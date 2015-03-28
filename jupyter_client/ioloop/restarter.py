@@ -20,7 +20,7 @@ from __future__ import absolute_import
 from zmq.eventloop import ioloop
 
 
-from IPython.kernel.restarter import KernelRestarter
+from jupyter_client.restarter import KernelRestarter
 from IPython.utils.traitlets import (
     Instance,
 )
@@ -51,4 +51,3 @@ class IOLoopKernelRestarter(KernelRestarter):
         if self._pcallback is not None:
             self._pcallback.stop()
             self._pcallback = None
-
