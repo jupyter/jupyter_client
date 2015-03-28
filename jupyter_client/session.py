@@ -53,8 +53,7 @@ from IPython.utils.traitlets import (CBytes, Unicode, Bool, Any, Instance, Set,
                                         TraitError,
 )
 from IPython.utils.pickleutil import PICKLE_PROTOCOL
-from IPython.kernel.adapter import adapt
-from IPython.kernel.zmq.serialize import MAX_ITEMS, MAX_BYTES
+from jupyter_client.adapter import adapt
 
 #-----------------------------------------------------------------------------
 # utility functions
@@ -77,6 +76,10 @@ def squash_unicode(obj):
 #-----------------------------------------------------------------------------
 # globals and defaults
 #-----------------------------------------------------------------------------
+
+# default values for the thresholds:
+MAX_ITEMS = 64
+MAX_BYTES = 1024
 
 # ISO8601-ify datetime objects
 # allow unicode
@@ -118,7 +121,7 @@ session_flags  = {
 
 def default_secure(cfg):
     """Set the default behavior for a config environment to be secure.
-    
+
     If Session.key/keyfile have not been set, set Session.key to
     a new random UUID.
     """
@@ -148,7 +151,7 @@ class SessionFactory(LoggingConfigurable):
     def _context_default(self):
         return zmq.Context.instance()
 
-    session = Instance('IPython.kernel.zmq.session.Session',
+    session = Instance('jupyter_client.session.Session',
                        allow_none=True)
 
     loop = Instance('zmq.eventloop.ioloop.IOLoop')
@@ -310,20 +313,20 @@ class Session(Configurable):
 
     metadata = Dict({}, config=True,
         help="""Metadata dictionary, which serves as the default top-level metadata dict for each message.""")
-    
+
     # if 0, no adapting to do.
     adapt_version = Integer(0)
 
     # message signature related traits:
-    
+
     key = CBytes(config=True,
         help="""execution key, for signing messages.""")
     def _key_default(self):
         return str_to_bytes(str(uuid.uuid4()))
-    
+
     def _key_changed(self):
         self._new_auth()
-    
+
     signature_scheme = Unicode('hmac-sha256', config=True,
         help="""The digest scheme used to construct the message signatures.
         Must have the form 'hmac-HASH'.""")
@@ -336,7 +339,7 @@ class Session(Configurable):
         except AttributeError:
             raise TraitError("hashlib has no such attribute: %s" % hash_name)
         self._new_auth()
-    
+
     digest_mod = Any()
     def _digest_mod_default(self):
         return hashlib.sha256
@@ -348,11 +351,11 @@ class Session(Configurable):
             self.auth = hmac.HMAC(self.key, digestmod=self.digest_mod)
         else:
             self.auth = None
-    
+
     digest_history = Set()
     digest_history_size = Integer(2**16, config=True,
         help="""The maximum number of digests to remember.
-        
+
         The digest history will be culled when it exceeds this value.
         """
     )
@@ -365,9 +368,9 @@ class Session(Configurable):
 
     # for protecting against sends from forks
     pid = Integer()
-    
+
     # serialization traits:
-    
+
     pack = Any(default_packer) # the actual packer function
     def _pack_changed(self, name, old, new):
         if not callable(new):
@@ -378,7 +381,7 @@ class Session(Configurable):
         # unpacker is not checked - it is assumed to be
         if not callable(new):
             raise TypeError("unpacker must be callable, not %s"%type(new))
-    
+
     # thresholds:
     copy_threshold = Integer(2**16, config=True,
         help="Threshold (in bytes) beyond which a buffer should be sent without copying.")
@@ -390,7 +393,7 @@ class Session(Configurable):
         """
     )
 
-    
+
     def __init__(self, **kwargs):
         """create a Session object
 
@@ -625,7 +628,7 @@ class Session(Configurable):
         track : bool
             Whether to track.  Only for use with Sockets, because ZMQStream
             objects cannot track messages.
-            
+
 
         Returns
         -------
@@ -655,7 +658,7 @@ class Session(Configurable):
         to_send.extend(buffers)
         longest = max([ len(s) for s in to_send ])
         copy = (longest < self.copy_threshold)
-        
+
         if buffers and track and not copy:
             # only really track when we are doing zero-copy buffers
             tracker = stream.send_multipart(to_send, copy=False, track=True)
@@ -776,15 +779,15 @@ class Session(Configurable):
         if self.digest_history_size == 0:
             # no history, never add digests
             return
-        
+
         self.digest_history.add(signature)
         if len(self.digest_history) > self.digest_history_size:
             # threshold reached, cull 10%
             self._cull_digest_history()
-    
+
     def _cull_digest_history(self):
         """cull the digest history
-        
+
         Removes a randomly selected 10% of the digest history
         """
         current = len(self.digest_history)
@@ -794,7 +797,7 @@ class Session(Configurable):
             return
         to_cull = random.sample(self.digest_history, n_to_cull)
         self.digest_history.difference_update(to_cull)
-    
+
     def deserialize(self, msg_list, content=True, copy=True):
         """Unserialize a msg_list to a nested message dict.
 
@@ -855,7 +858,7 @@ class Session(Configurable):
         message['buffers'] = buffers
         # adapt to the current version
         return adapt(message)
-    
+
     def unserialize(self, *args, **kwargs):
         warnings.warn(
             "Session.unserialize is deprecated. Use Session.deserialize.",
@@ -879,4 +882,3 @@ def test_msg2obj():
     am2 = dict(ao)
     assert am['x'] == am2['x']
     assert am['y']['z'] == am2['y']['z']
-

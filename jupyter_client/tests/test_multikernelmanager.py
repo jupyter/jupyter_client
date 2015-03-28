@@ -8,8 +8,8 @@ from IPython.testing import decorators as dec
 
 from IPython.config.loader import Config
 from IPython.utils.localinterfaces import localhost
-from IPython.kernel import KernelManager
-from IPython.kernel.multikernelmanager import MultiKernelManager
+from jupyter_client import KernelManager
+from jupyter_client.multikernelmanager import MultiKernelManager
 
 class TestKernelManager(TestCase):
 
@@ -61,7 +61,7 @@ class TestKernelManager(TestCase):
     def test_tcp_lifecycle(self):
         km = self._get_tcp_km()
         self._run_lifecycle(km)
-    
+
     def test_shutdown_all(self):
         km = self._get_tcp_km()
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -70,7 +70,7 @@ class TestKernelManager(TestCase):
         self.assertNotIn(kid, km)
         # shutdown again is okay, because we have no kernels
         km.shutdown_all()
-    
+
     def test_tcp_cinfo(self):
         km = self._get_tcp_km()
         self._run_cinfo(km, 'tcp', localhost())
@@ -79,9 +79,8 @@ class TestKernelManager(TestCase):
     def test_ipc_lifecycle(self):
         km = self._get_ipc_km()
         self._run_lifecycle(km)
-    
+
     @dec.skip_win32
     def test_ipc_cinfo(self):
         km = self._get_ipc_km()
         self._run_cinfo(km, 'ipc', 'test')
-
