@@ -1,5 +1,6 @@
-"""IPython kernels and associated utilities"""
+"""Client-side implementations of the Jupyter protocol"""
 
+from ._version import version_info, __version__
 from .connect import *
 from .launcher import *
 from .client import KernelClient
