@@ -1,7 +1,7 @@
 """Abstract base class for kernel clients"""
 
 #-----------------------------------------------------------------------------
-#  Copyright (C) 2013  The IPython Development Team
+#  Copyright (c) The Jupyter Development Team
 #
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
@@ -13,7 +13,7 @@
 
 import abc
 
-from IPython.utils.py3compat import with_metaclass
+from ipython_genutils.py3compat import with_metaclass
 
 #-----------------------------------------------------------------------------
 # Main kernel client class

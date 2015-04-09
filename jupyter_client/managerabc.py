@@ -1,11 +1,11 @@
 """Abstract base class for kernel managers."""
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 import abc
 
-from IPython.utils.py3compat import with_metaclass
+from ipython_genutils.py3compat import with_metaclass
 
 
 class KernelManagerABC(with_metaclass(abc.ABCMeta, object)):

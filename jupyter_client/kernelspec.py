@@ -8,9 +8,9 @@ import warnings
 pjoin = os.path.join
 
 from IPython.utils.path import get_ipython_dir
-from IPython.utils.py3compat import PY3
-from IPython.utils.traitlets import HasTraits, List, Unicode, Dict, Set
-from IPython.config import Configurable
+from ipython_genutils.py3compat import PY3
+from traitlets import HasTraits, List, Unicode, Dict, Set
+from traitlets.config import Configurable
 
 if os.name == 'nt':
     programdata = os.environ.get('PROGRAMDATA', None)

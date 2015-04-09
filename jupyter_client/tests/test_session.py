@@ -1,6 +1,6 @@
 """test building messages with Session"""
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 import hmac
@@ -16,8 +16,8 @@ from zmq.eventloop.zmqstream import ZMQStream
 from jupyter_client import session as ss
 from jupyter_client import jsonutil
 
-from IPython.testing.decorators import skipif, module_not_available
-from IPython.utils.py3compat import string_types
+from ipython_genutils.testing.decorators import skipif, module_not_available
+from ipython_genutils.py3compat import string_types
 
 def _bad_packer(obj):
     raise TypeError("I don't work")

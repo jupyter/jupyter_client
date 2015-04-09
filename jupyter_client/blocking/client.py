@@ -2,7 +2,7 @@
 
 Useful for test suites and blocking terminal interfaces.
 """
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 try:
@@ -10,7 +10,7 @@ try:
 except ImportError:
     from Queue import Empty  # Python 2
 
-from IPython.utils.traitlets import Type
+from traitlets import Type
 from jupyter_client.channels import HBChannel
 from jupyter_client.client import KernelClient
 from .channels import ZMQSocketChannel

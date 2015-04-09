@@ -1,7 +1,7 @@
 # coding: utf-8
 """Test suite for our JSON utilities."""
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 import datetime
@@ -12,7 +12,7 @@ import nose.tools as nt
 
 from jupyter_client import jsonutil
 from ..jsonutil import json_clean, encode_images
-from IPython.utils.py3compat import unicode_to_str, str_to_bytes, iteritems
+from ipython_genutils.py3compat import unicode_to_str, str_to_bytes, iteritems
 
 
 class Int(int):

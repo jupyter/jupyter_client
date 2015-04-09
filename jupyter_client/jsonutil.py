@@ -1,6 +1,6 @@
 """Utilities to manipulate JSON objects."""
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 import math
@@ -15,9 +15,9 @@ except ImportError:
     # Python 2.x
     from base64 import encodestring as encodebytes
 
-from IPython.utils import py3compat
-from IPython.utils.py3compat import string_types, unicode_type, iteritems
-from IPython.utils.encoding import DEFAULT_ENCODING
+from ipython_genutils import py3compat
+from ipython_genutils.py3compat import string_types, unicode_type, iteritems
+from ipython_genutils.encoding import DEFAULT_ENCODING
 next_attr_name = '__next__' if py3compat.PY3 else 'next'
 
 #-----------------------------------------------------------------------------

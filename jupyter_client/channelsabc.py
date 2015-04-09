@@ -1,11 +1,11 @@
 """Abstract base classes for kernel client channels"""
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 import abc
 
-from IPython.utils.py3compat import with_metaclass
+from ipython_genutils.py3compat import with_metaclass
 
 
 class ChannelABC(with_metaclass(abc.ABCMeta, object)):

@@ -3,8 +3,8 @@ import os
 from os.path import join as pjoin
 import unittest
 
-from IPython.testing.decorators import onlyif
-from IPython.utils.tempdir import TemporaryDirectory
+from ipython_genutils.testing.decorators import onlyif
+from ipython_genutils.tempdir import TemporaryDirectory
 from jupyter_client import kernelspec
 
 sample_kernel_json = {'argv':['cat', '{connection_file}'],

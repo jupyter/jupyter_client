@@ -1,7 +1,7 @@
 """A kernel manager with a tornado IOLoop"""
 
 #-----------------------------------------------------------------------------
-#  Copyright (C) 2013  The IPython Development Team
+#  Copyright (c) The Jupyter Development Team
 #
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
@@ -16,7 +16,7 @@ from __future__ import absolute_import
 from zmq.eventloop import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
-from IPython.utils.traitlets import (
+from traitlets import (
     Instance
 )
 
