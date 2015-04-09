@@ -17,10 +17,6 @@ class ListKernelSpecs(JupyterApp):
     description = """List installed kernel specifications."""
     kernel_spec_manager = Instance(KernelSpecManager)
 
-    # Not all of the base aliases are meaningful (e.g. profile)
-    aliases = {k: base_aliases[k] for k in ['ipython-dir', 'log-level']}
-    flags = {'debug': base_flags['debug'],}
-
     def _kernel_spec_manager_default(self):
         return KernelSpecManager(parent=self, data_dir=self.data_dir)
 
@@ -53,10 +49,9 @@ class InstallKernelSpec(JupyterApp):
     replace = Bool(False, config=True,
         help="Replace any existing kernel spec with this name."
     )
-
+    
     aliases = {'name': 'InstallKernelSpec.kernel_name'}
-    for k in ['ipython-dir', 'log-level']:
-        aliases[k] = base_aliases[k]
+    aliases.update(base_aliases)
 
     flags = {'user': ({'InstallKernelSpec': {'user': True}},
                 "Install to the per-user kernel registry"),
@@ -104,8 +99,6 @@ class InstallNativeKernelSpec(JupyterApp):
         """
     )
 
-    # Not all of the base aliases are meaningful (e.g. profile)
-    aliases = {k: base_aliases[k] for k in ['ipython-dir', 'log-level']}
     flags = {'user': ({'InstallNativeKernelSpec': {'user': True}},
                 "Install to the per-user kernel registry"),
              'debug': base_flags['debug'],
@@ -144,3 +137,7 @@ class KernelSpecApp(Application):
             self.exit(1)
         else:
             return self.subapp.start()
+
+
+if __name__ == '__main__':
+    KernelSpecApp.launch_instance()
