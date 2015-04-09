@@ -1,6 +1,7 @@
-"""Session object for building, serializing, sending, and receiving messages in
-IPython. The Session object supports serialization, HMAC signatures, and
-metadata on messages.
+"""Session object for building, serializing, sending, and receiving messages.
+
+The Session object supports serialization, HMAC signatures,
+and metadata on messages.
 
 Also defined here are utilities for working with Sessions:
 * A SessionFactory to be used as a base class for configurables that work with
@@ -47,7 +48,6 @@ from zmq.utils import jsonapi
 from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
-from IPython.core.release import kernel_protocol_version
 from traitlets.config.configurable import Configurable, LoggingConfigurable
 from ipython_genutils.importstring import import_item
 from jupyter_client.jsonutil import extract_dates, squash_dates, date_default
@@ -57,6 +57,7 @@ from traitlets import (CBytes, Unicode, Bool, Any, Instance, Set,
                                         DottedObjectName, CUnicode, Dict, Integer,
                                         TraitError,
 )
+from jupyter_client import protocol_version
 from jupyter_client.adapter import adapt
 from traitlets.log import get_logger
 
@@ -204,7 +205,7 @@ class Message(object):
 
 def msg_header(msg_id, msg_type, username, session):
     date = datetime.now()
-    version = kernel_protocol_version
+    version = protocol_version
     return locals()
 
 def extract_header(msg_or_header):
