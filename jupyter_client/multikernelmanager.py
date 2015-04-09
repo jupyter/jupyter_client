@@ -17,7 +17,7 @@ from IPython.utils.traitlets import (
 )
 from IPython.utils.py3compat import unicode_type
 
-from .kernelspec import NATIVE_KERNEL_NAME
+from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 
 class DuplicateKernelError(Exception):
     pass
@@ -45,6 +45,8 @@ class MultiKernelManager(LoggingConfigurable):
     default_kernel_name = Unicode(NATIVE_KERNEL_NAME, config=True,
         help="The name of the default kernel to start"
     )
+
+    kernel_spec_manager = Instance(KernelSpecManager, allow_none=True)
 
     kernel_manager_class = DottedObjectName(
         "jupyter_client.ioloop.IOLoopKernelManager", config=True,
@@ -100,10 +102,13 @@ class MultiKernelManager(LoggingConfigurable):
         # kernel_manager_factory is the constructor for the KernelManager
         # subclass we are using. It can be configured as any Configurable,
         # including things like its transport and ip.
+        kwargs = {}
+        if self.kernel_spec_manager:
+            kwargs['kernel_spec_manager'] = self.kernel_spec_manager
         km = self.kernel_manager_factory(connection_file=os.path.join(
                     self.connection_dir, "kernel-%s.json" % kernel_id),
                     parent=self, autorestart=True, log=self.log, kernel_name=kernel_name,
-                    kernel_spec_manager=self.kernel_spec_manager,
+                    **kwargs
         )
         km.start_kernel(**kwargs)
         self._kernels[kernel_id] = km
