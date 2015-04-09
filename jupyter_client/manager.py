@@ -21,7 +21,6 @@ import zmq
 
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
-from IPython.utils.path import get_ipython_dir
 from traitlets import (
     Any, Instance, Unicode, List, Bool, Type, DottedObjectName
 )
@@ -60,7 +59,7 @@ class KernelManager(ConnectionFileMixin):
     kernel_spec_manager = Instance(kernelspec.KernelSpecManager)
 
     def _kernel_spec_manager_default(self):
-        return kernelspec.KernelSpecManager(ipython_dir=self.ipython_dir)
+        return kernelspec.KernelSpecManager(data_dir=self.data_dir)
 
     kernel_name = Unicode(kernelspec.NATIVE_KERNEL_NAME)
 
@@ -83,11 +82,11 @@ class KernelManager(ConnectionFileMixin):
         The Popen Command to launch the kernel.
         Override this if you have a custom kernel.
         If kernel_cmd is specified in a configuration file,
-        IPython does not pass any arguments to the kernel,
+        Jupyter does not pass any arguments to the kernel,
         because it cannot make any assumptions about the
         arguments that the kernel understands. In particular,
         this means that the kernel does not receive the
-        option --debug if it given on the IPython command line.
+        option --debug if it given on the Jupyter command line.
         """
     )
 
@@ -97,10 +96,6 @@ class KernelManager(ConnectionFileMixin):
         self.ipython_kernel = False
 
     ipython_kernel = Bool(True)
-
-    ipython_dir = Unicode()
-    def _ipython_dir_default(self):
-        return get_ipython_dir()
 
     # Protected traits
     _launch_args = Any()

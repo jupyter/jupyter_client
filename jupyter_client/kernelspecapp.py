@@ -6,14 +6,14 @@ import errno
 import os.path
 
 from traitlets.config.application import Application
-from IPython.core.application import (
-    BaseIPythonApplication, base_flags, base_aliases
+from jupyter_core.application import (
+    JupyterApp, base_flags, base_aliases
 )
 from traitlets import Instance, Dict, Unicode, Bool
 
 from .kernelspec import KernelSpecManager
 
-class ListKernelSpecs(BaseIPythonApplication):
+class ListKernelSpecs(JupyterApp):
     description = """List installed kernel specifications."""
     kernel_spec_manager = Instance(KernelSpecManager)
 
@@ -22,7 +22,7 @@ class ListKernelSpecs(BaseIPythonApplication):
     flags = {'debug': base_flags['debug'],}
 
     def _kernel_spec_manager_default(self):
-        return KernelSpecManager(parent=self, ipython_dir=self.ipython_dir)
+        return KernelSpecManager(parent=self, data_dir=self.data_dir)
 
     def start(self):
         print("Available kernels:")
@@ -30,12 +30,12 @@ class ListKernelSpecs(BaseIPythonApplication):
             print("  %s" % kernelname)
 
 
-class InstallKernelSpec(BaseIPythonApplication):
+class InstallKernelSpec(JupyterApp):
     description = """Install a kernel specification directory."""
     kernel_spec_manager = Instance(KernelSpecManager)
 
     def _kernel_spec_manager_default(self):
-        return KernelSpecManager(ipython_dir=self.ipython_dir)
+        return KernelSpecManager(data_dir=self.data_dir)
 
     sourcedir = Unicode()
     kernel_name = Unicode("", config=True,
@@ -90,12 +90,12 @@ class InstallKernelSpec(BaseIPythonApplication):
                 self.exit(1)
             raise
 
-class InstallNativeKernelSpec(BaseIPythonApplication):
+class InstallNativeKernelSpec(JupyterApp):
     description = """[DEPRECATED] Install the IPython kernel spec directory for this Python."""
     kernel_spec_manager = Instance(KernelSpecManager)
 
     def _kernel_spec_manager_default(self):
-        return KernelSpecManager(ipython_dir=self.ipython_dir)
+        return KernelSpecManager(data_dir=self.data_dir)
 
     user = Bool(False, config=True,
         help="""

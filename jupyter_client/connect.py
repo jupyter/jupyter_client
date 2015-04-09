@@ -27,6 +27,7 @@ from ipython_genutils.py3compat import (str_to_bytes, bytes_to_str, cast_bytes_p
 from traitlets import (
     Bool, Integer, Unicode, CaselessStrEnum, Instance,
 )
+from jupyter_core.paths import jupyter_data_dir
 
 
 def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
@@ -256,7 +257,11 @@ port_names = [ "%s_port" % channel for channel in ('shell', 'stdin', 'iopub', 'h
 
 class ConnectionFileMixin(LoggingConfigurable):
     """Mixin for configurable classes that work with connection files"""
-
+    
+    data_dir = Unicode()
+    def _data_dir_default(self):
+        return jupyter_data_dir()
+    
     # The addresses for the communication channels
     connection_file = Unicode('', config=True,
     help="""JSON file in which to store connection info [default: kernel-<pid>.json]

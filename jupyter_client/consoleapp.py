@@ -15,7 +15,6 @@ import uuid
 
 
 from traitlets.config.application import boolean_flag
-from IPython.core.profiledir import ProfileDir
 from ipython_genutils.path import filefind
 from traitlets import (
     Dict, List, Unicode, CUnicode, CBool, Any
@@ -40,11 +39,11 @@ flags = {}
 # these must be scrubbed before being passed to the kernel,
 # or it will raise an error on unrecognized flags
 app_flags = {
-    'existing' : ({'IPythonConsoleApp' : {'existing' : 'kernel*.json'}},
+    'existing' : ({'JupyterConsoleApp' : {'existing' : 'kernel*.json'}},
             "Connect to an existing kernel. If no argument specified, guess most recent"),
 }
 app_flags.update(boolean_flag(
-    'confirm-exit', 'IPythonConsoleApp.confirm_exit',
+    'confirm-exit', 'JupyterConsoleApp.confirm_exit',
     """Set to display confirmation dialog on exit. You can always use 'exit' or 'quit',
        to force a direct exit without any confirmation.
     """,
@@ -58,18 +57,18 @@ aliases = {}
 
 # also scrub aliases from the frontend
 app_aliases = dict(
-    ip = 'IPythonConsoleApp.ip',
-    transport = 'IPythonConsoleApp.transport',
-    hb = 'IPythonConsoleApp.hb_port',
-    shell = 'IPythonConsoleApp.shell_port',
-    iopub = 'IPythonConsoleApp.iopub_port',
-    stdin = 'IPythonConsoleApp.stdin_port',
-    existing = 'IPythonConsoleApp.existing',
-    f = 'IPythonConsoleApp.connection_file',
+    ip = 'JupyterConsoleApp.ip',
+    transport = 'JupyterConsoleApp.transport',
+    hb = 'JupyterConsoleApp.hb_port',
+    shell = 'JupyterConsoleApp.shell_port',
+    iopub = 'JupyterConsoleApp.iopub_port',
+    stdin = 'JupyterConsoleApp.stdin_port',
+    existing = 'JupyterConsoleApp.existing',
+    f = 'JupyterConsoleApp.connection_file',
 
-    kernel = 'IPythonConsoleApp.kernel_name',
+    kernel = 'JupyterConsoleApp.kernel_name',
 
-    ssh = 'IPythonConsoleApp.sshserver',
+    ssh = 'JupyterConsoleApp.sshserver',
 )
 aliases.update(app_aliases)
 
@@ -77,13 +76,17 @@ aliases.update(app_aliases)
 # Classes
 #-----------------------------------------------------------------------------
 
-classes = [KernelManager, ProfileDir, Session]
+classes = [KernelManager, Session]
 
 class IPythonConsoleApp(ConnectionFileMixin):
-    name = 'ipython-console-mixin'
+    """Deprecated name"""
+    pass
+
+class JupyterConsoleApp(IPythonConsoleApp):
+    name = 'jupyter-console-mixin'
 
     description = """
-        The IPython Mixin Console.
+        The Jupyter Console Mixin.
         
         This class contains the common portions of console client (QtConsole,
         ZMQ-based terminal console, etc).  It is not a full console, in that
@@ -93,7 +96,7 @@ class IPythonConsoleApp(ConnectionFileMixin):
         the single-process Terminal IPython shell, such as connecting to
         existing kernel, via:
         
-            ipython <appname> --existing
+            jupyter console <appname> --existing
         
         as well as tunnel via SSH
         
@@ -106,12 +109,7 @@ class IPythonConsoleApp(ConnectionFileMixin):
     kernel_client_class = BlockingKernelClient
 
     kernel_argv = List(Unicode)
-    # frontend flags&aliases to be stripped when building kernel_argv
-    frontend_flags = Any(app_flags)
-    frontend_aliases = Any(app_aliases)
 
-    # create requested profiles by default, if they don't exist:
-    auto_create = CBool(True)
     # connection info:
     
     sshserver = Unicode('', config=True,
@@ -173,12 +171,12 @@ class IPythonConsoleApp(ConnectionFileMixin):
                 # file might not exist
                 if self.connection_file == os.path.basename(self.connection_file):
                     # just shortname, put it in security dir
-                    cf = os.path.join(self.profile_dir.security_dir, self.connection_file)
+                    cf = os.path.join(self.runtime_dir, self.connection_file)
                 else:
                     cf = self.connection_file
                 self.connection_file = cf
         try:
-            self.connection_file = filefind(self.connection_file, ['.', self.profile_dir.security_dir])
+            self.connection_file = filefind(self.connection_file, ['.', self.runtime_dir])
         except IOError:
             self.log.debug("Connection File not found: %s", self.connection_file)
             return
@@ -245,7 +243,7 @@ class IPythonConsoleApp(ConnectionFileMixin):
             # 48b node segment (12 hex chars).  Users running more than 32k simultaneous
             # kernels can subclass.
             ident = str(uuid.uuid4()).split('-')[-1]
-            cf = os.path.join(self.profile_dir.security_dir, 'kernel-%s.json' % ident)
+            cf = os.path.join(self.runtime_dir, 'kernel-%s.json' % ident)
             # only keep if it's actually new.  Protect against unlikely collision
             # in 48b random search space
             cf = cf if not os.path.exists(cf) else ''
@@ -271,7 +269,7 @@ class IPythonConsoleApp(ConnectionFileMixin):
                                     connection_file=self.connection_file,
                                     kernel_name=self.kernel_name,
                                     parent=self,
-                                    ipython_dir=self.ipython_dir,
+                                    data_dir=self.data_dir,
             )
         except NoSuchKernel:
             self.log.critical("Could not find kernel %s", self.kernel_name)
@@ -322,7 +320,7 @@ class IPythonConsoleApp(ConnectionFileMixin):
     def initialize(self, argv=None):
         """
         Classes which mix this class in should call:
-               IPythonConsoleApp.initialize(self,argv)
+               JupyterConsoleApp.initialize(self,argv)
         """
         self.init_connection_file()
         self.init_ssh()

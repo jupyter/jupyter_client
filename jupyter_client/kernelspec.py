@@ -7,10 +7,11 @@ import warnings
 
 pjoin = os.path.join
 
-from IPython.utils.path import get_ipython_dir
 from ipython_genutils.py3compat import PY3
 from traitlets import HasTraits, List, Unicode, Dict, Set
 from traitlets.config import Configurable
+
+from jupyter_core.paths import jupyter_data_dir
 
 if os.name == 'nt':
     programdata = os.environ.get('PROGRAMDATA', None)
@@ -75,13 +76,13 @@ class NoSuchKernel(KeyError):
         self.name = name
 
 class KernelSpecManager(Configurable):
-    ipython_dir = Unicode()
-    def _ipython_dir_default(self):
-        return get_ipython_dir()
+    data_dir = Unicode()
+    def _data_dir_default(self):
+        return jupyter_data_dir()
 
     user_kernel_dir = Unicode()
     def _user_kernel_dir_default(self):
-        return pjoin(self.ipython_dir, 'kernels')
+        return pjoin(self.data_dir, 'kernels')
 
     @property
     def env_kernel_dir(self):

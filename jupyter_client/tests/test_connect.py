@@ -9,17 +9,17 @@ import os
 import nose.tools as nt
 
 from traitlets.config import Config
-from IPython.consoleapp import IPythonConsoleApp
-from IPython.core.application import BaseIPythonApplication
+from jupyter_core.application import JupyterApp
 from ipython_genutils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
 from ipython_genutils.py3compat import str_to_bytes
 from jupyter_client import connect
+from jupyter_client.consoleapp import JupyterConsoleApp
 from jupyter_client.session import Session
 
 
-class DummyConsoleApp(BaseIPythonApplication, IPythonConsoleApp):
+class DummyConsoleApp(JupyterApp, JupyterConsoleApp):
     def initialize(self, argv=[]):
-        BaseIPythonApplication.initialize(self, argv=argv)
+        JupyterApp.initialize(self, argv=argv)
         self.init_connection_file()
 
 sample_info = dict(ip='1.2.3.4', transport='ipc',
@@ -78,7 +78,7 @@ def test_find_connection_file():
         app = DummyConsoleApp(config=cfg, connection_file=cf)
         app.initialize()
 
-        security_dir = os.path.join(app.profile_dir.location, 'security')
+        security_dir = app.runtime_dir
         profile_cf = os.path.join(security_dir, cf)
 
         with open(profile_cf, 'w') as f:
@@ -92,5 +92,5 @@ def test_find_connection_file():
             ):
             nt.assert_equal(connect.find_connection_file(query, path=security_dir), profile_cf)
 
-        BaseIPythonApplication._instance = None
+        JupyterApp._instance = None
 
