@@ -1,4 +1,4 @@
-"""Adapters for IPython msg spec versions."""
+"""Adapters for Jupyter msg spec versions."""
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
@@ -6,7 +6,7 @@
 import re
 import json
 
-from IPython.core.release import kernel_protocol_version_info
+from jupyter_client import protocol_version_info
 
 
 def code_to_line(code, cursor_pos):
@@ -364,23 +364,23 @@ class V4toV5(Adapter):
 
 
 
-def adapt(msg, to_version=kernel_protocol_version_info[0]):
+def adapt(msg, to_version=protocol_version_info[0]):
     """Adapt a single message to a target version
 
     Parameters
     ----------
 
     msg : dict
-        An IPython message.
+        A Jupyter message.
     to_version : int, optional
         The target major version.
-        If unspecified, adapt to the current version for IPython.
+        If unspecified, adapt to the current version.
 
     Returns
     -------
 
     msg : dict
-        An IPython message appropriate in the new version.
+        A Jupyter message appropriate in the new version.
     """
     header = msg['header']
     if 'version' in header:

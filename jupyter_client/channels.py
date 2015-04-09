@@ -15,7 +15,7 @@ import zmq
 # during garbage collection of threads at exit:
 from zmq import ZMQError
 
-from IPython.core.release import kernel_protocol_version_info
+from jupyter_client import protocol_version_info
 
 from .channelsabc import HBChannelABC
 
@@ -23,7 +23,7 @@ from .channelsabc import HBChannelABC
 # Constants and exceptions
 #-----------------------------------------------------------------------------
 
-major_protocol_version = kernel_protocol_version_info[0]
+major_protocol_version = protocol_version_info[0]
 
 class InvalidPortNumber(Exception):
     pass
