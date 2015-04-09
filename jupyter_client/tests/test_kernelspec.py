@@ -21,7 +21,7 @@ class KernelSpecTests(unittest.TestCase):
         with open(json_file, 'w') as f:
             json.dump(sample_kernel_json, f)
 
-        self.ksm = kernelspec.KernelSpecManager(ipython_dir=td.name)
+        self.ksm = kernelspec.KernelSpecManager(data_dir=td.name)
 
         td2 = TemporaryDirectory()
         self.addCleanup(td2.cleanup)
