@@ -12,6 +12,7 @@ import os
 import signal
 import sys
 import uuid
+import warnings
 
 
 from traitlets.config.application import boolean_flag
@@ -78,11 +79,7 @@ aliases.update(app_aliases)
 
 classes = [KernelManager, Session]
 
-class IPythonConsoleApp(ConnectionFileMixin):
-    """Deprecated name"""
-    pass
-
-class JupyterConsoleApp(IPythonConsoleApp):
+class JupyterConsoleApp(ConnectionFileMixin):
     name = 'jupyter-console-mixin'
 
     description = """
@@ -327,3 +324,7 @@ class JupyterConsoleApp(IPythonConsoleApp):
         self.init_kernel_manager()
         self.init_kernel_client()
 
+class IPythonConsoleApp(JupyterConsoleApp):
+    def __init__(self, *args, **kwargs):
+        warnings.warn("IPythonConsoleApp is deprecated. Use JupyterConsoleApp")
+        super(IPythonConsoleApp, self).__init__(*args, **kwargs)
