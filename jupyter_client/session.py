@@ -8,7 +8,7 @@ Sessions.
 * A Message object for convenience that allows attribute-access to the msg dict.
 """
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 import hashlib
@@ -48,12 +48,12 @@ from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from IPython.core.release import kernel_protocol_version
-from IPython.config.configurable import Configurable, LoggingConfigurable
-from IPython.utils.importstring import import_item
+from traitlets.config.configurable import Configurable, LoggingConfigurable
+from ipython_genutils.importstring import import_item
 from jupyter_client.jsonutil import extract_dates, squash_dates, date_default
-from IPython.utils.py3compat import (str_to_bytes, str_to_unicode, unicode_type,
+from ipython_genutils.py3compat import (str_to_bytes, str_to_unicode, unicode_type,
                                      iteritems)
-from IPython.utils.traitlets import (CBytes, Unicode, Bool, Any, Instance, Set,
+from traitlets import (CBytes, Unicode, Bool, Any, Instance, Set,
                                         DottedObjectName, CUnicode, Dict, Integer,
                                         TraitError,
 )

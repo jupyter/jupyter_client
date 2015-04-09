@@ -1,15 +1,15 @@
 """Base class to manage the interaction with a running kernel"""
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import absolute_import
 from jupyter_client.channels import major_protocol_version
-from IPython.utils.py3compat import string_types, iteritems
+from ipython_genutils.py3compat import string_types, iteritems
 
 import zmq
 
-from IPython.utils.traitlets import (
+from traitlets import (
     Any, Instance, Type,
 )
 

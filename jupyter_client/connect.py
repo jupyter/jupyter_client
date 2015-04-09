@@ -19,12 +19,12 @@ import tempfile
 
 import zmq
 
-from IPython.config import LoggingConfigurable
+from traitlets.config import LoggingConfigurable
 from .localinterfaces import localhost
-from IPython.utils.path import filefind
-from IPython.utils.py3compat import (str_to_bytes, bytes_to_str, cast_bytes_py2,
+from ipython_genutils.path import filefind
+from ipython_genutils.py3compat import (str_to_bytes, bytes_to_str, cast_bytes_py2,
                                      string_types)
-from IPython.utils.traitlets import (
+from traitlets import (
     Bool, Integer, Unicode, CaselessStrEnum, Instance,
 )
 

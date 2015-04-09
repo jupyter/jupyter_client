@@ -1,15 +1,15 @@
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 import errno
 import os.path
 
-from IPython.config.application import Application
+from traitlets.config.application import Application
 from IPython.core.application import (
     BaseIPythonApplication, base_flags, base_aliases
 )
-from IPython.utils.traitlets import Instance, Dict, Unicode, Bool
+from traitlets import Instance, Dict, Unicode, Bool
 
 from .kernelspec import KernelSpecManager
 

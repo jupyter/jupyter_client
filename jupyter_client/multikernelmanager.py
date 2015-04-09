@@ -1,6 +1,6 @@
 """A kernel manager for multiple kernels"""
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import absolute_import
@@ -10,12 +10,12 @@ import uuid
 
 import zmq
 
-from IPython.config.configurable import LoggingConfigurable
-from IPython.utils.importstring import import_item
-from IPython.utils.traitlets import (
+from traitlets.config.configurable import LoggingConfigurable
+from ipython_genutils.importstring import import_item
+from traitlets import (
     Instance, Dict, List, Unicode, Any, DottedObjectName
 )
-from IPython.utils.py3compat import unicode_type
+from ipython_genutils.py3compat import unicode_type
 
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 
@@ -47,7 +47,7 @@ class MultiKernelManager(LoggingConfigurable):
     )
 
     kernel_spec_manager = Instance(KernelSpecManager, allow_none=True)
-
+    
     kernel_manager_class = DottedObjectName(
         "jupyter_client.ioloop.IOLoopKernelManager", config=True,
         help="""The kernel manager class.  This is configurable to allow

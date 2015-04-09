@@ -13,7 +13,7 @@ from zmq import ZMQError
 from zmq.eventloop import ioloop, zmqstream
 
 # Local imports
-from IPython.utils.traitlets import Type, Instance
+from traitlets import Type, Instance
 from jupyter_client.channels import HBChannel
 from jupyter_client import KernelClient
 from jupyter_client.channels import HBChannel

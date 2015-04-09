@@ -1,6 +1,6 @@
 """Base classes to manage a Client's interaction with a running kernel"""
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import absolute_import

@@ -4,9 +4,9 @@ from subprocess import PIPE
 import time
 from unittest import TestCase
 
-from IPython.testing import decorators as dec
+from ipython_genutils.testing import decorators as dec
 
-from IPython.config.loader import Config
+from traitlets.config.loader import Config
 from ..localinterfaces import localhost
 from jupyter_client import KernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager

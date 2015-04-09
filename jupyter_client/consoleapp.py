@@ -4,7 +4,7 @@ This is not a complete console app, as subprocess will not be able to receive
 input, there is no real readline support, among other limitations. This is a
 refactoring of what used to be the IPython/qt/console/qtconsoleapp.py
 """
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 import atexit
@@ -14,10 +14,10 @@ import sys
 import uuid
 
 
-from IPython.config.application import boolean_flag
+from traitlets.config.application import boolean_flag
 from IPython.core.profiledir import ProfileDir
-from IPython.utils.path import filefind
-from IPython.utils.traitlets import (
+from ipython_genutils.path import filefind
+from traitlets import (
     Dict, List, Unicode, CUnicode, CBool, Any
 )
 

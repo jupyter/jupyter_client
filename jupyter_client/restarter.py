@@ -6,11 +6,11 @@ restarts the kernel if it dies.
 It is an incomplete base class, and must be subclassed.
 """
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from IPython.config.configurable import LoggingConfigurable
-from IPython.utils.traitlets import (
+from traitlets.config.configurable import LoggingConfigurable
+from traitlets import (
     Instance, Float, Dict, Bool, Integer,
 )
 

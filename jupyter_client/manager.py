@@ -1,6 +1,6 @@
 """Base class to manage a running kernel"""
 
-# Copyright (c) IPython Development Team.
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import absolute_import
@@ -19,10 +19,10 @@ except ImportError:
 
 import zmq
 
-from IPython.utils.importstring import import_item
+from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from IPython.utils.path import get_ipython_dir
-from IPython.utils.traitlets import (
+from traitlets import (
     Any, Instance, Unicode, List, Bool, Type, DottedObjectName
 )
 from jupyter_client import (

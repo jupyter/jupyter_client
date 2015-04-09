@@ -8,11 +8,11 @@ import os
 
 import nose.tools as nt
 
-from IPython.config import Config
+from traitlets.config import Config
 from IPython.consoleapp import IPythonConsoleApp
 from IPython.core.application import BaseIPythonApplication
-from IPython.utils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
-from IPython.utils.py3compat import str_to_bytes
+from ipython_genutils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
+from ipython_genutils.py3compat import str_to_bytes
 from jupyter_client import connect
 from jupyter_client.session import Session
 
