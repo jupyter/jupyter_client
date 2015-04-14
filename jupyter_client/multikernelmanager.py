@@ -102,7 +102,6 @@ class MultiKernelManager(LoggingConfigurable):
         # kernel_manager_factory is the constructor for the KernelManager
         # subclass we are using. It can be configured as any Configurable,
         # including things like its transport and ip.
-        kwargs = {}
         if self.kernel_spec_manager:
             kwargs['kernel_spec_manager'] = self.kernel_spec_manager
         km = self.kernel_manager_factory(connection_file=os.path.join(
