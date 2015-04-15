@@ -101,6 +101,10 @@ class KernelSpecManager(Configurable):
         dirs = SYSTEM_KERNEL_DIRS[:]
         if self.env_kernel_dir not in dirs:
             dirs.append(self.env_kernel_dir)
+        # FIXME: pending migration, include kernelspecs in .ipython:
+        from IPython.paths import get_ipython_dir
+        dirs.append(os.path.join(get_ipython_dir(), 'kernels'))
+        
         dirs.append(self.user_kernel_dir)
         return dirs
 
