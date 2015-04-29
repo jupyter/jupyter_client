@@ -166,7 +166,9 @@ class KernelManager(ConnectionFileMixin):
         else:
             cmd = self.kernel_spec.argv + extra_arguments
 
-        ns = dict(connection_file=self.connection_file)
+        ns = dict(connection_file=self.connection_file,
+                  prefix=sys.prefix,
+                 )
         ns.update(self._launch_args)
 
         pat = re.compile(r'\{([A-Za-z0-9_]+)\}')
