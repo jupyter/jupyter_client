@@ -122,10 +122,7 @@ class KernelSpecManager(Configurable):
         if user:
             return os.path.join(self.user_kernel_dir, kernel_name)
         else:
-            if SYSTEM_JUPYTER_PATH:
-                return os.path.join(SYSTEM_JUPYTER_PATH[0], 'kernels', kernel_name)
-            else:
-                raise EnvironmentError("No system kernel directory is available")
+            return os.path.join(SYSTEM_JUPYTER_PATH[0], 'kernels', kernel_name)
 
 
     def install_kernel_spec(self, source_dir, kernel_name=None, user=False,
