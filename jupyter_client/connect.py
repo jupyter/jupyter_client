@@ -27,7 +27,7 @@ from ipython_genutils.py3compat import (str_to_bytes, bytes_to_str, cast_bytes_p
 from traitlets import (
     Bool, Integer, Unicode, CaselessStrEnum, Instance,
 )
-from jupyter_core.paths import jupyter_data_dir
+from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir
 
 
 def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
@@ -159,7 +159,7 @@ def find_connection_file(filename='kernel-*.json', path=None):
     str : The absolute path of the connection file.
     """
     if path is None:
-        path = ['.']
+        path = ['.', jupyter_runtime_dir()]
     if isinstance(path, string_types):
         path = [path]
     
