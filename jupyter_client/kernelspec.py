@@ -9,7 +9,7 @@ pjoin = os.path.join
 
 from ipython_genutils.py3compat import PY3
 from traitlets import HasTraits, List, Unicode, Dict, Set
-from traitlets.config import Configurable
+from traitlets.config import LoggingConfigurable
 
 from jupyter_core.paths import jupyter_data_dir
 
@@ -75,7 +75,7 @@ class NoSuchKernel(KeyError):
     def __init__(self, name):
         self.name = name
 
-class KernelSpecManager(Configurable):
+class KernelSpecManager(LoggingConfigurable):
     data_dir = Unicode()
     def _data_dir_default(self):
         return jupyter_data_dir()
@@ -162,6 +162,7 @@ class KernelSpecManager(Configurable):
         kernel_name = kernel_name.lower()
 
         destination = self._get_destination_dir(kernel_name, user=user)
+        self.log.debug('Installing kernelspec in %s'%destination)
 
         if replace and os.path.isdir(destination):
             shutil.rmtree(destination)
