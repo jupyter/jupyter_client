@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import errno
 import os.path
+import sys
 
 from traitlets.config.application import Application
 from jupyter_core.application import (
