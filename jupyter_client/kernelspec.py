@@ -1,8 +1,12 @@
+"""Tools for managing kernel specs"""
+
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 import io
 import json
 import os
 import shutil
-import sys
 import warnings
 
 pjoin = os.path.join
@@ -11,18 +15,8 @@ from ipython_genutils.py3compat import PY3
 from traitlets import HasTraits, List, Unicode, Dict, Set
 from traitlets.config import LoggingConfigurable
 
-from jupyter_core.paths import jupyter_data_dir
+from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PATH
 
-if os.name == 'nt':
-    programdata = os.environ.get('PROGRAMDATA', None)
-    if programdata:
-        SYSTEM_KERNEL_DIRS = [pjoin(programdata, 'jupyter', 'kernels')]
-    else:  # PROGRAMDATA is not defined by default on XP.
-        SYSTEM_KERNEL_DIRS = []
-else:
-    SYSTEM_KERNEL_DIRS = ["/usr/share/jupyter/kernels",
-                          "/usr/local/share/jupyter/kernels",
-                         ]
 
 NATIVE_KERNEL_NAME = 'python3' if PY3 else 'python2'
 
@@ -84,10 +78,6 @@ class KernelSpecManager(LoggingConfigurable):
     def _user_kernel_dir_default(self):
         return pjoin(self.data_dir, 'kernels')
 
-    @property
-    def env_kernel_dir(self):
-        return pjoin(sys.prefix, 'share', 'jupyter', 'kernels')
-
     whitelist = Set(config=True,
         help="""Whitelist of allowed kernel names.
 
@@ -98,14 +88,10 @@ class KernelSpecManager(LoggingConfigurable):
         help="List of kernel directories to search. Later ones take priority over earlier."
     )
     def _kernel_dirs_default(self):
-        dirs = SYSTEM_KERNEL_DIRS[:]
-        if self.env_kernel_dir not in dirs:
-            dirs.append(self.env_kernel_dir)
+        dirs = jupyter_path('kernels')
         # FIXME: pending migration, include kernelspecs in .ipython:
         from IPython.paths import get_ipython_dir
         dirs.append(os.path.join(get_ipython_dir(), 'kernels'))
-        
-        dirs.append(self.user_kernel_dir)
         return dirs
 
     def find_kernel_specs(self):
@@ -136,10 +122,7 @@ class KernelSpecManager(LoggingConfigurable):
         if user:
             return os.path.join(self.user_kernel_dir, kernel_name)
         else:
-            if SYSTEM_KERNEL_DIRS:
-                return os.path.join(SYSTEM_KERNEL_DIRS[-1], kernel_name)
-            else:
-                raise EnvironmentError("No system kernel directory is available")
+            return os.path.join(SYSTEM_JUPYTER_PATH[0], 'kernels', kernel_name)
 
 
     def install_kernel_spec(self, source_dir, kernel_name=None, user=False,
