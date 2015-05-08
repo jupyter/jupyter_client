@@ -153,10 +153,10 @@ class KernelSpecManager(LoggingConfigurable):
         shutil.copytree(source_dir, destination)
 
     def install_native_kernel_spec(self, user=False):
-        """DEPRECATED: Use ipython_kernel.kenelspec.install"""
+        """DEPRECATED: Use ipykernel.kenelspec.install"""
         warnings.warn("install_native_kernel_spec is deprecated."
-            " Use ipython_kernel.kernelspec import install.")
-        from ipython_kernel.kernelspec import install
+            " Use ipykernel.kernelspec import install.")
+        from ipykernel.kernelspec import install
         install(self, user=user)
 
 

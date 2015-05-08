@@ -109,9 +109,9 @@ class InstallNativeKernelSpec(JupyterApp):
 
     def start(self):
         try:
-            from ipython_kernel import kernelspec
+            from ipykernel import kernelspec
         except ImportError:
-            print("ipython_kernel not available, can't install its spec.", file=sys.stderr)
+            print("ipykernel not available, can't install its spec.", file=sys.stderr)
             self.exit(1)
         try:
             kernelspec.install(self.kernel_spec_manager, user=self.user)

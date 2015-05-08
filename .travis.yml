@@ -10,7 +10,7 @@ before_install:
 install:
     - pip install -f travis-wheels/wheelhouse -e . coveralls -r requirements.txt
     - pip install  -f travis-wheels/wheelhouse jupyter_client[test]
-    - python -c 'import ipython_kernel.kernelspec; ipython_kernel.kernelspec.install(user=True)'
+    - python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 script:
     - nosetests --with-coverage jupyter_client
 after_success:

@@ -1,7 +1,7 @@
 """Use a Windows event to interrupt a child process like SIGINT.
 
 The child needs to explicitly listen for this - see
-ipython_kernel.parentpoller.ParentPollerWindows for a Python implementation.
+ipykernel.parentpoller.ParentPollerWindows for a Python implementation.
 """
 
 import ctypes

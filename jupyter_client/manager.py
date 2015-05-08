@@ -74,7 +74,7 @@ class KernelManager(ConnectionFileMixin):
             # This triggered another run of this function, so we can exit now
             return
         self.kernel_spec = self.kernel_spec_manager.get_kernel_spec(new)
-        self.ipython_kernel = new in {'python', 'python2', 'python3'}
+        self.ipykernel = new in {'python', 'python2', 'python3'}
 
     kernel_cmd = List(Unicode, config=True,
         help="""DEPRECATED: Use kernel_name instead.
@@ -93,9 +93,9 @@ class KernelManager(ConnectionFileMixin):
     def _kernel_cmd_changed(self, name, old, new):
         warnings.warn("Setting kernel_cmd is deprecated, use kernel_spec to "
                       "start different kernels.")
-        self.ipython_kernel = False
+        self.ipykernel = False
 
-    ipython_kernel = Bool(True)
+    ipykernel = Bool(True)
 
     # Protected traits
     _launch_args = Any()
