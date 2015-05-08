@@ -81,7 +81,7 @@ install_requires = setuptools_args['install_requires'] = [
 ]
 
 extras_require = setuptools_args['extras_require'] = {
-    'test': 'ipython_kernel',
+    'test': 'ipykernel',
 }
 
 if 'setuptools' in sys.modules:
