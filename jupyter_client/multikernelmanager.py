@@ -13,7 +13,7 @@ import zmq
 from traitlets.config.configurable import LoggingConfigurable
 from ipython_genutils.importstring import import_item
 from traitlets import (
-    Instance, Dict, List, Unicode, Any, DottedObjectName
+    Instance, Dict, Integer, Unicode, Any, DottedObjectName
 )
 from ipython_genutils.py3compat import unicode_type
 
@@ -69,6 +69,8 @@ class MultiKernelManager(LoggingConfigurable):
 
     _kernels = Dict()
 
+    analytics_port = Integer(None, allow_none=True)
+
     def list_kernel_ids(self):
         """Return a list of the kernel ids of the active kernels."""
         # Create a copy so we can iterate over kernels in operations
@@ -107,6 +109,7 @@ class MultiKernelManager(LoggingConfigurable):
         km = self.kernel_manager_factory(connection_file=os.path.join(
                     self.connection_dir, "kernel-%s.json" % kernel_id),
                     parent=self, autorestart=True, log=self.log, kernel_name=kernel_name,
+                    analytics_port=self.analytics_port,
                     **kwargs
         )
         km.start_kernel(**kwargs)

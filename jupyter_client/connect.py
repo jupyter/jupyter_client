@@ -32,7 +32,7 @@ from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir
 
 def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
                          control_port=0, ip='', key=b'', transport='tcp',
-                         signature_scheme='hmac-sha256',
+                         signature_scheme='hmac-sha256', analytics_port=None,
                          ):
     """Generates a JSON config file, including the selection of random ports.
 
@@ -126,6 +126,8 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
     cfg['key'] = bytes_to_str(key)
     cfg['transport'] = transport
     cfg['signature_scheme'] = signature_scheme
+    if analytics_port is not None:
+        cfg['analytics_port'] = analytics_port
 
     with open(fname, 'w') as f:
         f.write(json.dumps(cfg, indent=2))
@@ -307,6 +309,8 @@ class ConnectionFileMixin(LoggingConfigurable):
     control_port = Integer(0, config=True,
             help="set the control (ROUTER) port [default: random]")
 
+    analytics_port = Integer(None, allow_none=True)
+
     @property
     def ports(self):
         return [ getattr(self, name) for name in port_names ]
@@ -370,6 +374,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             shell_port=self.shell_port, hb_port=self.hb_port,
             control_port=self.control_port,
             signature_scheme=self.session.signature_scheme,
+            analytics_port=self.analytics_port,
         )
         # write_connection_file also sets default ports:
         for name in port_names:
