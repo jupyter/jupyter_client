@@ -98,7 +98,10 @@ class KernelSpecManager(LoggingConfigurable):
         """Returns a dict mapping kernel names to resource directories."""
         d = {}
         for kernel_dir in self.kernel_dirs:
-            d.update(_list_kernels_in(kernel_dir))
+            kernels = _list_kernels_in(kernel_dir)
+            for kname in kernels:
+                self.log.debug("Found kernel %s in %s" %( kname, kernel_dir ))
+            d.update(kernels)
 
         if self.whitelist:
             # filter if there's a whitelist
