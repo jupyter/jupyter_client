@@ -17,6 +17,16 @@ sample_kernel_json = {'argv':['cat', '{connection_file}'],
                      }
 
 class KernelSpecTests(unittest.TestCase):
+    
+    def _install_sample_kernel(self, kernels_dir):
+        """install a sample kernel in a kernels directory"""
+        sample_kernel_dir = pjoin(kernels_dir, 'Sample')
+        os.makedirs(sample_kernel_dir)
+        json_file = pjoin(sample_kernel_dir, 'kernel.json')
+        with open(json_file, 'w') as f:
+            json.dump(sample_kernel_json, f)
+        return sample_kernel_dir
+    
     def setUp(self):
         td = TemporaryDirectory()
         self.env_patch = patch.dict(os.environ, {
@@ -26,11 +36,8 @@ class KernelSpecTests(unittest.TestCase):
         })
         self.env_patch.start()
         self.addCleanup(td.cleanup)
-        self.sample_kernel_dir = pjoin(td.name, 'jupyter_data', 'kernels', 'Sample')
-        os.makedirs(self.sample_kernel_dir)
-        json_file = pjoin(self.sample_kernel_dir, 'kernel.json')
-        with open(json_file, 'w') as f:
-            json.dump(sample_kernel_json, f)
+        self.sample_kernel_dir = self._install_sample_kernel(
+            pjoin(td.name, 'jupyter_data', 'kernels'))
 
         self.ksm = kernelspec.KernelSpecManager()
 
@@ -53,6 +60,17 @@ class KernelSpecTests(unittest.TestCase):
         self.assertEqual(ks.argv, sample_kernel_json['argv'])
         self.assertEqual(ks.display_name, sample_kernel_json['display_name'])
         self.assertEqual(ks.env, {})
+    
+    def test_kernel_spec_priority(self):
+        td = TemporaryDirectory()
+        self.addCleanup(td.cleanup)
+        sample_kernel = self._install_sample_kernel(td.name)
+        self.ksm.kernel_dirs.append(td.name)
+        kernels = self.ksm.find_kernel_specs()
+        self.assertEqual(kernels['sample'], self.sample_kernel_dir)
+        self.ksm.kernel_dirs.insert(0, td.name)
+        kernels = self.ksm.find_kernel_specs()
+        self.assertEqual(kernels['sample'], sample_kernel)
 
     def test_install_kernel_spec(self):
         self.ksm.install_kernel_spec(self.installable_kernel,

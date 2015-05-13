@@ -99,9 +99,10 @@ class KernelSpecManager(LoggingConfigurable):
         d = {}
         for kernel_dir in self.kernel_dirs:
             kernels = _list_kernels_in(kernel_dir)
-            for kname in kernels:
-                self.log.debug("Found kernel %s in %s" %( kname, kernel_dir ))
-            d.update(kernels)
+            for kname, spec in kernels.items():
+                if kname not in d:
+                    self.log.debug("Found kernel %s in %s", kname, kernel_dir)
+                    d[kname] = spec
 
         if self.whitelist:
             # filter if there's a whitelist
