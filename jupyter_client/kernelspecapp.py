@@ -52,7 +52,7 @@ class InstallKernelSpec(JupyterApp):
     replace = Bool(False, config=True,
         help="Replace any existing kernel spec with this name."
     )
-    
+
     aliases = {'name': 'InstallKernelSpec.kernel_name'}
     aliases.update(base_aliases)
 
@@ -119,8 +119,8 @@ class InstallNativeKernelSpec(JupyterApp):
             self.exit(e)
 
 class KernelSpecApp(Application):
-    name = "ipython kernelspec"
-    description = """Manage IPython kernel specifications."""
+    name = "jupyter kernelspec"
+    description = """Manage Jupyter kernel specifications."""
 
     subcommands = Dict({
         'list': (ListKernelSpecs, ListKernelSpecs.description.splitlines()[0]),
