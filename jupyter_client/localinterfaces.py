@@ -106,7 +106,7 @@ def _load_ips_ifconfig():
 
 def _load_ips_ip():
     """load ip addresses from `ip addr` output (Linux)"""
-    out = _get_output(['ip', 'addr'])
+    out = _get_output(['ip', '-f', 'inet', 'addr'])
     
     lines = out.splitlines()
     addrs = []
