@@ -83,6 +83,8 @@ def _populate_from_list(addrs):
     LOCAL_IPS[:] = _uniq_stable(local_ips)
     PUBLIC_IPS[:] = _uniq_stable(public_ips)
 
+_ifconfig_ipv4_pat = re.compile(r'inet\b.*?(\d+\.\d+\.\d+\.\d+)', re.IGNORECASE)
+
 def _load_ips_ifconfig():
     """load ip addresses from `ifconfig` output (posix)"""
     
@@ -95,12 +97,9 @@ def _load_ips_ifconfig():
     lines = out.splitlines()
     addrs = []
     for line in lines:
-        blocks = line.lower().split()
-        if (len(blocks) >= 2) and (blocks[0] == 'inet'):
-            if  blocks[1].startswith("addr:"):
-                addrs.append(blocks[1].split(":")[1])
-            else:
-                addrs.append(blocks[1])
+        m = _ifconfig_ipv4_pat.match(line.strip())
+        if m:
+            addrs.append(m.group(1))
     _populate_from_list(addrs)
 
 
