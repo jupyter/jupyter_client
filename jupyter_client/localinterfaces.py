@@ -225,11 +225,11 @@ def _load_ips(suppress_exceptions=True):
                 pass
         else:
             try:
-                return _load_ips_ifconfig()
+                return _load_ips_ip()
             except (IOError, NoIPAddresses):
                 pass
             try:
-                return _load_ips_ip()
+                return _load_ips_ifconfig()
             except (IOError, NoIPAddresses):
                 pass
         
