@@ -10,6 +10,8 @@ Contents:
    :maxdepth: 2
 
    messaging
+   kernels
+   wrapperkernels
 
 Indices and tables
 ==================
