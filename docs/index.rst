@@ -1,17 +1,15 @@
-.. jupyter_client documentation master file, created by
-   sphinx-quickstart on Tue May 26 15:41:51 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+jupyter_client |version|
+========================
 
-Welcome to jupyter_client's documentation!
-==========================================
+This package provides the Python API for starting, managing and communicating
+with Jupyter kernels.
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-
+   messaging
 
 Indices and tables
 ==================
