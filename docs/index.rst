@@ -12,6 +12,7 @@ Contents:
    messaging
    kernels
    wrapperkernels
+   api/index
 
 Indices and tables
 ==================

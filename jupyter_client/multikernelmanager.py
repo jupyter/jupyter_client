@@ -88,10 +88,7 @@ class MultiKernelManager(LoggingConfigurable):
         The caller can pick a kernel_id by passing one in as a keyword arg,
         otherwise one will be picked using a uuid.
 
-        To silence the kernel's stdout/stderr, call this using::
-
-            km.start_kernel(stdout=PIPE, stderr=PIPE)
-
+        The kernel ID for the newly started kernel is returned.
         """
         kernel_id = kwargs.pop('kernel_id', unicode_type(uuid.uuid4()))
         if kernel_id in self:
