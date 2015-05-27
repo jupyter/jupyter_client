@@ -42,10 +42,10 @@ class KernelClient(ConnectionFileMixin):
     * hb: for monitoring the kernel's heartbeat.
     * stdin: for frontends to reply to raw_input calls in the kernel.
 
-    The methods of the channels are exposed as methods of the client itself
-    (KernelClient.execute, complete, history, etc.).
-    See the channels themselves for documentation of these methods.
-
+    The messages that can be sent on these channels are exposed as methods of the
+    client (KernelClient.execute, complete, history, etc.). These methods only
+    send the message, they don't wait for a reply. To get results, use e.g.
+    :meth:`get_shell_msg` to fetch messages from the shell channel.
     """
 
     # The PyZMQ Context to use for communication with the kernel.
@@ -71,9 +71,6 @@ class KernelClient(ConnectionFileMixin):
     #--------------------------------------------------------------------------
     # Channel proxy methods
     #--------------------------------------------------------------------------
-
-    def _get_msg(channel, *args, **kwargs):
-        return channel.get_msg(*args, **kwargs)
 
     def get_shell_msg(self, *args, **kwargs):
         """Get a message from the shell channel"""
@@ -202,7 +199,7 @@ class KernelClient(ConnectionFileMixin):
         Parameters
         ----------
         code : str
-            A string of Python code.
+            A string of code in the kernel's language.
 
         silent : bool, optional (default False)
             If set, the kernel will execute the code as quietly possible, and
@@ -334,7 +331,7 @@ class KernelClient(ConnectionFileMixin):
 
         Returns
         -------
-        The msg_id of the message sent.
+        The ID of the message sent.
         """
         content = dict(raw=raw, output=output, hist_access_type=hist_access_type,
                                                                     **kwargs)
@@ -376,12 +373,17 @@ class KernelClient(ConnectionFileMixin):
         return msg['header']['msg_id']
 
     def is_complete(self, code):
+        """Ask the kernel whether some code is complete and ready to execute."""
         msg = self.session.msg('is_complete_request', {'code': code})
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
     def input(self, string):
-        """Send a string of raw input to the kernel."""
+        """Send a string of raw input to the kernel.
+
+        This should only be called in response to the kernel sending an
+        ``input_request`` message on the stdin channel.
+        """
         content = dict(value=string)
         msg = self.session.msg('input_reply', content)
         self.stdin_channel.send(msg)

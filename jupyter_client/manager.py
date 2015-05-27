@@ -206,7 +206,7 @@ class KernelManager(ConnectionFileMixin):
 
         Parameters
         ----------
-        **kw : optional
+        `**kw` : optional
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
@@ -240,9 +240,6 @@ class KernelManager(ConnectionFileMixin):
 
     def request_shutdown(self, restart=False):
         """Send a shutdown request via control channel
-
-        On Windows, this just kills kernels instead, because the shutdown
-        messages don't work.
         """
         content = dict(restart=restart)
         msg = self.session.msg("shutdown_request", content=content)
@@ -320,7 +317,7 @@ class KernelManager(ConnectionFileMixin):
             In all cases the kernel is restarted, the only difference is whether
             it is given a chance to perform a clean shutdown or not.
 
-        **kw : optional
+        `**kw` : optional
             Any options specified here will overwrite those used to launch the
             kernel.
         """

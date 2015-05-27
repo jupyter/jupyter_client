@@ -49,6 +49,10 @@ class KernelSpec(HasTraits):
         return d
 
     def to_json(self):
+        """Serialise this kernelspec to a JSON object.
+
+        Returns a string.
+        """
         return json.dumps(self.to_dict())
 
 def _is_kernel_dir(path):
