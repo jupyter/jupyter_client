@@ -72,9 +72,6 @@ class KernelClient(ConnectionFileMixin):
     # Channel proxy methods
     #--------------------------------------------------------------------------
 
-    def _get_msg(channel, *args, **kwargs):
-        return channel.get_msg(*args, **kwargs)
-
     def get_shell_msg(self, *args, **kwargs):
         """Get a message from the shell channel"""
         return self.shell_channel.get_msg(*args, **kwargs)
