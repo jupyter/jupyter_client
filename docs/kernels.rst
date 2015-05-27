@@ -1,12 +1,12 @@
 ==========================
-Making kernels for IPython
+Making kernels for Jupyter
 ==========================
 
 A 'kernel' is a program that runs and introspects the user's code. IPython
 includes a kernel for Python code, and people have written kernels for
-`several other languages <https://github.com/ipython/ipython/wiki/Projects-using-IPython#list-of-some-ipython-compatible-kernels>`_.
+`several other languages <https://github.com/ipython/ipython/wiki/IPython-kernels-for-other-languages>`_.
 
-When IPython starts a kernel, it passes it a connection file. This specifies
+When Jupyter starts a kernel, it passes it a connection file. This specifies
 how to set up communications with the frontend.
 
 There are two options for writing a kernel:
@@ -89,19 +89,26 @@ A kernel identifies itself to IPython by creating a directory, the name of which
 is used as an identifier for the kernel. These may be created in a number of
 locations:
 
-+--------+--------------------------------------+-----------------------------------+
-|        | Unix                                 | Windows                           |
-+========+======================================+===================================+
-| System | ``/usr/share/jupyter/kernels``       | ``%PROGRAMDATA%\jupyter\kernels`` |
-|        |                                      |                                   |
-|        | ``/usr/local/share/jupyter/kernels`` |                                   |
-+--------+--------------------------------------+-----------------------------------+
-| User   |                     ``~/.ipython/kernels``                               |
-+--------+--------------------------------------+-----------------------------------+
++--------+--------------------------------------------+-----------------------------------+
+|        | Unix                                       | Windows                           |
++========+============================================+===================================+
+| System | ``/usr/share/jupyter/kernels``             | ``%PROGRAMDATA%\jupyter\kernels`` |
+|        |                                            |                                   |
+|        | ``/usr/local/share/jupyter/kernels``       |                                   |
++--------+--------------------------------------------+-----------------------------------+
+| Env    |                          ``{sys.prefix}/share/jupyter/kernels``                |
++--------+--------------------------------------------+-----------------------------------+
+| User   | ``~/.local/share/jupyter/kernels`` (Linux) | ``%APPDATA%\jupyter\kernels``     |
+|        |                                            |                                   |
+|        | ``~/Library/Jupyter/kernels`` (Mac)        |                                   |
++--------+--------------------------------------------+-----------------------------------+
 
 The user location takes priority over the system locations, and the case of the
 names is ignored, so selecting kernels works the same way whether or not the
 filesystem is case sensitive.
+
+Other locations may also be searched if the :envvar:`JUPYTER_PATH` environment
+variable is set.
 
 Inside the directory, the most important file is *kernel.json*. This should be a
 JSON serialised dictionary containing the following keys and values:
@@ -132,12 +139,12 @@ For example, the kernel.json file for IPython looks like this::
 
 To see the available kernel specs, run::
 
-    ipython kernelspec list
+    jupyter kernelspec list
 
 To start the terminal console or the Qt console with a specific kernel::
 
-    ipython console --kernel bash
-    ipython qtconsole --kernel bash
+    jupyter console --kernel bash
+    jupyter qtconsole --kernel bash
 
-To use different kernels in the notebook, select a different kernel from the
-dropdown menu in the top-right of the UI.
+The notebook offers you the available kernels in a dropdown menu from the 'New'
+button.

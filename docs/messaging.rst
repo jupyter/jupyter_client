@@ -1,24 +1,13 @@
 .. _messaging:
 
 ======================
- Messaging in IPython
+ Messaging in Jupyter
 ======================
 
-
-Versioning
-==========
-
-The IPython message specification is versioned independently of IPython.
-The current version of the specification is 5.0.
-
-
-Introduction
-============
-
 This document explains the basic communications design and messaging
-specification for how the various IPython objects interact over a network
-transport.  The current implementation uses the ZeroMQ_ library for messaging
-within and between hosts.
+specification for how Jupyter frontends and kernels communicate.
+The ZeroMQ_ library provides the low-level transport layer over which these
+messages are sent.
 
 .. Note::
 
@@ -26,6 +15,20 @@ within and between hosts.
    IPython messaging protocol, and all developers are strongly encouraged to
    keep it updated as the implementation evolves, so that we have a single
    common reference for all protocol details.
+
+
+Versioning
+==========
+
+The Jupyter message specification is versioned independently of the packages
+that use it.
+The current version of the specification is 5.0.
+
+'New in' and 'Changed in' messages in this document refer to versions of the
+message spec, not versions of :mod:`jupyter_client`.
+
+Introduction
+============
 
 The basic design is explained in the following diagram:
 
@@ -134,13 +137,13 @@ The Wire Protocol
 
 This message format exists at a high level,
 but does not describe the actual *implementation* at the wire level in zeromq.
-The canonical implementation of the message spec is our :class:`~IPython.kernel.zmq.session.Session` class.
+The canonical implementation of the message spec is our :class:`~jupyter_client.session.Session` class.
 
 .. note::
 
     This section should only be relevant to non-Python consumers of the protocol.
-    Python consumers should simply import and use IPython's own implementation of the wire protocol
-    in the :class:`IPython.kernel.zmq.session.Session` object.
+    Python consumers should simply import and the use implementation of the wire
+    protocol in :class:`jupyter_client.session.Session`.
 
 Every message is serialized to a sequence of at least six blobs of bytes:
 
@@ -1140,7 +1143,7 @@ Custom Messages
 
 .. versionadded:: 4.1
 
-IPython 2.0 (msgspec v4.1) adds a messaging system for developers to add their own objects with Frontend
+Message spec 4.1 (IPython 2.0) added a messaging system for developers to add their own objects with Frontend
 and Kernel-side components, and allow them to communicate with each other.
 To do this, IPython adds a notion of a ``Comm``, which exists on both sides,
 and can communicate in either direction.
@@ -1216,4 +1219,4 @@ Missing things include:
 
 * Important: finish thinking through the payload concept and API.
 
-.. include:: ../links.txt
+.. _ZeroMQ: http://zeromq.org
