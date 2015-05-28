@@ -1,7 +1,7 @@
 client - communicating with kernels
 ===================================
 
-.. module:: jupyter_client.client
+.. currentmodule:: jupyter_client
 
 .. seealso::
 

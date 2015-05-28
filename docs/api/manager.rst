@@ -1,7 +1,7 @@
 manager - starting, stopping, signalling
 ========================================
 
-.. module:: jupyter_client.manager
+.. currentmodule:: jupyter_client
 
 .. autoclass:: KernelManager
 
@@ -32,8 +32,6 @@ manager - starting, stopping, signalling
 
 multikernelmanager - controlling multiple kernels
 -------------------------------------------------
-
-.. module:: jupyter_client.multikernelmanager
 
 .. autoclass:: MultiKernelManager
 
