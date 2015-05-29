@@ -134,7 +134,7 @@ class KernelSpecManager(LoggingConfigurable):
 
 
     def install_kernel_spec(self, source_dir, kernel_name=None, user=False,
-                            replace=False):
+                            replace=None):
         """Install a kernel spec by copying its directory.
 
         If ``kernel_name`` is not given, the basename of ``source_dir`` will
@@ -143,22 +143,28 @@ class KernelSpecManager(LoggingConfigurable):
         If ``user`` is False, it will attempt to install into the systemwide
         kernel registry. If the process does not have appropriate permissions,
         an :exc:`OSError` will be raised.
-
-        If ``replace`` is True, this will replace an existing kernel of the same
-        name. Otherwise, if the destination already exists, an :exc:`OSError`
-        will be raised.
         """
         if not kernel_name:
             kernel_name = os.path.basename(source_dir)
         kernel_name = kernel_name.lower()
-
+        
+        if replace is not None:
+            warnings.warn(
+                "replace is ignored. Installing a kernelspec always replaces an existing installation",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        
         destination = self._get_destination_dir(kernel_name, user=user)
-        self.log.debug('Installing kernelspec in %s'%destination)
+        self.log.debug('Installing kernelspec in %s', destination)
 
-        if replace and os.path.isdir(destination):
+        if os.path.isdir(destination):
+            self.log.info('Removing existing kernelspec in %s', destination)
             shutil.rmtree(destination)
 
         shutil.copytree(source_dir, destination)
+        self.log.info('Installed kernelspec %s in %s', kernel_name, destination)
+        return destination
 
     def install_native_kernel_spec(self, user=False):
         """DEPRECATED: Use ipykernel.kenelspec.install"""

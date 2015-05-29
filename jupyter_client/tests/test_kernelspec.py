@@ -77,16 +77,11 @@ class KernelSpecTests(unittest.TestCase):
                                      kernel_name='tstinstalled',
                                      user=True)
         self.assertIn('tstinstalled', self.ksm.find_kernel_specs())
-
-        with self.assertRaises(OSError):
-            self.ksm.install_kernel_spec(self.installable_kernel,
-                                         kernel_name='tstinstalled',
-                                         user=True)
-
-        # Smoketest that this succeeds
+        
+        # install again works
         self.ksm.install_kernel_spec(self.installable_kernel,
                                      kernel_name='tstinstalled',
-                                     replace=True, user=True)
+                                     user=True)
 
     @onlyif(os.name != 'nt' and not os.access('/usr/local/share', os.W_OK), "needs Unix system without root privileges")
     def test_cant_install_kernel_spec(self):
