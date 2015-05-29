@@ -152,6 +152,7 @@ class KernelSpecManager(LoggingConfigurable):
             warnings.warn(
                 "replace is ignored. Installing a kernelspec always replaces an existing installation",
                 DeprecationWarning,
+                stacklevel=2,
             )
         
         destination = self._get_destination_dir(kernel_name, user=user)
