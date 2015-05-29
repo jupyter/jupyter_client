@@ -6,6 +6,7 @@
 import io
 import json
 import os
+import sys
 import shutil
 import warnings
 
@@ -37,7 +38,24 @@ class KernelSpec(HasTraits):
         kernel_file = pjoin(resource_dir, 'kernel.json')
         with io.open(kernel_file, 'r', encoding='utf-8') as f:
             kernel_dict = json.load(f)
+        kernel_dict = cls.update_newest_kernel(kernel_file, kernel_dict)
         return cls(resource_dir=resource_dir, **kernel_dict)
+
+    @classmethod
+    def update_newest_kernel(cls, kernel_file, kernel_dict):
+        """Update to the newest kernel.json when kernel"s language is python
+        """
+        if 'language' in kernel_dict and \
+           kernel_dict['language'] == 'python' and \
+           kernel_dict['argv'][0] != sys.executable:
+            kernel_dict['argv'][0] = sys.executable
+            if PY3:
+                f = io.open(kernel_file, 'w', encoding='utf-8')
+            else:
+                f = open(kernel_file, 'wb')
+            with f:
+                json.dump(kernel_dict, f)
+        return kernel_dict
 
     def to_dict(self):
         d = dict(argv=self.argv,
