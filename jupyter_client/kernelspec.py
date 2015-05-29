@@ -162,6 +162,8 @@ class KernelSpecManager(LoggingConfigurable):
             shutil.rmtree(destination)
 
         shutil.copytree(source_dir, destination)
+        self.log.info('Installed kernelspec %s in %s', kernel_name, destination)
+        return destination
 
     def install_native_kernel_spec(self, user=False):
         """DEPRECATED: Use ipykernel.kenelspec.install"""
