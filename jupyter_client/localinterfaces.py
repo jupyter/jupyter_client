@@ -225,11 +225,11 @@ def _load_ips(suppress_exceptions=True):
         else:
             try:
                 return _load_ips_ip()
-            except (IOError, NoIPAddresses):
+            except (IOError, OSError, NoIPAddresses):
                 pass
             try:
                 return _load_ips_ifconfig()
-            except (IOError, NoIPAddresses):
+            except (IOError, OSError, NoIPAddresses):
                 pass
         
         # lowest priority, use gethostbyname
