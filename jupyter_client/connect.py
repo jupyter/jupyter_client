@@ -14,8 +14,9 @@ import glob
 import json
 import os
 import socket
-from getpass import getpass
 import tempfile
+import warnings
+from getpass import getpass
 
 import zmq
 
@@ -133,7 +134,7 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
     return fname, cfg
 
 
-def find_connection_file(filename='kernel-*.json', path=None):
+def find_connection_file(filename='kernel-*.json', path=None, profile=None):
     """find a connection file, and return its absolute path.
 
     The current working directory and the profile's security
@@ -158,6 +159,8 @@ def find_connection_file(filename='kernel-*.json', path=None):
     -------
     str : The absolute path of the connection file.
     """
+    if profile is not None:
+        warnings.warn("Jupyter has no profiles. profile=%s has been ignored." % profile)
     if path is None:
         path = ['.', jupyter_runtime_dir()]
     if isinstance(path, string_types):
