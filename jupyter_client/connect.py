@@ -14,8 +14,9 @@ import glob
 import json
 import os
 import socket
-from getpass import getpass
 import tempfile
+import warnings
+from getpass import getpass
 
 import zmq
 
@@ -133,15 +134,11 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
     return fname, cfg
 
 
-def find_connection_file(filename='kernel-*.json', path=None):
+def find_connection_file(filename='kernel-*.json', path=None, profile=None):
     """find a connection file, and return its absolute path.
 
-    The current working directory and the profile's security
-    directory will be searched for the file if it is not given by
-    absolute path.
-
-    If profile is unspecified, then the current running application's
-    profile will be used, or 'default', if not run from IPython.
+    The current working directory and optional search path
+    will be searched for the file if it is not given by absolute path.
 
     If the argument does not match an existing file, it will be interpreted as a
     fileglob, and the matching file in the profile's security dir with
@@ -158,6 +155,8 @@ def find_connection_file(filename='kernel-*.json', path=None):
     -------
     str : The absolute path of the connection file.
     """
+    if profile is not None:
+        warnings.warn("Jupyter has no profiles. profile=%s has been ignored." % profile)
     if path is None:
         path = ['.', jupyter_runtime_dir()]
     if isinstance(path, string_types):
