@@ -48,7 +48,10 @@ class KernelManager(ConnectionFileMixin):
 
     # the class to create with our `client` method
     client_class = DottedObjectName('jupyter_client.blocking.BlockingKernelClient')
-    client_factory = Type(allow_none=True)
+    client_factory = Type(klass='jupyter_client.KernelClient')
+    def _client_factory_default(self):
+        return import_item(self.client_class)
+
     def _client_class_changed(self, name, old, new):
         self.client_factory = import_item(str(new))
 
@@ -139,9 +142,6 @@ class KernelManager(ConnectionFileMixin):
 
     def client(self, **kwargs):
         """Create a client configured to connect to our kernel"""
-        if self.client_factory is None:
-            self.client_factory = import_item(self.client_class)
-
         kw = {}
         kw.update(self.get_connection_info())
         kw.update(dict(
