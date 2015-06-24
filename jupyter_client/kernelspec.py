@@ -20,6 +20,11 @@ from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PA
 
 NATIVE_KERNEL_NAME = 'python3' if PY3 else 'python2'
 
+try:
+    from ipykernel.kernelspec import RESOURCES as NATIVE_RESOURCE_DIR
+except ImportError:
+    NATIVE_RESOURCE_DIR = None
+
 
 class KernelSpec(HasTraits):
     argv = List()
@@ -108,6 +113,14 @@ class KernelSpecManager(LoggingConfigurable):
                     self.log.debug("Found kernel %s in %s", kname, kernel_dir)
                     d[kname] = spec
 
+        if NATIVE_KERNEL_NAME not in d:
+            if NATIVE_RESOURCE_DIR is None:
+                self.log.warn("Native kernel (%s) is not available", NATIVE_KERNEL_NAME)
+            else:
+                self.log.debug("Native kernel (%s) available from %s",
+                               NATIVE_KERNEL_NAME, NATIVE_RESOURCE_DIR)
+                d[NATIVE_KERNEL_NAME] = NATIVE_RESOURCE_DIR
+
         if self.whitelist:
             # filter if there's a whitelist
             d = {name:spec for name,spec in d.items() if name in self.whitelist}
@@ -124,6 +137,16 @@ class KernelSpecManager(LoggingConfigurable):
             resource_dir = d[kernel_name.lower()]
         except KeyError:
             raise NoSuchKernel(kernel_name)
+
+        if d == NATIVE_RESOURCE_DIR:
+            try:
+                from ipykernel.kernelspec import get_kernel_dict
+            except ImportError:
+                # It should be impossible to reach this, but let's play it safe
+                raise NoSuchKernel(kernel_name)
+            else:
+                return KernelSpec(resource_dir=resource_dir, **get_kernel_dict())
+
         return KernelSpec.from_resource_dir(resource_dir)
 
     def _get_destination_dir(self, kernel_name, user=False):
