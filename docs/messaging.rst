@@ -753,11 +753,11 @@ Message type: ``kernel_info_reply``::
             'file_extension': str,
 
             # Pygments lexer, for highlighting
-            # Only needed if it differs from the top level 'language' field.
+            # Only needed if it differs from the 'name' field.
             'pygments_lexer': str,
 
             # Codemirror mode, for for highlighting in the notebook.
-            # Only needed if it differs from the top level 'language' field.
+            # Only needed if it differs from the 'name' field.
             'codemirror_mode': str or dict,
 
             # Nbconvert exporter, if notebooks written with this kernel should
