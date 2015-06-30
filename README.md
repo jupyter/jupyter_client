@@ -6,4 +6,4 @@ It also provides client and kernel management APIs for working with kernels.
 It also provides the `jupyter kernelspec` entrypoint
 for installing kernelspecs for use with Jupyter frontends.
 
-[Jupyter protocol]: http://ipython.org/ipython-doc/stable/development/messaging.html
+[Jupyter protocol]: http://jupyter-client.readthedocs.org/en/latest/messaging.html
