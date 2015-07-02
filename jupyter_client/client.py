@@ -345,6 +345,12 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
+    def comm_info(self):
+        """Request comm info."""
+        msg = self.session.msg('comm_info_request')
+        self.shell_channel.send(msg)
+        return msg['header']['msg_id']
+
     def _handle_kernel_info_reply(self, msg):
         """handle kernel info reply
 

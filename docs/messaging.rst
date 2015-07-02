@@ -700,6 +700,30 @@ Message type: ``connect_reply``::
         'hb_port' : int,      # The port the heartbeat socket is listening on.
     }
 
+.. _msging_comm_info:
+
+Comm info
+---------
+
+When a client needs the currently open comms in the kernel, it can issue a
+request for the currently open comms.
+
+Message type: ``comm_info_request``::
+
+    content = {
+    }
+
+Message type: ``comm_info_reply``::
+
+    content = {
+        # A dictionary of the comms, indexed by uuids.
+        'comms': {
+            comm_id: {
+                'target_name': str,
+            },
+        },
+    }
+
 .. _msging_kernel_info:
 
 Kernel info
