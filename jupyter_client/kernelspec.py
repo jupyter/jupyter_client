@@ -98,9 +98,18 @@ class KernelSpecManager(LoggingConfigurable):
     )
     def _kernel_dirs_default(self):
         dirs = jupyter_path('kernels')
-        # FIXME: pending migration, include kernelspecs in .ipython:
-        from IPython.paths import get_ipython_dir
-        dirs.append(os.path.join(get_ipython_dir(), 'kernels'))
+        # At some point, we should stop adding .ipython/kernels to the path,
+        # but the cost to keeping it is very small.
+        try:
+            from IPython.paths import get_ipython_dir
+        except ImportError:
+            try:
+                from IPython.utils.path import get_ipython_dir
+            except ImportError:
+                # no IPython, no ipython dir
+                get_ipython_dir = None
+        if get_ipython_dir is not None:
+            dirs.append(os.path.join(get_ipython_dir(), 'kernels'))
         return dirs
 
     def find_kernel_specs(self):
