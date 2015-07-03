@@ -9,7 +9,12 @@ try:
     from unittest.mock import patch
 except ImportError:
     from mock import patch
-    
+
+if str is bytes: # py2
+    StringIO = io.BytesIO
+else:
+    StringIO = io.StringIO
+
 from ipython_genutils.testing.decorators import onlyif
 from ipython_genutils.tempdir import TemporaryDirectory
 from jupyter_client import kernelspec
@@ -88,7 +93,7 @@ class KernelSpecTests(unittest.TestCase):
     def test_install_kernel_spec_prefix(self):
         td = TemporaryDirectory()
         self.addCleanup(td.cleanup)
-        capture = io.StringIO()
+        capture = StringIO()
         handler = StreamHandler(capture)
         self.ksm.log.addHandler(handler)
         self.ksm.install_kernel_spec(self.installable_kernel,
@@ -104,7 +109,7 @@ class KernelSpecTests(unittest.TestCase):
         self.assertIn('tstinstalled', self.ksm.find_kernel_specs())
     
         # Run it again, no warning this time because we've added it to the path
-        capture = io.StringIO()
+        capture = StringIO()
         handler = StreamHandler(capture)
         self.ksm.log.addHandler(handler)
         self.ksm.install_kernel_spec(self.installable_kernel,
