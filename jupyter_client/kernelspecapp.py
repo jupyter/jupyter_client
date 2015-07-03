@@ -49,11 +49,19 @@ class InstallKernelSpec(JupyterApp):
         the system or environment directory.
         """
     )
+    prefix = Unicode('', config=True,
+        help="""Specify a prefix to install to, e.g. an env.
+        The kernelspec will be installed in PREFIX/share/jupyter/kernels/
+        """
+    )
     replace = Bool(False, config=True,
         help="Replace any existing kernel spec with this name."
     )
 
-    aliases = {'name': 'InstallKernelSpec.kernel_name'}
+    aliases = {
+        'name': 'InstallKernelSpec.kernel_name',
+        'prefix': 'InstallKernelSpec.prefix',
+    }
     aliases.update(base_aliases)
 
     flags = {'user': ({'InstallKernelSpec': {'user': True}},
@@ -73,10 +81,13 @@ class InstallKernelSpec(JupyterApp):
             self.exit(1)
 
     def start(self):
+        if self.user and self.prefix:
+            self.exit("Can't specify both user and prefix. Please choose one or the other.")
         try:
             self.kernel_spec_manager.install_kernel_spec(self.sourcedir,
                                                  kernel_name=self.kernel_name,
                                                  user=self.user,
+                                                 prefix=self.prefix,
                                                  replace=self.replace,
                                                 )
         except OSError as e:
