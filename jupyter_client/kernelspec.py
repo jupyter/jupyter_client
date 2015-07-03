@@ -149,15 +149,17 @@ class KernelSpecManager(LoggingConfigurable):
 
         return KernelSpec.from_resource_dir(resource_dir)
 
-    def _get_destination_dir(self, kernel_name, user=False):
+    def _get_destination_dir(self, kernel_name, user=False, prefix=None):
         if user:
             return os.path.join(self.user_kernel_dir, kernel_name)
+        elif prefix:
+            return os.path.join(os.path.abspath(prefix), 'share', 'jupyter', 'kernels', kernel_name)
         else:
             return os.path.join(SYSTEM_JUPYTER_PATH[0], 'kernels', kernel_name)
 
 
     def install_kernel_spec(self, source_dir, kernel_name=None, user=False,
-                            replace=None):
+                            replace=None, prefix=None):
         """Install a kernel spec by copying its directory.
 
         If ``kernel_name`` is not given, the basename of ``source_dir`` will
@@ -166,10 +168,17 @@ class KernelSpecManager(LoggingConfigurable):
         If ``user`` is False, it will attempt to install into the systemwide
         kernel registry. If the process does not have appropriate permissions,
         an :exc:`OSError` will be raised.
+        
+        If ``prefix`` is given, the kernelspec will be installed to
+        PREFIX/share/jupyter/kernels/KERNEL_NAME. This can be sys.prefix
+        for installation inside virtual or conda envs.
         """
         if not kernel_name:
             kernel_name = os.path.basename(source_dir)
         kernel_name = kernel_name.lower()
+        
+        if user and prefix:
+            raise ValueError("Can't specify both user and prefix. Please choose one or the other.")
         
         if replace is not None:
             warnings.warn(
@@ -178,9 +187,15 @@ class KernelSpecManager(LoggingConfigurable):
                 stacklevel=2,
             )
         
-        destination = self._get_destination_dir(kernel_name, user=user)
+        destination = self._get_destination_dir(kernel_name, user=user, prefix=prefix)
         self.log.debug('Installing kernelspec in %s', destination)
-
+        
+        kernel_dir = os.path.dirname(destination)
+        if kernel_dir not in self.kernel_dirs:
+            self.log.warn("Installing to %s, which is not in %s. The kernelspec may not be found.",
+                kernel_dir, self.kernel_dirs,
+            )
+        
         if os.path.isdir(destination):
             self.log.info('Removing existing kernelspec in %s', destination)
             shutil.rmtree(destination)
