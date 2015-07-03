@@ -7,6 +7,7 @@ from __future__ import print_function
 import errno
 import os.path
 import sys
+import json
 
 from traitlets.config.application import Application
 from jupyter_core.application import (
@@ -19,14 +20,30 @@ from .kernelspec import KernelSpecManager
 class ListKernelSpecs(JupyterApp):
     description = """List installed kernel specifications."""
     kernel_spec_manager = Instance(KernelSpecManager)
+    json_output = Bool(False, help='output spec name and location as machine-readable json.',
+            config=True)
+    
+    flags = {'json': ({'ListKernelSpecs': {'json_output': True}},
+                "output spec name and location as machine-readable json."),
+             'debug': base_flags['debug'],
+            }
 
     def _kernel_spec_manager_default(self):
         return KernelSpecManager(parent=self, data_dir=self.data_dir)
 
     def start(self):
-        print("Available kernels:")
-        for kernelname in sorted(self.kernel_spec_manager.find_kernel_specs()):
-            print("  %s" % kernelname)
+        specs = sorted(self.kernel_spec_manager.find_kernel_specs().items())
+        if not self.json_output:
+            print("Available kernels:")
+            for kernelname, spec in specs:
+                print("  %s" % kernelname)
+        else:
+            print(json.dumps(
+                [{'name':k, 'path':v} for k,v in specs],
+                indent=2
+                )
+            )
+
 
 
 class InstallKernelSpec(JupyterApp):
