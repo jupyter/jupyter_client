@@ -38,8 +38,10 @@ class ListKernelSpecs(JupyterApp):
             for kernelname, spec in specs:
                 print("  %s" % kernelname)
         else:
-            print(json.dumps(
-                [{'name':k, 'path':v} for k,v in specs],
+            print(json.dumps({
+                "kernelspecs":
+                    [{'name':k, 'path':v} for k,v in specs]
+                },
                 indent=2
                 )
             )
