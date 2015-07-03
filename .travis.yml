@@ -12,6 +12,6 @@ install:
     - pip install  -f travis-wheels/wheelhouse jupyter_client[test]
     - python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 script:
-    - nosetests --with-coverage jupyter_client
+    - nosetests --with-coverage --cover-package jupyter_client jupyter_client
 after_success:
     - coveralls
