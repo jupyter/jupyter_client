@@ -32,19 +32,15 @@ class ListKernelSpecs(JupyterApp):
         return KernelSpecManager(parent=self, data_dir=self.data_dir)
 
     def start(self):
-        specs = sorted(self.kernel_spec_manager.find_kernel_specs().items())
+        specs = self.kernel_spec_manager.find_kernel_specs()
         if not self.json_output:
             print("Available kernels:")
-            for kernelname, spec in specs:
+            for kernelname, spec in sorted(specs.items()):
                 print("  %s" % kernelname)
         else:
             print(json.dumps({
-                "kernelspecs":
-                    [{'name':k, 'path':v} for k,v in specs]
-                },
-                indent=2
-                )
-            )
+                'kernelspecs': specs
+            }, indent=2))
 
 
 
