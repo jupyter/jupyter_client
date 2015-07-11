@@ -20,12 +20,6 @@ from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PA
 
 NATIVE_KERNEL_NAME = 'python3' if PY3 else 'python2'
 
-try:
-    from ipykernel.kernelspec import RESOURCES as NATIVE_RESOURCE_DIR
-except ImportError:
-    NATIVE_RESOURCE_DIR = None
-
-
 class KernelSpec(HasTraits):
     argv = List()
     display_name = Unicode()
@@ -123,12 +117,13 @@ class KernelSpecManager(LoggingConfigurable):
                     d[kname] = spec
 
         if NATIVE_KERNEL_NAME not in d:
-            if NATIVE_RESOURCE_DIR is None:
-                self.log.warn("Native kernel (%s) is not available", NATIVE_KERNEL_NAME)
-            else:
+            try:
+                from ipykernel.kernelspec import RESOURCES
                 self.log.debug("Native kernel (%s) available from %s",
-                               NATIVE_KERNEL_NAME, NATIVE_RESOURCE_DIR)
-                d[NATIVE_KERNEL_NAME] = NATIVE_RESOURCE_DIR
+                               NATIVE_KERNEL_NAME, RESOURCES)
+                d[NATIVE_KERNEL_NAME] = RESOURCES
+            except ImportError:
+                self.log.warn("Native kernel (%s) is not available", NATIVE_KERNEL_NAME)
 
         if self.whitelist:
             # filter if there's a whitelist
@@ -147,14 +142,15 @@ class KernelSpecManager(LoggingConfigurable):
         except KeyError:
             raise NoSuchKernel(kernel_name)
 
-        if d == NATIVE_RESOURCE_DIR:
+        if kernel_name == NATIVE_KERNEL_NAME:
             try:
-                from ipykernel.kernelspec import get_kernel_dict
+                from ipykernel.kernelspec import RESOURCES, get_kernel_dict
             except ImportError:
                 # It should be impossible to reach this, but let's play it safe
-                raise NoSuchKernel(kernel_name)
+                pass
             else:
-                return KernelSpec(resource_dir=resource_dir, **get_kernel_dict())
+                if resource_dir == RESOURCES:
+                    return KernelSpec(resource_dir=resource_dir, **get_kernel_dict())
 
         return KernelSpec.from_resource_dir(resource_dir)
 
