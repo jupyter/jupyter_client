@@ -14,9 +14,11 @@ from jupyter_core.application import (
 )
 from traitlets import Instance, Dict, Unicode, Bool
 
+from . import __version__
 from .kernelspec import KernelSpecManager
 
 class ListKernelSpecs(JupyterApp):
+    version = __version__
     description = """List installed kernel specifications."""
     kernel_spec_manager = Instance(KernelSpecManager)
 
@@ -30,6 +32,7 @@ class ListKernelSpecs(JupyterApp):
 
 
 class InstallKernelSpec(JupyterApp):
+    version = __version__
     description = """Install a kernel specification directory."""
     kernel_spec_manager = Instance(KernelSpecManager)
 
@@ -100,6 +103,7 @@ class InstallKernelSpec(JupyterApp):
             raise
 
 class InstallNativeKernelSpec(JupyterApp):
+    version = __version__
     description = """[DEPRECATED] Install the IPython kernel spec directory for this Python."""
     kernel_spec_manager = Instance(KernelSpecManager)
 
@@ -130,6 +134,7 @@ class InstallNativeKernelSpec(JupyterApp):
             self.exit(e)
 
 class KernelSpecApp(Application):
+    version = __version__
     name = "jupyter kernelspec"
     description = """Manage Jupyter kernel specifications."""
 
