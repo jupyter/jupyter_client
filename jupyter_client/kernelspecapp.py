@@ -33,7 +33,10 @@ class ListKernelSpecs(JupyterApp):
 
     def start(self):
         specs = self.kernel_spec_manager.find_kernel_specs()
-        specs = {kname:{"dir":specs[kname],"info":self.kernel_spec_manager.get_kernel_spec(kname).to_dict()} for kname in specs}
+        specs = {kname: {
+                "resources_dir": specs[kname],
+                "spec": self.kernel_spec_manager.get_kernel_spec(kname).to_dict() 
+            } for kname in specs}
         if not self.json_output:
             print("Available kernels:")
             for kernelname, spec in sorted(specs.items()):
