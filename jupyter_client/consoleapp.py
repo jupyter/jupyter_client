@@ -105,7 +105,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
     kernel_manager_class = KernelManager
     kernel_client_class = BlockingKernelClient
 
-    kernel_argv = List(Unicode)
+    kernel_argv = List(Unicode())
 
     # connection info:
     

@@ -60,10 +60,10 @@ class KernelClient(ConnectionFileMixin):
     hb_channel_class = Type(HBChannelABC)
 
     # Protected traits
-    _shell_channel = Any
-    _iopub_channel = Any
-    _stdin_channel = Any
-    _hb_channel = Any
+    _shell_channel = Any()
+    _iopub_channel = Any()
+    _stdin_channel = Any()
+    _hb_channel = Any()
 
     # flag for whether execute requests should be allowed to call raw_input:
     allow_stdin = True

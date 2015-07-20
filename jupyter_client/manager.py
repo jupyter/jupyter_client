@@ -79,7 +79,7 @@ class KernelManager(ConnectionFileMixin):
         self.kernel_spec = self.kernel_spec_manager.get_kernel_spec(new)
         self.ipykernel = new in {'python', 'python2', 'python3'}
 
-    kernel_cmd = List(Unicode, config=True,
+    kernel_cmd = List(Unicode(), config=True,
         help="""DEPRECATED: Use kernel_name instead.
 
         The Popen Command to launch the kernel.
