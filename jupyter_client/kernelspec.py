@@ -81,12 +81,12 @@ class KernelSpecManager(LoggingConfigurable):
     def _user_kernel_dir_default(self):
         return pjoin(self.data_dir, 'kernels')
 
-    whitelist = Set(config=True,
+    whitelist = Set(
         help="""Whitelist of allowed kernel names.
 
         By default, all installed kernels are allowed.
         """
-    )
+    ).tag(config=True)
     kernel_dirs = List(
         help="List of kernel directories to search. Later ones take priority over earlier."
     )

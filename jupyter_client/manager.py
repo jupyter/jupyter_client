@@ -79,7 +79,7 @@ class KernelManager(ConnectionFileMixin):
         self.kernel_spec = self.kernel_spec_manager.get_kernel_spec(new)
         self.ipykernel = new in {'python', 'python2', 'python3'}
 
-    kernel_cmd = List(Unicode(), config=True,
+    kernel_cmd = List(Unicode(), 
         help="""DEPRECATED: Use kernel_name instead.
 
         The Popen Command to launch the kernel.
@@ -91,7 +91,7 @@ class KernelManager(ConnectionFileMixin):
         this means that the kernel does not receive the
         option --debug if it given on the Jupyter command line.
         """
-    )
+    ).tag(config=True)
 
     def _kernel_cmd_changed(self, name, old, new):
         warnings.warn("Setting kernel_cmd is deprecated, use kernel_spec to "
@@ -106,9 +106,9 @@ class KernelManager(ConnectionFileMixin):
 
     _restarter = Any()
 
-    autorestart = Bool(False, config=True,
+    autorestart = Bool(False, 
         help="""Should we autorestart the kernel if it dies."""
-    )
+    ).tag(config=True)
 
     def __del__(self):
         self._close_control_socket()

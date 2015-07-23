@@ -109,25 +109,25 @@ class JupyterConsoleApp(ConnectionFileMixin):
 
     # connection info:
     
-    sshserver = Unicode('', config=True,
-        help="""The SSH server to use to connect to the kernel.""")
-    sshkey = Unicode('', config=True,
-        help="""Path to the ssh key to use for logging in to the ssh server.""")
+    sshserver = Unicode('', 
+        help="""The SSH server to use to connect to the kernel.""").tag(config=True)
+    sshkey = Unicode('', 
+        help="""Path to the ssh key to use for logging in to the ssh server.""").tag(config=True)
     
     def _connection_file_default(self):
         return 'kernel-%i.json' % os.getpid()
 
-    existing = CUnicode('', config=True,
-        help="""Connect to an already running kernel""")
+    existing = CUnicode('', 
+        help="""Connect to an already running kernel""").tag(config=True)
 
-    kernel_name = Unicode('python', config=True,
-        help="""The name of the default kernel to start.""")
+    kernel_name = Unicode('python', 
+        help="""The name of the default kernel to start.""").tag(config=True)
 
-    confirm_exit = CBool(True, config=True,
+    confirm_exit = CBool(True, 
         help="""
         Set to display confirmation dialog on exit. You can always use 'exit' or 'quit',
         to force a direct exit without any confirmation.""",
-    )
+    ).tag(config=True)
     
     def build_kernel_argv(self, argv=None):
         """build argv to be passed to kernel subprocess

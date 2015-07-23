@@ -20,20 +20,20 @@ class KernelRestarter(LoggingConfigurable):
 
     kernel_manager = Instance('jupyter_client.KernelManager')
 
-    debug = Bool(False, config=True,
+    debug = Bool(False, 
         help="""Whether to include every poll event in debugging output.
 
         Has to be set explicitly, because there will be *a lot* of output.
         """
-    )
+    ).tag(config=True)
 
-    time_to_dead = Float(3.0, config=True,
+    time_to_dead = Float(3.0, 
         help="""Kernel heartbeat interval in seconds."""
-    )
+    ).tag(config=True)
 
-    restart_limit = Integer(5, config=True,
+    restart_limit = Integer(5, 
         help="""The number of consecutive autorestarts before the kernel is presumed dead."""
-    )
+    ).tag(config=True)
     _restarting = Bool(False)
     _restart_count = Integer(0)
 
