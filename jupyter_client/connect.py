@@ -26,7 +26,7 @@ from ipython_genutils.path import filefind
 from ipython_genutils.py3compat import (str_to_bytes, bytes_to_str, cast_bytes_py2,
                                      string_types)
 from traitlets import (
-    Bool, Integer, Unicode, CaselessStrEnum, Instance,
+    Bool, Integer, Unicode, CaselessStrEnum, Instance, Type,
 )
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir
 
@@ -333,6 +333,16 @@ class ConnectionFileMixin(LoggingConfigurable):
             signature_scheme=self.session.signature_scheme,
             key=self.session.key,
         )
+
+    # factory for blocking clients
+    blocking_class = Type(klass=object, default_value='jupyter_client.BlockingKernelClient')
+    def blocking_client(self):
+        """Make a blocking client connected to my kernel"""
+        info = self.get_connection_info()
+        info['parent'] = self
+        bc = self.blocking_class(**info)
+        bc.session.key = self.session.key
+        return bc
 
     def cleanup_connection_file(self):
         """Cleanup connection file *if we wrote it*
