@@ -64,20 +64,23 @@ class KernelManager(ConnectionFileMixin):
     def _kernel_spec_manager_default(self):
         return kernelspec.KernelSpecManager(data_dir=self.data_dir)
 
+    def _kernel_spec_manager_changed(self):
+        self._kernel_spec = None
+
     kernel_name = Unicode(kernelspec.NATIVE_KERNEL_NAME)
 
-    kernel_spec = Instance(kernelspec.KernelSpec)
-
-    def _kernel_spec_default(self):
-        return self.kernel_spec_manager.get_kernel_spec(self.kernel_name)
-
     def _kernel_name_changed(self, name, old, new):
+        self._kernel_spec = None
         if new == 'python':
             self.kernel_name = kernelspec.NATIVE_KERNEL_NAME
-            # This triggered another run of this function, so we can exit now
-            return
-        self.kernel_spec = self.kernel_spec_manager.get_kernel_spec(new)
-        self.ipykernel = new in {'python', 'python2', 'python3'}
+
+    _kernel_spec = None
+
+    @property
+    def kernel_spec(self):
+        if self._kernel_spec is None:
+            self._kernel_spec = self.kernel_spec_manager.get_kernel_spec(self.kernel_name)
+        return self._kernel_spec
 
     kernel_cmd = List(Unicode(), config=True,
         help="""DEPRECATED: Use kernel_name instead.
@@ -96,9 +99,10 @@ class KernelManager(ConnectionFileMixin):
     def _kernel_cmd_changed(self, name, old, new):
         warnings.warn("Setting kernel_cmd is deprecated, use kernel_spec to "
                       "start different kernels.")
-        self.ipykernel = False
 
-    ipykernel = Bool(True)
+    @property
+    def ipykernel(self):
+        return self.kernel_name in {'python', 'python2', 'python3'}
 
     # Protected traits
     _launch_args = Any()
