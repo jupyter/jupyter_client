@@ -345,9 +345,13 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    def comm_info(self):
+    def comm_info(self, target_name=None):
         """Request comm info."""
-        msg = self.session.msg('comm_info_request')
+        if target_name is None:
+            content = {}
+        else:
+            content = dict(target_name=target_name)
+        msg = self.session.msg('comm_info_request', content)
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 

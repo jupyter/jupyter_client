@@ -706,11 +706,14 @@ Comm info
 ---------
 
 When a client needs the currently open comms in the kernel, it can issue a
-request for the currently open comms.
+request for the currently open comms. When the optional ``target_name`` is
+specified, the reply only contains the currently open comms for the target.
 
 Message type: ``comm_info_request``::
 
     content = {
+        # Optional, the target name
+        'target_name': str,
     }
 
 Message type: ``comm_info_reply``::
