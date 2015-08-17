@@ -34,15 +34,30 @@ class ListKernelSpecs(JupyterApp):
         return KernelSpecManager(parent=self, data_dir=self.data_dir)
 
     def start(self):
-        specs = self.kernel_spec_manager.find_kernel_specs()
+        paths = self.kernel_spec_manager.find_kernel_specs()
         specs = {kname: {
-                "resources_dir": specs[kname],
+                "resources_dir": paths[kname],
                 "spec": self.kernel_spec_manager.get_kernel_spec(kname).to_dict() 
-            } for kname in specs}
+            } for kname in paths}
         if not self.json_output:
+            if not specs:
+                print("No kernels available")
+                return
+            # pad to width of longest kernel name
+            name_len = len(sorted(paths, key=lambda name: len(name))[-1])
+
+            def path_key(item):
+                """sort key function for Jupyter path priority"""
+                path = item[1]
+                for idx, prefix in enumerate(self.jupyter_path):
+                    if path.startswith(prefix):
+                        return (idx, path)
+                # not in jupyter path, artificially added to the front
+                return (-1, path)
+
             print("Available kernels:")
-            for kernelname, spec in sorted(specs.items()):
-                print("  %s" % kernelname)
+            for kernelname, path in sorted(paths.items(), key=path_key):
+                print("  %s    %s" % (kernelname.ljust(name_len), path))
         else:
             print(json.dumps({
                 'kernelspecs': specs
