@@ -239,6 +239,7 @@ class KernelManager(ConnectionFileMixin):
             env.update(self.kernel_spec.env or {})
         
         # launch the kernel subprocess
+        self.log.debug("Starting kernel: %s", kernel_cmd)
         self.kernel = self._launch_kernel(kernel_cmd, env=env,
                                     **kw)
         self.start_restarter()
