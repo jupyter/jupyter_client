@@ -129,10 +129,12 @@ class InstallKernelSpec(JupyterApp):
                                                 )
         except OSError as e:
             if e.errno == errno.EACCES:
-                print("Permission denied")
+                print(e, file=sys.stderr)
+                if not self.user:
+                    print("Perhaps you want to install with `sudo` or `--user`?", file=sys.stderr)
                 self.exit(1)
             elif e.errno == errno.EEXIST:
-                print("A kernel spec is already present at %s" % e.filename)
+                print("A kernel spec is already present at %s" % e.filename, file=sys.stderr)
                 self.exit(1)
             raise
 
@@ -165,6 +167,11 @@ class InstallNativeKernelSpec(JupyterApp):
         try:
             kernelspec.install(self.kernel_spec_manager, user=self.user)
         except OSError as e:
+            if e.errno == errno.EACCES:
+                print(e, file=sys.stderr)
+                if not self.user:
+                    print("Perhaps you want to install with `sudo` or `--user`?", file=sys.stderr)
+                self.exit(1)
             self.exit(e)
 
 class KernelSpecApp(Application):
