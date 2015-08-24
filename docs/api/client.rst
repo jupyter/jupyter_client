@@ -18,6 +18,8 @@ client - communicating with kernels
 
    .. automethod:: history
 
+   .. automethod:: comm_info
+
    .. automethod:: is_complete
 
    .. automethod:: input
