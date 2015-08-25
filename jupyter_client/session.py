@@ -864,6 +864,8 @@ class Session(Configurable):
             # force copy to workaround pyzmq #646
             buffers = [memoryview(b.bytes) for b in msg_list[5:]]
         message['buffers'] = buffers
+        if self.debug:
+            pprint.pprint(message)
         # adapt to the current version
         return adapt(message)
 
