@@ -114,6 +114,10 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
         if independent:
             kwargs['preexec_fn'] = lambda: os.setsid()
         else:
+            # Create a new process group. This makes it easier to
+            # interrupt the kernel, because we want to interrupt the
+            # children of the kernel process also.
+            kwargs['preexec_fn'] = lambda: os.setpgrp()
             env['JPY_PARENT_PID'] = str(os.getpid())
 
         proc = Popen(cmd, **kwargs)
