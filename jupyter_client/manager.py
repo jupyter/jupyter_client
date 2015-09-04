@@ -385,18 +385,24 @@ class KernelManager(ConnectionFileMixin):
                 from .win_interrupt import send_interrupt
                 send_interrupt(self.kernel.win32_interrupt_event)
             else:
-                self.kernel.send_signal(signal.SIGINT)
+                self.signal_kernel(signal.SIGINT)
         else:
             raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
 
     def signal_kernel(self, signum):
-        """Sends a signal to the kernel.
+        """Sends a signal to the process group of the kernel (this
+        usually includes the kernel and any subprocesses spawned by
+        the kernel).
 
         Note that since only SIGTERM is supported on Windows, this function is
         only useful on Unix systems.
         """
         if self.has_kernel:
-            self.kernel.send_signal(signum)
+            try:
+                pgid = os.getpgid(self.kernel.pid)
+                os.killpg(pgid, signal.SIGINT)
+            except OSError:
+                self.kernel.send_signal(signum)
         else:
             raise RuntimeError("Cannot signal kernel. No kernel is running!")
 
