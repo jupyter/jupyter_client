@@ -118,7 +118,7 @@ relevant section of the :doc:`messaging spec <messaging>`.
 
 .. class:: MyKernel
 
-   .. method:: do_complete(code, cusor_pos)
+   .. method:: do_complete(code, cursor_pos)
 
      Code completion
      
@@ -129,7 +129,7 @@ relevant section of the :doc:`messaging spec <messaging>`.
      
         :ref:`msging_completion` messages
 
-   .. method:: do_inspect(code, cusor_pos, detail_level=0)
+   .. method:: do_inspect(code, cursor_pos, detail_level=0)
 
      Object introspection
      
