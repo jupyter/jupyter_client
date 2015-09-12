@@ -21,6 +21,8 @@ from traitlets import (
     Dict, List, Unicode, CUnicode, CBool, Any
 )
 
+from jupyter_core.application import base_flags, base_aliases
+
 from .blocking import BlockingKernelClient
 from . import KernelManager, tunnel_to_kernel, find_connection_file, connect
 from .kernelspec import NoSuchKernel
@@ -35,7 +37,7 @@ from .localinterfaces import localhost
 #-----------------------------------------------------------------------------
 
 flags = {}
-
+flags.update(base_flags)
 # the flags that are specific to the frontend
 # these must be scrubbed before being passed to the kernel,
 # or it will raise an error on unrecognized flags
@@ -55,6 +57,7 @@ app_flags.update(boolean_flag(
 flags.update(app_flags)
 
 aliases = {}
+aliases.update(base_aliases)
 
 # also scrub aliases from the frontend
 app_aliases = dict(
@@ -319,6 +322,8 @@ class JupyterConsoleApp(ConnectionFileMixin):
         Classes which mix this class in should call:
                JupyterConsoleApp.initialize(self,argv)
         """
+        if self._dispatching:
+            return
         self.init_connection_file()
         self.init_ssh()
         self.init_kernel_manager()
