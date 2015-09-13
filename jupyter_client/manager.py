@@ -400,8 +400,8 @@ class KernelManager(ConnectionFileMixin):
         if self.has_kernel:
             try:
                 pgid = os.getpgid(self.kernel.pid)
-                os.killpg(pgid, signal.SIGINT)
-            except OSError:
+                os.killpg(pgid, signum)
+            except Exception:
                 self.kernel.send_signal(signum)
         else:
             raise RuntimeError("Cannot signal kernel. No kernel is running!")
