@@ -398,11 +398,14 @@ class KernelManager(ConnectionFileMixin):
         only useful on Unix systems.
         """
         if self.has_kernel:
-            try:
-                pgid = os.getpgid(self.kernel.pid)
-                os.killpg(pgid, signum)
-            except Exception:
-                self.kernel.send_signal(signum)
+            if hasattr(os, "getpgid") and hasattr(os, "killpg"):
+                try:
+                    pgid = os.getpgid(self.kernel.pid)
+                    os.killpg(pgid, signum)
+                    return
+                except OSError:
+                    pass
+            self.kernel.send_signal(signum)
         else:
             raise RuntimeError("Cannot signal kernel. No kernel is running!")
 
