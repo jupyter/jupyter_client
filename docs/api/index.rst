@@ -5,6 +5,7 @@ jupyter_client API
 
 .. toctree::
    :maxdepth: 2
+   :caption: Jupyter API
 
    kernelspec
    manager
