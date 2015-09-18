@@ -9,10 +9,9 @@ specification for how Jupyter frontends and kernels communicate.
 The ZeroMQ_ library provides the low-level transport layer over which these
 messages are sent.
 
-.. Note::
-
-   This document should be considered the authoritative description of the
-   IPython messaging protocol, and all developers are strongly encouraged to
+.. important::
+   This document contains the authoritative description of the
+   IPython messaging protocol. All developers are strongly encouraged to
    keep it updated as the implementation evolves, so that we have a single
    common reference for all protocol details.
 
@@ -24,8 +23,9 @@ The Jupyter message specification is versioned independently of the packages
 that use it.
 The current version of the specification is 5.0.
 
-'New in' and 'Changed in' messages in this document refer to versions of the
-message spec, not versions of :mod:`jupyter_client`.
+.. note::
+   *New in* and *Changed in* messages in this document refer to versions of the
+   **Jupyter message specification**, not versions of :mod:`jupyter_client`.
 
 Introduction
 ============
@@ -41,13 +41,13 @@ The basic design is explained in the following diagram:
 A single kernel can be simultaneously connected to one or more frontends.  The
 kernel has four sockets that serve the following functions:
 
-1. Shell: this single ROUTER socket allows multiple incoming connections from
+1. **Shell**: this single ROUTER socket allows multiple incoming connections from
    frontends, and this is the socket where requests for code execution, object
    information, prompts, etc. are made to the kernel by any frontend.  The
    communication on this socket is a sequence of request/reply actions from
    each frontend and the kernel.
 
-2. IOPub: this socket is the 'broadcast channel' where the kernel publishes all
+2. **IOPub**: this socket is the 'broadcast channel' where the kernel publishes all
    side effects (stdout, stderr, etc.) as well as the requests coming from any
    client over the shell socket and its own requests on the stdin socket.  There
    are a number of actions in Python which generate side effects: :func:`print`
@@ -58,7 +58,7 @@ kernel has four sockets that serve the following functions:
    about communications taking place with one client over the shell channel
    to be made available to all clients in a uniform manner.
 
-3. stdin: this ROUTER socket is connected to all frontends, and it allows
+3. **stdin**: this ROUTER socket is connected to all frontends, and it allows
    the kernel to request input from the active frontend when :func:`raw_input` is called.
    The frontend that executed the code has a DEALER socket that acts as a 'virtual keyboard'
    for the kernel while this communication is happening (illustrated in the
@@ -72,7 +72,7 @@ kernel has four sockets that serve the following functions:
    which ones are from other clients, so they can display each type
    appropriately.
 
-4. Control: This channel is identical to Shell, but operates on a separate socket,
+4. **Control**: This channel is identical to Shell, but operates on a separate socket,
    to allow important messages to avoid queueing behind execution requests (e.g. shutdown or abort).
 
 The actual format of the messages allowed on each of these channels is
@@ -116,10 +116,10 @@ A message is defined by the following four-dictionary structure::
       # In a chain of messages, the header from the parent is copied so that
       # clients can track where messages come from.
       'parent_header' : dict,
-      
+
       # Any metadata associated with the message.
       'metadata' : dict,
-      
+
       # The actual content of the message must be a dict, whose structure
       # depends on the message type.
       'content' : dict,
@@ -127,7 +127,7 @@ A message is defined by the following four-dictionary structure::
 
 .. versionchanged:: 5.0
 
-    ``version`` key added to the header.
+   ``version`` key added to the header.
 
 .. _wire_protocol:
 
@@ -199,7 +199,7 @@ In Python, this is implemented via:
 
     # once:
     digester = HMAC(key, digestmod=hashlib.sha256)
-    
+
     # for each message
     d = digester.copy()
     for serialized_dict in (header, parent, metadata, content):
@@ -345,7 +345,7 @@ the ``In[n]`` and ``Out[n]`` prompts.  The value of this counter will be returne
 
 Execution results
 ~~~~~~~~~~~~~~~~~
-    
+
 Message type: ``execute_reply``::
 
     content = {
@@ -366,7 +366,7 @@ When status is 'ok', the following extra fields are present::
       # payloads are considered deprecated.
       # The only requirement of each payload dict is that it have a 'source' key,
       # which is a string classifying the payload (e.g. 'page').
-      
+
       'payload' : list(dict),
 
       # Results for the user_expressions.
@@ -398,12 +398,12 @@ When status is 'error', the following extra fields are present::
 When status is 'abort', there are for now no additional data fields.  This
 happens when the kernel was interrupted by a signal.
 
-Payloads
-********
+Payloads (DEPRECATED)
+~~~~~~~~~~~~~~~~~~~~~
 
 .. admonition:: Execution payloads
 
-    Payloads are considered deprecated, though their replacement is not yet implemented.
+    Payloads are considered **deprecated**, though their replacement is not yet implemented.
 
 Payloads are a way to trigger frontend actions from the kernel. Current payloads:
 
@@ -481,7 +481,7 @@ Message type: ``inspect_request``::
         # The code context in which introspection is requested
         # this may be up to an entire multiline cell.
         'code' : str,
-        
+
         # The cursor position within 'code' (in unicode characters) where inspection is requested
         'cursor_pos' : int,
 
@@ -510,10 +510,10 @@ Message type: ``inspect_reply``::
     content = {
         # 'ok' if the request succeeded or 'error', with error information as in all other replies.
         'status' : 'ok',
-        
+
         # found should be true if an object was found, false otherwise
         'found' : bool,
-        
+
         # data can be empty if nothing is found
         'data' : dict,
         'metadata' : dict,
@@ -539,7 +539,7 @@ Message type: ``complete_request``::
         # this may be up to an entire multiline cell, such as
         # 'foo = a.isal'
         'code' : str,
-        
+
         # The cursor position within 'code' (in unicode characters) where completion is requested
         'cursor_pos' : int,
     }
@@ -556,15 +556,15 @@ Message type: ``complete_reply``::
     # The list of all matches to the completion request, such as
     # ['a.isalnum', 'a.isalpha'] for the above example.
     'matches' : list,
-    
+
     # The range of text that should be replaced by the above matches when a completion is accepted.
     # typically cursor_end is the same as cursor_pos in the request.
     'cursor_start' : int,
     'cursor_end' : int,
-    
+
     # Information that frontend plugins might use for extra display information about completions.
     'metadata' : dict,
-    
+
     # status should be 'ok' unless an exception was raised during the request,
     # in which case it should be 'error', along with the usual error message content
     # in other messages.
@@ -588,7 +588,7 @@ request it from the kernel when needed.
 Message type: ``history_request``::
 
     content = {
-    
+
       # If True, also return output history in the resulting dict.
       'output' : bool,
 
@@ -597,7 +597,7 @@ Message type: ``history_request``::
 
       # So far, this can be 'range', 'tail' or 'search'.
       'hist_access_type' : str,
-      
+
       # If hist_access_type is 'range', get a range of input cells. session can
       # be a positive session number, or a negative number to count back from
       # the current session.
@@ -605,10 +605,10 @@ Message type: ``history_request``::
       # start and stop are line numbers within that session.
       'start' : int,
       'stop' : int,
-      
+
       # If hist_access_type is 'tail' or 'search', get the last n cells.
       'n' : int,
-      
+
       # If hist_access_type is 'search', get cells matching the specified glob
       # pattern (with * and ? as wildcards).
       'pattern' : str,
@@ -616,7 +616,7 @@ Message type: ``history_request``::
       # If hist_access_type is 'search' and unique is true, do not
       # include duplicated history.  Default is false.
       'unique' : bool,
-      
+
     }
 
 .. versionadded:: 4.0
@@ -670,7 +670,7 @@ Message type: ``is_complete_reply``::
     content = {
         # One of 'complete', 'incomplete', 'invalid', 'unknown'
         'status' : str,
-        
+
         # If status is 'incomplete', indent should contain the characters to use
         # to indent the next line. This is only a hint: frontends may ignore it
         # and use their own autoindentation rules. For other statuses, this
@@ -767,12 +767,12 @@ Message type: ``kernel_info_reply``::
             # Name of the programming language in which kernel is implemented.
             # Kernel included in IPython returns 'python'.
             'name': str,
-            
+
             # Language version number.
             # It is Python version number (e.g., '2.7.3') for the kernel
             # included in IPython.
             'version': 'X.Y.Z',
-            
+
             # mimetype for script files in this language
             'mimetype': str,
 
@@ -810,7 +810,7 @@ and `codemirror modes <http://codemirror.net/mode/index.html>`_ for those fields
 .. versionchanged:: 5.0
 
     Versions changed from lists of integers to strings.
-    
+
 .. versionchanged:: 5.0
 
     ``ipython_version`` is removed.
@@ -868,7 +868,7 @@ Message type: ``shutdown_reply``::
    When the clients detect a dead kernel thanks to inactivity on the heartbeat
    socket, they simply send a forceful process termination signal, since a dead
    process is unlikely to respond in any useful way to messages.
-    
+
 
 Messages on the PUB/SUB socket
 ==============================
@@ -881,7 +881,7 @@ Message type: ``stream``::
     content = {
         # The name of the stream is one of 'stdout', 'stderr'
         'name' : str,
-    
+
         # The text is an arbitrary string to be written to that stream
         'text' : str,
     }
@@ -1078,7 +1078,7 @@ Message type: ``status``::
 
     Extra status messages are added between the notebook webserver and websocket clients
     that are not sent by the kernel. These are:
-    
+
     - restarting (kernel has died, but will be automatically restarted)
     - dead (kernel has died, restarting has failed)
 
