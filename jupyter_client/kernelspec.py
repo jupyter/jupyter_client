@@ -15,7 +15,7 @@ from ipython_genutils.py3compat import PY3
 from traitlets import HasTraits, List, Unicode, Dict, Set
 from traitlets.config import LoggingConfigurable
 
-from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PATH
+from jupyter_core.paths import jupyter_data_dir, jupyter_path, ENV_JUPYTER_PATH
 
 
 NATIVE_KERNEL_NAME = 'python3' if PY3 else 'python2'
@@ -160,7 +160,7 @@ class KernelSpecManager(LoggingConfigurable):
         elif prefix:
             return os.path.join(os.path.abspath(prefix), 'share', 'jupyter', 'kernels', kernel_name)
         else:
-            return os.path.join(SYSTEM_JUPYTER_PATH[0], 'kernels', kernel_name)
+            return os.path.join(ENV_JUPYTER_PATH[0], 'kernels', kernel_name)
 
 
     def install_kernel_spec(self, source_dir, kernel_name=None, user=False,
