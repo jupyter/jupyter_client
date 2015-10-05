@@ -86,6 +86,12 @@ extras_require = setuptools_args['extras_require'] = {
 
 if 'setuptools' in sys.modules:
     setup_args.update(setuptools_args)
+    setup_args['entry_points'] = {
+        'console_scripts': [
+            'jupyter-kernelspec = jupyter_client.kernelspecapp:KernelSpecApp.launch_instance',
+        ]
+    }
+    setup_args.pop('scripts', None)
 
 if __name__ == '__main__':
     setup(**setup_args)
