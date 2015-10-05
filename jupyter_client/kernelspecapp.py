@@ -67,7 +67,17 @@ class ListKernelSpecs(JupyterApp):
 
 class InstallKernelSpec(JupyterApp):
     version = __version__
-    description = """Install a kernel specification directory."""
+    description = """Install a kernel specification directory.
+    
+    Given a SOURCE DIRECTORY containing a kernel spec,
+    jupyter will copy that directory into one of the Jupyter kernel directories.
+    The default is to install kernelspecs for all users.
+    `--user` can be specified to install a kernel only for the current user.
+    """
+    examples = """
+    jupyter kernelspec install /path/to/my_kernel --user
+    """
+    usage = "jupyter kernelspec install SOURCE_DIR [--options]"
     kernel_spec_manager = Instance(KernelSpecManager)
 
     def _kernel_spec_manager_default(self):
