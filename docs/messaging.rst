@@ -727,6 +727,10 @@ Message type: ``comm_info_reply``::
         },
     }
 
+.. versionadded:: 5.1
+
+    ``comm_info`` is a proposed addition for msgspec v5.1.
+
 .. _msging_kernel_info:
 
 Kernel info
