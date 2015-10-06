@@ -12,7 +12,7 @@ import warnings
 pjoin = os.path.join
 
 from ipython_genutils.py3compat import PY3
-from traitlets import HasTraits, List, Unicode, Dict, Set, Type
+from traitlets import HasTraits, List, Unicode, Dict, Set, Bool, Type
 from traitlets.config import LoggingConfigurable
 
 from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PATH
@@ -80,6 +80,12 @@ class KernelSpecManager(LoggingConfigurable):
         """
     )
 
+    ensure_native_kernel = Bool(True, config=True,
+        help="""If there is no Python kernelspec registered and the IPython
+        kernel is available, ensure it is added to the spec list.
+        """
+    )
+
     data_dir = Unicode()
     def _data_dir_default(self):
         return jupyter_data_dir()
@@ -123,7 +129,7 @@ class KernelSpecManager(LoggingConfigurable):
                     self.log.debug("Found kernel %s in %s", kname, kernel_dir)
                     d[kname] = spec
 
-        if NATIVE_KERNEL_NAME not in d:
+        if self.ensure_native_kernel and NATIVE_KERNEL_NAME not in d:
             try:
                 from ipykernel.kernelspec import RESOURCES
                 self.log.debug("Native kernel (%s) available from %s",
