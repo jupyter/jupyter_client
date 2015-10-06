@@ -182,6 +182,25 @@ class KernelSpecManager(LoggingConfigurable):
                 "spec": self._get_kernel_spec_by_name(kname, d[kname]).to_dict()
                 } for kname in d}
 
+    def remove_kernel_spec(self, name):
+        """Remove a kernel spec directory by name.
+        
+        Returns the path that was deleted.
+        """
+        save_native = self.ensure_native_kernel
+        try:
+            self.ensure_native_kernel = False
+            specs = self.find_kernel_specs()
+        finally:
+            self.ensure_native_kernel = save_native
+        spec_dir = specs[name]
+        self.log.debug("Removing %s", spec_dir)
+        if os.path.islink(spec_dir):
+            os.remove(spec_dir)
+        else:
+            shutil.rmtree(spec_dir)
+        return spec_dir
+
     def _get_destination_dir(self, kernel_name, user=False, prefix=None):
         if user:
             return os.path.join(self.user_kernel_dir, kernel_name)
