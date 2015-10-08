@@ -107,6 +107,8 @@ A message is defined by the following four-dictionary structure::
                     'msg_id' : uuid,
                     'username' : str,
                     'session' : uuid,
+                    # ISO 8601 timestamp for when the message is created
+                    'date': str,
                     # All recognized message type strings are listed below.
                     'msg_type' : str,
                     # the message protocol version
@@ -128,6 +130,13 @@ A message is defined by the following four-dictionary structure::
 .. versionchanged:: 5.0
 
    ``version`` key added to the header.
+
+.. versionchanged:: 5.1
+
+    ``date`` in the header was accidentally omitted from the spec prior to 5.1,
+    but it has always been in the canonical implementation,
+    so implementers are strongly encouraged to include it.
+    It will be mandatory in 5.1.
 
 .. _wire_protocol:
 
@@ -727,6 +736,10 @@ Message type: ``comm_info_reply``::
         },
     }
 
+.. versionadded:: 5.1
+
+    ``comm_info`` is a proposed addition for msgspec v5.1.
+
 .. _msging_kernel_info:
 
 Kernel info
@@ -888,7 +901,7 @@ Message type: ``stream``::
 
 .. versionchanged:: 5.0
 
-    'data' key renamed to 'text' for conistency with the notebook format.
+    'data' key renamed to 'text' for consistency with the notebook format.
 
 Display Data
 ------------

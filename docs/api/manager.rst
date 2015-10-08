@@ -26,6 +26,8 @@ manager - starting, stopping, signalling
 
       For the client API, see :mod:`jupyter_client.client`.
 
+   .. automethod:: blocking_client
+
    .. automethod:: shutdown_kernel
 
    .. automethod:: restart_kernel
@@ -48,3 +50,9 @@ multikernelmanager - controlling multiple kernels
    .. automethod:: remove_kernel
 
    .. automethod:: shutdown_all
+
+Utility functions
+-----------------
+
+.. autofunction:: run_kernel
+

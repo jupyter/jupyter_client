@@ -382,6 +382,8 @@ def adapt(msg, to_version=protocol_version_info[0]):
         A Jupyter message appropriate in the new version.
     """
     header = msg['header']
+    if 'date' not in header:
+        header['date'] = datetime.now().isoformat()
     if 'version' in header:
         from_version = int(header['version'].split('.')[0])
     else:
