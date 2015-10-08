@@ -133,7 +133,7 @@ A message is defined by the following four-dictionary structure::
 
 .. versionchanged:: 5.1
 
-    ``date`` in the header was accidentally ommitted from the spec prior to 5.1,
+    ``date`` in the header was accidentally omitted from the spec prior to 5.1,
     but it has always been in the canonical implementation,
     so implementers are strongly encouraged to include it.
     It will be mandatory in 5.1.
@@ -901,7 +901,7 @@ Message type: ``stream``::
 
 .. versionchanged:: 5.0
 
-    'data' key renamed to 'text' for conistency with the notebook format.
+    'data' key renamed to 'text' for consistency with the notebook format.
 
 Display Data
 ------------
