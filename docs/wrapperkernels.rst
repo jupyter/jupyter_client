@@ -65,7 +65,7 @@ following methods and attributes:
 To launch your kernel, add this at the end of your module::
 
     if __name__ == '__main__':
-        from ipyernel.kernelapp import IPKernelApp
+        from ipykernel.kernelapp import IPKernelApp
         IPKernelApp.launch_instance(kernel_class=MyKernel)
 
 Now create a `JSON kernel spec file <http://jupyter-client.readthedocs.org/en/latest/kernels.html#kernel-specs>`_ and install it using ``jupyter kernelspec install </path/to/kernel>``. Place your kernel module anywhere Python can import it (try current directory for testing). Finally, you can run your kernel using ``jupyter console --kernel <mykernelname>``. Note that ``<mykernelname>`` in the below example is ``echo``. 
