@@ -30,7 +30,11 @@ def _uniq_stable(elems):
 
 def _get_output(cmd):
     """Get output of a command, raising IOError if it fails"""
-    p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    startupinfo = None
+    if os.name == 'nt':
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    p = Popen(cmd, stdout=PIPE, stderr=PIPE, startupinfo=startupinfo)
     stdout, stderr = p.communicate()
     if p.returncode:
         raise IOError("Failed to run %s: %s" % (cmd, stderr.decode('utf8', 'replace')))
