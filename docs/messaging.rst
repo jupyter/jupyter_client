@@ -223,11 +223,12 @@ The default and most common serialization is JSON, but msgpack and pickle
 are common alternatives.
 
 After the serialized dicts are zero to many raw data buffers,
-which can be used by message types that support binary data (mainly apply and data_pub).
+which can be used by message types that support binary data,
+which can be used in custom messages, such as comms and extensions to the protocol.
 
 
-Python functional API
-=====================
+Python API
+==========
 
 As messages are dicts, they map naturally to a ``func(**kw)`` call form.  We
 should develop, at a few key points, functional forms of all the requests that
@@ -962,42 +963,6 @@ of images::
     not double-serialized as a JSON string.
 
 
-Raw Data Publication
---------------------
-
-``display_data`` lets you publish *representations* of data, such as images and html.
-This ``data_pub`` message lets you publish *actual raw data*, sent via message buffers.
-
-data_pub messages are constructed via the :func:`IPython.lib.datapub.publish_data` function:
-
-.. sourcecode:: python
-
-    from IPython.kernel.zmq.datapub import publish_data
-    ns = dict(x=my_array)
-    publish_data(ns)
-
-
-Message type: ``data_pub``::
-
-    content = {
-        # the keys of the data dict, after it has been unserialized
-        'keys' : ['a', 'b']
-    }
-    # the namespace dict will be serialized in the message buffers,
-    # which will have a length of at least one
-    buffers = [b'pdict', ...]
-
-
-The interpretation of a sequence of data_pub messages for a given parent request should be
-to update a single namespace with subsequent results.
-
-.. note::
-
-    No frontends directly handle data_pub messages at this time.
-    It is currently only used by the client/engines in :mod:`IPython.parallel`,
-    where engines may publish *data* to the Client,
-    of which the Client can then publish *representations* via ``display_data``
-    to various frontends.
 
 Code inputs
 -----------
