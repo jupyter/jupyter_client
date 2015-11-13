@@ -12,7 +12,7 @@ import warnings
 pjoin = os.path.join
 
 from ipython_genutils.py3compat import PY3
-from traitlets import HasTraits, List, Unicode, Dict, Set
+from traitlets import HasTraits, List, Unicode, Dict, Set, Type
 from traitlets.config import LoggingConfigurable
 
 from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PATH
@@ -73,6 +73,13 @@ class NoSuchKernel(KeyError):
         self.name = name
 
 class KernelSpecManager(LoggingConfigurable):
+
+    kernel_spec_class = Type(KernelSpec, config=True,
+        help="""The kernel spec class.  This is configurable to allow
+        subclassing of the KernelSpecManager for customized behavior.
+        """
+    )
+
     data_dir = Unicode()
     def _data_dir_default(self):
         return jupyter_data_dir()
@@ -150,9 +157,9 @@ class KernelSpecManager(LoggingConfigurable):
                 pass
             else:
                 if resource_dir == RESOURCES:
-                    return KernelSpec(resource_dir=resource_dir, **get_kernel_dict())
+                    return self.kernel_spec_class(resource_dir=resource_dir, **get_kernel_dict())
 
-        return KernelSpec.from_resource_dir(resource_dir)
+        return self.kernel_spec_class.from_resource_dir(resource_dir)
 
     def _get_destination_dir(self, kernel_name, user=False, prefix=None):
         if user:
