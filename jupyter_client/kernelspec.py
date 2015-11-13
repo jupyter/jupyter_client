@@ -75,7 +75,7 @@ class NoSuchKernel(KeyError):
 class KernelSpecManager(LoggingConfigurable):
 
     kernel_spec_class = DottedObjectName(
-        "jupyter_client.kernel_spec.KernelSpec", config=True,
+        "jupyter_client.kernelspec.KernelSpec", config=True,
         help="""The kernel spec class.  This is configurable to allow
         subclassing of the KernelSpecManager for customized behavior.
         """
