@@ -12,7 +12,7 @@ import warnings
 pjoin = os.path.join
 
 from ipython_genutils.py3compat import PY3
-from traitlets import HasTraits, List, Unicode, Dict, Set, DottedObjectName, Any, import_item
+from traitlets import HasTraits, List, Unicode, Dict, Set, Type
 from traitlets.config import LoggingConfigurable
 
 from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PATH
@@ -74,19 +74,11 @@ class NoSuchKernel(KeyError):
 
 class KernelSpecManager(LoggingConfigurable):
 
-    kernel_spec_class = DottedObjectName(
-        "jupyter_client.kernelspec.KernelSpec", config=True,
+    kernel_spec_class = Type(KernelSpec, config=True,
         help="""The kernel spec class.  This is configurable to allow
         subclassing of the KernelSpecManager for customized behavior.
         """
     )
-
-    def _kernel_spec_class_changed(self, name, old, new):
-        self.kernel_spec_factory = import_item(new)
-
-    kernel_spec_factory = Any(help="this is kernel_spec_class after import")
-    def _kernel_spec_factory_default(self):
-        return import_item(self.kernel_spec_class)
 
     data_dir = Unicode()
     def _data_dir_default(self):
@@ -165,9 +157,9 @@ class KernelSpecManager(LoggingConfigurable):
                 pass
             else:
                 if resource_dir == RESOURCES:
-                    return self.kernel_spec_factory(resource_dir=resource_dir, **get_kernel_dict())
+                    return self.kernel_spec_class(resource_dir=resource_dir, **get_kernel_dict())
 
-        return self.kernel_spec_factory.from_resource_dir(resource_dir)
+        return self.kernel_spec_class.from_resource_dir(resource_dir)
 
     def _get_destination_dir(self, kernel_name, user=False, prefix=None):
         if user:
