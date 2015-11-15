@@ -138,17 +138,10 @@ class KernelSpecManager(LoggingConfigurable):
         return d
         # TODO: Caching?
 
-    def get_kernel_spec(self, kernel_name):
-        """Returns a :class:`KernelSpec` instance for the given kernel_name.
-
-        Raises :exc:`NoSuchKernel` if the given kernel name is not found.
+    def get_kernel_spec_helper(self, kernel_name, resource_dir):
+        """ Returns a :class:`KernelSpec` instance for a given kernel_name
+        and resource_dir.
         """
-        d = self.find_kernel_specs()
-        try:
-            resource_dir = d[kernel_name.lower()]
-        except KeyError:
-            raise NoSuchKernel(kernel_name)
-
         if kernel_name == NATIVE_KERNEL_NAME:
             try:
                 from ipykernel.kernelspec import RESOURCES, get_kernel_dict
@@ -160,6 +153,26 @@ class KernelSpecManager(LoggingConfigurable):
                     return self.kernel_spec_class(resource_dir=resource_dir, **get_kernel_dict())
 
         return self.kernel_spec_class.from_resource_dir(resource_dir)
+
+    def get_kernel_spec(self, kernel_name):
+        """Returns a :class:`KernelSpec` instance for the given kernel_name.
+
+        Raises :exc:`NoSuchKernel` if the given kernel name is not found.
+        """
+        d = self.find_kernel_specs()
+        try:
+            resource_dir = d[kernel_name.lower()]
+        except KeyError:
+            raise NoSuchKernel(kernel_name)
+
+        return self.get_kernel_spec_helper(kernel_name, resource_dir)
+
+    def find_all_specs(self):
+        d = self.find_kernel_specs()
+        return {kname: {
+                "resource_dir": d[kname],
+                "spec": self.get_kernel_spec_helper(kname, d[kname]).to_dict()
+                } for kname in d}
 
     def _get_destination_dir(self, kernel_name, user=False, prefix=None):
         if user:
