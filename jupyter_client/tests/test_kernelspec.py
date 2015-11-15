@@ -67,6 +67,11 @@ class KernelSpecTests(unittest.TestCase):
         self.assertEqual(ks.argv, sample_kernel_json['argv'])
         self.assertEqual(ks.display_name, sample_kernel_json['display_name'])
         self.assertEqual(ks.env, {})
+
+    def test_find_all_specs(self):
+        kernels = self.ksm.find_all_specs()
+        self.assertEqual(kernels['sample']['resource_dir'], self.sample_kernel_dir)
+        self.assertIsNotNone(kernels['sample']['spec'])
     
     def test_kernel_spec_priority(self):
         td = TemporaryDirectory()
