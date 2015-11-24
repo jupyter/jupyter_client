@@ -138,7 +138,7 @@ class KernelSpecManager(LoggingConfigurable):
         return d
         # TODO: Caching?
 
-    def get_kernel_spec_helper(self, kernel_name, resource_dir):
+    def _get_kernel_spec_by_name(self, kernel_name, resource_dir):
         """ Returns a :class:`KernelSpec` instance for a given kernel_name
         and resource_dir.
         """
@@ -165,13 +165,13 @@ class KernelSpecManager(LoggingConfigurable):
         except KeyError:
             raise NoSuchKernel(kernel_name)
 
-        return self.get_kernel_spec_helper(kernel_name, resource_dir)
+        return self._get_kernel_spec_by_name(kernel_name, resource_dir)
 
     def find_all_specs(self):
         d = self.find_kernel_specs()
         return {kname: {
                 "resource_dir": d[kname],
-                "spec": self.get_kernel_spec_helper(kname, d[kname]).to_dict()
+                "spec": self._get_kernel_spec_by_name(kname, d[kname]).to_dict()
                 } for kname in d}
 
     def _get_destination_dir(self, kernel_name, user=False, prefix=None):
