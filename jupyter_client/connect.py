@@ -262,23 +262,23 @@ class ConnectionFileMixin(LoggingConfigurable):
         return jupyter_data_dir()
     
     # The addresses for the communication channels
-    connection_file = Unicode('', config=True,
+    connection_file = Unicode('', 
     help="""JSON file in which to store connection info [default: kernel-<pid>.json]
 
     This file will contain the IP, ports, and authentication key needed to connect
     clients to this kernel. By default, this file will be created in the security dir
     of the current profile, but can be specified by absolute path.
-    """)
+    """).tag(config=True)
     _connection_file_written = Bool(False)
 
-    transport = CaselessStrEnum(['tcp', 'ipc'], default_value='tcp', config=True)
+    transport = CaselessStrEnum(['tcp', 'ipc'], default_value='tcp').tag(config=True)
 
-    ip = Unicode(config=True,
+    ip = Unicode(
         help="""Set the kernel\'s IP address [default localhost].
         If the IP address is something other than localhost, then
         Consoles on other machines will be able to connect
         to the Kernel, so be careful!"""
-    )
+    ).tag(config=True)
 
     def _ip_default(self):
         if self.transport == 'ipc':
@@ -295,16 +295,16 @@ class ConnectionFileMixin(LoggingConfigurable):
 
     # protected traits
 
-    hb_port = Integer(0, config=True,
-            help="set the heartbeat port [default: random]")
-    shell_port = Integer(0, config=True,
-            help="set the shell (ROUTER) port [default: random]")
-    iopub_port = Integer(0, config=True,
-            help="set the iopub (PUB) port [default: random]")
-    stdin_port = Integer(0, config=True,
-            help="set the stdin (ROUTER) port [default: random]")
-    control_port = Integer(0, config=True,
-            help="set the control (ROUTER) port [default: random]")
+    hb_port = Integer(0, 
+            help="set the heartbeat port [default: random]").tag(config=True)
+    shell_port = Integer(0, 
+            help="set the shell (ROUTER) port [default: random]").tag(config=True)
+    iopub_port = Integer(0,
+            help="set the iopub (PUB) port [default: random]").tag(config=True)
+    stdin_port = Integer(0,
+            help="set the stdin (ROUTER) port [default: random]").tag(config=True)
+    control_port = Integer(0,
+            help="set the control (ROUTER) port [default: random]").tag(config=True)
 
     @property
     def ports(self):

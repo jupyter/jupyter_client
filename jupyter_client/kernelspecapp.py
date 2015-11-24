@@ -22,8 +22,8 @@ class ListKernelSpecs(JupyterApp):
     version = __version__
     description = """List installed kernel specifications."""
     kernel_spec_manager = Instance(KernelSpecManager)
-    json_output = Bool(False, help='output spec name and location as machine-readable json.',
-            config=True)
+    json_output = Bool(False,
+                       help='output spec name and location as machine-readable json.').tag(config=True)
     
     flags = {'json': ({'ListKernelSpecs': {'json_output': True}},
                 "output spec name and location as machine-readable json."),
@@ -84,26 +84,26 @@ class InstallKernelSpec(JupyterApp):
         return KernelSpecManager(data_dir=self.data_dir)
 
     sourcedir = Unicode()
-    kernel_name = Unicode("", config=True,
+    kernel_name = Unicode("", 
         help="Install the kernel spec with this name"
-    )
+    ).tag(config=True)
     def _kernel_name_default(self):
         return os.path.basename(self.sourcedir)
 
-    user = Bool(False, config=True,
+    user = Bool(False, 
         help="""
         Try to install the kernel spec to the per-user directory instead of
         the system or environment directory.
         """
-    )
-    prefix = Unicode('', config=True,
+    ).tag(config=True)
+    prefix = Unicode('', 
         help="""Specify a prefix to install to, e.g. an env.
         The kernelspec will be installed in PREFIX/share/jupyter/kernels/
         """
-    )
-    replace = Bool(False, config=True,
+    ).tag(config=True)
+    replace = Bool(False, 
         help="Replace any existing kernel spec with this name."
-    )
+    ).tag(config=True)
 
     aliases = {
         'name': 'InstallKernelSpec.kernel_name',
@@ -156,12 +156,12 @@ class InstallNativeKernelSpec(JupyterApp):
     def _kernel_spec_manager_default(self):
         return KernelSpecManager(data_dir=self.data_dir)
 
-    user = Bool(False, config=True,
+    user = Bool(False, 
         help="""
         Try to install the kernel spec to the per-user directory instead of
         the system or environment directory.
         """
-    )
+    ).tag(config=True)
 
     flags = {'user': ({'InstallNativeKernelSpec': {'user': True}},
                 "Install to the per-user kernel registry"),

@@ -268,12 +268,12 @@ class Session(Configurable):
 
     """
 
-    debug=Bool(False, config=True, help="""Debug output in the Session""")
+    debug=Bool(False, help="""Debug output in the Session""").tag(config=True)
 
-    packer = DottedObjectName('json',config=True,
+    packer = DottedObjectName('json',
             help="""The name of the packer for serializing messages.
             Should be one of 'json', 'pickle', or an import name
-            for a custom callable serializer.""")
+            for a custom callable serializer.""").tag(config=True)
     def _packer_changed(self, name, old, new):
         if new.lower() == 'json':
             self.pack = json_packer
@@ -286,9 +286,9 @@ class Session(Configurable):
         else:
             self.pack = import_item(str(new))
 
-    unpacker = DottedObjectName('json', config=True,
+    unpacker = DottedObjectName('json', 
         help="""The name of the unpacker for unserializing messages.
-        Only used with custom functions for `packer`.""")
+        Only used with custom functions for `packer`.""").tag(config=True)
     def _unpacker_changed(self, name, old, new):
         if new.lower() == 'json':
             self.pack = json_packer
@@ -301,8 +301,8 @@ class Session(Configurable):
         else:
             self.unpack = import_item(str(new))
 
-    session = CUnicode(u'', config=True,
-        help="""The UUID identifying this session.""")
+    session = CUnicode(u'', 
+        help="""The UUID identifying this session.""").tag(config=True)
     def _session_default(self):
         u = unicode_type(uuid.uuid4())
         self.bsession = u.encode('ascii')
@@ -315,28 +315,27 @@ class Session(Configurable):
     bsession = CBytes(b'')
 
     username = Unicode(str_to_unicode(os.environ.get('USER', 'username')),
-        help="""Username for the Session. Default is your system username.""",
-        config=True)
+        help="""Username for the Session. Default is your system username.""").tag(config=True)
 
-    metadata = Dict({}, config=True,
-        help="""Metadata dictionary, which serves as the default top-level metadata dict for each message.""")
+    metadata = Dict({}, 
+        help="""Metadata dictionary, which serves as the default top-level metadata dict for each message.""").tag(config=True)
 
     # if 0, no adapting to do.
     adapt_version = Integer(0)
 
     # message signature related traits:
 
-    key = CBytes(config=True,
-        help="""execution key, for signing messages.""")
+    key = CBytes(
+        help="""execution key, for signing messages.""").tag(config=True)
     def _key_default(self):
         return str_to_bytes(str(uuid.uuid4()))
 
     def _key_changed(self):
         self._new_auth()
 
-    signature_scheme = Unicode('hmac-sha256', config=True,
+    signature_scheme = Unicode('hmac-sha256', 
         help="""The digest scheme used to construct the message signatures.
-        Must have the form 'hmac-HASH'.""")
+        Must have the form 'hmac-HASH'.""").tag(config=True)
     def _signature_scheme_changed(self, name, old, new):
         if not new.startswith('hmac-'):
             raise TraitError("signature_scheme must start with 'hmac-', got %r" % new)
@@ -360,15 +359,15 @@ class Session(Configurable):
             self.auth = None
 
     digest_history = Set()
-    digest_history_size = Integer(2**16, config=True,
+    digest_history_size = Integer(2**16, 
         help="""The maximum number of digests to remember.
 
         The digest history will be culled when it exceeds this value.
         """
-    )
+    ).tag(config=True)
 
-    keyfile = Unicode('', config=True,
-        help="""path to file containing execution key.""")
+    keyfile = Unicode('', 
+        help="""path to file containing execution key.""").tag(config=True)
     def _keyfile_changed(self, name, old, new):
         with open(new, 'rb') as f:
             self.key = f.read().strip()
@@ -390,15 +389,15 @@ class Session(Configurable):
             raise TypeError("unpacker must be callable, not %s"%type(new))
 
     # thresholds:
-    copy_threshold = Integer(2**16, config=True,
-        help="Threshold (in bytes) beyond which a buffer should be sent without copying.")
-    buffer_threshold = Integer(MAX_BYTES, config=True,
-        help="Threshold (in bytes) beyond which an object's buffer should be extracted to avoid pickling.")
-    item_threshold = Integer(MAX_ITEMS, config=True,
+    copy_threshold = Integer(2**16, 
+        help="Threshold (in bytes) beyond which a buffer should be sent without copying.").tag(config=True)
+    buffer_threshold = Integer(MAX_BYTES,
+        help="Threshold (in bytes) beyond which an object's buffer should be extracted to avoid pickling.").tag(config=True)
+    item_threshold = Integer(MAX_ITEMS,
         help="""The maximum number of items for a container to be introspected for custom serialization.
         Containers larger than this are pickled outright.
         """
-    )
+    ).tag(config=True)
 
 
     def __init__(self, **kwargs):

@@ -42,18 +42,18 @@ def kernel_method(f):
 class MultiKernelManager(LoggingConfigurable):
     """A class for managing multiple kernels."""
 
-    default_kernel_name = Unicode(NATIVE_KERNEL_NAME, config=True,
+    default_kernel_name = Unicode(NATIVE_KERNEL_NAME, 
         help="The name of the default kernel to start"
-    )
+    ).tag(config=True)
 
     kernel_spec_manager = Instance(KernelSpecManager, allow_none=True)
     
     kernel_manager_class = DottedObjectName(
-        "jupyter_client.ioloop.IOLoopKernelManager", config=True,
+        "jupyter_client.ioloop.IOLoopKernelManager", 
         help="""The kernel manager class.  This is configurable to allow
         subclassing of the KernelManager for customized behavior.
         """
-    )
+    ).tag(config=True)
     def _kernel_manager_class_changed(self, name, old, new):
         self.kernel_manager_factory = import_item(new)
 
