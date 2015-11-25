@@ -167,7 +167,9 @@ class KernelSpecManager(LoggingConfigurable):
 
         return self._get_kernel_spec_by_name(kernel_name, resource_dir)
 
-    def find_all_specs(self):
+    def get_all_specs(self):
+        """Returns a dict mapping kernel names and resource directories.
+        """
         d = self.find_kernel_specs()
         return {kname: {
                 "resource_dir": d[kname],

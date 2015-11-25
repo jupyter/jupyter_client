@@ -69,7 +69,7 @@ class KernelSpecTests(unittest.TestCase):
         self.assertEqual(ks.env, {})
 
     def test_find_all_specs(self):
-        kernels = self.ksm.find_all_specs()
+        kernels = self.ksm.get_all_specs()
         self.assertEqual(kernels['sample']['resource_dir'], self.sample_kernel_dir)
         self.assertIsNotNone(kernels['sample']['spec'])
     
