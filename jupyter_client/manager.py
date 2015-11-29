@@ -110,7 +110,7 @@ class KernelManager(ConnectionFileMixin):
 
     _restarter = Any()
 
-    autorestart = Bool(False, config=True,
+    autorestart = Bool(True, config=True,
         help="""Should we autorestart the kernel if it dies."""
     )
 
