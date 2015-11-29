@@ -24,7 +24,7 @@ class DummyConsoleApp(JupyterApp, JupyterConsoleApp):
 
 sample_info = dict(ip='1.2.3.4', transport='ipc',
         shell_port=1, hb_port=2, iopub_port=3, stdin_port=4, control_port=5,
-        key=b'abc123', signature_scheme='hmac-md5',
+        key=b'abc123', signature_scheme='hmac-md5', kernel_name='python'
     )
 
 def test_write_connection_file():
