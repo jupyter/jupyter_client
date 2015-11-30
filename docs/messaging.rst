@@ -104,9 +104,9 @@ A message is defined by the following four-dictionary structure::
       # same kernel simultaneously, so that frontends can label the various
       # messages in a meaningful way.
       'header' : {
-                    'msg_id' : uuid,
+                    'msg_id' : str, # typically UUID, must be unique per message
                     'username' : str,
-                    'session' : uuid,
+                    'session' : str, # typically UUID, should be unique per session
                     # ISO 8601 timestamp for when the message is created
                     'date': str,
                     # All recognized message type strings are listed below.
@@ -242,7 +242,7 @@ messages upon deserialization to the following form for convenience::
       'header' : dict,
       # The msg's unique identifier and type are always stored in the header,
       # but the Python implementation copies them to the top level.
-      'msg_id' : uuid,
+      'msg_id' : str,
       'msg_type' : str,
       'parent_header' : dict,
       'content' : dict,
