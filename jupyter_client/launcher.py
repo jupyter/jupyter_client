@@ -105,11 +105,6 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
                                      DUPLICATE_SAME_ACCESS)
             env['JPY_PARENT_PID'] = str(int(handle))
 
-        proc = Popen(cmd, **kwargs)
-
-        # Attach the interrupt event to the Popen objet so it can be used later.
-        proc.win32_interrupt_event = interrupt_event
-
     else:
         if independent:
             kwargs['preexec_fn'] = lambda: os.setsid()
@@ -120,7 +115,20 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
             kwargs['preexec_fn'] = lambda: os.setpgrp()
             env['JPY_PARENT_PID'] = str(os.getpid())
 
+    try:
         proc = Popen(cmd, **kwargs)
+    except Exception as exc:
+        msg = (
+            "Failed to run command:\n{}\n"
+            "with kwargs:\n{!r}\n"
+        )
+        msg = msg.format(cmd, kwargs)
+        print(msg)
+        raise
+
+    if sys.platform == 'win32':
+        # Attach the interrupt event to the Popen objet so it can be used later.
+        proc.win32_interrupt_event = interrupt_event
 
     # Clean up pipes created to work around Popen bug.
     if redirect_in:
