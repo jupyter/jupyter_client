@@ -9,6 +9,7 @@ from subprocess import Popen, PIPE
 
 from ipython_genutils.encoding import getdefaultencoding
 from ipython_genutils.py3compat import cast_bytes_py2
+from traitlets.log import get_logger
 
 
 def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
@@ -123,7 +124,7 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
             "with kwargs:\n{!r}\n"
         )
         msg = msg.format(cmd, kwargs)
-        print(msg)
+        get_logger().error(msg)
         raise
 
     if sys.platform == 'win32':
