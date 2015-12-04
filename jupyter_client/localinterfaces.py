@@ -6,6 +6,7 @@
 import os
 import re
 import socket
+import subprocess
 from subprocess import Popen, PIPE
 
 from warnings import warn
