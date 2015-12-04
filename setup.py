@@ -77,6 +77,7 @@ setuptools_args = {}
 install_requires = setuptools_args['install_requires'] = [
     'traitlets',
     'jupyter_core',
+    'netifaces',
     'pyzmq>=13',
 ]
 

@@ -3,11 +3,6 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import os
-import re
-import socket
-from subprocess import Popen, PIPE
-
 from warnings import warn
 
 
@@ -28,17 +23,6 @@ def _uniq_stable(elems):
     seen = set()
     return [x for x in elems if x not in seen and not seen.add(x)]
 
-def _get_output(cmd):
-    """Get output of a command, raising IOError if it fails"""
-    startupinfo = None
-    if os.name == 'nt':
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-    p = Popen(cmd, stdout=PIPE, stderr=PIPE, startupinfo=startupinfo)
-    stdout, stderr = p.communicate()
-    if p.returncode:
-        raise IOError("Failed to run %s: %s" % (cmd, stderr.decode('utf8', 'replace')))
-    return stdout.decode('utf8', 'replace')
 
 def _only_once(f):
     """decorator to only run a function once"""
@@ -87,52 +71,6 @@ def _populate_from_list(addrs):
     LOCAL_IPS[:] = _uniq_stable(local_ips)
     PUBLIC_IPS[:] = _uniq_stable(public_ips)
 
-_ifconfig_ipv4_pat = re.compile(r'inet\b.*?(\d+\.\d+\.\d+\.\d+)', re.IGNORECASE)
-
-def _load_ips_ifconfig():
-    """load ip addresses from `ifconfig` output (posix)"""
-    
-    try:
-        out = _get_output('ifconfig')
-    except (IOError, OSError):
-        # no ifconfig, it's usually in /sbin and /sbin is not on everyone's PATH
-        out = _get_output('/sbin/ifconfig')
-    
-    lines = out.splitlines()
-    addrs = []
-    for line in lines:
-        m = _ifconfig_ipv4_pat.match(line.strip())
-        if m:
-            addrs.append(m.group(1))
-    _populate_from_list(addrs)
-
-
-def _load_ips_ip():
-    """load ip addresses from `ip addr` output (Linux)"""
-    out = _get_output(['ip', '-f', 'inet', 'addr'])
-    
-    lines = out.splitlines()
-    addrs = []
-    for line in lines:
-        blocks = line.lower().split()
-        if (len(blocks) >= 2) and (blocks[0] == 'inet'):
-            addrs.append(blocks[1].split('/')[0])
-    _populate_from_list(addrs)
-
-_ipconfig_ipv4_pat = re.compile(r'ipv4.*?(\d+\.\d+\.\d+\.\d+)$', re.IGNORECASE)
-
-def _load_ips_ipconfig():
-    """load ip addresses from `ipconfig` output (Windows)"""
-    out = _get_output('ipconfig')
-    
-    lines = out.splitlines()
-    addrs = []
-    for line in lines:
-        m = _ipconfig_ipv4_pat.match(line.strip())
-        if m:
-            addrs.append(m.group(1))
-    _populate_from_list(addrs)
-
 
 def _load_ips_netifaces():
     """load ip addresses with netifaces"""
@@ -168,6 +106,7 @@ def _load_ips_gethostbyname():
     
     This can be slow.
     """
+    import socket
     global LOCALHOST
     try:
         LOCAL_IPS[:] = socket.gethostbyname_ex('localhost')[2]
@@ -218,23 +157,6 @@ def _load_ips(suppress_exceptions=True):
             return _load_ips_netifaces()
         except ImportError:
             pass
-        
-        # second priority, parse subprocess output (how reliable is this?)
-        
-        if os.name == 'nt':
-            try:
-                return _load_ips_ipconfig()
-            except (IOError, NoIPAddresses):
-                pass
-        else:
-            try:
-                return _load_ips_ip()
-            except (IOError, OSError, NoIPAddresses):
-                pass
-            try:
-                return _load_ips_ifconfig()
-            except (IOError, OSError, NoIPAddresses):
-                pass
         
         # lowest priority, use gethostbyname
         
