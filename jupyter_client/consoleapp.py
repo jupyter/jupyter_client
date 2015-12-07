@@ -231,11 +231,11 @@ class JupyterConsoleApp(ConnectionFileMixin):
         self.shell_port, self.iopub_port, self.stdin_port, self.hb_port = newports
         
         cf = self.connection_file
-        base,ext = os.path.splitext(cf)
-        base = os.path.basename(base)
-        self.connection_file = os.path.basename(base)+'-ssh'+ext
+        root, ext = os.path.splitext(cf)
+        self.connection_file = root + '-ssh' + ext
+        self.write_connection_file() # write the new connection file
         self.log.info("To connect another client via this tunnel, use:")
-        self.log.info("--existing %s" % self.connection_file)
+        self.log.info("--existing %s" % os.path.basename(self.connection_file))
     
     def _new_connection_file(self):
         cf = ''
