@@ -60,7 +60,7 @@ def test_load_connection_file_session():
     nt.assert_equal(session.signature_scheme, sample_info['signature_scheme'])
 
 
-def test_load_connection_file_session():
+def test_load_connection_file_session_with_kn():
     """test load_connection_file() after """
     session = Session()
     app = DummyConsoleApp(session=Session())
