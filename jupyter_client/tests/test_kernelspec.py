@@ -3,6 +3,8 @@ import json
 from logging import StreamHandler
 import os
 from os.path import join as pjoin
+from subprocess import Popen, PIPE, STDOUT
+import sys
 import unittest
 
 try:
@@ -27,7 +29,7 @@ class KernelSpecTests(unittest.TestCase):
     
     def _install_sample_kernel(self, kernels_dir):
         """install a sample kernel in a kernels directory"""
-        sample_kernel_dir = pjoin(kernels_dir, 'Sample')
+        sample_kernel_dir = pjoin(kernels_dir, 'sample')
         os.makedirs(sample_kernel_dir)
         json_file = pjoin(sample_kernel_dir, 'kernel.json')
         with open(json_file, 'w') as f:
@@ -40,6 +42,7 @@ class KernelSpecTests(unittest.TestCase):
             'JUPYTER_CONFIG_DIR': pjoin(td.name, 'jupyter'),
             'JUPYTER_DATA_DIR': pjoin(td.name, 'jupyter_data'),
             'JUPYTER_RUNTIME_DIR': pjoin(td.name, 'jupyter_runtime'),
+            'IPYTHONDIR': pjoin(td.name, 'ipython'),
         })
         self.env_patch.start()
         self.addCleanup(td.cleanup)
@@ -130,3 +133,16 @@ class KernelSpecTests(unittest.TestCase):
             self.ksm.install_kernel_spec(self.installable_kernel,
                                          kernel_name='tstinstalled',
                                          user=False)
+
+    def test_remove_kernel_spec(self):
+        path = self.ksm.remove_kernel_spec('sample')
+        self.assertEqual(path, self.sample_kernel_dir)
+
+    def test_remove_kernel_spec_app(self):
+        p = Popen(
+            [sys.executable, '-m', 'jupyter_client.kernelspecapp', 'remove', 'sample', '-f'],
+            stdout=PIPE, stderr=STDOUT,
+            env=os.environ,
+        )
+        out, _ = p.communicate()
+        self.assertEqual(p.returncode, 0, out.decode('utf8', 'replace'))
