@@ -24,7 +24,12 @@ class DummyConsoleApp(JupyterApp, JupyterConsoleApp):
 
 sample_info = dict(ip='1.2.3.4', transport='ipc',
         shell_port=1, hb_port=2, iopub_port=3, stdin_port=4, control_port=5,
-        key=b'abc123', signature_scheme='hmac-md5',
+        key=b'abc123', signature_scheme='hmac-md5', kernel_name='python'
+    )
+
+sample_info_kn = dict(ip='1.2.3.4', transport='ipc',
+        shell_port=1, hb_port=2, iopub_port=3, stdin_port=4, control_port=5,
+        key=b'abc123', signature_scheme='hmac-md5', kernel_name='test'
     )
 
 def test_write_connection_file():
@@ -53,6 +58,23 @@ def test_load_connection_file_session():
 
     nt.assert_equal(session.key, sample_info['key'])
     nt.assert_equal(session.signature_scheme, sample_info['signature_scheme'])
+
+
+def test_load_connection_file_session_with_kn():
+    """test load_connection_file() after """
+    session = Session()
+    app = DummyConsoleApp(session=Session())
+    app.initialize(argv=[])
+    session = app.session
+
+    with TemporaryDirectory() as d:
+        cf = os.path.join(d, 'kernel.json')
+        connect.write_connection_file(cf, **sample_info_kn)
+        app.connection_file = cf
+        app.load_connection_file()
+
+    nt.assert_equal(session.key, sample_info_kn['key'])
+    nt.assert_equal(session.signature_scheme, sample_info_kn['signature_scheme'])
 
 
 def test_app_load_connection_file():
