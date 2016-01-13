@@ -268,7 +268,13 @@ class Session(Configurable):
 
     """
 
-    debug=Bool(False, config=True, help="""Debug output in the Session""")
+    debug = Bool(False, config=True, help="""Debug output in the Session""")
+    
+    check_pid = Bool(True, config=True,
+        help="""Whether to check PID to protect against calls after fork.
+        
+        This check can be disabled if fork-safety is handled elsewhere.
+        """)
 
     packer = DottedObjectName('json',config=True,
             help="""The name of the packer for serializing messages.
@@ -656,7 +662,7 @@ class Session(Configurable):
         else:
             msg = self.msg(msg_or_type, content=content, parent=parent,
                            header=header, metadata=metadata)
-        if not os.getpid() == self.pid:
+        if self.check_pid and not os.getpid() == self.pid:
             get_logger().warning("WARNING: attempted to send message from fork\n%s",
                 msg
             )
