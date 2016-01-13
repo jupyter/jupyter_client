@@ -448,6 +448,8 @@ class Session(Configurable):
         self.session
         self.pid = os.getpid()
         self._new_auth()
+        if not self.key:
+            get_logger().warning("Message signing is disabled.  This is insecure and not recommended!")
 
     @property
     def msg_id(self):
@@ -655,7 +657,7 @@ class Session(Configurable):
             msg = self.msg(msg_or_type, content=content, parent=parent,
                            header=header, metadata=metadata)
         if not os.getpid() == self.pid:
-            get_logger().warn("WARNING: attempted to send message from fork\n%s",
+            get_logger().warning("WARNING: attempted to send message from fork\n%s",
                 msg
             )
             return
