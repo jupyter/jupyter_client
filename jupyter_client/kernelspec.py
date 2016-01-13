@@ -72,6 +72,9 @@ class NoSuchKernel(KeyError):
     def __init__(self, name):
         self.name = name
 
+    def __str__(self):
+        return "No such kernel named {}".format(self.name)
+
 class KernelSpecManager(LoggingConfigurable):
 
     kernel_spec_class = Type(KernelSpec, config=True,
