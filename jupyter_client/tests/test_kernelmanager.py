@@ -1,15 +1,46 @@
-"""Tests for the notebook kernel and session manager"""
+"""Tests for the KernelManager"""
 
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
+
+import json
+import os
+pjoin = os.path.join
+import signal
 from subprocess import PIPE
+import sys
 import time
 from unittest import TestCase
 
 from ipython_genutils.testing import decorators as dec
 
 from traitlets.config.loader import Config
+from jupyter_core import paths
 from jupyter_client import KernelManager
+from ..manager import start_new_kernel
+from .utils import test_env
+
+TIMEOUT = 30
 
 class TestKernelManager(TestCase):
+    def setUp(self):
+        self.env_patch = test_env()
+        self.env_patch.start()
+    
+    def tearDown(self):
+        self.env_patch.stop()
+    
+    def _install_test_kernel(self):
+        kernel_dir = pjoin(paths.jupyter_data_dir(), 'kernels', 'signaltest')
+        os.makedirs(kernel_dir)
+        with open(pjoin(kernel_dir, 'kernel.json'), 'w') as f:
+            f.write(json.dumps({
+                'argv': [sys.executable,
+                         '-m', 'jupyter_client.tests.signalkernel',
+                         '-f', '{connection_file}'],
+                'display_name': "Signal Test Kernel",
+            }))
 
     def _get_tcp_km(self):
         c = Config()
@@ -51,3 +82,41 @@ class TestKernelManager(TestCase):
             'key', 'signature_scheme',
         ])
         self.assertEqual(keys, expected)
+    
+    @dec.skip_win32
+    def test_signal_kernel_subprocesses(self):
+        self._install_test_kernel()
+        km, kc = start_new_kernel(kernel_name='signaltest')
+        def execute(cmd):
+            kc.execute(cmd)
+            reply = kc.get_shell_msg(TIMEOUT)
+            content = reply['content']
+            self.assertEqual(content['status'], 'ok')
+            return content
+        
+        self.addCleanup(kc.stop_channels)
+        self.addCleanup(km.shutdown_kernel)
+        N = 5
+        for i in range(N):
+            execute("start")
+        time.sleep(1) # make sure subprocs stay up
+        reply = execute('check')
+        self.assertEqual(reply['poll'], [None] * N)
+        
+        # start a job on the kernel to be interrupted
+        kc.execute('sleep')
+        time.sleep(1) # ensure sleep message has been handled before we interrupt
+        km.interrupt_kernel()
+        reply = kc.get_shell_msg(TIMEOUT)
+        content = reply['content']
+        self.assertEqual(content['status'], 'ok')
+        self.assertEqual(content['interrupted'], True)
+        # wait up to 5s for subprocesses to handle signal
+        for i in range(50):
+            reply = execute('check')
+            if reply['poll'] != [-signal.SIGINT] * N:
+                time.sleep(0.1)
+            else:
+                break
+        # verify that subprocesses were interrupted
+        self.assertEqual(reply['poll'], [-signal.SIGINT] * N)
