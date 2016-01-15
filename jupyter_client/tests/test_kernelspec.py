@@ -1,3 +1,8 @@
+"""Tests for the KernelSpecManager"""
+
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 import io
 import json
 from logging import StreamHandler
@@ -7,11 +12,6 @@ from subprocess import Popen, PIPE, STDOUT
 import sys
 import unittest
 
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
-
 if str is bytes: # py2
     StringIO = io.BytesIO
 else:
@@ -20,6 +20,8 @@ else:
 from ipython_genutils.testing.decorators import onlyif
 from ipython_genutils.tempdir import TemporaryDirectory
 from jupyter_client import kernelspec
+from jupyter_core import paths
+from .utils import test_env
 
 sample_kernel_json = {'argv':['cat', '{connection_file}'],
                       'display_name':'Test kernel',
@@ -37,17 +39,10 @@ class KernelSpecTests(unittest.TestCase):
         return sample_kernel_dir
     
     def setUp(self):
-        td = TemporaryDirectory()
-        self.env_patch = patch.dict(os.environ, {
-            'JUPYTER_CONFIG_DIR': pjoin(td.name, 'jupyter'),
-            'JUPYTER_DATA_DIR': pjoin(td.name, 'jupyter_data'),
-            'JUPYTER_RUNTIME_DIR': pjoin(td.name, 'jupyter_runtime'),
-            'IPYTHONDIR': pjoin(td.name, 'ipython'),
-        })
+        self.env_patch = test_env()
         self.env_patch.start()
-        self.addCleanup(td.cleanup)
         self.sample_kernel_dir = self._install_sample_kernel(
-            pjoin(td.name, 'jupyter_data', 'kernels'))
+            pjoin(paths.jupyter_data_dir(), 'kernels'))
 
         self.ksm = kernelspec.KernelSpecManager()
 
