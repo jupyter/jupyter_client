@@ -101,7 +101,7 @@ class TestKernelManager(TestCase):
             execute("start")
         time.sleep(1) # make sure subprocs stay up
         reply = execute('check')
-        self.assertEqual(reply['poll'], [None] * N)
+        self.assertEqual(reply['user_expressions']['poll'], [None] * N)
         
         # start a job on the kernel to be interrupted
         kc.execute('sleep')
@@ -110,13 +110,13 @@ class TestKernelManager(TestCase):
         reply = kc.get_shell_msg(TIMEOUT)
         content = reply['content']
         self.assertEqual(content['status'], 'ok')
-        self.assertEqual(content['interrupted'], True)
+        self.assertEqual(content['user_expressions']['interrupted'], True)
         # wait up to 5s for subprocesses to handle signal
         for i in range(50):
             reply = execute('check')
-            if reply['poll'] != [-signal.SIGINT] * N:
+            if reply['user_expressions']['poll'] != [-signal.SIGINT] * N:
                 time.sleep(0.1)
             else:
                 break
         # verify that subprocesses were interrupted
-        self.assertEqual(reply['poll'], [-signal.SIGINT] * N)
+        self.assertEqual(reply['user_expressions']['poll'], [-signal.SIGINT] * N)

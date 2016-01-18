@@ -27,20 +27,23 @@ class SignalTestKernel(Kernel):
     def do_execute(self, code, silent, store_history=True, user_expressions=None,
                    allow_stdin=False):
         code = code.strip()
-        reply = {'status': 'ok'}
+        reply = {
+            'status': 'ok',
+            'user_expressions': {},
+        }
         if code == 'start':
             child = Popen(['bash', '-i', '-c', 'sleep 30'], stderr=PIPE)
             self.children.append(child)
-            reply['pid'] = self.children[-1].pid
+            reply['user_expressions']['pid'] = self.children[-1].pid
         elif code == 'check':
-            reply['poll'] = [ child.poll() for child in self.children ]
+            reply['user_expressions']['poll'] = [ child.poll() for child in self.children ]
         elif code == 'sleep':
             try:
                 time.sleep(10)
             except KeyboardInterrupt:
-                reply['interrupted'] = True
+                reply['user_expressions']['interrupted'] = True
             else:
-                reply['interrupted'] = False
+                reply['user_expressions']['interrupted'] = False
         else:
             reply['status'] = 'error'
             reply['ename'] = 'Error'
