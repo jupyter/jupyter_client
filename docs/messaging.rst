@@ -362,7 +362,7 @@ Message type: ``execute_reply``::
       # One of: 'ok' OR 'error' OR 'abort'
       'status' : str,
 
-      # The global kernel counter that increases by one with each request that 
+      # The global kernel counter that increases by one with each request that
       # stores history.  This will typically be used by clients to display
       # prompt numbers to the user.  If the request did not store history, this will
       # be the current value of the counter in the kernel.
@@ -859,7 +859,8 @@ multiple cases:
 
 The client sends a shutdown request to the kernel, and once it receives the
 reply message (which is otherwise empty), it can assume that the kernel has
-completed shutdown safely.
+completed shutdown safely.  The request can be sent on either the `control` or
+`shell` channels.
 
 Upon their own shutdown, client applications will typically execute a last
 minute sanity check and forcefully terminate any kernel that is still alive, to
@@ -868,13 +869,13 @@ avoid leaving stray processes in the user's machine.
 Message type: ``shutdown_request``::
 
     content = {
-        'restart' : bool # whether the shutdown is final, or precedes a restart
+        'restart' : bool # False if final shutdown, or True if shutdown precedes a restart
     }
 
 Message type: ``shutdown_reply``::
 
     content = {
-        'restart' : bool # whether the shutdown is final, or precedes a restart
+        'restart' : bool # False if final shutdown, or True if shutdown precedes a restart
     }
 
 .. Note::
@@ -1070,7 +1071,7 @@ Message type: ``clear_output``::
     content = {
 
         # Wait to clear the output until new output is available.  Clears the
-        # existing output immediately before the new output is displayed.  
+        # existing output immediately before the new output is displayed.
         # Useful for creating simple animations with minimal flickering.
         'wait' : bool,
     }
@@ -1181,7 +1182,7 @@ The ``data`` key is always a dict and can be any extra JSON information used in 
 If the ``target_name`` key is not found on the receiving side,
 then it should immediately reply with a ``comm_close`` message to avoid an inconsistent state.
 
-The optional ``target_module`` is used to select a module that is responsible 
+The optional ``target_module`` is used to select a module that is responsible
 for handling the ``target_name``.
 
 Comm Messages
