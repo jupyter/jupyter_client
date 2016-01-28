@@ -228,6 +228,7 @@ class KernelSpecManager(LoggingConfigurable):
         PREFIX/share/jupyter/kernels/KERNEL_NAME. This can be sys.prefix
         for installation inside virtual or conda envs.
         """
+        source_dir = source_dir.rstrip('/\\')
         if not kernel_name:
             kernel_name = os.path.basename(source_dir)
         kernel_name = kernel_name.lower()
