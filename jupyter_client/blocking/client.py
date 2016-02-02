@@ -21,7 +21,7 @@ class BlockingKernelClient(KernelClient):
         if timeout is None:
             abs_timeout = float('inf')
         else:
-            abs_timeout = time.time()
+            abs_timeout = time.time() + timeout
         # Wait for kernel info reply on shell channel
         while True:
             try:
