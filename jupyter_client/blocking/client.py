@@ -9,6 +9,7 @@ try:
     from queue import Empty  # Python 3
 except ImportError:
     from Queue import Empty  # Python 2
+import time
 
 from traitlets import Type
 from jupyter_client.channels import HBChannel
@@ -16,13 +17,27 @@ from jupyter_client.client import KernelClient
 from .channels import ZMQSocketChannel
 
 class BlockingKernelClient(KernelClient):
-    def wait_for_ready(self):
+    def wait_for_ready(self, timeout=None):
+        if timeout is None:
+            abs_timeout = float('inf')
+        else:
+            abs_timeout = time.time()
         # Wait for kernel info reply on shell channel
         while True:
-            msg = self.shell_channel.get_msg(block=True)
-            if msg['msg_type'] == 'kernel_info_reply':
-                self._handle_kernel_info_reply(msg)
-                break
+            try:
+                msg = self.shell_channel.get_msg(block=True, timeout=1)
+            except Empty:
+                pass
+            else:
+                if msg['msg_type'] == 'kernel_info_reply':
+                    self._handle_kernel_info_reply(msg)
+                    break
+
+            if not self.is_alive():
+                raise RuntimeError('Kernel died before replying to kernel_info')
+
+            if time.time() < abs_timeout:
+                raise RuntimeError("Kernel didn't respond in %d seconds" % timeout)
 
         # Flush IOPub channel
         while True:
