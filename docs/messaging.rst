@@ -928,7 +928,8 @@ Message type: ``display_data``::
     content = {
 
         # Who create the data
-        'source' : str,
+        # Used in V4. Removed in V5.
+        # 'source' : str,
 
         # The data dict contains key/value pairs, where the keys are MIME
         # types and the values are the raw data of the representation in that
