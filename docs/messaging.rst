@@ -778,7 +778,7 @@ Message type: ``kernel_info_reply``::
 
         # Information about the language of code for the kernel
         'language_info': {
-            # Name of the programming language in which kernel is implemented.
+            # Name of the programming language that the kernel implements.
             # Kernel included in IPython returns 'python'.
             'name': str,
 
