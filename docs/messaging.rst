@@ -75,6 +75,9 @@ kernel has four sockets that serve the following functions:
 4. **Control**: This channel is identical to Shell, but operates on a separate socket,
    to allow important messages to avoid queueing behind execution requests (e.g. shutdown or abort).
 
+5. **Heartbeat**: This socket allows for simple bytestring messages to be sent
+    between the frontend and the kernel to ensure that they are still connected.
+
 The actual format of the messages allowed on each of these channels is
 specified below.  Messages are dicts of dicts with string keys and values that
 are reasonably representable in JSON.  Our current implementation uses JSON
