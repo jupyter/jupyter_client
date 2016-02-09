@@ -845,7 +845,9 @@ class Session(Configurable):
                 raise ValueError("Unsigned Message")
             if signature in self.digest_history:
                 raise ValueError("Duplicate Signature: %r" % signature)
-            self._add_digest(signature)
+            if content:
+                # Only store signature if we are unpacking content, don't store if just peeking.
+                self._add_digest(signature)
             check = self.sign(msg_list[1:5])
             if not compare_digest(signature, check):
                 raise ValueError("Invalid Signature: %r" % signature)
