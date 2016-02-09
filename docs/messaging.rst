@@ -184,7 +184,7 @@ which is the topic for IOPub subscribers, e.g. ``execute_result``, ``display_dat
     In most cases, the IOPub topics are irrelevant and completely ignored,
     because frontends just subscribe to all topics.
     The convention used in the IPython kernel is to use the msg_type as the topic,
-    and possibly extra information about the message, e.g. ``execute_result`` or ``stream.stdout``
+    and possibly extra information about the message, e.g. ``kernel.{u-u-i-d}.execute_result`` or ``stream.stdout``
 
 After the delimiter is the `HMAC`_ signature of the message, used for authentication.
 If authentication is disabled, this should be an empty string.
