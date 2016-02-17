@@ -147,10 +147,9 @@ class KernelManager(ConnectionFileMixin):
     def client(self, **kwargs):
         """Create a client configured to connect to our kernel"""
         kw = {}
-        kw.update(self.get_connection_info())
+        kw.update(self.get_connection_info(session=True))
         kw.update(dict(
             connection_file=self.connection_file,
-            session=self.session,
             parent=self,
         ))
 
