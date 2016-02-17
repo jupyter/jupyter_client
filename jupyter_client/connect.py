@@ -323,9 +323,22 @@ class ConnectionFileMixin(LoggingConfigurable):
     # Connection and ipc file management
     #--------------------------------------------------------------------------
 
-    def get_connection_info(self):
-        """return the connection info as a dict"""
-        return dict(
+    def get_connection_info(self, session=False):
+        """Return the connection info as a dict
+
+        Parameters
+        ----------
+        session : bool [default: False]
+            If True, return our session object will be included in the connection info.
+            If False (default), the configuration parameters of our session object will be included,
+            rather than the session object itself.
+
+        Returns
+        -------
+        connect_info : dict
+            dictionary of connection information.
+        """
+        info = dict(
             transport=self.transport,
             ip=self.ip,
             shell_port=self.shell_port,
@@ -333,9 +346,17 @@ class ConnectionFileMixin(LoggingConfigurable):
             stdin_port=self.stdin_port,
             hb_port=self.hb_port,
             control_port=self.control_port,
-            signature_scheme=self.session.signature_scheme,
-            key=self.session.key,
         )
+        if session:
+            # add session
+            info['session'] = self.session
+        else:
+            # add session info
+            info.update(dict(
+                signature_scheme=self.session.signature_scheme,
+                key=self.session.key,
+            ))
+        return info
 
     # factory for blocking clients
     blocking_class = Type(klass=object, default_value='jupyter_client.BlockingKernelClient')
