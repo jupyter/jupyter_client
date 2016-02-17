@@ -104,7 +104,6 @@ class MultiKernelManager(LoggingConfigurable):
         km = self.kernel_manager_factory(connection_file=os.path.join(
                     self.connection_dir, "kernel-%s.json" % kernel_id),
                     parent=self, log=self.log, kernel_name=kernel_name,
-                    **kwargs
         )
         km.start_kernel(**kwargs)
         self._kernels[kernel_id] = km
