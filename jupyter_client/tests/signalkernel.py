@@ -20,6 +20,7 @@ class SignalTestKernel(Kernel):
     banner = ''
     
     def __init__(self, **kwargs):
+        kwargs.pop('user_ns', None)
         super(SignalTestKernel, self).__init__(**kwargs)
         self.children = []
         
