@@ -51,12 +51,12 @@ app_flags.update(boolean_flag(
     """Set to display confirmation dialog on exit. You can always use 'exit' or
        'quit', to force a direct exit without any confirmation. This can also
        be set in the config file by setting
-       `c.TerminalInteractiveShell.confirm_exit`.
+       `c.JupyterConsoleApp.confirm_exit`.
     """,
     """Don't prompt the user when exiting. This will terminate the kernel
        if it is owned by the frontend, and leave it alive if it is external.
        This can also be set in the config file by setting
-       `c.TerminalInteractiveShell.confirm_exit`.
+       `c.JupyterConsoleApp.confirm_exit`.
     """
 ))
 flags.update(app_flags)
