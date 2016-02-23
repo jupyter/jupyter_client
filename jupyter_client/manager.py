@@ -228,7 +228,7 @@ class KernelManager(ConnectionFileMixin):
         # build the Popen cmd
         extra_arguments = kw.pop('extra_arguments', [])
         kernel_cmd = self.format_kernel_cmd(extra_arguments=extra_arguments)
-        env = os.environ.copy()
+        env = kw.pop('env', os.environ).copy()
         # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
         # If set, it can bork all the things.
         env.pop('PYTHONEXECUTABLE', None)
