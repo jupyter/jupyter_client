@@ -177,7 +177,17 @@ class KernelSpecManager(LoggingConfigurable):
         return self._get_kernel_spec_by_name(kernel_name, resource_dir)
 
     def get_all_specs(self):
-        """Returns a dict mapping kernel names and resource directories.
+        """Returns a dict mapping kernel names to kernelspecs.
+
+        Returns a dict of the form::
+
+            {
+              'kernel_name': {
+                'resource_dir': '/path/to/kernel_name',
+                'spec': {"the spec itself": ...}
+              },
+              ...
+            }
         """
         d = self.find_kernel_specs()
         return {kname: {

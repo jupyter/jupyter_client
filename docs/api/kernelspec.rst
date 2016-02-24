@@ -35,6 +35,8 @@ kernelspec - discovering kernels
 
    .. automethod:: find_kernel_specs
 
+   .. automethod:: get_all_specs
+
    .. automethod:: get_kernel_spec
 
    .. automethod:: install_kernel_spec
