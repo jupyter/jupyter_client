@@ -228,7 +228,7 @@ class KernelManager(ConnectionFileMixin):
         # build the Popen cmd
         extra_arguments = kw.pop('extra_arguments', [])
         kernel_cmd = self.format_kernel_cmd(extra_arguments=extra_arguments)
-        notebook_name = kw.pop('notebook_name', None)
+        notebook_path = kw.pop('notebook_path', None)
         env = kw.pop('env', os.environ).copy()
         # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
         # If set, it can bork all the things.
@@ -237,8 +237,8 @@ class KernelManager(ConnectionFileMixin):
             # If kernel_cmd has been set manually, don't refer to a kernel spec
             # Environment variables from kernel spec are added to os.environ
             env.update(self.kernel_spec.env or {})
-        if notebook_name is not None:
-            env['JPY_NOTEBOOK_NAME'] = notebook_name
+        if notebook_path is not None:
+            env['JPY_NOTEBOOK_PATH'] = notebook_path
         
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
