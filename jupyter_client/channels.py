@@ -72,8 +72,10 @@ class HBChannel(Thread):
         self.address = address
         atexit.register(self._notice_exit)
 
+        # running is False until `.start()` is called
         self._running = False
-        self._pause = True
+        # don't start paused
+        self._pause = False
         self.poller = zmq.Poller()
 
     def _notice_exit(self):
