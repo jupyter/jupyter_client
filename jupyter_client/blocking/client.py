@@ -16,8 +16,19 @@ from jupyter_client.channels import HBChannel
 from jupyter_client.client import KernelClient
 from .channels import ZMQSocketChannel
 
+
 class BlockingKernelClient(KernelClient):
+    """A BlockingKernelClient """
+    
     def wait_for_ready(self, timeout=None):
+        """Waits for a response when a client is blocked
+        
+        - Sets future time for timeout
+        - Blocks on shell channel until a message is received
+        - Exit if the kernel has died
+        - If client times out before receiving a message from the kernel, send RuntimeError
+        - Flush the IOPub channel
+        """
         if timeout is None:
             abs_timeout = float('inf')
         else:
@@ -35,14 +46,12 @@ class BlockingKernelClient(KernelClient):
                     break
 
             if not self.is_alive():
-                print("self.is_alive: ", self.is_alive())
                 raise RuntimeError('Kernel died before replying to kernel_info')
 
             # Check if current time is ready check time plus timeout
-            time_now = time.time()
-            if now > abs_timeout:
+            if time.time() > abs_timeout:
                 print("now:")
-                print(now)
+                print(time.time())
                 print("abs_timeout:")
                 print(abs_timeout)
                 raise RuntimeError("Kernel didn't respond in %d seconds" % timeout)
