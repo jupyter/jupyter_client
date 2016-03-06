@@ -7,6 +7,15 @@ Changes in Jupyter Client
 4.2
 ===
 
+4.2.1
+-----
+
+`4.2.1 on GitHub <https://github.com/jupyter/jupyter_client/milestones/4.2.1>`__
+
+- Fix regression in 4.2 causing :func:`start_new_kernel`
+  to fail while waiting for kernels to become available.
+
+
 4.2.0
 -----
 
