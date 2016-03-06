@@ -40,7 +40,7 @@ class BlockingKernelClient(KernelClient):
 
             # Check if current time is ready check time plus timeout
             time_now = time.time()
-            if now < abs_timeout:
+            if now > abs_timeout:
                 print("now:")
                 print(now)
                 print("abs_timeout:")
