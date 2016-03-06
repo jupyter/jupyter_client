@@ -120,3 +120,12 @@ class TestKernelManager(TestCase):
                 break
         # verify that subprocesses were interrupted
         self.assertEqual(reply['user_expressions']['poll'], [-signal.SIGINT] * N)
+
+    def test_start_new_kernel(self):
+        self._install_test_kernel()
+        km, kc = start_new_kernel(kernel_name='signaltest')
+        self.addCleanup(kc.stop_channels)
+        self.addCleanup(km.shutdown_kernel)
+
+        self.assertTrue(km.is_alive())
+        self.assertTrue(kc.is_alive())

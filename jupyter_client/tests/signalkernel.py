@@ -18,12 +18,11 @@ class SignalTestKernel(Kernel):
     implementation = 'signaltest'
     implementation_version = '0.0'
     banner = ''
-    
+
     def __init__(self, **kwargs):
         kwargs.pop('user_ns', None)
         super(SignalTestKernel, self).__init__(**kwargs)
         self.children = []
-        
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None,
                    allow_stdin=False):
@@ -51,6 +50,14 @@ class SignalTestKernel(Kernel):
             reply['evalue'] = code
             reply['traceback'] = ['no such command: %s' % code]
         return reply
+    
+    def kernel_info_request(self, *args, **kwargs):
+        """Add delay to kernel_info_request
+        
+        triggers slow-response code in KernelClient.wait_for_ready
+        """
+        time.sleep(1)
+        return super(SignalTestKernel, self).kernel_info_request(*args, **kwargs)
 
 class SignalTestApp(IPKernelApp):
     kernel_class = SignalTestKernel
