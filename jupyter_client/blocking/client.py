@@ -22,6 +22,7 @@ class BlockingKernelClient(KernelClient):
             abs_timeout = float('inf')
         else:
             abs_timeout = time.time() + timeout
+
         # Wait for kernel info reply on shell channel
         while True:
             try:
@@ -36,7 +37,8 @@ class BlockingKernelClient(KernelClient):
             if not self.is_alive():
                 raise RuntimeError('Kernel died before replying to kernel_info')
 
-            if time.time() < abs_timeout:
+            # Check if current time is ready check time plus timeout
+            if time.time() > abs_timeout:
                 raise RuntimeError("Kernel didn't respond in %d seconds" % timeout)
 
         # Flush IOPub channel
