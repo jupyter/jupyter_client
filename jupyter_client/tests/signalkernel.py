@@ -56,13 +56,13 @@ class SignalTestKernel(Kernel):
         
         triggers slow-response code in KernelClient.wait_for_ready
         """
-        time.sleep(1)
         return super(SignalTestKernel, self).kernel_info_request(*args, **kwargs)
 
 class SignalTestApp(IPKernelApp):
     kernel_class = SignalTestKernel
     def init_io(self):
         pass # disable stdout/stderr capture
-    
+
 if __name__ == '__main__':
+    time.sleep(2)
     SignalTestApp.launch_instance()
