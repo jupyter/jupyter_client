@@ -34,6 +34,15 @@ class BlockingKernelClient(KernelClient):
         else:
             abs_timeout = time.time() + timeout
 
+        from ..manager import KernelManager
+        if not isinstance(self.parent, KernelManager):
+            # We aren't connected to a manager,
+            # so first wait for kernel to become responsive to heartbeats
+            while not self.is_alive():
+                if time.time() > abs_timeout:
+                    raise RuntimeError("Kernel didn't respond to heartbeats in %d seconds" % timeout)
+                time.sleep(0.2)
+
         # Wait for kernel info reply on shell channel
         while True:
             try:

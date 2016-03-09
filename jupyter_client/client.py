@@ -181,9 +181,13 @@ class KernelClient(ConnectionFileMixin):
 
     def is_alive(self):
         """Is the kernel process still running?"""
+        from .manager import KernelManager
+        if isinstance(self.parent, KernelManager):
+            # We were created by a KernelManager, we can ask them:
+            return self.parent.is_alive()
         if self._hb_channel is not None:
-            # We didn't start the kernel with this KernelManager so we
-            # use the heartbeat.
+            # We don't have access to the KernelManager,
+            # so we use the heartbeat.
             return self._hb_channel.is_beating()
         else:
             # no heartbeat and not local, we can't tell if it's running,
