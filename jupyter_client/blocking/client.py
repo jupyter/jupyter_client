@@ -36,11 +36,12 @@ class BlockingKernelClient(KernelClient):
 
         from ..manager import KernelManager
         if not isinstance(self.parent, KernelManager):
-            # We aren't connected to a manager,
-            # so first wait for kernel to become responsive to heartbeats
+            # This Client was not created by a KernelManager,
+            # so wait for kernel to become responsive to heartbeats
+            # before checking for kernel_info reply
             while not self.is_alive():
                 if time.time() > abs_timeout:
-                    raise RuntimeError("Kernel didn't respond to heartbeats in %d seconds" % timeout)
+                    raise RuntimeError("Kernel didn't respond to heartbeats in %d seconds and timed out" % timeout)
                 time.sleep(0.2)
 
         # Wait for kernel info reply on shell channel

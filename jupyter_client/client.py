@@ -183,7 +183,8 @@ class KernelClient(ConnectionFileMixin):
         """Is the kernel process still running?"""
         from .manager import KernelManager
         if isinstance(self.parent, KernelManager):
-            # We were created by a KernelManager, we can ask them:
+            # This KernelClient was created by a KernelManager,
+            # we can ask the parent KernelManager:
             return self.parent.is_alive()
         if self._hb_channel is not None:
             # We don't have access to the KernelManager,
