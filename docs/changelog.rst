@@ -7,6 +7,14 @@ Changes in Jupyter Client
 4.2
 ===
 
+4.2.2
+-----
+
+`4.2.2 on GitHub <https://github.com/jupyter/jupyter_client/milestones/4.2.2>`__
+
+- Another fix for the :func:`start_new_kernel` issue in 4.2.1 affecting slow-starting kernels.
+
+
 4.2.1
 -----
 
