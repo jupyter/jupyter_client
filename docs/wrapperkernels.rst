@@ -23,13 +23,11 @@ following methods and attributes:
 
    .. attribute:: implementation
                   implementation_version
-                  language
-                  language_version
                   banner
     
      Information for :ref:`msging_kernel_info` replies. 'Implementation' refers
-     to the kernel (e.g. IPython), and 'language' refers to the language it
-     interprets (e.g. Python). The 'banner' is displayed to the user in console
+     to the kernel (e.g. IPython), rather than the language (e.g. Python).
+     The 'banner' is displayed to the user in console
      UIs before the first prompt. All of these values are strings.
 
    .. attribute:: language_info
