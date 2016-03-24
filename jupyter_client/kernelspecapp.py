@@ -227,6 +227,8 @@ class InstallNativeKernelSpec(JupyterApp):
             }
 
     def start(self):
+        self.log.warn("`jupyter kernelspec install-self` is DEPRECATED as of 4.0."
+            " You probably want `ipython kernel install` to install the IPython kernelspec.")
         try:
             from ipykernel import kernelspec
         except ImportError:
