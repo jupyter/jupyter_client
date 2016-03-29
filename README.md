@@ -1,5 +1,8 @@
 # Jupyter Client
 
+[![Code Health](https://landscape.io/github/jupyter/jupyter_client/master/landscape.svg?style=flat)](https://landscape.io/github/jupyter/jupyter_client/master)
+
+
 `jupyter_client` contains the reference implementation of the [Jupyter protocol][].
 It also provides client and kernel management APIs for working with kernels.
 
