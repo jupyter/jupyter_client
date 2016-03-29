@@ -6,7 +6,6 @@ import errno
 from threading import Thread
 import time
 
-import zmq
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
 # during garbage collection of threads at exit:
 from zmq import ZMQError
@@ -16,7 +15,6 @@ from zmq.eventloop import ioloop, zmqstream
 from traitlets import Type, Instance
 from jupyter_client.channels import HBChannel
 from jupyter_client import KernelClient
-from jupyter_client.channels import HBChannel
 
 class ThreadedZMQSocketChannel(object):
     """A ZMQ socket invoking a callback in the ioloop"""
