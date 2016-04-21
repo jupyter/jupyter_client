@@ -118,6 +118,8 @@ class InstallKernelSpec(JupyterApp):
                 "Install to the per-user kernel registry"),
              'replace': ({'InstallKernelSpec': {'replace': True}},
                 "Replace any existing kernel spec with this name."),
+             'sys-prefix': ({'InstallKernelSpec': {'prefix': sys.prefix}},
+                "Install to Python's sys.prefix. Useful in conda/virtual environments."),
              'debug': base_flags['debug'],
             }
 
