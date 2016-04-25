@@ -265,6 +265,7 @@ class KernelManager(ConnectionFileMixin):
         else:
             # OK, we've waited long enough.
             if self.has_kernel:
+                self.log.debug("Kernel is taking too long to finish, killing")
                 self._kill_kernel()
 
     def cleanup(self, connection_file=True):
