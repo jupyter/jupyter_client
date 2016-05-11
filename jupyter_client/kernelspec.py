@@ -289,9 +289,10 @@ def get_kernel_spec(kernel_name):
     """
     return KernelSpecManager().get_kernel_spec(kernel_name)
 
-def install_kernel_spec(source_dir, kernel_name=None, user=False, replace=False):
+def install_kernel_spec(source_dir, kernel_name=None, user=False, replace=False,
+                        prefix=None):
     return KernelSpecManager().install_kernel_spec(source_dir, kernel_name,
-                                                    user, replace)
+                                                    user, replace, prefix)
 
 install_kernel_spec.__doc__ = KernelSpecManager.install_kernel_spec.__doc__
 
