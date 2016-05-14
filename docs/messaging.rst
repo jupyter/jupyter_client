@@ -819,6 +819,11 @@ Message type: ``kernel_info_reply``::
         'help_links': [
             {'text': str, 'url': str}
         ],
+
+        # Optional: MathJax configuration, 'config' is a dict that is passed
+        # to MathJax.Hub.Config, 'options' specifies MathJax.Hub options like
+        # processSectionDelay (see http://docs.mathjax.org/en/latest/api/hub.html).
+        'mathjax' : {'config': config, 'options: options}
     }
 
 Refer to the lists of available `Pygments lexers <http://pygments.org/docs/lexers/>`_
