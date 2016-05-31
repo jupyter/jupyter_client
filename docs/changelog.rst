@@ -4,6 +4,17 @@
 Changes in Jupyter Client
 =========================
 
+4.3
+===
+
+4.3.0
+-----
+
+`4.3 on GitHub <https://github.com/jupyter/jupyter_client/milestones/4.3>`__
+
+- Adds ``--sys-prefix`` argument to :command:`jupyter kernelspec install`,
+  for better symmetry with :command:`jupyter nbextension install`, etc.
+
 4.2
 ===
 
