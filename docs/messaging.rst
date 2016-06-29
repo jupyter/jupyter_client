@@ -141,6 +141,7 @@ A message is defined by the following four-dictionary structure::
     so implementers are strongly encouraged to include it.
     It will be mandatory in 5.1.
 
+
 .. _wire_protocol:
 
 The Wire Protocol
@@ -256,8 +257,38 @@ All messages sent to or received by any IPython process should have this
 extended structure.
 
 
-Messages on the shell ROUTER/DEALER sockets
-===========================================
+Messages on the shell (ROUTER/DEALER) channel
+=============================================
+
+.. _request_reply:
+
+Request-Reply
+-------------
+
+In general, the ROUTER/DEALER sockets follow a request-reply pattern:
+
+The client sends an ``<action>_request`` message (such as ``execute_request``) on its shell (DEALER) socket.
+The kernel receives that request and immediately publishes a ``status: busy`` message on IOPub.
+The kernel then processes the request and sends the appropriate ``<action>_reply`` message, such as ``execute_reply``.
+After processing the request and publishing associated IOPub messages, if any,
+the kernel publishes a ``status: idle`` message.
+This idle status message indicates that IOPub messages associated with a given request have all been received.
+
+All reply messages have a ``'status'`` field, which will have one of the following values:
+
+- ``status='ok'``: The request was processed successfully, and the remaining content of the reply is specified in the appropriate section below.
+- ``status='error'``: The request failed due to an error.
+   When status is 'error', the usual content of a successful reply should be omitted,
+   instead the following fields should be present::
+
+       {
+          'status' : 'error',
+          'ename' : str,   # Exception name, as a string
+          'evalue' : str,  # Exception value, as a string
+          'traceback' : list(str), # traceback frames as strings
+       }
+
+- ``status='abort'``: the task has been aborted. In this case, no additional fields should be present.
 
 .. _execute:
 
@@ -390,26 +421,6 @@ When status is 'ok', the following extra fields are present::
 
     ``user_variables`` is removed, use user_expressions instead.
 
-When status is 'error', the following extra fields are present::
-
-    {
-      'ename' : str,   # Exception name, as a string
-      'evalue' : str,  # Exception value, as a string
-
-      # The traceback will contain a list of frames, represented each as a
-      # string.  For now we'll stick to the existing design of ultraTB, which
-      # controls exception level of detail statefully.  But eventually we'll
-      # want to grow into a model where more information is collected and
-      # packed into the traceback object, with clients deciding how little or
-      # how much of it to unpack.  But for now, let's start with a simple list
-      # of strings, since that requires only minimal changes to ultratb as
-      # written.
-      'traceback' : list,
-    }
-
-
-When status is 'abort', there are for now no additional data fields.  This
-happens when the kernel was interrupted by a signal.
 
 Payloads (DEPRECATED)
 ~~~~~~~~~~~~~~~~~~~~~
@@ -888,8 +899,10 @@ Message type: ``shutdown_reply``::
    process is unlikely to respond in any useful way to messages.
 
 
-Messages on the PUB/SUB socket
-==============================
+Messages on the IOPub (PUB/SUB) channel
+=======================================
+
+
 
 Streams (stdout,  stderr, etc)
 ------------------------------
@@ -1052,9 +1065,28 @@ Message type: ``status``::
         execution_state : ('busy', 'idle', 'starting')
     }
 
+When a kernel receives a request and begins processing it,
+the kernel shall immediately publish a status message with ``execution_state: 'busy'``.
+When that kernel has completed processing the request
+and has finished publishing associated IOPub messages, if any,
+it shall publish a status message with ``execution_state: 'idle'``.
+Thus, the outputs associated with a given execution shall generally arrive
+between the busy and idle status messages associated with a given request.
+
+.. note::
+
+    **A caveat for asynchronous output**
+
+    Asynchronous output (e.g. from background threads) may be produced after the kernel
+    has sent the idle status message that signals the completion of the request.
+    The handling of these out-of-order output messages is currently undefined in this specification,
+    but the Jupyter Notebook continues to handle IOPub messages associated with a given request
+    after the idle message has arrived,
+    as long as the output area corresponding to that request is still active.
+
 .. versionchanged:: 5.0
 
-    Busy and idle messages should be sent before/after handling every message,
+    Busy and idle messages should be sent before/after handling every request,
     not just execution.
 
 .. note::
@@ -1088,8 +1120,8 @@ Message type: ``clear_output``::
     so v4 clear_output messages will be safely handled by a v4.1 frontend.
 
 
-Messages on the stdin ROUTER/DEALER sockets
-===========================================
+Messages on the stdin (ROUTER/DEALER) channel
+=============================================
 
 This is a socket where the request/reply pattern goes in the opposite direction:
 from the kernel to a *single* frontend, and its purpose is to allow
