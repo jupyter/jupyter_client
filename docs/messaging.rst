@@ -1087,17 +1087,29 @@ Message type: ``clear_output``::
     The selective clearing keys are ignored in v4 and the default behavior remains the same,
     so v4 clear_output messages will be safely handled by a v4.1 frontend.
 
+.. _stdin_messages:
 
 Messages on the stdin ROUTER/DEALER sockets
 ===========================================
 
-This is a socket where the request/reply pattern goes in the opposite direction:
-from the kernel to a *single* frontend, and its purpose is to allow
-``raw_input`` and similar operations that read from ``sys.stdin`` on the kernel
-to be fulfilled by the client. The request should be made to the frontend that
-made the execution request that prompted ``raw_input`` to be called. For now we
-will keep these messages as simple as possible, since they only mean to convey
-the ``raw_input(prompt)`` call.
+With the stdin ROUTER/DEALER socket, the request/reply pattern goes in the
+opposite direction of most kernel communication.
+With the stdin socket, the kernel makes the request, and the single frontend
+provides the response.
+This pattern allows code to prompt the user for a line of input,
+which would normally be read from stdin in a terminal.
+
+Many programming languages provide a function which displays a prompt, blocks
+until the user presses return, and returns the text they typed before pressing
+return. In Python 3, this is the ``input()`` function; in R it is called
+``readline()``. If the :ref:`execute_request <execute>` message has
+``allow_stdin==True``, kernels may implement these functions so that they send
+an ``input_request`` message and wait for a corresponding ``input_reply``. The
+frontend is responsible for displaying the prompt and getting the user's input.
+
+If ``allow_stdin`` is False, the kernel must not send ``stdin_request``. The
+kernel may decide what to do instead, but it's most likely that calls to the
+'prompt for input' function should fail immediately in this case.
 
 Message type: ``input_request``::
 
@@ -1114,7 +1126,10 @@ Message type: ``input_reply``::
     content = { 'value' : str }
 
 
-When ``password`` is True, the frontend should not echo the input as it is entered.
+When ``password`` is True, the frontend should not show the input as it is entered.
+Different frontends may obscure it in different ways; e.g. showing each
+character entered as the same neutral symbol, or not showing anything at all as
+the user types.
 
 .. versionchanged:: 5.0
 
@@ -1130,14 +1145,10 @@ When ``password`` is True, the frontend should not echo the input as it is enter
 
 .. note::
 
-   We do not explicitly try to forward the raw ``sys.stdin`` object, because in
-   practice the kernel should behave like an interactive program.  When a
-   program is opened on the console, the keyboard effectively takes over the
-   ``stdin`` file descriptor, and it can't be used for raw reading anymore.
-   Since the IPython kernel effectively behaves like a console program (albeit
-   one whose "keyboard" is actually living in a separate process and
-   transported over the zmq connection), raw ``stdin`` isn't expected to be
-   available.
+   This pattern of requesting user input is quite different from how stdin works
+   at a lower level. The Jupyter protocol does not support everything code
+   running in a terminal can do with stdin, but we believe that this enables the
+   most common use cases.
 
 .. _kernel_heartbeat:
 
