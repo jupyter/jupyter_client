@@ -1092,10 +1092,12 @@ Message type: ``clear_output``::
 Messages on the stdin ROUTER/DEALER sockets
 ===========================================
 
-This is a socket where the request/reply pattern goes in the opposite direction:
-from the kernel to a *single* frontend. Its purpose is to allow code to prompt
-the user for a line of input, which would normally be read from stdin in a
-terminal.
+With the stdin ROUTER/DEALER socket, the request/reply pattern goes in the
+opposite direction of most kernel communication.
+With the stdin socket, the kernel makes the request, and the single frontend
+provides the response.
+This pattern allows code to prompt the user for a line of input,
+which would normally be read from stdin in a terminal.
 
 Many programming languages provide a function which displays a prompt, blocks
 until the user presses return, and returns the text they typed before pressing
@@ -1143,7 +1145,7 @@ the user types.
 
 .. note::
 
-   This model of requesting user input is quite different from how stdin works
+   This pattern of requesting user input is quite different from how stdin works
    at a lower level. The Jupyter protocol does not support everything code
    running in a terminal can do with stdin, but we believe that this enables the
    most common use cases.
