@@ -294,8 +294,9 @@ Message type: ``execute_request``::
     'user_expressions' : dict,
 
     # Some frontends do not support stdin requests.
-    # If raw_input is called from code executed from such a frontend,
-    # a StdinNotImplementedError will be raised.
+    # If this is true, code running in the kernel can prompt the user for input
+    # with an input_request message (see below). If it is false, the kernel
+    # should not send these messages.
     'allow_stdin' : True,
 
     # A boolean flag, which, if True, does not abort the execution queue, if an exception is encountered.
