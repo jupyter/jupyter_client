@@ -112,6 +112,10 @@ filesystem is case sensitive.
 Other locations may also be searched if the :envvar:`JUPYTER_PATH` environment
 variable is set.
 
+Inside the kernel directory, three types of files are presently used:
+``kernel.json``, ``kernel.js``, and logo image files. Currently, no other
+files are used, but this may change in the future.
+
 Inside the directory, the most important file is *kernel.json*. This should be a
 JSON serialised dictionary containing the following keys and values:
 
