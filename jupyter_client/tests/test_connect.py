@@ -12,7 +12,7 @@ from traitlets.config import Config
 from jupyter_core.application import JupyterApp
 from ipython_genutils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
 from ipython_genutils.py3compat import str_to_bytes
-from jupyter_client import connect
+from jupyter_client import connect, KernelClient
 from jupyter_client.consoleapp import JupyterConsoleApp
 from jupyter_client.session import Session
 
@@ -90,6 +90,25 @@ def test_app_load_connection_file():
             continue
         value = getattr(app, attr)
         nt.assert_equal(value, expected, "app.%s = %s != %s" % (attr, value, expected))
+
+
+def test_load_connection_info():
+    client = KernelClient()
+    info = {
+        'control_port': 53702,
+        'hb_port': 53705,
+        'iopub_port': 53703,
+        'ip': '0.0.0.0',
+        'key': 'secret',
+        'shell_port': 53700,
+        'signature_scheme': 'hmac-sha256',
+        'stdin_port': 53701,
+        'transport': 'tcp',
+    }
+    client.load_connection_info(info)
+    assert client.control_port == info['control_port']
+    assert client.session.key.decode('ascii') == info['key']
+    assert client.ip == info['ip']
 
 
 def test_find_connection_file():
