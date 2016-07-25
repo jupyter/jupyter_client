@@ -126,6 +126,7 @@ class V5toV4(Adapter):
 
     def update_header(self, msg):
         msg['header'].pop('version', None)
+        msg['parent_header'].pop('version', None)
         return msg
 
     # shell channel
@@ -231,6 +232,8 @@ class V4toV5(Adapter):
 
     def update_header(self, msg):
         msg['header']['version'] = self.version
+        if msg['parent_header']:
+            msg['parent_header']['version'] = self.version
         return msg
 
     # shell channel
