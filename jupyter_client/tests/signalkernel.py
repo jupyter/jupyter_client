@@ -9,6 +9,7 @@ from subprocess import Popen, PIPE
 import sys
 import time
 
+from ipykernel.displayhook import ZMQDisplayHook
 from ipykernel.kernelbase import Kernel
 from ipykernel.kernelapp import IPKernelApp
 
@@ -61,7 +62,8 @@ class SignalTestKernel(Kernel):
 class SignalTestApp(IPKernelApp):
     kernel_class = SignalTestKernel
     def init_io(self):
-        pass # disable stdout/stderr capture
+        # Overridden to disable stdout/stderr capture
+        self.displayhook = ZMQDisplayHook(self.session, self.iopub_socket)
 
 if __name__ == '__main__':
     # make startup artificially slow,
