@@ -23,8 +23,9 @@ import zmq
 from traitlets.config import LoggingConfigurable
 from .localinterfaces import localhost
 from ipython_genutils.path import filefind
-from ipython_genutils.py3compat import (str_to_bytes, bytes_to_str, cast_bytes_py2,
-                                     string_types)
+from ipython_genutils.py3compat import (
+    bytes_to_str, cast_bytes, cast_bytes_py2, string_types,
+)
 from traitlets import (
     Bool, Integer, Unicode, CaselessStrEnum, Instance, Type,
 )
@@ -411,23 +412,46 @@ class ConnectionFileMixin(LoggingConfigurable):
 
         self._connection_file_written = True
 
-    def load_connection_file(self):
-        """Load connection info from JSON dict in self.connection_file."""
-        self.log.debug(u"Loading connection file %s", self.connection_file)
-        with open(self.connection_file) as f:
-            cfg = json.load(f)
-        self.transport = cfg.get('transport', self.transport)
-        self.ip = cfg.get('ip', self._ip_default())
+    def load_connection_file(self, connection_file=None):
+        """Load connection info from JSON dict in self.connection_file.
+        
+        Parameters
+        ----------
+        connection_file: unicode, optional
+            Path to connection file to load.
+            If unspecified, use self.connection_file
+        """
+        if connection_file is None:
+            connection_file = self.connection_file
+        self.log.debug(u"Loading connection file %s", connection_file)
+        with open(connection_file) as f:
+            info = json.load(f)
+        self.load_connection_info(info)
+
+    def load_connection_info(self, info):
+        """Load connection info from a dict containing connection info.
+        
+        Typically this data comes from a connection file
+        and is called by load_connection_file.
+        
+        Parameters
+        ----------
+        info: dict
+            Dictionary containing connection_info.
+            See the connection_file spec for details.
+        """
+        self.transport = info.get('transport', self.transport)
+        self.ip = info.get('ip', self._ip_default())
 
         for name in port_names:
-            if getattr(self, name) == 0 and name in cfg:
+            if getattr(self, name) == 0 and name in info:
                 # not overridden by config or cl_args
-                setattr(self, name, cfg[name])
+                setattr(self, name, info[name])
 
-        if 'key' in cfg:
-            self.session.key = str_to_bytes(cfg['key'])
-        if 'signature_scheme' in cfg:
-            self.session.signature_scheme = cfg['signature_scheme']
+        if 'key' in info:
+            self.session.key = cast_bytes(info['key'])
+        if 'signature_scheme' in info:
+            self.session.signature_scheme = info['signature_scheme']
 
     #--------------------------------------------------------------------------
     # Creating connected sockets
