@@ -703,6 +703,7 @@ Message type: ``is_complete_reply``::
         'indent': str,
     }
 
+
 Connect
 -------
 
@@ -710,11 +711,14 @@ When a client connects to the request/reply socket of the kernel, it can issue
 a connect request to get basic information about the kernel, such as the ports
 the other ZeroMQ sockets are listening on. This allows clients to only have
 to know about a single port (the shell channel) to connect to a kernel.
+The ports for any additional channels the kernel is listening on should be included in the reply.
+If any ports are omitted from the reply, this indicates that the channels are not running.
 
 Message type: ``connect_request``::
 
-    content = {
-    }
+    content = {}
+
+For example, a kernel with all channels running:
 
 Message type: ``connect_reply``::
 
@@ -723,7 +727,9 @@ Message type: ``connect_reply``::
         'iopub_port' : int,   # The port the PUB socket is listening on.
         'stdin_port' : int,   # The port the stdin ROUTER socket is listening on.
         'hb_port' : int,      # The port the heartbeat socket is listening on.
+        'control_port' : int,      # The port the control ROUTER socket is listening on.
     }
+
 
 .. _msging_comm_info:
 
