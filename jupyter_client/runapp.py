@@ -54,15 +54,6 @@ class RunApp(JupyterApp, JupyterConsoleApp):
     aliases = Dict(aliases)
     frontend_aliases = Any(frontend_aliases)
     frontend_flags = Any(frontend_flags)
-    session_id = Unicode()
-    include_other_output = Bool(False, config=True,
-        help="""Whether to include output from clients
-        other than this one sharing the same kernel.
-
-        Outputs are not displayed until enter is pressed.
-        """
-    )
-    kernel_info = {}
     kernel_timeout = Float(60, config=True,
         help="""Timeout for giving up on a kernel (in seconds).
 
@@ -80,7 +71,7 @@ class RunApp(JupyterApp, JupyterConsoleApp):
 
     @catch_config_error
     def initialize(self, argv=None):
-        self.log.debug("jupyter run initialize...")
+        self.log.debug("jupyter run: initialize...")
         super(RunApp, self).initialize(argv)
         JupyterConsoleApp.initialize(self)
         signal.signal(signal.SIGINT, self.handle_sigint)
@@ -111,10 +102,10 @@ class RunApp(JupyterApp, JupyterConsoleApp):
                     return
 
     def start(self):
-        self.log.debug("jupyter run start...")
+        self.log.debug("jupyter run: starting...")
         super(RunApp, self).start()
         for filename in self.filenames_to_run:
-            self.log.debug("jupyter run: running `%s`" % filename)
+            self.log.debug("jupyter run: executing `%s`" % filename)
             cell = open(filename).read()
             self.run_cell(cell)
 
