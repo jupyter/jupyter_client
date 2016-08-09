@@ -108,7 +108,9 @@ class RunApp(JupyterApp, JupyterConsoleApp):
             self.log.debug("jupyter run: executing `%s`" % filename)
             with open(filename) as fp:
                 cell = fp.read()
-            self.run_cell(cell)
+            return_code = self.run_cell(cell)
+            if return_code:
+                raise Exception("jupyter-run error running '%s'" % filename)
 
     def run_cell(self, cell):
         """
@@ -116,6 +118,7 @@ class RunApp(JupyterApp, JupyterConsoleApp):
         Any output from the cell will be displayed.
         """
         msg_id = self.kernel_client.execute(cell)
+        return_code = 0
         while True:
             try:
                 msg = self.kernel_client.get_iopub_msg(timeout=OUTPUT_TIMEOUT)
@@ -133,13 +136,18 @@ class RunApp(JupyterApp, JupyterConsoleApp):
             elif msg_type == 'stream':
                 stream = getattr(sys, content['name'])
                 stream.write(content['text'])
+                # TODO: remove this when all kernels use error msg_type:
+                if content['name'] == "stderr":
+                    return_code = 1
             elif msg_type in ('display_data', 'execute_result', 'error'):
                 if msg_type == 'error':
                     print('\n'.join(content['traceback']), file=sys.stderr)
+                    return_code = 1
                 else:
                     sys.stdout.write(content['data'].get('text/plain', ''))
             else:
                 pass
+        return return_code
 
 main = launch_new_instance = RunApp.launch_instance
 
