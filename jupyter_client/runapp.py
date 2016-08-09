@@ -108,11 +108,11 @@ class RunApp(JupyterApp, JupyterConsoleApp):
             self.log.debug("jupyter run: executing `%s`" % filename)
             with open(filename) as fp:
                 cell = fp.read()
-            return_code = self.run_cell(cell)
+            return_code = self.execute_printing_output(cell)
             if return_code:
                 raise Exception("jupyter-run error running '%s'" % filename)
 
-    def run_cell(self, cell):
+    def execute_printing_output(self, cell):
         """
         Run a cell on a KernelClient
         Any output from the cell will be displayed.
@@ -145,6 +145,8 @@ class RunApp(JupyterApp, JupyterConsoleApp):
                     return_code = 1
                 else:
                     sys.stdout.write(content['data'].get('text/plain', ''))
+            elif msg_type == 'aborted':
+                return_code = 1
             else:
                 pass
         return return_code
