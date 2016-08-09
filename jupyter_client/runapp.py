@@ -106,7 +106,8 @@ class RunApp(JupyterApp, JupyterConsoleApp):
         super(RunApp, self).start()
         for filename in self.filenames_to_run:
             self.log.debug("jupyter run: executing `%s`" % filename)
-            cell = open(filename).read()
+            with open(filename) as fp:
+                cell = fp.read()
             self.run_cell(cell)
 
     def run_cell(self, cell):
