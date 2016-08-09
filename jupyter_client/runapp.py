@@ -6,11 +6,12 @@ from __future__ import print_function
 
 import logging
 import signal
+import time
+import sys
 
-from traitlets.config.application import Application
 from traitlets.config import catch_config_error
 from traitlets import (
-    Instance, Dict, Unicode, Bool, List, CUnicode, Any
+    Instance, Dict, Unicode, Bool, List, CUnicode, Any, Float
 )
 from jupyter_core.application import (
     JupyterApp, base_flags, base_aliases
@@ -19,7 +20,12 @@ from jupyter_core.application import (
 from . import __version__
 from .consoleapp import JupyterConsoleApp, app_aliases, app_flags
 
-from jupyter_console.ptshell import ZMQTerminalInteractiveShell
+try:
+    import queue
+except ImportError:
+    import Queue as queue
+
+OUTPUT_TIMEOUT = 10
 
 # copy flags from mixin:
 flags = dict(base_flags)
@@ -48,6 +54,24 @@ class RunApp(JupyterApp, JupyterConsoleApp):
     aliases = Dict(aliases)
     frontend_aliases = Any(frontend_aliases)
     frontend_flags = Any(frontend_flags)
+    session_id = Unicode()
+    include_other_output = Bool(False, config=True,
+        help="""Whether to include output from clients
+        other than this one sharing the same kernel.
+
+        Outputs are not displayed until enter is pressed.
+        """
+    )
+    kernel_info = {}
+    kernel_timeout = Float(60, config=True,
+        help="""Timeout for giving up on a kernel (in seconds).
+
+        On first connect and restart, the console tests whether the
+        kernel is running and responsive by sending kernel_info_requests.
+        This sets the timeout in seconds for how long the kernel can take
+        before being presumed dead.
+        """
+    )
 
     def parse_command_line(self, argv=None):
         super(RunApp, self).parse_command_line(argv)
@@ -56,32 +80,74 @@ class RunApp(JupyterApp, JupyterConsoleApp):
 
     @catch_config_error
     def initialize(self, argv=None):
+        self.log.debug("jupyter run initialize...")
         super(RunApp, self).initialize(argv)
         JupyterConsoleApp.initialize(self)
         signal.signal(signal.SIGINT, self.handle_sigint)
-        self.shell = ZMQTerminalInteractiveShell.instance(parent=self,
-                        manager=self.kernel_manager,
-                        client=self.kernel_client,
-        )
-        self.shell.own_kernel = not self.existing
+        self.init_kernel_info()
 
     def handle_sigint(self, *args):
-        if self.shell._executing:
-            if self.kernel_manager:
-                self.kernel_manager.interrupt_kernel()
-            else:
-                print("", file=sys.stderr)
-                error("Cannot interrupt kernels we didn't start.\n")
+        if self.kernel_manager:
+            self.kernel_manager.interrupt_kernel()
         else:
-            # raise the KeyboardInterrupt if we aren't waiting for execution,
-            # so that the interact loop advances, and prompt is redrawn, etc.
-            raise KeyboardInterrupt
+            print("", file=sys.stderr)
+            error("Cannot interrupt kernels we didn't start.\n")
+
+    def init_kernel_info(self):
+        """Wait for a kernel to be ready, and store kernel info"""
+        timeout = self.kernel_timeout
+        tic = time.time()
+        self.kernel_client.hb_channel.unpause()
+        msg_id = self.kernel_client.kernel_info()
+        while True:
+            try:
+                reply = self.kernel_client.get_shell_msg(timeout=1)
+            except queue.Empty:
+                if (time.time() - tic) > timeout:
+                    raise RuntimeError("Kernel didn't respond to kernel_info_request")
+            else:
+                if reply['parent_header'].get('msg_id') == msg_id:
+                    self.kernel_info = reply['content']
+                    return
 
     def start(self):
+        self.log.debug("jupyter run start...")
         super(RunApp, self).start()
         for filename in self.filenames_to_run:
+            self.log.debug("jupyter run: running `%s`" % filename)
             cell = open(filename).read()
-            self.shell.run_cell(cell, False)
+            self.run_cell(cell)
+
+    def run_cell(self, cell):
+        """
+        Run a cell on a KernelClient
+        Any output from the cell will be displayed.
+        """
+        msg_id = self.kernel_client.execute(cell)
+        while True:
+            try:
+                msg = self.kernel_client.get_iopub_msg(timeout=OUTPUT_TIMEOUT)
+            except queue.Empty:
+                raise TimeoutError("Timeout waiting for kernel output")
+    
+            if msg['parent_header'].get('msg_id') != msg_id:
+                continue
+            msg_type = msg['header']['msg_type']
+            content = msg['content']
+            if msg_type == 'status':
+                if content['execution_state'] == 'idle':
+                    # idle means output is done
+                    break
+            elif msg_type == 'stream':
+                stream = getattr(sys, content['name'])
+                stream.write(content['text'])
+            elif msg_type in ('display_data', 'execute_result', 'error'):
+                if msg_type == 'error':
+                    print('\n'.join(content['traceback']), file=sys.stderr)
+                else:
+                    sys.stdout.write(content['data'].get('text/plain', ''))
+            else:
+                pass
 
 main = launch_new_instance = RunApp.launch_instance
 
