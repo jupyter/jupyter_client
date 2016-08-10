@@ -136,17 +136,12 @@ class RunApp(JupyterApp, JupyterConsoleApp):
             elif msg_type == 'stream':
                 stream = getattr(sys, content['name'])
                 stream.write(content['text'])
-                # TODO: remove this when all kernels use error msg_type:
-                if content['name'] == "stderr":
-                    return_code = 1
             elif msg_type in ('display_data', 'execute_result', 'error'):
                 if msg_type == 'error':
                     print('\n'.join(content['traceback']), file=sys.stderr)
                     return_code = 1
                 else:
                     sys.stdout.write(content['data'].get('text/plain', ''))
-            elif msg_type == 'aborted':
-                return_code = 1
             else:
                 pass
         return return_code
