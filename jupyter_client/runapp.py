@@ -129,6 +129,7 @@ class RunApp(JupyterApp, JupyterConsoleApp):
                 continue
             msg_type = msg['header']['msg_type']
             content = msg['content']
+            self.log.debug("iopub msg: %s" % msg)
             if msg_type == 'status':
                 if content['execution_state'] == 'idle':
                     # idle means output is done
