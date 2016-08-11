@@ -7,6 +7,7 @@ Useful for test suites and blocking terminal interfaces.
 
 from __future__ import print_function
 
+from getpass import getpass
 try:
     from queue import Empty  # Python 3
 except ImportError:
@@ -14,10 +15,7 @@ except ImportError:
 import sys
 import time
 
-try:
-    monotonic = time.monotonic
-except AttributeError: # py2
-    monotonic = time.clock # close enough
+import zmq
 
 from traitlets import Type
 from jupyter_client.channels import HBChannel
@@ -25,10 +23,24 @@ from jupyter_client.client import KernelClient
 from .channels import ZMQSocketChannel
 
 try:
+    monotonic = time.monotonic
+except AttributeError:
+    # py2
+    monotonic = time.time # close enough
+
+try:
     TimeoutError
 except NameError:
     # py2
     TimeoutError = RuntimeError
+
+try:
+    # py2
+    input = raw_input
+except NameError:
+    # py3
+    pass
+
 
 def reqrep(meth):
     def wrapped(self, *args, **kwargs):
@@ -144,10 +156,28 @@ class BlockingKernelClient(KernelClient):
     kernel_info = reqrep(KernelClient.kernel_info)
     comm_info = reqrep(KernelClient.comm_info)
     shutdown = reqrep(KernelClient.shutdown)
+    
+    def _handle_input(self, req):
+        """Handle an input request"""
+        content = req['content']
+        prompt = getpass if content.get('password', False) else input
+        try:
+            raw_data = prompt(content["prompt"])
+        except EOFError:
+            # turn EOFError into EOF character
+            raw_data = '\x04'
+        except KeyboardInterrupt:
+            sys.stdout.write('\n')
+            return
+
+        # only send stdin reply if there *was not* another request
+        # or execution finished while we were reading.
+        if not (self.stdin_channel.msg_ready() or self.shell_channel.msg_ready()):
+            self.input(raw_data)
 
 
     def execute(self, code, silent=False, store_history=True,
-                 user_expressions=None, stop_on_error=True,
+                 user_expressions=None, allow_stdin=None, stop_on_error=True,
                  reply=False, timeout=None,
                 ):
         """Execute code in the kernel.
@@ -178,6 +208,7 @@ class BlockingKernelClient(KernelClient):
             Some frontends (e.g. the Notebook) do not support stdin requests.
             If raw_input is called from code executed from such a frontend, a
             StdinNotImplementedError will be raised.
+            If reply=True, stdin requests from the kernel will call input / getpass.
 
         stop_on_error: bool, optional (default True)
             Flag whether to abort the execution queue, if an exception is encountered.
@@ -197,12 +228,19 @@ class BlockingKernelClient(KernelClient):
         """
         if reply and not self.iopub_channel.is_alive():
             raise RuntimeError("IOPub channel must be running to receive output")
+        if allow_stdin is None:
+            allow_stdin = self.allow_stdin
+        if allow_stdin and not self.stdin_channel.is_alive():
+            raise RuntimeError("stdin channel must be running to allow input")
         msg_id = super(BlockingKernelClient, self).execute(code,
                               silent=silent,
                               store_history=store_history,
                               user_expressions=user_expressions,
+                              allow_stdin=allow_stdin,
                               stop_on_error=stop_on_error,
         )
+        if not reply:
+            return msg_id
 
         if 'IPython' in sys.modules:
             from IPython import get_ipython
@@ -218,15 +256,31 @@ class BlockingKernelClient(KernelClient):
         # set deadline based on timeout
         if timeout is not None:
             deadline = monotonic() + timeout
+        
+        poller = zmq.Poller()
+        iopub_socket = self.iopub_channel.socket
+        poller.register(iopub_socket, zmq.POLLIN)
+        if allow_stdin:
+            stdin_socket = self.stdin_channel.socket
+            poller.register(stdin_socket, zmq.POLLIN)
+        else:
+            stdin_socket = None
 
         # wait for output and redisplay it
         while True:
             if timeout is not None:
                 timeout = max(0, deadline - monotonic())
-            try:
-                msg = self.get_iopub_msg(timeout=timeout)
-            except Empty:
+            events = dict(poller.poll(timeout=timeout))
+            if not events:
                 raise TimeoutError("Timeout waiting for IPython output")
+            if stdin_socket in events:
+                req = self.stdin_channel.get_msg(timeout=0)
+                self._handle_input(req)
+                continue
+            if iopub_socket not in events:
+                continue
+
+            msg = self.iopub_channel.get_msg(timeout=0)
 
             if msg['parent_header'].get('msg_id') != msg_id:
                 # not from my request
