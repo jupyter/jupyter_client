@@ -30,6 +30,38 @@ except NameError:
     # py2
     TimeoutError = RuntimeError
 
+def reqrep(meth):
+    def wrapped(self, *args, **kwargs):
+        reply = kwargs.pop('reply', False)
+        timeout = kwargs.pop('timeout', None)
+        msg_id = meth(self, *args, **kwargs)
+        if not reply:
+            return msg_id
+
+        return self._recv_reply(msg_id, timeout=timeout)
+    
+    basedoc, _ = meth.__doc__.split('Returns\n', 1)
+    parts = [basedoc.strip()]
+    if 'Parameters' not in basedoc:
+        parts.append("""
+        Parameters
+        ----------
+        """)
+    parts.append("""
+        reply: bool (default: False)
+            Whether to wait for and return reply
+        timeout: float or None (default: None)
+            Timeout to use when waiting for a reply
+
+        Returns
+        -------
+        msg_id: str
+            The msg_id of the request sent, if reply=False (default)
+        reply: dict
+            The reply message for this request, if reply=True
+    """)
+    wrapped.__doc__ = '\n'.join(parts)
+    return wrapped
 
 class BlockingKernelClient(KernelClient):
     """A BlockingKernelClient """
@@ -89,14 +121,38 @@ class BlockingKernelClient(KernelClient):
     stdin_channel_class = Type(ZMQSocketChannel)
     hb_channel_class = Type(HBChannel)
 
-    def run(self, code, silent=False, store_history=True,
-                 user_expressions=None, stop_on_error=True,
-                 timeout=None,
-                ):
-        """Run code in the kernel, redisplaying output.
 
-        Wraps a call to `.execute`, capturing and redisplaying any output produced.
-        The execute_reply is returned.
+    def _recv_reply(self, msg_id, timeout=None):
+        """Receive and return the reply for a given request"""
+        if timeout is not None:
+            deadline = monotonic() + timeout
+        while True:
+            if timeout is not None:
+                timeout = max(0, deadline - monotonic())
+            try:
+                reply = self.get_shell_msg(timeout=timeout)
+            except Empty:
+                raise TimeoutError("Timeout waiting for reply")
+            if reply['parent_header'].get('msg_id') != msg_id:
+                # not my reply, someone may have forgotten to retrieve theirs
+                continue
+            return reply
+
+    history = reqrep(KernelClient.history)
+    complete = reqrep(KernelClient.complete)
+    inspect = reqrep(KernelClient.inspect)
+    kernel_info = reqrep(KernelClient.kernel_info)
+    comm_info = reqrep(KernelClient.comm_info)
+    shutdown = reqrep(KernelClient.shutdown)
+
+
+    def execute(self, code, silent=False, store_history=True,
+                 user_expressions=None, stop_on_error=True,
+                 reply=False, timeout=None,
+                ):
+        """Execute code in the kernel.
+
+        If reply=True, wait for reply and redisplay output produced by the execution.
 
         Parameters
         ----------
@@ -116,19 +172,32 @@ class BlockingKernelClient(KernelClient):
             dict. The expression values are returned as strings formatted using
             :func:`repr`.
 
+        allow_stdin : bool, optional (default self.allow_stdin)
+            Flag for whether the kernel can send stdin requests to frontends.
+
+            Some frontends (e.g. the Notebook) do not support stdin requests.
+            If raw_input is called from code executed from such a frontend, a
+            StdinNotImplementedError will be raised.
+
         stop_on_error: bool, optional (default True)
             Flag whether to abort the execution queue, if an exception is encountered.
-        timeout: int or None (default None)
-            Timeout (in seconds) to wait for output. If None, wait forever.
+
+        reply: bool (default: False)
+            Whether to wait for and return reply
+
+        timeout: float or None (default: None)
+            Timeout to use when waiting for a reply
 
         Returns
         -------
+        msg_id: str
+            The msg_id of the request sent, if reply=False (default)
         reply: dict
-            The execute_reply message.
+            The reply message for this request, if reply=True
         """
-        if not self.iopub_channel.is_alive():
+        if reply and not self.iopub_channel.is_alive():
             raise RuntimeError("IOPub channel must be running to receive output")
-        msg_id = self.execute(code,
+        msg_id = super(BlockingKernelClient, self).execute(code,
                               silent=silent,
                               store_history=store_history,
                               user_expressions=user_expressions,
@@ -147,7 +216,6 @@ class BlockingKernelClient(KernelClient):
             in_kernel = False
 
         # set deadline based on timeout
-        start = monotonic()
         if timeout is not None:
             deadline = monotonic() + timeout
 
@@ -184,15 +252,6 @@ class BlockingKernelClient(KernelClient):
                 pass
 
         # output is done, get the reply
-        while True:
-            if timeout is not None:
-                timeout = max(0, deadline - monotonic())
-            try:
-                reply = self.get_shell_msg(timeout=timeout)
-            except Empty:
-                raise TimeoutError("Timeout waiting for reply")
-            if reply['parent_header'].get('msg_id') != msg_id:
-                # not my reply, someone may have forgotten to retrieve theirs
-                continue
-            return reply
-
+        if timeout is not None:
+            timeout = max(0, deadline - monotonic())
+        return self._recv_reply(msg_id, timeout=timeout)
