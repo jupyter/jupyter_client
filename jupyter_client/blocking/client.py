@@ -292,7 +292,9 @@ class BlockingKernelClient(KernelClient):
         # set deadline based on timeout
         if timeout is not None:
             deadline = monotonic() + timeout
-        
+        else:
+            timeout_ms = None
+
         poller = zmq.Poller()
         iopub_socket = self.iopub_channel.socket
         poller.register(iopub_socket, zmq.POLLIN)
@@ -306,7 +308,8 @@ class BlockingKernelClient(KernelClient):
         while True:
             if timeout is not None:
                 timeout = max(0, deadline - monotonic())
-            events = dict(poller.poll(timeout=timeout))
+                timeout_ms = 1e3 * timeout
+            events = dict(poller.poll(timeout_ms))
             if not events:
                 raise TimeoutError("Timeout waiting for IPython output")
             if stdin_socket in events:
