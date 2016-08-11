@@ -35,13 +35,6 @@ except NameError:
     # py2
     TimeoutError = RuntimeError
 
-try:
-    # py2
-    input = raw_input
-except NameError:
-    # py3
-    pass
-
 
 def reqrep(meth):
     def wrapped(self, *args, **kwargs):
@@ -161,10 +154,16 @@ class BlockingKernelClient(KernelClient):
     shutdown = reqrep(KernelClient.shutdown)
 
 
-    def _handle_input(self, req):
+    def _stdin_hook_default(self, msg):
         """Handle an input request"""
-        content = req['content']
-        prompt = getpass if content.get('password', False) else input
+        content = msg['content']
+        if content.get('password', False):
+            prompt = getpass
+        elif sys.version_info < (3,):
+            prompt = raw_input
+        else:
+            prompt = input
+
         try:
             raw_data = prompt(content["prompt"])
         except EOFError:
@@ -204,7 +203,7 @@ class BlockingKernelClient(KernelClient):
 
     def execute_interactive(self, code, silent=False, store_history=True,
                  user_expressions=None, allow_stdin=None, stop_on_error=True,
-                 timeout=None, output_hook=None,
+                 timeout=None, output_hook=None, stdin_hook=None,
                 ):
         """Execute code in the kernel interactively
 
@@ -249,6 +248,10 @@ class BlockingKernelClient(KernelClient):
             Function to be called with output messages.
             If not specified, output will be redisplayed.
 
+        stdin_hook: callable(msg)
+            Function to be called with stdin_request messages.
+            If not specified, input/getpass will be called.
+
         Returns
         -------
         reply: dict
@@ -267,6 +270,8 @@ class BlockingKernelClient(KernelClient):
                               allow_stdin=allow_stdin,
                               stop_on_error=stop_on_error,
         )
+        if stdin_hook is None:
+            stdin_hook = self._stdin_hook_default
         if output_hook is None:
             # detect IPython kernel
             if 'IPython' in sys.modules:
@@ -306,7 +311,7 @@ class BlockingKernelClient(KernelClient):
                 raise TimeoutError("Timeout waiting for IPython output")
             if stdin_socket in events:
                 req = self.stdin_channel.get_msg(timeout=0)
-                self._handle_input(req)
+                stdin_hook(req)
                 continue
             if iopub_socket not in events:
                 continue
