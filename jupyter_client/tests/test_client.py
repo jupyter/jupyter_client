@@ -32,11 +32,11 @@ class TestKernelClient(TestCase):
         self.addCleanup(self.kc.stop_channels)
         self.addCleanup(self.km.shutdown_kernel)
 
-    def test_execute(self):
+    def test_execute_interactive(self):
         kc = self.kc
 
         with capture_output() as io:
-            reply = kc.execute("print('hello')", reply=True, timeout=TIMEOUT)
+            reply = kc.execute_interactive("print('hello')", timeout=TIMEOUT)
         assert 'hello' in io.stdout
         assert reply['content']['status'] == 'ok'
     

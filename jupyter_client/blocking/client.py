@@ -7,6 +7,7 @@ Useful for test suites and blocking terminal interfaces.
 
 from __future__ import print_function
 
+from functools import partial
 from getpass import getpass
 try:
     from queue import Empty  # Python 3
@@ -150,13 +151,16 @@ class BlockingKernelClient(KernelClient):
                 continue
             return reply
 
+
+    execute = reqrep(KernelClient.execute)
     history = reqrep(KernelClient.history)
     complete = reqrep(KernelClient.complete)
     inspect = reqrep(KernelClient.inspect)
     kernel_info = reqrep(KernelClient.kernel_info)
     comm_info = reqrep(KernelClient.comm_info)
     shutdown = reqrep(KernelClient.shutdown)
-    
+
+
     def _handle_input(self, req):
         """Handle an input request"""
         content = req['content']
@@ -175,14 +179,40 @@ class BlockingKernelClient(KernelClient):
         if not (self.stdin_channel.msg_ready() or self.shell_channel.msg_ready()):
             self.input(raw_data)
 
+    def _output_hook_default(self, msg):
+        """Default hook for redisplaying plain-text output"""
+        msg_type = msg['header']['msg_type']
+        content = msg['content']
+        if msg_type == 'stream':
+            stream = getattr(sys, content['name'])
+            stream.write(content['text'])
+        elif msg_type in ('display_data', 'execute_result'):
+            sys.stdout.write(content['data'].get('text/plain', ''))
+        elif msg_type == 'error':
+            print('\n'.join(content['traceback']), file=sys.stderr)
 
-    def execute(self, code, silent=False, store_history=True,
+    def _output_hook_kernel(self, session, socket, parent_header, msg):
+        """Output hook when running inside an IPython kernel
+
+        adds rich output support.
+        """
+        msg_type = msg['header']['msg_type']
+        if msg_type in ('display_data', 'execute_result', 'error'):
+            session.send(socket, msg_type, msg['content'], parent=parent_header)
+        else:
+            self._output_hook_default(msg)
+
+    def execute_interactive(self, code, silent=False, store_history=True,
                  user_expressions=None, allow_stdin=None, stop_on_error=True,
-                 reply=False, timeout=None,
+                 timeout=None, output_hook=None,
                 ):
-        """Execute code in the kernel.
+        """Execute code in the kernel interactively
 
-        If reply=True, wait for reply and redisplay output produced by the execution.
+        Output will be redisplayed, and stdin prompts will be relayed as well.
+        If an IPython kernel is detected, rich output will be displayed.
+
+        You can pass a custom output_hook callable that will be called
+        with every IOPub message that is produced instead of the default redisplay.
 
         Parameters
         ----------
@@ -208,25 +238,23 @@ class BlockingKernelClient(KernelClient):
             Some frontends (e.g. the Notebook) do not support stdin requests.
             If raw_input is called from code executed from such a frontend, a
             StdinNotImplementedError will be raised.
-            If reply=True, stdin requests from the kernel will call input / getpass.
 
         stop_on_error: bool, optional (default True)
             Flag whether to abort the execution queue, if an exception is encountered.
 
-        reply: bool (default: False)
-            Whether to wait for and return reply
-
         timeout: float or None (default: None)
             Timeout to use when waiting for a reply
 
+        output_hook: callable(msg)
+            Function to be called with output messages.
+            If not specified, output will be redisplayed.
+
         Returns
         -------
-        msg_id: str
-            The msg_id of the request sent, if reply=False (default)
         reply: dict
-            The reply message for this request, if reply=True
+            The reply message for this request
         """
-        if reply and not self.iopub_channel.is_alive():
+        if not self.iopub_channel.is_alive():
             raise RuntimeError("IOPub channel must be running to receive output")
         if allow_stdin is None:
             allow_stdin = self.allow_stdin
@@ -239,19 +267,22 @@ class BlockingKernelClient(KernelClient):
                               allow_stdin=allow_stdin,
                               stop_on_error=stop_on_error,
         )
-        if not reply:
-            return msg_id
-
-        if 'IPython' in sys.modules:
-            from IPython import get_ipython
-            ip = get_ipython()
-            in_kernel = getattr(ip, 'kernel', False)
-            if in_kernel:
-                socket = ip.display_pub.pub_socket
-                session = ip.display_pub.session
-                parent_header = ip.display_pub.parent_header
-        else:
-            in_kernel = False
+        if output_hook is None:
+            # detect IPython kernel
+            if 'IPython' in sys.modules:
+                from IPython import get_ipython
+                ip = get_ipython()
+                in_kernel = getattr(ip, 'kernel', False)
+                if in_kernel:
+                    output_hook = partial(
+                        self._output_hook_kernel,
+                        ip.display_pub.session,
+                        ip.display_pub.pub_socket,
+                        ip.display_pub.parent_header,
+                    )
+        if output_hook is None:
+            # default: redisplay plain-text outputs
+            output_hook = self._output_hook_default
 
         # set deadline based on timeout
         if timeout is not None:
@@ -285,25 +316,12 @@ class BlockingKernelClient(KernelClient):
             if msg['parent_header'].get('msg_id') != msg_id:
                 # not from my request
                 continue
-            msg_type = msg['header']['msg_type']
-            content = msg['content']
-            if msg_type == 'status':
-                if content['execution_state'] == 'idle':
-                    # idle means output is done
-                    break
-            elif msg_type == 'stream':
-                stream = getattr(sys, content['name'])
-                stream.write(content['text'])
-            elif msg_type in ('display_data', 'execute_result', 'error'):
-                if in_kernel:
-                    session.send(socket, msg_type, content, parent=parent_header)
-                else:
-                    if msg_type == 'error':
-                        print('\n'.join(content['traceback']), file=sys.stderr)
-                    else:
-                        sys.stdout.write(content['data'].get('text/plain', ''))
-            else:
-                pass
+            output_hook(msg)
+
+            # stop on idle
+            if msg['header']['msg_type'] == 'status' and \
+            msg['content']['execution_state'] == 'idle':
+                break
 
         # output is done, get the reply
         if timeout is not None:
