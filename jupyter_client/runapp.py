@@ -104,14 +104,21 @@ class RunApp(JupyterApp, JupyterConsoleApp):
     def start(self):
         self.log.debug("jupyter run: starting...")
         super(RunApp, self).start()
-        for filename in self.filenames_to_run:
-            self.log.debug("jupyter run: executing `%s`" % filename)
-            with open(filename) as fp:
-                code = fp.read()
-                reply = self.kernel_client.execute(code, reply=True)
-                return_code = 0 if reply['content']['status'] == 'ok' else 1
-                if return_code:
-                    raise Exception("jupyter-run error running '%s'" % filename)
+        if self.filenames_to_run:
+            for filename in self.filenames_to_run:
+                self.log.debug("jupyter run: executing `%s`" % filename)
+                with open(filename) as fp:
+                    code = fp.read()
+                    reply = self.kernel_client.execute(code, reply=True)
+                    return_code = 0 if reply['content']['status'] == 'ok' else 1
+                    if return_code:
+                        raise Exception("jupyter-run error running '%s'" % filename)
+        else:
+            code = sys.stdin.read()
+            reply = self.kernel_client.execute(code, reply=True)
+            return_code = 0 if reply['content']['status'] == 'ok' else 1
+            if return_code:
+                raise Exception("jupyter-run error running 'stdin'")
 
 main = launch_new_instance = RunApp.launch_instance
 
