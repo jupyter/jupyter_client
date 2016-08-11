@@ -263,7 +263,7 @@ class BlockingKernelClient(KernelClient):
             allow_stdin = self.allow_stdin
         if allow_stdin and not self.stdin_channel.is_alive():
             raise RuntimeError("stdin channel must be running to allow input")
-        msg_id = super(BlockingKernelClient, self).execute(code,
+        msg_id = self.execute(code,
                               silent=silent,
                               store_history=store_history,
                               user_expressions=user_expressions,
@@ -311,7 +311,7 @@ class BlockingKernelClient(KernelClient):
                 timeout_ms = 1e3 * timeout
             events = dict(poller.poll(timeout_ms))
             if not events:
-                raise TimeoutError("Timeout waiting for IPython output")
+                raise TimeoutError("Timeout waiting for output")
             if stdin_socket in events:
                 req = self.stdin_channel.get_msg(timeout=0)
                 stdin_hook(req)
