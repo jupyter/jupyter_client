@@ -109,13 +109,13 @@ class RunApp(JupyterApp, JupyterConsoleApp):
                 self.log.debug("jupyter run: executing `%s`" % filename)
                 with open(filename) as fp:
                     code = fp.read()
-                    reply = self.kernel_client.execute(code, reply=True)
+                    reply = self.kernel_client.execute_interactive(code, timeout=OUTPUT_TIMEOUT)
                     return_code = 0 if reply['content']['status'] == 'ok' else 1
                     if return_code:
                         raise Exception("jupyter-run error running '%s'" % filename)
         else:
             code = sys.stdin.read()
-            reply = self.kernel_client.execute(code, reply=True)
+            reply = self.kernel_client.execute_interactive(code, timeout=OUTPUT_TIMEOUT)
             return_code = 0 if reply['content']['status'] == 'ok' else 1
             if return_code:
                 raise Exception("jupyter-run error running 'stdin'")
