@@ -107,45 +107,11 @@ class RunApp(JupyterApp, JupyterConsoleApp):
         for filename in self.filenames_to_run:
             self.log.debug("jupyter run: executing `%s`" % filename)
             with open(filename) as fp:
-                cell = fp.read()
-            return_code = self.execute_printing_output(cell)
-            if return_code:
-                raise Exception("jupyter-run error running '%s'" % filename)
-
-    def execute_printing_output(self, cell):
-        """
-        Run a cell on a KernelClient
-        Any output from the cell will be displayed.
-        """
-        msg_id = self.kernel_client.execute(cell)
-        return_code = 0
-        while True:
-            try:
-                msg = self.kernel_client.get_iopub_msg(timeout=OUTPUT_TIMEOUT)
-            except queue.Empty:
-                raise TimeoutError("Timeout waiting for kernel output")
-    
-            if msg['parent_header'].get('msg_id') != msg_id:
-                continue
-            msg_type = msg['header']['msg_type']
-            content = msg['content']
-            self.log.debug("iopub msg: %s" % msg)
-            if msg_type == 'status':
-                if content['execution_state'] == 'idle':
-                    # idle means output is done
-                    break
-            elif msg_type == 'stream':
-                stream = getattr(sys, content['name'])
-                stream.write(content['text'])
-            elif msg_type in ('display_data', 'execute_result', 'error'):
-                if msg_type == 'error':
-                    print('\n'.join(content['traceback']), file=sys.stderr)
-                    return_code = 1
-                else:
-                    sys.stdout.write(content['data'].get('text/plain', ''))
-            else:
-                pass
-        return return_code
+                code = fp.read()
+                reply = self.kernel_client.execute(code, reply=True)
+                return_code = 0 if reply['content']['status'] == 'ok' else 1
+                if return_code:
+                    raise Exception("jupyter-run error running '%s'" % filename)
 
 main = launch_new_instance = RunApp.launch_instance
 
