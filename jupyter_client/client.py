@@ -338,6 +338,9 @@ class KernelClient(ConnectionFileMixin):
         -------
         The ID of the message sent.
         """
+        if hist_access_type == 'range':
+            kwargs.setdefault('session', 0)
+            kwargs.setdefault('start', 0)
         content = dict(raw=raw, output=output, hist_access_type=hist_access_type,
                                                                     **kwargs)
         msg = self.session.msg('history_request', content)
