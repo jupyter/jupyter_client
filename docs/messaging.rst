@@ -1226,9 +1226,7 @@ Opening a Comm produces a ``comm_open`` message, to be sent to the other side::
     {
       'comm_id' : 'u-u-i-d',
       'target_name' : 'my_comm',
-      'data' : {},
-      # Optional, the target module
-      'target_module': 'my_module',
+      'data' : {}
     }
 
 Every Comm has an ID and a target name.
@@ -1241,8 +1239,6 @@ The ``data`` key is always a dict and can be any extra JSON information used in 
 If the ``target_name`` key is not found on the receiving side,
 then it should immediately reply with a ``comm_close`` message to avoid an inconsistent state.
 
-The optional ``target_module`` is used to select a module that is responsible
-for handling the ``target_name``.
 
 Comm Messages
 -------------
