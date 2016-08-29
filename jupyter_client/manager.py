@@ -22,7 +22,7 @@ import zmq
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
-    Any, Instance, Unicode, List, Bool, Type, DottedObjectName
+    Any, Instance, Integer, Unicode, List, Bool, Type, DottedObjectName
 )
 from jupyter_client import (
     launch_kernel,
@@ -66,6 +66,11 @@ class KernelManager(ConnectionFileMixin):
 
     def _kernel_spec_manager_changed(self):
         self._kernel_spec = None
+
+    shutdown_wait_time = Integer(
+        5, config=True,
+        help="Time to wait for a kernel to terminate before killing it, "
+             "in seconds.")
 
     kernel_name = Unicode(kernelspec.NATIVE_KERNEL_NAME)
 
@@ -251,12 +256,14 @@ class KernelManager(ConnectionFileMixin):
         msg = self.session.msg("shutdown_request", content=content)
         self.session.send(self._control_socket, msg)
 
-    def finish_shutdown(self, waittime=1, pollinterval=0.1):
+    def finish_shutdown(self, waittime=None, pollinterval=0.1):
         """Wait for kernel shutdown, then kill process if it doesn't shutdown.
 
         This does not send shutdown requests - use :meth:`request_shutdown`
         first.
         """
+        if waittime is None:
+            waittime = max(self.shutdown_wait_time, 0)
         for i in range(int(waittime/pollinterval)):
             if self.is_alive():
                 time.sleep(pollinterval)

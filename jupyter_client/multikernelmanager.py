@@ -132,7 +132,7 @@ class MultiKernelManager(LoggingConfigurable):
         """Ask a kernel to shut down by its kernel uuid"""
 
     @kernel_method
-    def finish_shutdown(self, kernel_id, waittime=1, pollinterval=0.1):
+    def finish_shutdown(self, kernel_id, waittime=None, pollinterval=0.1):
         """Wait for a kernel to finish shutting down, and kill it if it doesn't
         """
         self.log.info("Kernel shutdown: %s" % kernel_id)
