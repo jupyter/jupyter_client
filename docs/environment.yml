@@ -1,4 +1,4 @@
-name: jupyter_client
+name: jup_client
 channels:
   - conda-forge
 dependencies:
@@ -10,5 +10,3 @@ dependencies:
 - ipykernel
 - sphinx>=1.3.6
 - sphinx_rtd_theme
-- pip:
-    - recommonmark==0.4.0
