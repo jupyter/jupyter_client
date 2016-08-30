@@ -10,6 +10,12 @@ client - communicating with kernels
 
 .. autoclass:: KernelClient
 
+   .. automethod:: load_connection_file
+
+   .. automethod:: load_connection_info
+
+   .. automethod:: start_channels
+
    .. automethod:: execute
 
    .. automethod:: complete

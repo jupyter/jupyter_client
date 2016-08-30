@@ -4,6 +4,20 @@
 Changes in Jupyter Client
 =========================
 
+4.4
+===
+
+4.4.0
+-----
+
+`4.4 on GitHub <https://github.com/jupyter/jupyter_client/milestones/4.4>`__
+
+- Add :meth:`.KernelClient.load_connection_info` on KernelClient, etc. for loading connection info
+  directly from a dict, not just from files.
+- Include parent headers when adapting messages from older protocol implementations
+  (treats parent headers the same as headers).
+- Compatibility fixes in tests for recent changes in ipykernel.
+
 4.3
 ===
 
