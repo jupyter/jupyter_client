@@ -1,0 +1,14 @@
+name: jupyter_client
+channels:
+  - conda-forge
+dependencies:
+- pyzmq
+- python=3
+- traitlets>=4.1
+- jupyter_core
+- ipython
+- ipykernel
+- sphinx>=1.3.6
+- sphinx_rtd_theme
+- pip:
+    - recommonmark==0.4.0
