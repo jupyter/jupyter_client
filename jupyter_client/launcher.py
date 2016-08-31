@@ -124,9 +124,13 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
     except Exception as exc:
         msg = (
             "Failed to run command:\n{}\n"
-            "with kwargs:\n{!r}\n"
+            "    PATH={!r}\n"
+            "    with kwargs:\n{!r}\n"
         )
-        msg = msg.format(cmd, kwargs)
+        # exclude environment variables,
+        # which may contain access tokens and the like.
+        without_env = {key:value for key, value in kwargs.items() if key != 'env'}
+        msg = msg.format(cmd, env.get('PATH', os.defpath), without_env)
         get_logger().error(msg)
         raise
 
