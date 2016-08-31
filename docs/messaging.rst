@@ -191,7 +191,7 @@ After the delimiter is the `HMAC`_ signature of the message, used for authentica
 If authentication is disabled, this should be an empty string.
 By default, the hashing function used for computing these signatures is sha256.
 
-.. _HMAC: http://en.wikipedia.org/wiki/HMAC
+.. _HMAC: https://en.wikipedia.org/wiki/HMAC
 
 .. note::
 

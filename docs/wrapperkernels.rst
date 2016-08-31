@@ -4,8 +4,8 @@ Making simple Python wrapper kernels
 You can re-use IPython's kernel machinery to easily make new kernels.
 This is useful for languages that have Python bindings, such as `Octave
 <http://www.gnu.org/software/octave/>`_ (via
-`Oct2Py <http://blink1073.github.io/oct2py/docs/index.html>`_), or languages
-where the REPL can be controlled in a tty using `pexpect <http://pexpect.readthedocs.org/en/latest/>`_,
+`Oct2Py <https://blink1073.github.io/oct2py/#>`_), or languages
+where the REPL can be controlled in a tty using `pexpect <http://pexpect.readthedocs.io/en/latest/>`_,
 such as bash.
 
 .. seealso::
@@ -67,7 +67,7 @@ To launch your kernel, add this at the end of your module::
         from ipykernel.kernelapp import IPKernelApp
         IPKernelApp.launch_instance(kernel_class=MyKernel)
 
-Now create a `JSON kernel spec file <http://jupyter-client.readthedocs.org/en/latest/kernels.html#kernel-specs>`_ and install it using ``jupyter kernelspec install </path/to/kernel>``. Place your kernel module anywhere Python can import it (try current directory for testing). Finally, you can run your kernel using ``jupyter console --kernel <mykernelname>``. Note that ``<mykernelname>`` in the below example is ``echo``. 
+Now create a `JSON kernel spec file <http://jupyter-client.readthedocs.io/en/latest/kernels.html#kernel-specs>`_ and install it using ``jupyter kernelspec install </path/to/kernel>``. Place your kernel module anywhere Python can import it (try current directory for testing). Finally, you can run your kernel using ``jupyter console --kernel <mykernelname>``. Note that ``<mykernelname>`` in the below example is ``echo``.
 
 Example
 -------
