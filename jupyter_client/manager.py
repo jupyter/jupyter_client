@@ -22,7 +22,7 @@ import zmq
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
-    Any, Instance, Integer, Unicode, List, Bool, Type, DottedObjectName
+    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName
 )
 from jupyter_client import (
     launch_kernel,
@@ -67,8 +67,8 @@ class KernelManager(ConnectionFileMixin):
     def _kernel_spec_manager_changed(self):
         self._kernel_spec = None
 
-    shutdown_wait_time = Integer(
-        5, config=True,
+    shutdown_wait_time = Float(
+        5.0, config=True,
         help="Time to wait for a kernel to terminate before killing it, "
              "in seconds.")
 
