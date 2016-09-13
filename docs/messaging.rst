@@ -288,7 +288,11 @@ All reply messages have a ``'status'`` field, which will have one of the followi
           'traceback' : list(str), # traceback frames as strings
        }
 
-- ``status='abort'``: the task has been aborted. In this case, no additional fields should be present.
+- ``status='abort'``: The request has been aborted in a manner that does not result in an error
+  (e.g. the request has been canceled somehow).
+  Some kernels may set this for execution halted by signals,
+  but should only do so if there is no corresponding error raised in the evaluating code.
+
 
 .. _execute:
 
