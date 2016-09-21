@@ -24,6 +24,9 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
     stdin, stdout, stderr : optional (default None)
         Standards streams, as defined in subprocess.Popen.
 
+    env: dict, optional
+        Environment variables passed to the kernel
+
     independent : bool, optional (default False)
         If set, the kernel process is guaranteed to survive if this process
         dies. If not set, an effort is made to ensure that the kernel is killed
@@ -32,6 +35,9 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
 
     cwd : path, optional
         The working dir of the kernel process (default: cwd of this process).
+
+    **kw: optional
+        Additional arguments for Popen
 
     Returns
     -------
