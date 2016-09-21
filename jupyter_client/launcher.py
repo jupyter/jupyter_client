@@ -13,10 +13,7 @@ from traitlets.log import get_logger
 
 
 def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
-                        independent=False,
-                        cwd=None,
-                        **kw
-                        ):
+                  independent=False, cwd=None, **kw):
     """ Launches a localhost kernel, binding to the specified ports.
 
     Parameters
@@ -66,13 +63,15 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
     env = env if (env is not None) else os.environ.copy()
 
     encoding = getdefaultencoding(prefer_stream=False)
-    kwargs = dict(
+    kwargs = kw.copy()
+    main_args = dict(
         stdin=_stdin,
         stdout=_stdout,
         stderr=_stderr,
         cwd=cwd,
         env=env,
     )
+    kwargs.update(main_args)
 
     # Spawn a kernel.
     if sys.platform == 'win32':
