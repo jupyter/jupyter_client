@@ -338,6 +338,9 @@ class KernelClient(ConnectionFileMixin):
         -------
         The ID of the message sent.
         """
+        if hist_access_type == 'range':
+            kwargs.setdefault('session', 0)
+            kwargs.setdefault('start', 0)
         content = dict(raw=raw, output=output, hist_access_type=hist_access_type,
                                                                     **kwargs)
         msg = self.session.msg('history_request', content)
@@ -345,13 +348,23 @@ class KernelClient(ConnectionFileMixin):
         return msg['header']['msg_id']
 
     def kernel_info(self):
-        """Request kernel info."""
+        """Request kernel info
+
+        Returns
+        -------
+        The msg_id of the message sent
+        """
         msg = self.session.msg('kernel_info_request')
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
     def comm_info(self, target_name=None):
-        """Request comm info."""
+        """Request comm info
+        
+        Returns
+        -------
+        The msg_id of the message sent
+        """
         if target_name is None:
             content = {}
         else:
@@ -380,6 +393,10 @@ class KernelClient(ConnectionFileMixin):
         The kernel will send the reply via a function registered with Python's
         atexit module, ensuring it's truly done as the kernel is done with all
         normal operation.
+
+        Returns
+        -------
+        The msg_id of the message sent
         """
         # Send quit message to kernel. Once we implement kernel-side setattr,
         # this should probably be done that way, but for now this will do.

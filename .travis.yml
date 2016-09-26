@@ -13,6 +13,6 @@ install:
     - pip install -f travis-wheels/wheelhouse -e .[test] codecov
     - python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 script:
-    - nosetests --with-coverage --cover-package jupyter_client jupyter_client
+    - nosetests -v --with-coverage --cover-package jupyter_client jupyter_client
 after_success:
     - codecov
