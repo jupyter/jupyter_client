@@ -13,10 +13,7 @@ from traitlets.log import get_logger
 
 
 def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
-                        independent=False,
-                        cwd=None,
-                        **kw
-                        ):
+                  independent=False, cwd=None, **kw):
     """ Launches a localhost kernel, binding to the specified ports.
 
     Parameters
@@ -27,6 +24,9 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
     stdin, stdout, stderr : optional (default None)
         Standards streams, as defined in subprocess.Popen.
 
+    env: dict, optional
+        Environment variables passed to the kernel
+
     independent : bool, optional (default False)
         If set, the kernel process is guaranteed to survive if this process
         dies. If not set, an effort is made to ensure that the kernel is killed
@@ -35,6 +35,9 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
 
     cwd : path, optional
         The working dir of the kernel process (default: cwd of this process).
+
+    **kw: optional
+        Additional arguments for Popen
 
     Returns
     -------
@@ -66,13 +69,15 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
     env = env if (env is not None) else os.environ.copy()
 
     encoding = getdefaultencoding(prefer_stream=False)
-    kwargs = dict(
+    kwargs = kw.copy()
+    main_args = dict(
         stdin=_stdin,
         stdout=_stdout,
         stderr=_stderr,
         cwd=cwd,
         env=env,
     )
+    kwargs.update(main_args)
 
     # Spawn a kernel.
     if sys.platform == 'win32':
