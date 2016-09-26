@@ -110,24 +110,24 @@ DONE = zmq.MessageTracker()
 # Mixin tools for apps that use Sessions
 #-----------------------------------------------------------------------------
 
-def uuid4():
-    """Generate a new UUID.
+def new_id():
+    """Generate a new random id.
 
     Avoids problematic runtime import in stdlib uuid on Python 2.
 
     Returns
     -------
 
-    uuid string (16 random bytes as hex-encoded unicode str)
+    id string (16 random bytes as hex-encoded text, chunks separated by '-')
     """
     buf = os.urandom(16)
     return u'-'.join(b2a_hex(x).decode('ascii') for x in (
-        buf[:4], buf[4:6], buf[6:8], buf[8:10], buf[10:]
+        buf[:4], buf[4:]
     ))
 
-def uuid4_bytes():
-    """Return uuid4 as ascii bytes"""
-    return uuid4().encode('ascii')
+def new_id_bytes():
+    """Return new_id as ascii bytes"""
+    return new_id().encode('ascii')
 
 session_aliases = dict(
     ident = 'Session.session',
@@ -136,7 +136,7 @@ session_aliases = dict(
 )
 
 session_flags  = {
-    'secure' : ({'Session' : { 'key' : uuid4_bytes(),
+    'secure' : ({'Session' : { 'key' : new_id_bytes(),
                             'keyfile' : '' }},
         """Use HMAC digests for authentication of messages.
         Setting this flag will generate a new UUID to use as the HMAC key.
@@ -156,7 +156,7 @@ def default_secure(cfg):
         if 'key' in cfg.Session or 'keyfile' in cfg.Session:
             return
     # key/keyfile not specified, generate new UUID:
-    cfg.Session.key = uuid4_bytes()
+    cfg.Session.key = new_id_bytes()
 
 
 #-----------------------------------------------------------------------------
@@ -329,7 +329,7 @@ class Session(Configurable):
     session = CUnicode(u'', config=True,
         help="""The UUID identifying this session.""")
     def _session_default(self):
-        u = uuid4()
+        u = new_id()
         self.bsession = u.encode('ascii')
         return u
 
@@ -354,7 +354,7 @@ class Session(Configurable):
     key = CBytes(config=True,
         help="""execution key, for signing messages.""")
     def _key_default(self):
-        return uuid4_bytes()
+        return new_id_bytes()
 
     def _key_changed(self):
         self._new_auth()
@@ -479,7 +479,7 @@ class Session(Configurable):
     @property
     def msg_id(self):
         """always return new uuid"""
-        return uuid4()
+        return new_id()
 
     def _check_packers(self):
         """check packers for datetime support."""
