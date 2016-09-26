@@ -44,8 +44,8 @@ class TestSession(SessionTestCase):
         self.assertTrue(isinstance(msg['metadata'],dict))
         self.assertTrue(isinstance(msg['header'],dict))
         self.assertTrue(isinstance(msg['parent_header'],dict))
-        self.assertTrue(isinstance(msg['msg_id'],str))
-        self.assertTrue(isinstance(msg['msg_type'],str))
+        self.assertTrue(isinstance(msg['msg_id'], string_types))
+        self.assertTrue(isinstance(msg['msg_type'], string_types))
         self.assertEqual(msg['header']['msg_type'], 'execute')
         self.assertEqual(msg['msg_type'], 'execute')
 
