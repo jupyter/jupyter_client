@@ -128,6 +128,10 @@ A message is defined by the following four-dictionary structure::
       # The actual content of the message must be a dict, whose structure
       # depends on the message type.
       'content' : dict,
+
+      # optional: buffers is a list of binary data buffers for implementations
+      # that support binary extensions to the protocol.
+      'buffers': list,
     }
 
 .. versionchanged:: 5.0
@@ -170,7 +174,7 @@ Every message is serialized to a sequence of at least six blobs of bytes:
       b'{parent_header}', # serialized parent header dict
       b'{metadata}',      # serialized metadata dict
       b'{content}',       # serialized content dict
-      b'blob',            # extra raw data buffer(s)
+      b'0x1234',          # extra raw data buffer(s)
       ...
     ]
 
