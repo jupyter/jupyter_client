@@ -9,4 +9,4 @@ It also provides client and kernel management APIs for working with kernels.
 It also provides the `jupyter kernelspec` entrypoint
 for installing kernelspecs for use with Jupyter frontends.
 
-[Jupyter protocol]: http://jupyter-client.readthedocs.org/en/latest/messaging.html
+[Jupyter protocol]: https://jupyter-client.readthedocs.io/en/latest/messaging.html
