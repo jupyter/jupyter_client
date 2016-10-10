@@ -174,7 +174,7 @@ Every message is serialized to a sequence of at least six blobs of bytes:
       b'{parent_header}', # serialized parent header dict
       b'{metadata}',      # serialized metadata dict
       b'{content}',       # serialized content dict
-      b'0x1234',          # extra raw data buffer(s)
+      b'\xf0\x9f\x90\xb1' # extra raw data buffer(s)
       ...
     ]
 
