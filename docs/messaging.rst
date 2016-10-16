@@ -998,6 +998,13 @@ of images::
       }
     }
 
+and expanded for JSON data::
+
+    metadata = {
+      'application/json' : {
+        'expanded': True
+      }
+    }
 
 .. versionchanged:: 5.0
 
