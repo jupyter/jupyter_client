@@ -139,7 +139,7 @@ class KernelSpecManager(LoggingConfigurable):
                                NATIVE_KERNEL_NAME, RESOURCES)
                 d[NATIVE_KERNEL_NAME] = RESOURCES
             except ImportError:
-                self.log.warn("Native kernel (%s) is not available", NATIVE_KERNEL_NAME)
+                self.log.warning("Native kernel (%s) is not available", NATIVE_KERNEL_NAME)
 
         if self.whitelist:
             # filter if there's a whitelist
@@ -258,7 +258,7 @@ class KernelSpecManager(LoggingConfigurable):
         
         kernel_dir = os.path.dirname(destination)
         if kernel_dir not in self.kernel_dirs:
-            self.log.warn("Installing to %s, which is not in %s. The kernelspec may not be found.",
+            self.log.warning("Installing to %s, which is not in %s. The kernelspec may not be found.",
                 kernel_dir, self.kernel_dirs,
             )
         

@@ -92,7 +92,7 @@ class KernelRestarter(LoggingConfigurable):
                 self._restart_count = 1
 
             if self._restart_count >= self.restart_limit:
-                self.log.warn("KernelRestarter: restart failed")
+                self.log.warning("KernelRestarter: restart failed")
                 self._fire_callbacks('dead')
                 self._restarting = False
                 self._restart_count = 0
