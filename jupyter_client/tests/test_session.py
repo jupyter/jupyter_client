@@ -258,8 +258,8 @@ class TestSession(SessionTestCase):
             session = ss.Session(unpack=lambda b: 5)
 
     def _datetime_test(self, session):
-        content = dict(t=datetime.now())
-        metadata = dict(t=datetime.now())
+        content = dict(t=ss.utcnow())
+        metadata = dict(t=ss.utcnow())
         p = session.msg('msg')
         msg = session.msg('msg', content=content, metadata=metadata, parent=p['header'])
         smsg = session.serialize(msg)

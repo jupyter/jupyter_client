@@ -43,6 +43,13 @@ except ImportError:
     # limiting the surface of attack
     def compare_digest(a,b): return a == b
 
+try:
+    from datetime import timezone
+    utc = timezone.utc
+except ImportError:
+    from dateutil.tz import tzutc
+    utc = tzutc()
+
 import zmq
 from zmq.utils import jsonapi
 from zmq.eventloop.ioloop import IOLoop
@@ -158,6 +165,9 @@ def default_secure(cfg):
     # key/keyfile not specified, generate new UUID:
     cfg.Session.key = new_id_bytes()
 
+def utcnow():
+    """Return timezone-aware UTC timestamp"""
+    return datetime.utcnow().replace(tzinfo=utc)
 
 #-----------------------------------------------------------------------------
 # Classes
@@ -223,7 +233,8 @@ class Message(object):
 
 
 def msg_header(msg_id, msg_type, username, session):
-    date = datetime.now()
+    """Create a new message header"""
+    date = utcnow()
     version = protocol_version
     return locals()
 
@@ -519,7 +530,7 @@ class Session(Configurable):
             )
 
         # check datetime support
-        msg = dict(t=datetime.now())
+        msg = dict(t=utcnow())
         try:
             unpacked = unpack(pack(msg))
             if isinstance(unpacked['t'], datetime):
