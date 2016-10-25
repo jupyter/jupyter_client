@@ -1,5 +1,7 @@
 language: python
 python:
+    - "nightly"
+    - '3.6-dev'
     - 3.5
     - 3.4
     - 3.3
@@ -16,3 +18,6 @@ script:
     - nosetests -v --with-coverage --cover-package jupyter_client jupyter_client
 after_success:
     - codecov
+matrix:
+    allow_failures:
+        - python: nightly
