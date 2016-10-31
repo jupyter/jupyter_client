@@ -108,6 +108,9 @@ locations:
 The user location takes priority over the system locations, and the case of the
 names is ignored, so selecting kernels works the same way whether or not the
 filesystem is case sensitive.
+Since kernelspecs show up in URLs and other places,
+they are required to be simple names, only containing ASCII letters and numbers,
+and the simple separators: ``-``, ``.``, ``_``.
 
 Other locations may also be searched if the :envvar:`JUPYTER_PATH` environment
 variable is set.

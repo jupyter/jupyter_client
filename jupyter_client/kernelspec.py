@@ -6,6 +6,7 @@
 import io
 import json
 import os
+import re
 import shutil
 import warnings
 
@@ -19,6 +20,7 @@ from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PA
 
 
 NATIVE_KERNEL_NAME = 'python3' if PY3 else 'python2'
+
 
 class KernelSpec(HasTraits):
     argv = List()
@@ -54,9 +56,22 @@ class KernelSpec(HasTraits):
         """
         return json.dumps(self.to_dict())
 
+
+_kernel_name_pat = re.compile(r'^[a-z0-9._\-]+$', re.IGNORECASE)
+
+def _is_valid_kernel_name(name):
+    """Check that a kernel name is valid."""
+    # quote is not unicode-safe on Python 2
+    return _kernel_name_pat.match(name)
+
+
+_kernel_name_description = "Kernel names can only contain ASCII letters and numbers and these separators: -._"
+
+
 def _is_kernel_dir(path):
     """Is ``path`` a kernel directory?"""
     return os.path.isdir(path) and os.path.isfile(pjoin(path, 'kernel.json'))
+
 
 def _list_kernels_in(dir):
     """Return a mapping of kernel names to resource directories from dir.
@@ -65,8 +80,19 @@ def _list_kernels_in(dir):
     """
     if dir is None or not os.path.isdir(dir):
         return {}
-    return {f.lower(): pjoin(dir, f) for f in os.listdir(dir)
-                        if _is_kernel_dir(pjoin(dir, f))}
+    kernels = {}
+    for f in os.listdir(dir):
+        path = pjoin(dir, f)
+        if not _is_kernel_dir(path):
+            continue
+        key = f.lower()
+        if not _is_valid_kernel_name(key):
+            warnings.warn("Invalid kernelspec directory name (%s): %s",
+                _kernel_name_description, path, stacklevel=3,
+            )
+        kernels[key] = path
+    return kernels
+
 
 class NoSuchKernel(KeyError):
     def __init__(self, name):
@@ -74,6 +100,7 @@ class NoSuchKernel(KeyError):
 
     def __str__(self):
         return "No such kernel named {}".format(self.name)
+
 
 class KernelSpecManager(LoggingConfigurable):
 
@@ -242,10 +269,12 @@ class KernelSpecManager(LoggingConfigurable):
         if not kernel_name:
             kernel_name = os.path.basename(source_dir)
         kernel_name = kernel_name.lower()
-        
+        if not _is_valid_kernel_name(kernel_name):
+            raise ValueError("Invalid kernel name %r.  %s" % (kernel_name, _kernel_name_description))
+
         if user and prefix:
             raise ValueError("Can't specify both user and prefix. Please choose one or the other.")
-        
+
         if replace is not None:
             warnings.warn(
                 "replace is ignored. Installing a kernelspec always replaces an existing installation",
