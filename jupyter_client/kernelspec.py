@@ -65,7 +65,8 @@ def _is_valid_kernel_name(name):
     return _kernel_name_pat.match(name)
 
 
-_kernel_name_description = "Kernel names can only contain ASCII letters and numbers and these separators: -._"
+_kernel_name_description = "Kernel names can only contain ASCII letters and numbers and these separators:" \
+ " - . _ (hyphen, period, and underscore)."
 
 
 def _is_kernel_dir(path):
