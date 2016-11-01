@@ -1,3 +1,4 @@
+# coding: utf-8
 """Tests for the KernelSpecManager"""
 
 # Copyright (c) Jupyter Development Team.
@@ -141,3 +142,23 @@ class KernelSpecTests(unittest.TestCase):
         )
         out, _ = p.communicate()
         self.assertEqual(p.returncode, 0, out.decode('utf8', 'replace'))
+
+    def test_validate_kernel_name(self):
+        for good in [
+            'julia-0.4',
+            'ipython',
+            'R',
+            'python_3',
+            'Haskell-1-2-3',
+        ]:
+            assert kernelspec._is_valid_kernel_name(good)
+        
+        for bad in [
+            'has space',
+            u'ünicode',
+            '%percent',
+            'question?',
+        ]:
+            assert not kernelspec._is_valid_kernel_name(bad)
+
+
