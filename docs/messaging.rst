@@ -80,19 +80,7 @@ kernel has four sockets that serve the following functions:
 
 The actual format of the messages allowed on each of these channels is
 specified below.  Messages are dicts of dicts with string keys and values that
-are reasonably representable in JSON.  Our current implementation uses JSON
-explicitly as its message format, but this shouldn't be considered a permanent
-feature.  As we've discovered that JSON has non-trivial performance issues due
-to excessive copying, we may in the future move to a pure pickle-based raw
-message format.  However, it should be possible to easily convert from the raw
-objects to JSON, since we may have non-python clients (e.g. a web frontend).
-As long as it's easy to make a JSON version of the objects that is a faithful
-representation of all the data, we can communicate with such clients.
-
-.. Note::
-
-   Not all of these have yet been fully fleshed out, but the key ones are, see
-   kernel and frontend files for actual implementation details.
+are reasonably representable in JSON.
 
 General Message Format
 ======================
