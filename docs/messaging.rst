@@ -966,6 +966,10 @@ Message type: ``display_data``::
 
         # Any metadata that describes the data
         'metadata' : dict
+
+        # Any information not to be persisted to a notebook or other environment
+        # Intended to live only during a kernel session
+        'transient': dict
     }
 
 
@@ -994,12 +998,20 @@ and expanded for JSON data::
       }
     }
 
+
+The ``transient`` dict contains runtime metadata that should not be persisted to
+document formats. The first field used in transient is `display_id`.
+
 .. versionchanged:: 5.0
 
     `application/json` data should be unpacked JSON data,
     not double-serialized as a JSON string.
 
+Update Display Data
+-------------------
 
+This message has the same format as `display_data`_ messages and must contain
+a ```transient`` field with a ``display_id``.
 
 Code inputs
 -----------
