@@ -965,11 +965,11 @@ Message type: ``display_data``::
         'data' : dict,
 
         # Any metadata that describes the data
-        'metadata' : dict
+        'metadata' : dict,
 
         # Optional transient data. Information not to be persisted to a notebook
         # or other documents. Intended to live only during a live kernel session.
-        'transient': dict
+        'transient': dict,
     }
 
 
@@ -1034,11 +1034,11 @@ Message type: ``update_display_data``::
         'data' : dict,
 
         # Any metadata that describes the data
-        'metadata' : dict
+        'metadata' : dict,
 
         # Any information not to be persisted to a notebook or other environment
         # Intended to live only during a kernel session
-        'transient': dict
+        'transient': dict,
     }
 
 Code inputs
