@@ -1022,6 +1022,25 @@ When a ``display_id`` is specified for a display, it can be updated later
 with an ``update_display_data`` message. This message has the same format as `display_data`_
 messages and must contain a ```transient`` field with a ``display_id``.
 
+.. _update_display_data:
+
+Message type: ``update_display_data``::
+
+    content = {
+
+        # The data dict contains key/value pairs, where the keys are MIME
+        # types and the values are the raw data of the representation in that
+        # format.
+        'data' : dict,
+
+        # Any metadata that describes the data
+        'metadata' : dict
+
+        # Any information not to be persisted to a notebook or other environment
+        # Intended to live only during a kernel session
+        'transient': dict
+    }
+
 Code inputs
 -----------
 
