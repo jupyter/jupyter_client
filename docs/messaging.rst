@@ -967,8 +967,8 @@ Message type: ``display_data``::
         # Any metadata that describes the data
         'metadata' : dict
 
-        # Any information not to be persisted to a notebook or other environment
-        # Intended to live only during a kernel session
+        # Optional transient data. Information not to be persisted to a notebook
+        # or other documents. Intended to live only during a live kernel session.
         'transient': dict
     }
 
@@ -1000,7 +1000,7 @@ and expanded for JSON data::
 
 
 The ``transient`` dict contains runtime metadata that should not be persisted to
-document formats. The only transient key currently defined in Jupyter is
+document formats and is fully optional. The only transient key currently defined in Jupyter is
 ``display_id``::
 
     transient = {
