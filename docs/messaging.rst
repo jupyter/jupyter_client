@@ -1000,7 +1000,12 @@ and expanded for JSON data::
 
 
 The ``transient`` dict contains runtime metadata that should not be persisted to
-document formats. The first field used in transient is `display_id`.
+document formats. The only transient key currently defined in Jupyter is
+``display_id``::
+
+    transient = {
+        'display_id': 'abcd'
+    }
 
 .. versionchanged:: 5.0
 
@@ -1010,8 +1015,12 @@ document formats. The first field used in transient is `display_id`.
 Update Display Data
 -------------------
 
-This message has the same format as `display_data`_ messages and must contain
-a ```transient`` field with a ``display_id``.
+Displays can now be named with a `display_id`` within the ``transient`` field of
+``display_data`` or ``execute_result``.
+
+When a ``display_id`` is specified for a display, it can be updated later
+with an ``update_display_data`` message. This message has the same format as `display_data`_
+messages and must contain a ```transient`` field with a ``display_id``.
 
 Code inputs
 -----------
