@@ -1015,12 +1015,12 @@ document formats and is fully optional. The only transient key currently defined
 Update Display Data
 -------------------
 
-Displays can now be named with a `display_id`` within the ``transient`` field of
+Displays can now be named with a ``display_id`` within the ``transient`` field of
 ``display_data`` or ``execute_result``.
 
 When a ``display_id`` is specified for a display, it can be updated later
 with an ``update_display_data`` message. This message has the same format as `display_data`_
-messages and must contain a ```transient`` field with a ``display_id``.
+messages and must contain a ``transient`` field with a ``display_id``.
 
 .. _update_display_data:
 
@@ -1040,6 +1040,10 @@ Message type: ``update_display_data``::
         # Intended to live only during a kernel session
         'transient': dict,
     }
+
+Frontends can choose how they update prior outputs (or if they regard this as a
+regular ``display_data`` message). Within the jupyter and nteract_ notebooks,
+all displays that match the ``display_id`` are updated (even if there are multiple).
 
 Code inputs
 -----------
@@ -1337,3 +1341,4 @@ Missing things include:
 * Important: finish thinking through the payload concept and API.
 
 .. _ZeroMQ: http://zeromq.org
+.. _nteract: https://nteract.io
