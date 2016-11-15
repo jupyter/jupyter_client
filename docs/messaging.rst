@@ -967,8 +967,9 @@ Message type: ``display_data``::
         # Any metadata that describes the data
         'metadata' : dict,
 
-        # Optional transient data. Information not to be persisted to a notebook
-        # or other documents. Intended to live only during a live kernel session.
+        # Optional transient data introduced in 5.1. Information not to be
+        # persisted to a notebook or other documents. Intended to live only
+        # during a live kernel session.
         'transient': dict,
     }
 
@@ -1012,8 +1013,14 @@ document formats and is fully optional. The only transient key currently defined
     `application/json` data should be unpacked JSON data,
     not double-serialized as a JSON string.
 
+.. versionchanged:: 5.1
+
+    `transient` is a new field.
+
 Update Display Data
 -------------------
+
+.. versionadded:: 5.1
 
 Displays can now be named with a ``display_id`` within the ``transient`` field of
 ``display_data`` or ``execute_result``.
