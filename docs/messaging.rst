@@ -965,7 +965,12 @@ Message type: ``display_data``::
         'data' : dict,
 
         # Any metadata that describes the data
-        'metadata' : dict
+        'metadata' : dict,
+
+        # Optional transient data introduced in 5.1. Information not to be
+        # persisted to a notebook or other documents. Intended to live only
+        # during a live kernel session.
+        'transient': dict,
     }
 
 
@@ -994,12 +999,58 @@ and expanded for JSON data::
       }
     }
 
+
+The ``transient`` dict contains runtime metadata that should not be persisted to
+document formats and is fully optional. The only transient key currently defined in Jupyter is
+``display_id``::
+
+    transient = {
+        'display_id': 'abcd'
+    }
+
 .. versionchanged:: 5.0
 
     `application/json` data should be unpacked JSON data,
     not double-serialized as a JSON string.
 
+.. versionchanged:: 5.1
 
+    `transient` is a new field.
+
+Update Display Data
+-------------------
+
+.. versionadded:: 5.1
+
+Displays can now be named with a ``display_id`` within the ``transient`` field of
+``display_data`` or ``execute_result``.
+
+When a ``display_id`` is specified for a display, it can be updated later
+with an ``update_display_data`` message. This message has the same format as `display_data`_
+messages and must contain a ``transient`` field with a ``display_id``.
+
+.. _update_display_data:
+
+Message type: ``update_display_data``::
+
+    content = {
+
+        # The data dict contains key/value pairs, where the keys are MIME
+        # types and the values are the raw data of the representation in that
+        # format.
+        'data' : dict,
+
+        # Any metadata that describes the data
+        'metadata' : dict,
+
+        # Any information not to be persisted to a notebook or other environment
+        # Intended to live only during a kernel session
+        'transient': dict,
+    }
+
+Frontends can choose how they update prior outputs (or if they regard this as a
+regular ``display_data`` message). Within the jupyter and nteract_ notebooks,
+all displays that match the ``display_id`` are updated (even if there are multiple).
 
 Code inputs
 -----------
@@ -1297,3 +1348,4 @@ Missing things include:
 * Important: finish thinking through the payload concept and API.
 
 .. _ZeroMQ: http://zeromq.org
+.. _nteract: https://nteract.io
