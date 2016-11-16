@@ -47,6 +47,7 @@ try:
     from datetime import timezone
     utc = timezone.utc
 except ImportError:
+    # Python 2
     from dateutil.tz import tzutc
     utc = tzutc()
 
