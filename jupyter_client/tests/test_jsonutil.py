@@ -8,9 +8,15 @@ import datetime
 from datetime import timedelta
 import json
 
+try:
+    from unittest import mock
+except ImportError:
+    # py2
+    import mock
+
 import nose.tools as nt
 
-from dateutil.tz import tzlocal, gettz
+from dateutil.tz import tzlocal, tzoffset
 from jupyter_client import jsonutil
 from jupyter_client.session import utcnow
 
@@ -55,8 +61,11 @@ def test_parse_ms_precision():
 
 def test_date_default():
     naive = datetime.datetime.now()
-    data = dict(naive=naive, utc=utcnow(), withtz=naive.replace(tzinfo=gettz('CEST')))
-    jsondata = json.dumps(data, default=jsonutil.date_default)
+    local = tzoffset('Local', -8 * 3600)
+    other = tzoffset('Other', 2 * 3600)
+    data = dict(naive=naive, utc=utcnow(), withtz=naive.replace(tzinfo=other))
+    with mock.patch.object(jsonutil, 'tzlocal', lambda : local):
+        jsondata = json.dumps(data, default=jsonutil.date_default)
     nt.assert_in("Z", jsondata)
     nt.assert_equal(jsondata.count("Z"), 1)
     extracted = jsonutil.extract_dates(json.loads(jsondata))
