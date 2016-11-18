@@ -38,7 +38,7 @@ def _ensure_tzinfo(dt):
     """
     if not dt.tzinfo:
         # No more naïve datetime objects!
-        warnings.warn(u"Interpreting naïve datetime as local %s. Please add timezone info to timestamps." % dt,
+        warnings.warn(u"Interpreting naive datetime as local %s. Please add timezone info to timestamps." % dt,
             DeprecationWarning,
             stacklevel=4)
         dt = dt.replace(tzinfo=tzlocal())
