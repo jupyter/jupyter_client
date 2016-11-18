@@ -4,8 +4,9 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import re
 from datetime import datetime
+import re
+import warnings
 
 from dateutil.parser import parse as _dateutil_parse
 from dateutil.tz import tzlocal
@@ -37,6 +38,9 @@ def _ensure_tzinfo(dt):
     """
     if not dt.tzinfo:
         # No more naïve datetime objects!
+        warnings.warn(u"Interpreting naïve datetime as local %s. Please add timezone info to timestamps." % dt,
+            DeprecationWarning,
+            stacklevel=4)
         dt = dt.replace(tzinfo=tzlocal())
     return dt
 
