@@ -6,10 +6,7 @@
 import re
 import json
 
-from datetime import datetime
-
 from jupyter_client import protocol_version_info
-
 
 def code_to_line(code, cursor_pos):
     """Turn a multiline code block and cursor position into a single line
@@ -386,9 +383,10 @@ def adapt(msg, to_version=protocol_version_info[0]):
     msg : dict
         A Jupyter message appropriate in the new version.
     """
+    from .session import utcnow
     header = msg['header']
     if 'date' not in header:
-        header['date'] = datetime.now().isoformat()
+        header['date'] = utcnow()
     if 'version' in header:
         from_version = int(header['version'].split('.')[0])
     else:

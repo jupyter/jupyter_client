@@ -5,32 +5,43 @@
 # Distributed under the terms of the Modified BSD License.
 
 import datetime
+from datetime import timedelta
 import json
+
+try:
+    from unittest import mock
+except ImportError:
+    # py2
+    import mock
 
 import nose.tools as nt
 
+from dateutil.tz import tzlocal, tzoffset
 from jupyter_client import jsonutil
-from ipython_genutils.py3compat import unicode_to_str, str_to_bytes, iteritems
+from jupyter_client.session import utcnow
 
 
 def test_extract_dates():
     timestamps = [
         '2013-07-03T16:34:52.249482',
         '2013-07-03T16:34:52.249482Z',
-        '2013-07-03T16:34:52.249482Z-0800',
-        '2013-07-03T16:34:52.249482Z+0800',
-        '2013-07-03T16:34:52.249482Z+08:00',
-        '2013-07-03T16:34:52.249482Z-08:00',
         '2013-07-03T16:34:52.249482-0800',
         '2013-07-03T16:34:52.249482+0800',
-        '2013-07-03T16:34:52.249482+08:00',
         '2013-07-03T16:34:52.249482-08:00',
+        '2013-07-03T16:34:52.249482+08:00',
     ]
     extracted = jsonutil.extract_dates(timestamps)
     ref = extracted[0]
     for dt in extracted:
         nt.assert_true(isinstance(dt, datetime.datetime))
-        nt.assert_equal(dt, ref)
+        nt.assert_not_equal(dt.tzinfo, None)
+
+    nt.assert_equal(extracted[0].tzinfo.utcoffset(ref), tzlocal().utcoffset(ref))
+    nt.assert_equal(extracted[1].tzinfo.utcoffset(ref), timedelta(0))
+    nt.assert_equal(extracted[2].tzinfo.utcoffset(ref), timedelta(hours=-8))
+    nt.assert_equal(extracted[3].tzinfo.utcoffset(ref), timedelta(hours=8))
+    nt.assert_equal(extracted[4].tzinfo.utcoffset(ref), timedelta(hours=-8))
+    nt.assert_equal(extracted[5].tzinfo.utcoffset(ref), timedelta(hours=8))
 
 def test_parse_ms_precision():
     base = '2013-07-03T16:34:52'
@@ -47,27 +58,18 @@ def test_parse_ms_precision():
             nt.assert_is_instance(parsed, str)
 
 
-ZERO = datetime.timedelta(0)
-
-class tzUTC(datetime.tzinfo):
-    """tzinfo object for UTC (zero offset)"""
-
-    def utcoffset(self, d):
-        return ZERO
-
-    def dst(self, d):
-        return ZERO
-
-UTC = tzUTC()
 
 def test_date_default():
-    now = datetime.datetime.now()
-    utcnow = now.replace(tzinfo=UTC)
-    data = dict(now=now, utcnow=utcnow)
-    jsondata = json.dumps(data, default=jsonutil.date_default)
-    nt.assert_in("+00", jsondata)
-    nt.assert_equal(jsondata.count("+00"), 1)
+    naive = datetime.datetime.now()
+    local = tzoffset('Local', -8 * 3600)
+    other = tzoffset('Other', 2 * 3600)
+    data = dict(naive=naive, utc=utcnow(), withtz=naive.replace(tzinfo=other))
+    with mock.patch.object(jsonutil, 'tzlocal', lambda : local):
+        jsondata = json.dumps(data, default=jsonutil.date_default)
+    nt.assert_in("Z", jsondata)
+    nt.assert_equal(jsondata.count("Z"), 1)
     extracted = jsonutil.extract_dates(json.loads(jsondata))
     for dt in extracted.values():
         nt.assert_is_instance(dt, datetime.datetime)
+        nt.assert_not_equal(dt.tzinfo, None)
 

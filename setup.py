@@ -78,6 +78,7 @@ install_requires = setuptools_args['install_requires'] = [
     'traitlets',
     'jupyter_core',
     'pyzmq>=13',
+    'python-dateutil>=2.1',
 ]
 
 extras_require = setuptools_args['extras_require'] = {
