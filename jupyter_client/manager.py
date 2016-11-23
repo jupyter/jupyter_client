@@ -254,6 +254,8 @@ class KernelManager(ConnectionFileMixin):
         """
         content = dict(restart=restart)
         msg = self.session.msg("shutdown_request", content=content)
+        # ensure control socket is connected
+        self._connect_control_socket()
         self.session.send(self._control_socket, msg)
 
     def finish_shutdown(self, waittime=None, pollinterval=0.1):
