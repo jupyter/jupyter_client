@@ -72,6 +72,11 @@ Now create a `JSON kernel spec file <https://jupyter-client.readthedocs.io/en/la
 Example
 -------
 
+.. seealso::
+
+    `echo_kernel <https://github.com/jupyter/echo_kernel>`__
+      A packaged, installable version of the condensed example below.
+
 ``echokernel.py`` will simply echo any input it's given to stdout::
 
     from ipykernel.kernelbase import Kernel
