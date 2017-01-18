@@ -36,7 +36,7 @@ following methods and attributes:
      This should contain the key ``mimetype`` with the mimetype of code in the
      target language (e.g. ``'text/x-python'``), the ``name`` of the language
      being implemented (e.g. ``'python'``), and ``file_extension`` (e.g.
-     ``'py'``).
+     ``'.py'``).
      It may also contain keys ``codemirror_mode`` and ``pygments_lexer`` if they
      need to differ from :attr:`language`.
 
@@ -81,7 +81,11 @@ Example
         implementation_version = '1.0'
         language = 'no-op'
         language_version = '0.1'
-        language_info = {'mimetype': 'text/plain'}
+        language_info = {
+            'name': 'Any text',
+            'mimetype': 'text/plain',
+            'file_extension': '.txt',
+        }
         banner = "Echo kernel - as useful as a parrot"
 
         def do_execute(self, code, silent, store_history=True, user_expressions=None,
