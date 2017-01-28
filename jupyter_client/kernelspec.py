@@ -88,8 +88,8 @@ def _list_kernels_in(dir):
             continue
         key = f.lower()
         if not _is_valid_kernel_name(key):
-            warnings.warn("Invalid kernelspec directory name (%s): %s",
-                _kernel_name_description, path, stacklevel=3,
+            warnings.warn("Invalid kernelspec directory name (%s): %s"
+                % (_kernel_name_description, path), stacklevel=3,
             )
         kernels[key] = path
     return kernels
