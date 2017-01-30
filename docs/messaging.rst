@@ -623,11 +623,12 @@ Message type: ``history_request``::
       # So far, this can be 'range', 'tail' or 'search'.
       'hist_access_type' : str,
 
-      # If hist_access_type is 'range', get a range of input cells. session can
-      # be a positive session number, or a negative number to count back from
+      # If hist_access_type is 'range', get a range of input cells. session
+      # is a number counting up each time the kernel starts; you can give
+      # a positive session number, or a negative number to count back from
       # the current session.
       'session' : int,
-      # start and stop are line numbers within that session.
+      # start and stop are line (cell) numbers within that session.
       'start' : int,
       'stop' : int,
 
@@ -656,6 +657,18 @@ Message type: ``history_reply``::
       # depending on whether output was False or True, respectively.
       'history' : list,
     }
+
+.. note::
+
+   Most of the history messaging options are not used by Jupyter frontends, and
+   many kernels do not implement them. If you're implementing these messages in
+   a kernel, the 'tail' request is the most useful; this is used by the Qt
+   console, for example. The notebook interface does not use history messages
+   at all.
+
+   This interface was designed by exposing all the main options of IPython's
+   history interface. We may remove some options in a future version of the
+   message spec.
 
 .. _msging_is_complete:
 
