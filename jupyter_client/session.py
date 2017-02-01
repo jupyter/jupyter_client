@@ -699,6 +699,14 @@ class Session(Configurable):
             )
             return
         buffers = [] if buffers is None else buffers
+        for buf in buffers:
+            if not isinstance(buf, memoryview):
+                try:
+                    # check to see if buf supports the buffer protocol.
+                    memoryview(buf)
+                except TypeError:
+                    raise TypeError("Buffer objects must support the buffer protocol.")
+
         if self.adapt_version:
             msg = adapt(msg, self.adapt_version)
         to_send = self.serialize(msg, ident)
