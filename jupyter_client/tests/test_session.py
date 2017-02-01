@@ -121,6 +121,10 @@ class TestSession(SessionTestCase):
         self.assertEqual(new_msg['parent_header'],msg['parent_header'])
         self.assertEqual(new_msg['buffers'],[b'bar'])
 
+        # buffers must support the buffer protocol
+        with self.assertRaises(TypeError) as cm:
+            self.session.send(A, msg, ident=b'foo', buffers=[1])
+
         A.close()
         B.close()
         ctx.term()
