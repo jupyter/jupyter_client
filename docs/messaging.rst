@@ -133,6 +133,27 @@ A message is defined by the following four-dictionary structure::
     so implementers are strongly encouraged to include it.
     It will be mandatory in 5.1.
 
+.. _msging_compatibility:
+
+Compatibility
+=============
+
+Kernels must implement the :ref:`execute <execute>` and :ref:`kernel info
+<msging_kernel_info>` messages in order to be usable. All other message types
+are optional, although we recommend implementing :ref:`completion
+<msging_completion>` if possible. Kernels do not need to send any reply for
+messages they don't handle, and frontends should provide sensible behaviour if
+no reply arrives (except for the required execution and kernel info messages).
+
+:ref:`stdin messages <stdin_messages>` are unique in that the request comes from
+the kernel, and the reply from the frontend. The frontend is not required to
+support this, but if it does not, it must set ``'allow_stdin' : False`` in
+its :ref:`execute requests <execute>`. In this case, the kernel may not send
+stdin requests. If that field is true, the kernel may send stdin requests and
+block waiting for a reply, so the frontend must answer.
+
+Both sides should allow unexpected message types, and extra fields in known
+message types, so that additions to the protocol do not break existing code.
 
 .. _wire_protocol:
 
