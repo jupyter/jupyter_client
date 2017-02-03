@@ -174,6 +174,15 @@ class KernelManager(ConnectionFileMixin):
         else:
             cmd = self.kernel_spec.argv + extra_arguments
 
+        if cmd and cmd[0] == 'python':
+            # executable is 'python', use sys.executable.
+            # These will typically be the same,
+            # but if the current process is in an env
+            # and has been launched by abspath without
+            # activating the env, python on PATH may not be sys.executable,
+            # but it should be.
+            cmd[0] = sys.executable
+
         ns = dict(connection_file=self.connection_file,
                   prefix=sys.prefix,
                  )
