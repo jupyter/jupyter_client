@@ -139,7 +139,11 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
     if hasattr(stat, 'S_ISVTX'):
         # set the sticky bit on the file and its parent directory
         # to avoid periodic cleanup
-        for path in [fname, os.path.dirname(fname)]:
+        paths = [fname]
+        runtime_dir = os.path.dirname(fname)
+        if runtime_dir:
+            paths.append(runtime_dir)
+        for path in paths:
             permissions = os.stat(path).st_mode
             new_permissions = permissions | stat.S_ISVTX
             if new_permissions != permissions:
