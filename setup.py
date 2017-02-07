@@ -90,6 +90,7 @@ if 'setuptools' in sys.modules:
     setup_args['entry_points'] = {
         'console_scripts': [
             'jupyter-kernelspec = jupyter_client.kernelspecapp:KernelSpecApp.launch_instance',
+            'jupyter-run = jupyter_client.runapp:RunApp.launch_instance',
         ]
     }
     setup_args.pop('scripts', None)
