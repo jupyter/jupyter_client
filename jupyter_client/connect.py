@@ -137,19 +137,21 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
         f.write(json.dumps(cfg, indent=2))
 
     if hasattr(stat, 'S_ISVTX'):
-        # set the sticky bit to avoid periodic cleanup
-        permissions = os.stat(fname).st_mode
-        new_permissions = permissions | stat.S_ISVTX
-        if new_permissions != permissions:
-            try:
-                os.chmod(fname, permissions)
-            except OSError as e:
-                # failed to set sticky bit,
-                # probably not a big deal
-                warnings.warn(
-                    "Failed to set sticky bit on %r: %s" % (fname, e),
-                    RuntimeWarning,
-                )
+        # set the sticky bit on the file and its parent directory
+        # to avoid periodic cleanup
+        for path in [fname, os.path.dirname(fname)]:
+            permissions = os.stat(path).st_mode
+            new_permissions = permissions | stat.S_ISVTX
+            if new_permissions != permissions:
+                try:
+                    os.chmod(path, permissions)
+                except OSError as e:
+                    # failed to set sticky bit,
+                    # probably not a big deal
+                    warnings.warn(
+                        "Failed to set sticky bit on %r: %s" % (path, e),
+                        RuntimeWarning,
+                    )
 
     return fname, cfg
 
