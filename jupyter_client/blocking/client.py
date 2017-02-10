@@ -70,7 +70,11 @@ def reqrep(meth):
     return wrapped
 
 class BlockingKernelClient(KernelClient):
-    """A BlockingKernelClient """
+    """A KernelClient with blocking APIs
+    
+    ``get_[channel]_msg()`` methods wait for and return messages on channels,
+    raising :exc:`queue.Empty` if no message arrives within ``timeout`` seconds.
+    """
     
     def wait_for_ready(self, timeout=None):
         """Waits for a response when a client is blocked
@@ -212,6 +216,8 @@ class BlockingKernelClient(KernelClient):
 
         You can pass a custom output_hook callable that will be called
         with every IOPub message that is produced instead of the default redisplay.
+
+        .. versionadded:: 5.0
 
         Parameters
         ----------

@@ -37,3 +37,7 @@ client - communicating with kernels
    .. automethod:: get_iopub_msg
 
    .. automethod:: get_stdin_msg
+
+.. autoclass:: BlockingKernelClient
+
+   .. automethod:: execute_interactive
