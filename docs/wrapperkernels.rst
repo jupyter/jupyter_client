@@ -61,6 +61,8 @@ following methods and attributes:
      using :meth:`~ipykernel.kernelbase.Kernel.send_response`.
      See :doc:`messaging` for details of the different message types.
 
+.. automethod:: ipykernel.kernelbase.Kernel.send_response
+
 To launch your kernel, add this at the end of your module::
 
     if __name__ == '__main__':
