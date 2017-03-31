@@ -7,6 +7,14 @@ Changes in Jupyter Client
 5.0
 ===
 
+5.0.1
+-----
+
+`5.0.1 on GitHub <https://github.com/jupyter/jupyter_client/milestones/5.0.1>`__
+
+- Update internal protocol version number to 5.1,
+  which should have been done in 5.0.0.
+
 5.0.0
 -----
 
@@ -14,6 +22,7 @@ Changes in Jupyter Client
 
 New features:
 
+- Implement Jupyter protocol version 5.1.
 - Introduce :command:`jupyter run` command for running scripts with a kernel, for instance::
 
     jupyter run --kernel python3 myscript.py
