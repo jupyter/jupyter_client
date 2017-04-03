@@ -82,7 +82,7 @@ class PipeCapturer(object):
         """
         data = self.buffer + data
         self.buffer = b''
-        lines = data.splitlines(keepends=True)
+        lines = data.splitlines(True)
         if lines and not lines[-1].endswith(b'\n') and len(lines[-1]) < BUFFER_LIMIT:
             self.buffer = lines.pop()
 
