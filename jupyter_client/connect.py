@@ -371,8 +371,9 @@ class ConnectionFileMixin(LoggingConfigurable):
             control_port=self.control_port,
         )
         if session:
-            # add session
-            info['session'] = self.session
+            # add *clone* of my session,
+            # so that state such as digest_history is not shared.
+            info['session'] = self.session.clone()
         else:
             # add session info
             info.update(dict(

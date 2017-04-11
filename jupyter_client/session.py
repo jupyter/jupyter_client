@@ -488,6 +488,24 @@ class Session(Configurable):
         if not self.key:
             get_logger().warning("Message signing is disabled.  This is insecure and not recommended!")
 
+    def clone(self):
+        """Create a copy of this Session
+
+        Useful when connecting multiple times to a given kernel.
+        This prevents a shared digest_history warning about duplicate digests
+        due to multiple connections to IOPub in the same process.
+
+        .. versionadded:: 5.1
+        """
+        # make a copy
+        new_session = type(self)()
+        for name in self.traits():
+            setattr(new_session, name, getattr(self, name))
+        # fork digest_history
+        new_session.digest_history = set()
+        new_session.digest_history.update(self.digest_history)
+        return new_session
+
     @property
     def msg_id(self):
         """always return new uuid"""
