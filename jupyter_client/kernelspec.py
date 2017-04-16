@@ -131,7 +131,7 @@ class KernelSpecManager(LoggingConfigurable):
         By default, all installed kernels are allowed.
         """
     )
-    kernel_dirs = List(
+    kernel_dirs = List(config=True,
         help="List of kernel directories to search. Later ones take priority over earlier."
     )
     def _kernel_dirs_default(self):
