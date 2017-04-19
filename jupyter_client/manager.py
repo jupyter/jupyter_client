@@ -295,7 +295,7 @@ class KernelManager(ConnectionFileMixin):
         self._close_control_socket()
 
     def shutdown_kernel(self, now=False, restart=False):
-        """Attempts to the stop the kernel process cleanly.
+        """Attempts to stop the kernel process cleanly.
 
         This attempts to shutdown the kernels cleanly by:
 
