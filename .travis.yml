@@ -11,7 +11,7 @@ before_install:
     - git clone --quiet --depth 1 https://github.com/minrk/travis-wheels travis-wheels
     
 install:
-    - pip install -U setuptools
+    - pip install -U setuptools pip
     - pip install -f travis-wheels/wheelhouse -e .[test] codecov
     - python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 script:
