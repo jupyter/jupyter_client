@@ -46,6 +46,11 @@ def reqrep(meth):
 
         return self._recv_reply(msg_id, timeout=timeout)
     
+    if not meth.__doc__:
+        # python -OO removes docstrings,
+        # so don't bother building the wrapped docstring
+        return wrapped
+    
     basedoc, _ = meth.__doc__.split('Returns\n', 1)
     parts = [basedoc.strip()]
     if 'Parameters' not in basedoc:
