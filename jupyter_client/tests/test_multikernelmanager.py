@@ -4,12 +4,11 @@ from subprocess import PIPE
 import time
 from unittest import TestCase
 
-from ipython_genutils.testing import decorators as dec
-
 from traitlets.config.loader import Config
 from ..localinterfaces import localhost
 from jupyter_client import KernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager
+from .utils import skip_win32
 
 class TestKernelManager(TestCase):
 
@@ -75,12 +74,12 @@ class TestKernelManager(TestCase):
         km = self._get_tcp_km()
         self._run_cinfo(km, 'tcp', localhost())
 
-    @dec.skip_win32
+    @skip_win32
     def test_ipc_lifecycle(self):
         km = self._get_ipc_km()
         self._run_lifecycle(km)
 
-    @dec.skip_win32
+    @skip_win32
     def test_ipc_cinfo(self):
         km = self._get_ipc_km()
         self._run_cinfo(km, 'ipc', 'test')

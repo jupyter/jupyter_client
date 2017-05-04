@@ -3,12 +3,19 @@
 """
 import os
 pjoin = os.path.join
+import sys
 try:
     from unittest.mock import patch
 except ImportError:
     from mock import patch
 
+import pytest
+
 from ipython_genutils.tempdir import TemporaryDirectory
+
+
+skip_win32 = pytest.mark.skipif(sys.platform.startswith('win'), reason="Windows")
+
 
 class test_env(object):
     """Set Jupyter path variables to a temporary directory
