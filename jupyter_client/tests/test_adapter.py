@@ -6,7 +6,6 @@
 import copy
 import json
 from unittest import TestCase
-import nose.tools as nt
 
 from jupyter_client.adapter import adapt, V4toV5, V5toV4, code_to_line
 from jupyter_client.session import Session
@@ -18,12 +17,12 @@ def test_default_version():
     msg['header'].pop('version')
     original = copy.deepcopy(msg)
     adapted = adapt(original)
-    nt.assert_equal(adapted['header']['version'], V4toV5.version)
+    assert adapted['header']['version'] == V4toV5.version
 
 def test_code_to_line_no_code():
     line, pos = code_to_line("", 0)
-    nt.assert_equal(line, "")
-    nt.assert_equal(pos, 0)
+    assert line == ""
+    assert pos == 0
 
 class AdapterTest(TestCase):
 
@@ -263,7 +262,7 @@ class V5toV4TestCase(AdapterTest):
             msg = self.msg(v5_type, {'key' : 'value'})
             v5, v4 = self.adapt(msg)
             self.assertEqual(v4['header']['msg_type'], v4_type)
-            nt.assert_not_in('version', v4['header'])
+            assert 'version' not in v4['header']
             self.assertEqual(v4['content'], v5['content'])
 
     def test_execute_request(self):

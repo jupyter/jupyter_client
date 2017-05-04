@@ -8,11 +8,11 @@ import os
 pjoin = os.path.join
 from unittest import TestCase
 
-from nose import SkipTest
-
 from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel, NATIVE_KERNEL_NAME
 from ..manager import start_new_kernel
 from .utils import test_env
+
+import pytest
 
 from ipython_genutils.py3compat import string_types
 from IPython.utils.capture import capture_output
@@ -27,7 +27,7 @@ class TestKernelClient(TestCase):
         try:
             KernelSpecManager().get_kernel_spec(NATIVE_KERNEL_NAME)
         except NoSuchKernel:
-            raise SkipTest()
+            pytest.skip()
         self.km, self.kc = start_new_kernel(kernel_name=NATIVE_KERNEL_NAME)
         self.addCleanup(self.kc.stop_channels)
         self.addCleanup(self.km.shutdown_kernel)
