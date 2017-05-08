@@ -6,8 +6,6 @@
 import json
 import os
 
-import nose.tools as nt
-
 from traitlets.config import Config
 from jupyter_core.application import JupyterApp
 from ipython_genutils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
@@ -36,11 +34,11 @@ def test_write_connection_file():
     with TemporaryDirectory() as d:
         cf = os.path.join(d, 'kernel.json')
         connect.write_connection_file(cf, **sample_info)
-        nt.assert_true(os.path.exists(cf))
+        assert os.path.exists(cf)
         with open(cf, 'r') as f:
             info = json.load(f)
     info['key'] = str_to_bytes(info['key'])
-    nt.assert_equal(info, sample_info)
+    assert info == sample_info
 
 
 def test_load_connection_file_session():
@@ -56,8 +54,8 @@ def test_load_connection_file_session():
         app.connection_file = cf
         app.load_connection_file()
 
-    nt.assert_equal(session.key, sample_info['key'])
-    nt.assert_equal(session.signature_scheme, sample_info['signature_scheme'])
+    assert session.key == sample_info['key']
+    assert session.signature_scheme == sample_info['signature_scheme']
 
 
 def test_load_connection_file_session_with_kn():
@@ -73,8 +71,8 @@ def test_load_connection_file_session_with_kn():
         app.connection_file = cf
         app.load_connection_file()
 
-    nt.assert_equal(session.key, sample_info_kn['key'])
-    nt.assert_equal(session.signature_scheme, sample_info_kn['signature_scheme'])
+    assert session.key == sample_info_kn['key']
+    assert session.signature_scheme == sample_info_kn['signature_scheme']
 
 
 def test_app_load_connection_file():
@@ -89,7 +87,7 @@ def test_app_load_connection_file():
         if attr in ('key', 'signature_scheme'):
             continue
         value = getattr(app, attr)
-        nt.assert_equal(value, expected, "app.%s = %s != %s" % (attr, value, expected))
+        assert value == expected, "app.%s = %s != %s" % (attr, value, expected)
 
 
 def test_load_connection_info():
@@ -131,7 +129,7 @@ def test_find_connection_file():
             '*ernel*',
             'k*',
             ):
-            nt.assert_equal(connect.find_connection_file(query, path=security_dir), profile_cf)
+            assert connect.find_connection_file(query, path=security_dir) == profile_cf
 
         JupyterApp._instance = None
 

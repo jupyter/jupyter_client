@@ -3,12 +3,19 @@
 """
 import os
 pjoin = os.path.join
+import sys
 try:
     from unittest.mock import patch
 except ImportError:
     from mock import patch
 
+import pytest
+
 from ipython_genutils.tempdir import TemporaryDirectory
+
+
+skip_win32 = pytest.mark.skipif(sys.platform.startswith('win'), reason="Windows")
+
 
 class test_env(object):
     """Set Jupyter path variables to a temporary directory
@@ -46,11 +53,11 @@ def execute(code='', kc=None, **kwargs):
     validate_message(reply, 'execute_reply', msg_id)
     busy = kc.get_iopub_msg(timeout=TIMEOUT)
     validate_message(busy, 'status', msg_id)
-    nt.assert_equal(busy['content']['execution_state'], 'busy')
+    assert busy['content']['execution_state'] == 'busy'
 
     if not kwargs.get('silent'):
         execute_input = kc.get_iopub_msg(timeout=TIMEOUT)
         validate_message(execute_input, 'execute_input', msg_id)
-        nt.assert_equal(execute_input['content']['code'], code)
+        assert execute_input['content']['code'] == code
 
     return msg_id, reply['content']

@@ -13,13 +13,11 @@ import sys
 import time
 from unittest import TestCase
 
-from ipython_genutils.testing import decorators as dec
-
 from traitlets.config.loader import Config
 from jupyter_core import paths
 from jupyter_client import KernelManager
 from ..manager import start_new_kernel
-from .utils import test_env
+from .utils import test_env, skip_win32
 
 TIMEOUT = 30
 
@@ -67,7 +65,7 @@ class TestKernelManager(TestCase):
         km = self._get_tcp_km()
         self._run_lifecycle(km)
 
-    @dec.skip_win32
+    @skip_win32
     def test_ipc_lifecycle(self):
         km = self._get_ipc_km()
         self._run_lifecycle(km)
@@ -82,8 +80,8 @@ class TestKernelManager(TestCase):
             'key', 'signature_scheme',
         ])
         self.assertEqual(keys, expected)
-    
-    @dec.skip_win32
+
+    @skip_win32
     def test_signal_kernel_subprocesses(self):
         self._install_test_kernel()
         km, kc = start_new_kernel(kernel_name='signaltest')

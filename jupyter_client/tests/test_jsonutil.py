@@ -14,8 +14,6 @@ except ImportError:
     # py2
     import mock
 
-import nose.tools as nt
-
 from dateutil.tz import tzlocal, tzoffset
 from jupyter_client import jsonutil
 from jupyter_client.session import utcnow
@@ -33,29 +31,29 @@ def test_extract_dates():
     extracted = jsonutil.extract_dates(timestamps)
     ref = extracted[0]
     for dt in extracted:
-        nt.assert_true(isinstance(dt, datetime.datetime))
-        nt.assert_not_equal(dt.tzinfo, None)
+        assert isinstance(dt, datetime.datetime)
+        assert dt.tzinfo != None
 
-    nt.assert_equal(extracted[0].tzinfo.utcoffset(ref), tzlocal().utcoffset(ref))
-    nt.assert_equal(extracted[1].tzinfo.utcoffset(ref), timedelta(0))
-    nt.assert_equal(extracted[2].tzinfo.utcoffset(ref), timedelta(hours=-8))
-    nt.assert_equal(extracted[3].tzinfo.utcoffset(ref), timedelta(hours=8))
-    nt.assert_equal(extracted[4].tzinfo.utcoffset(ref), timedelta(hours=-8))
-    nt.assert_equal(extracted[5].tzinfo.utcoffset(ref), timedelta(hours=8))
+    assert extracted[0].tzinfo.utcoffset(ref) == tzlocal().utcoffset(ref)
+    assert extracted[1].tzinfo.utcoffset(ref) == timedelta(0)
+    assert extracted[2].tzinfo.utcoffset(ref) == timedelta(hours=-8)
+    assert extracted[3].tzinfo.utcoffset(ref) == timedelta(hours=8)
+    assert extracted[4].tzinfo.utcoffset(ref) == timedelta(hours=-8)
+    assert extracted[5].tzinfo.utcoffset(ref) == timedelta(hours=8)
 
 def test_parse_ms_precision():
     base = '2013-07-03T16:34:52'
     digits = '1234567890'
     
     parsed = jsonutil.parse_date(base)
-    nt.assert_is_instance(parsed, datetime.datetime)
+    assert isinstance(parsed, datetime.datetime)
     for i in range(len(digits)):
         ts = base + '.' + digits[:i]
         parsed = jsonutil.parse_date(ts)
         if i >= 1 and i <= 6:
-            nt.assert_is_instance(parsed, datetime.datetime)
+            assert isinstance(parsed, datetime.datetime)
         else:
-            nt.assert_is_instance(parsed, str)
+            assert isinstance(parsed, str)
 
 
 
@@ -66,10 +64,10 @@ def test_date_default():
     data = dict(naive=naive, utc=utcnow(), withtz=naive.replace(tzinfo=other))
     with mock.patch.object(jsonutil, 'tzlocal', lambda : local):
         jsondata = json.dumps(data, default=jsonutil.date_default)
-    nt.assert_in("Z", jsondata)
-    nt.assert_equal(jsondata.count("Z"), 1)
+    assert "Z" in jsondata
+    assert jsondata.count("Z") == 1
     extracted = jsonutil.extract_dates(json.loads(jsondata))
     for dt in extracted.values():
-        nt.assert_is_instance(dt, datetime.datetime)
-        nt.assert_not_equal(dt.tzinfo, None)
+        assert isinstance(dt, datetime.datetime)
+        assert dt.tzinfo != None
 

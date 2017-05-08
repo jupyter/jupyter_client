@@ -8,6 +8,8 @@ import os
 import uuid
 from datetime import datetime
 
+import pytest
+
 import zmq
 
 from zmq.tests import BaseZMQTestCase
@@ -16,7 +18,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 from jupyter_client import session as ss
 from jupyter_client import jsonutil
 
-from ipython_genutils.testing.decorators import skipif, module_not_available
 from ipython_genutils.py3compat import string_types
 
 def _bad_packer(obj):
@@ -286,9 +287,8 @@ class TestSession(SessionTestCase):
         session = ss.Session(packer='pickle')
         self._datetime_test(session)
 
-    @skipif(module_not_available('msgpack'))
     def test_datetimes_msgpack(self):
-        import msgpack
+        msgpack = pytest.importorskip('msgpack')
 
         session = ss.Session(
             pack=msgpack.packb,

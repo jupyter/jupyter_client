@@ -13,12 +13,13 @@ from subprocess import Popen, PIPE, STDOUT
 import sys
 import unittest
 
+import pytest
+
 if str is bytes: # py2
     StringIO = io.BytesIO
 else:
     StringIO = io.StringIO
 
-from ipython_genutils.testing.decorators import onlyif
 from ipython_genutils.tempdir import TemporaryDirectory
 from jupyter_client import kernelspec
 from jupyter_core import paths
@@ -123,7 +124,9 @@ class KernelSpecTests(unittest.TestCase):
         self.ksm.log.removeHandler(handler)
         self.assertNotIn("may not be found", captured)
 
-    @onlyif(os.name != 'nt' and not os.access('/usr/local/share', os.W_OK), "needs Unix system without root privileges")
+    @pytest.mark.skipif(
+        not (os.name != 'nt' and not os.access('/usr/local/share', os.W_OK)),
+        reason="needs Unix system without root privileges")
     def test_cant_install_kernel_spec(self):
         with self.assertRaises(OSError):
             self.ksm.install_kernel_spec(self.installable_kernel,
