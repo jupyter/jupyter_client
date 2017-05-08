@@ -320,3 +320,15 @@ class TestSession(SessionTestCase):
         A.close()
         B.close()
         ctx.term()
+    
+    def test_clone(self):
+        s = self.session
+        s._add_digest('initial')
+        s2 = s.clone()
+        assert s2.session == s.session
+        assert s2.digest_history == s.digest_history
+        assert s2.digest_history is not s.digest_history
+        digest = 'abcdef'
+        s._add_digest(digest)
+        assert digest in s.digest_history
+        assert digest not in s2.digest_history
