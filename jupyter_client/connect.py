@@ -207,6 +207,7 @@ def find_connection_file(filename='kernel-*.json', path=None, profile=None):
     for p in path:
         matches.extend(glob.glob(os.path.join(p, pat)))
     
+    matches = [ os.path.abspath(m) for m in matches ]
     if not matches:
         raise IOError("Could not find %r in %r" % (filename, path))
     elif len(matches) == 1:

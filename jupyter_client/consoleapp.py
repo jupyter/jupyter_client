@@ -161,7 +161,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         """
         if self.existing:
             try:
-                cf = find_connection_file(self.existing, [self.runtime_dir])
+                cf = find_connection_file(self.existing, ['.', self.runtime_dir])
             except Exception:
                 self.log.critical("Could not find existing kernel connection file %s", self.existing)
                 self.exit(1)
