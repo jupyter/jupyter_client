@@ -8,6 +8,7 @@ import os
 
 from traitlets.config import Config
 from jupyter_core.application import JupyterApp
+from jupyter_core.paths import jupyter_runtime_dir
 from ipython_genutils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
 from ipython_genutils.py3compat import str_to_bytes
 from jupyter_client import connect, KernelClient
@@ -110,11 +111,9 @@ def test_load_connection_info():
 
 
 def test_find_connection_file():
-    cfg = Config()
     with TemporaryDirectory() as d:
-        cfg.ProfileDir.location = d
         cf = 'kernel.json'
-        app = DummyConsoleApp(config=cfg, connection_file=cf)
+        app = DummyConsoleApp(runtime_dir=d, connection_file=cf)
         app.initialize()
 
         security_dir = app.runtime_dir
@@ -131,5 +130,45 @@ def test_find_connection_file():
             ):
             assert connect.find_connection_file(query, path=security_dir) == profile_cf
 
-        JupyterApp._instance = None
+
+def test_find_connection_file_local():
+    with TemporaryWorkingDirectory() as d:
+        cf = 'test.json'
+        abs_cf = os.path.abspath(cf)
+        with open(cf, 'w') as f:
+            f.write('{}')
+        
+        for query in (
+            'test.json',
+            'test',
+            abs_cf,
+            os.path.join('.', 'test.json'),
+        ):
+            assert connect.find_connection_file(query, path=['.', jupyter_runtime_dir()]) == abs_cf
+
+
+def test_find_connection_file_relative():
+    with TemporaryWorkingDirectory() as d:
+        cf = 'test.json'
+        os.mkdir('subdir')
+        cf = os.path.join('subdir', 'test.json')
+        abs_cf = os.path.abspath(cf)
+        with open(cf, 'w') as f:
+            f.write('{}')
+        
+        for query in (
+            os.path.join('.', 'subdir', 'test.json'),
+            os.path.join('subdir', 'test.json'),
+            abs_cf,
+        ):
+            assert connect.find_connection_file(query, path=['.', jupyter_runtime_dir()]) == abs_cf
+
+
+def test_find_connection_file_abspath():
+    with TemporaryDirectory() as d:
+        cf = 'absolute.json'
+        abs_cf = os.path.abspath(cf)
+        with open(cf, 'w') as f:
+            f.write('{}')
+        assert connect.find_connection_file(abs_cf, path=jupyter_runtime_dir()) == abs_cf
 
