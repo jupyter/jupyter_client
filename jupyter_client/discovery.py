@@ -22,7 +22,7 @@ class KernelSpecFinder(object):
 
     def make_manager(self, name):
         spec = self.ksm.get_kernel_spec(name)
-        return KernelManager(kernel_cmd=spec.argv)  # TODO: env
+        return KernelManager(kernel_cmd=spec.argv, extra_env=spec.env)
 
 
 class IPykernelFinder(object):
@@ -53,7 +53,7 @@ class IPykernelFinder(object):
                 'argv': info['spec']['argv'],
             }
 
-    def make_manager(self):
+    def make_manager(self, name):
         info = self._check_for_kernel()
         if info is None:
             raise Exception("ipykernel is not importable")
