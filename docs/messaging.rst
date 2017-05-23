@@ -21,7 +21,7 @@ Versioning
 
 The Jupyter message specification is versioned independently of the packages
 that use it.
-The current version of the specification is 5.1.
+The current version of the specification is 5.2.
 
 .. note::
    *New in* and *Changed in* messages in this document refer to versions of the
@@ -547,6 +547,14 @@ Message type: ``inspect_request``::
     ``name`` key replaced with ``code`` and ``cursor_pos``,
     moving the lexing responsibility to the kernel.
 
+.. versionchanged:: 5.2
+
+    Due to a widespread bug in many frontends, ``cursor_pos``
+    in versions prior to 5.2 is ambiguous in the presence of "astral-plane" characters.
+    In 5.2, cursor_pos **must be** the actual encoding-independent offset in unicode codepoints.
+    See :ref:`cursor_pos_unicode_note` for more.
+
+
 The reply is a mime-bundle, like a `display_data`_ message,
 which should be a formatted representation of information about the context.
 In the notebook, this is used to show tooltips over function calls, etc.
@@ -594,6 +602,13 @@ Message type: ``complete_request``::
 
     ``line``, ``block``, and ``text`` keys are removed in favor of a single ``code`` for context.
     Lexing is up to the kernel.
+
+.. versionchanged:: 5.2
+
+    Due to a widespread bug in many frontends, ``cursor_pos``
+    in versions prior to 5.2 is ambiguous in the presence of "astral-plane" characters.
+    In 5.2, cursor_pos **must be** the actual encoding-independent offset in unicode codepoints.
+    See :ref:`cursor_pos_unicode_note` for more.
 
 
 Message type: ``complete_reply``::
@@ -1370,12 +1385,48 @@ handlers should set the parent header and publish status busy / idle,
 just like an execute request.
 
 
-To Do
+Notes
 =====
 
-Missing things include:
+.. _cursor_pos_unicode_note:
 
-* Important: finish thinking through the payload concept and API.
+``cursor_pos`` and unicode offsets
+----------------------------------
+
+Many frontends, especially those implemented in javascript,
+reported cursor_pos as the interpreter's string index,
+which is not the same as the unicode character offset if the interpreter uses UTF-16 (e.g. javascript or Python 2 on macOS),
+which stores "astral-plane" characters such as ``𝐚 (U+1D41A)`` as surrogate pairs,
+taking up two indices instead of one, causing a unicode offset
+drift of one per astral-plane character.
+Not all frontends have this behavior, however,
+and after JSON serialization information about which encoding was used
+when calculating the offset is lost,
+so assuming ``cursor_pos`` is calculated in UTF-16 could result in a similarly incorrect offset
+for frontends that did the right thing.
+
+For this reason, in protocol versions prior to 5.2, ``cursor_pos``
+is officially ambiguous in the presence of astral plane unicode characters.
+Frontends claiming to implement protocol 5.2 **MUST** identify cursor_pos as the encoding-independent unicode character offset.
+Kernels may choose to expect the UTF-16 offset from requests implementing protocol 5.1 and earlier, in order to behave correctly with the most popular frontends.
+But they should know that doing so *introduces* the inverse bug for the frontends that do not have this bug.
+
+Known affected frontends (as of 2017-06):
+
+- Jupyter Notebook < 5.1
+- JupyterLab < 0.24
+- nteract
+- CoCalc
+- Jupyter Console and QtConsole with Python 2 on macOS and Windows
+
+Known *not* affected frontends:
+
+- QtConsole, Jupyter Console with Python 3 or Python 2 on Linux
+
+.. see-also::
+
+    `Discussion on GitHub <https://github.com/jupyter/jupyter_client/issues/259>`_
+
 
 .. _ZeroMQ: http://zeromq.org
 .. _nteract: https://nteract.io
