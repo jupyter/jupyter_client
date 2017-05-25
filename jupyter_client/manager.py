@@ -251,6 +251,14 @@ class KernelManager(ConnectionFileMixin):
             # Environment variables from kernel spec are added to os.environ
             env.update(self.kernel_spec.env or {})
         
+        if os.path.isdir(self.kernel_spec.resources_dir):
+            # add kernelspec directory to PATH,
+            # so that any executables are in there
+            if 'PATH' in env:
+                path = env['PATH']
+            else:
+                path = os.getenv('PATH') or os.defpath
+            env['PATH'] = os.pathsep.join(self.kernel_spec.resources_dir, path)
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
         self.kernel = self._launch_kernel(kernel_cmd, env=env,
