@@ -70,7 +70,6 @@ class HBChannel(Thread):
                 raise InvalidPortNumber(message)
             address = "tcp://%s:%i" % address
         self.address = address
-        atexit.register(self._notice_exit)
 
         # running is False until `.start()` is called
         self._running = False
@@ -78,8 +77,10 @@ class HBChannel(Thread):
         self._pause = False
         self.poller = zmq.Poller()
 
-    def _notice_exit(self):
-        self._exiting = True
+    @staticmethod
+    @atexit.register
+    def _notice_exit():
+        HBChannel._exiting = True
 
     def _create_socket(self):
         if self.socket is not None:

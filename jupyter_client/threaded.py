@@ -141,14 +141,17 @@ class ThreadedZMQSocketChannel(object):
 class IOLoopThread(Thread):
     """Run a pyzmq ioloop in a thread to send and receive messages
     """
+    _exiting = False
+
     def __init__(self, loop):
         super(IOLoopThread, self).__init__()
         self.daemon = True
-        atexit.register(self._notice_exit)
         self.ioloop = loop or ioloop.IOLoop()
 
-    def _notice_exit(self):
-        self._exiting = True
+    @staticmethod
+    @atexit.register
+    def _notice_exit():
+        IOLoopThread._exiting = True
 
     def run(self):
         """Run my loop, ignoring EINTR events in the poller"""
