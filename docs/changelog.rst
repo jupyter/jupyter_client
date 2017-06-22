@@ -4,6 +4,26 @@
 Changes in Jupyter Client
 =========================
 
+5.1
+===
+
+`5.1 on GitHub <https://github.com/jupyter/jupyter_client/milestones/5.1>`__
+
+- Define Jupyter protocol version 5.2,
+  resolving ambiguity of ``cursor_pos`` field in the presence
+  of unicode surrogate pairs.
+  
+  .. seealso::
+  
+      :ref:`cursor_pos_unicode_note`
+
+- Add :meth:`Session.clone` for making a copy of a Session object
+  without sharing the digest history.
+  Reusing a single Session object to connect multiple sockets
+  to the same IOPub peer can cause digest collisions.
+- Avoid global references preventing garbage collection of background threads.
+
+
 5.0
 ===
 
