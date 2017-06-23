@@ -39,7 +39,7 @@ The basic design is explained in the following diagram:
    :target: ../_images/frontend-kernel.png
 
 A single kernel can be simultaneously connected to one or more frontends.  The
-kernel has four sockets that serve the following functions:
+kernel has dedicated sockets for the following functions:
 
 1. **Shell**: this single ROUTER socket allows multiple incoming connections from
    frontends, and this is the socket where requests for code execution, object
