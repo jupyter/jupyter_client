@@ -62,18 +62,18 @@ if you are using an Anaconda distribution, with `conda`.
 
 ## Run the Test Suite
 
-Use `pytest` to run the test suite:
+Use `py.test` to run the test suite:
 
     cd /my/projects/jupyter_client/
-    pytest
+    py.test
 
 The full test suite takes a while. During development, you'll probably prefer
-to run only the tests relevant to your changes. You can tell `pytest` to
+to run only the tests relevant to your changes. You can tell `py.test` to
 run just the tests from a single file by providing the path to the file.
 For example:
 
     cd /my/projects/jupyter_client
-    pytest jupyter_client/tests/test_session.py
+    py.test jupyter_client/tests/test_session.py
 
 ## Build the Documentation
 
