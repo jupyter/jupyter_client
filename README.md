@@ -84,5 +84,5 @@ Use `make` to build the documentation in HTML:
 
 Point your browser to the following URL to access the generated documentation:
 
-_file:///my/projects/jupyter_client/docs/_build/html/index.html_
+_file:///my/projects/jupyter\_client/docs/\_build/html/index.html_
 
