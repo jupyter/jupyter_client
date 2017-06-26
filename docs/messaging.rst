@@ -1423,7 +1423,7 @@ Known *not* affected frontends:
 
 - QtConsole, Jupyter Console with Python 3 or Python 2 on Linux
 
-.. see-also::
+.. seealso::
 
     `Discussion on GitHub <https://github.com/jupyter/jupyter_client/issues/259>`_
 
