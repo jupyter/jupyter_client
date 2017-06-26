@@ -14,8 +14,8 @@ for installing kernelspecs for use with Jupyter frontends.
 
 # Development Setup
 
-To develop and contribute code for Jupyter Client, you should set up
-a local development environment where you can run the test suite.
+To develop and contribute code for the Jupyter Client, you should set up
+a development environment to run the test suite and build the documentation.
 The following steps assume that you have `git`, `python`, `pip`, and `make`
 already installed and on the system search path.
 You might want to set up the development project in a dedicated
@@ -25,9 +25,10 @@ depending on what Python distribution you are using.
 
 ## Clone the Repository
 
-Fetch the Jupyter Client source code by cloning the GitHub repository,
-or [your fork](https://help.github.com/articles/fork-a-repo/) of it.
-To clone the original repository into a subdirectory of `/my/projects/`:
+Fetch the Jupyter Client source code by cloning the GitHub repository itself,
+or your [fork](https://help.github.com/articles/fork-a-repo/) of it.
+To clone the original repository into a subdirectory `jupyter_client` of
+`/my/projects/`:
 
     cd /my/projects/
     git clone https://github.com/jupyter/jupyter_client.git
@@ -49,8 +50,9 @@ include the dependencies for the test suite:
     pip install -e .[test]
 
 The Jupyter Client documentation is built with
-[Sphinx](http://www.sphinx-doc.org/en/stable/). You can install that with `pip`,
-or with `conda` you are using an Anaconda distribution.
+[Sphinx](http://www.sphinx-doc.org/en/stable/).
+You can install that with `pip` or,
+if you are using an Anaconda distribution, with `conda`.
 
     # in a virtual environment...
     pip install sphinx sphinx_rtd_theme
@@ -82,5 +84,5 @@ Use `make` to build the documentation in HTML:
 
 Point your browser to the following URL to access the generated documentation:
 
-[file:///my/projects/jupyter_client/docs/_build/html/index.html]
+_file:///my/projects/jupyter_client/docs/_build/html/index.html_
 
