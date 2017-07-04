@@ -67,6 +67,7 @@ class KernelSpecTests(unittest.TestCase):
         self.assertEqual(ks.argv, sample_kernel_json['argv'])
         self.assertEqual(ks.display_name, sample_kernel_json['display_name'])
         self.assertEqual(ks.env, {})
+        self.assertEqual(ks.metadata, {})
 
     def test_find_all_specs(self):
         kernels = self.ksm.get_all_specs()
