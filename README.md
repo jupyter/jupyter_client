@@ -26,19 +26,18 @@ and download the dependencies of code and test suite by executing:
     pip install -e .[test]
     py.test
 
-The last command runs the test suite to verify the setup. During development, you can pass filenames to `py.test`, and it will execute only those tests.
+The last command runs the test suite to verify the setup. During development,
+you can pass filenames to `py.test`, and it will execute only those tests.
+
+Alternately, you can install and run `tox` to run all tests. For more info on
+`tox`, see [the docs](https://tox.readthedocs.io/en/latest/).
 
 ## Documentation
 
 The documentation of Jupyter Client is generated from the files in `docs/` using Sphinx. Instructions for setting up Sphinx with a selection of optional modules are in the [Documentation Guide](http://jupyter.readthedocs.io/en/latest/contrib_docs/index.html). You'll also need the `make` command.
 For a minimal Sphinx installation to process the Jupyter Client docs, execute:
 
-    pip install sphinx sphinx_rtd_theme
-
-The following commands build the documentation in HTML format and check for broken links:
-
-    cd /my/projects/jupyter_client/docs/
-    make html linkcheck
+    tox -e docs
 
 Point your browser to the following URL to access the generated documentation:
 
