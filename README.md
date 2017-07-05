@@ -33,7 +33,7 @@ The last command runs the test suite to verify the setup. During development, yo
 The documentation of Jupyter Client is generated from the files in `docs/` using Sphinx. Instructions for setting up Sphinx with a selection of optional modules are in the [Documentation Guide](http://jupyter.readthedocs.io/en/latest/contrib_docs/index.html). You'll also need the `make` command.
 For a minimal Sphinx installation to process the Jupyter Client docs, execute:
 
-    pip install sphinx sphinx_rtd_theme
+    pip install ipykernel sphinx sphinx_rtd_theme
 
 The following commands build the documentation in HTML format and check for broken links:
 
