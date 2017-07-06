@@ -21,6 +21,10 @@ class DummyConsoleApp(JupyterApp, JupyterConsoleApp):
         JupyterApp.initialize(self, argv=argv)
         self.init_connection_file()
 
+class DummyConfigurable(connect.ConnectionFileMixin):
+    def initialize(self):
+        pass
+
 sample_info = dict(ip='1.2.3.4', transport='ipc',
         shell_port=1, hb_port=2, iopub_port=3, stdin_port=4, control_port=5,
         key=b'abc123', signature_scheme='hmac-md5', kernel_name='python'
@@ -30,6 +34,7 @@ sample_info_kn = dict(ip='1.2.3.4', transport='ipc',
         shell_port=1, hb_port=2, iopub_port=3, stdin_port=4, control_port=5,
         key=b'abc123', signature_scheme='hmac-md5', kernel_name='test'
     )
+
 
 def test_write_connection_file():
     with TemporaryDirectory() as d:
@@ -172,3 +177,11 @@ def test_find_connection_file_abspath():
             f.write('{}')
         assert connect.find_connection_file(abs_cf, path=jupyter_runtime_dir()) == abs_cf
 
+
+def test_mixin_record_random_ports():
+    with TemporaryDirectory() as d:
+        dc = DummyConfigurable(data_dir=d, kernel_name='via-tcp', transport='tcp')
+        dc.write_connection_file()
+        assert dc._connection_file_written
+        assert os.path.exists(dc.connection_file)
+        assert dc._random_port_names == connect.port_names
