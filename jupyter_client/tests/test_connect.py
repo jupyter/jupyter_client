@@ -176,6 +176,7 @@ def test_find_connection_file_abspath():
         with open(cf, 'w') as f:
             f.write('{}')
         assert connect.find_connection_file(abs_cf, path=jupyter_runtime_dir()) == abs_cf
+        os.remove(abs_cf)
 
 
 def test_mixin_record_random_ports():
