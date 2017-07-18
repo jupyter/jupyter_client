@@ -423,7 +423,8 @@ class ConnectionFileMixin(LoggingConfigurable):
     def _record_random_port_names(self):
         """Records which of the ports are randomly assigned.
 
-        Records on first invocation. Does nothing on later invocations."""
+        Records on first invocation, if the transport is tcp.
+        Does nothing on later invocations."""
 
         if self.transport != 'tcp':
             return
@@ -435,6 +436,20 @@ class ConnectionFileMixin(LoggingConfigurable):
             if getattr(self, name) <= 0:
                 self._random_port_names.append(name)
 
+    def cleanup_random_ports(self):
+        """Forgets randomly assigned port numbers and cleans up the connection file.
+
+        Does nothing if no port numbers have been randomly assigned.
+        In particular, does nothing unless the transport is tcp.
+        """
+
+        if not self._random_port_names:
+            return
+
+        for name in self._random_port_names:
+            setattr(self, name, 0)
+
+        self.cleanup_connection_file()
 
     def write_connection_file(self):
         """Write connection info to JSON dict in self.connection_file."""

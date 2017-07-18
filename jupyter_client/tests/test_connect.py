@@ -183,6 +183,19 @@ def test_mixin_record_random_ports():
     with TemporaryDirectory() as d:
         dc = DummyConfigurable(data_dir=d, kernel_name='via-tcp', transport='tcp')
         dc.write_connection_file()
+
         assert dc._connection_file_written
         assert os.path.exists(dc.connection_file)
         assert dc._random_port_names == connect.port_names
+
+
+def test_mixin_cleanup_random_ports():
+    with TemporaryDirectory() as d:
+        dc = DummyConfigurable(data_dir=d, kernel_name='via-tcp', transport='tcp')
+        dc.write_connection_file()
+        filename = dc.connection_file
+        dc.cleanup_random_ports()
+
+        assert not os.path.exists(filename)
+        for name in dc._random_port_names:
+            assert getattr(dc, name) == 0
