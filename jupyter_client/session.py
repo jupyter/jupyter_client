@@ -708,7 +708,9 @@ class Session(Configurable):
                     view = memoryview(buf)
                 except TypeError:
                     raise TypeError("Buffer objects must support the buffer protocol.")
-            if not view.contiguous:
+            # memoryview.contiguous is new in 3.3,
+            # just skip the check on Python 2
+            if hasattr(view, 'contiguous') and not view.contiguous:
                 # zmq requires memoryviews to be contiguous
                 raise ValueError("Buffer %i (%r) is not contiguous" % (idx, buf))
 
