@@ -36,6 +36,7 @@ class KernelRestarter(LoggingConfigurable):
     )
     _restarting = Bool(False)
     _restart_count = Integer(0)
+    _initial_startup = Bool(True)
 
     callbacks = Dict()
     def _callbacks_default(self):
@@ -98,14 +99,17 @@ class KernelRestarter(LoggingConfigurable):
                 self._restart_count = 0
                 self.stop()
             else:
-                self.log.info('KernelRestarter: restarting kernel (%i/%i)',
+                self.log.info('KernelRestarter: restarting kernel (%i/%i), %s random ports',
                     self._restart_count,
-                    self.restart_limit
+                    self.restart_limit,
+                    'new' if self._initial_startup else 'keep'
                 )
                 self._fire_callbacks('restart')
-                self.kernel_manager.restart_kernel(now=True)
+                self.kernel_manager.restart_kernel(now=True, newports=self._initial_startup)
                 self._restarting = True
         else:
+            if self._initial_startup:
+                self._initial_startup = False
             if self._restarting:
                 self.log.debug("KernelRestarter: restart apparently succeeded")
             self._restarting = False
