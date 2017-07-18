@@ -25,6 +25,11 @@ kernelspec - discovering kernels
       The name of the language the kernel implements, to help with picking
       appropriate kernels when loading notebooks.
 
+   .. attribute:: metadata
+
+      Additional kernel-specific metadata; clients can use this as needed,
+      for instance to aid in kernel selection and filtering.
+
    .. attribute:: resource_dir
 
       The path to the directory with this kernel's resources, such as icons.

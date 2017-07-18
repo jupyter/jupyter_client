@@ -28,6 +28,7 @@ class KernelSpec(HasTraits):
     language = Unicode()
     env = Dict()
     resource_dir = Unicode()
+    metadata = Dict()
 
     @classmethod
     def from_resource_dir(cls, resource_dir):
@@ -45,6 +46,7 @@ class KernelSpec(HasTraits):
                  env=self.env,
                  display_name=self.display_name,
                  language=self.language,
+                 metadata=self.metadata,
                 )
 
         return d

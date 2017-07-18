@@ -14,3 +14,5 @@ __pycache__
 \#*#
 .#*
 .coverage
+.cache
+absolute.json

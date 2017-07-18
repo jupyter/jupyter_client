@@ -135,6 +135,8 @@ JSON serialised dictionary containing the following keys and values:
 - **env** (optional): A dictionary of environment variables to set for the kernel.
   These will be added to the current environment variables before the kernel is
   started.
+- **metadata** (optional): A dictionary of additional attributes about this
+  kernel; used by clients to aid clients in kernel selection.
 
 For example, the kernel.json file for IPython looks like this::
 
