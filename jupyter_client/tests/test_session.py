@@ -5,6 +5,7 @@
 
 import hmac
 import os
+import sys
 import uuid
 from datetime import datetime
 
@@ -127,8 +128,9 @@ class TestSession(SessionTestCase):
 
         # buffers must be contiguous
         buf = memoryview(os.urandom(16))
-        with self.assertRaises(ValueError):
-            self.session.send(A, msg, ident=b'foo', buffers=[buf[::2]])
+        if sys.version_info >= (3,3):
+            with self.assertRaises(ValueError):
+                self.session.send(A, msg, ident=b'foo', buffers=[buf[::2]])
 
         A.close()
         B.close()
