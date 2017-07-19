@@ -717,13 +717,20 @@ class Session(Configurable):
             )
             return
         buffers = [] if buffers is None else buffers
-        for buf in buffers:
-            if not isinstance(buf, memoryview):
+        for idx, buf in enumerate(buffers):
+            if isinstance(buf, memoryview):
+                view = buf
+            else:
                 try:
                     # check to see if buf supports the buffer protocol.
-                    memoryview(buf)
+                    view = memoryview(buf)
                 except TypeError:
                     raise TypeError("Buffer objects must support the buffer protocol.")
+            # memoryview.contiguous is new in 3.3,
+            # just skip the check on Python 2
+            if hasattr(view, 'contiguous') and not view.contiguous:
+                # zmq requires memoryviews to be contiguous
+                raise ValueError("Buffer %i (%r) is not contiguous" % (idx, buf))
 
         if self.adapt_version:
             msg = adapt(msg, self.adapt_version)
