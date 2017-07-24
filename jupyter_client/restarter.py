@@ -34,6 +34,10 @@ class KernelRestarter(LoggingConfigurable):
     restart_limit = Integer(5, config=True,
         help="""The number of consecutive autorestarts before the kernel is presumed dead."""
     )
+
+    random_ports_until_alive = Bool(False, config=True,
+        help="""Whether to choose new random ports when restarting before the kernel is alive."""
+    )
     _restarting = Bool(False)
     _restart_count = Integer(0)
     _initial_startup = Bool(True)
@@ -99,13 +103,14 @@ class KernelRestarter(LoggingConfigurable):
                 self._restart_count = 0
                 self.stop()
             else:
+                newports = self.random_ports_until_alive and self._initial_startup
                 self.log.info('KernelRestarter: restarting kernel (%i/%i), %s random ports',
                     self._restart_count,
                     self.restart_limit,
-                    'new' if self._initial_startup else 'keep'
+                    'new' if newports else 'keep'
                 )
                 self._fire_callbacks('restart')
-                self.kernel_manager.restart_kernel(now=True, newports=self._initial_startup)
+                self.kernel_manager.restart_kernel(now=True, newports=newports)
                 self._restarting = True
         else:
             if self._initial_startup:
