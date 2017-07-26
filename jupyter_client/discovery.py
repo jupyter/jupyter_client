@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import entrypoints
 import logging
 
@@ -6,7 +7,23 @@ from .manager import KernelManager
 
 log = logging.getLogger(__name__)
 
-class KernelSpecFinder(object):
+class KernelFinderBase(ABC):
+    id = None  # Should be a short string identifying the finder class.
+
+    @abstractmethod
+    def find_kernels(self):
+        """Return an iterator of (kernel_name, kernel_info_dict) tuples."""
+        pass
+
+    @abstractmethod
+    def make_manager(self, name):
+        """Make and return a KernelManager instance to start a specified kernel
+
+        name will be one of the kernel names produced by find_kernels()
+        """
+        pass
+
+class KernelSpecFinder(KernelFinderBase):
     """Find kernels from installed kernelspec directories.
     """
     id = 'spec'
@@ -29,7 +46,7 @@ class KernelSpecFinder(object):
         return KernelManager(kernel_cmd=spec.argv, extra_env=spec.env)
 
 
-class IPykernelFinder(object):
+class IPykernelFinder(KernelFinderBase):
     """Find ipykernel on this Python version by trying to import it.
     """
     id = 'pyimport'
