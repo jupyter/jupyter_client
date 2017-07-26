@@ -1,13 +1,14 @@
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 import entrypoints
 import logging
+import six
 
 from .kernelspec import KernelSpecManager
 from .manager import KernelManager
 
 log = logging.getLogger(__name__)
 
-class KernelFinderBase(ABC):
+class KernelFinderBase(six.with_metaclass(ABCMeta, object)):
     id = None  # Should be a short string identifying the finder class.
 
     @abstractmethod
