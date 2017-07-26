@@ -1,6 +1,10 @@
+import entrypoints
+import logging
+
 from .kernelspec import KernelSpecManager
 from .manager import KernelManager
 
+log = logging.getLogger(__name__)
 
 class KernelSpecFinder(object):
     """Find kernels from installed kernelspec directories.
@@ -61,11 +65,21 @@ class IPykernelFinder(object):
 
 
 class MetaKernelFinder(object):
-    def __init__(self):
-        self.finders = [
-            KernelSpecFinder(),
-            IPykernelFinder(),
-        ]
+    def __init__(self, finders):
+        self.finders = finders
+
+    @classmethod
+    def from_entrypoints(cls):
+        finders = []
+        for ep in entrypoints.get_group_all('jupyter_client.kernel_finders'):
+            try:
+                finder = ep.load()()  # Load and instantiate
+            except Exception:
+                log.error('Error loading kernel finder', exc_info=True)
+            else:
+                finders.append(finder)
+
+        return cls(finders)
 
     def find_kernels(self):
         for finder in self.finders:
