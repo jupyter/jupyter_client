@@ -70,6 +70,7 @@ setup_args = dict(
     ],
 )
 
+# require setuptools for these cases
 if 'develop' in sys.argv or any(a.startswith('bdist') for a in sys.argv):
     import setuptools
 
@@ -85,7 +86,12 @@ extras_require = setuptools_args['extras_require'] = {
     'test': ['ipykernel', 'ipython', 'mock', 'pytest'],
 }
 
-if 'setuptools' in sys.modules:
+# always try to use setuptools if available
+try:
+    import setuptools
+except ImportError:
+    pass
+else:
     setup_args.update(setuptools_args)
     setup_args['entry_points'] = {
         'console_scripts': [
