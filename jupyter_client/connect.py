@@ -333,6 +333,9 @@ class ConnectionFileMixin(LoggingConfigurable):
     control_port = Integer(0, config=True,
             help="set the control (ROUTER) port [default: random]")
 
+    # names of the ports with random assignment
+    _random_port_names = None
+
     @property
     def ports(self):
         return [ getattr(self, name) for name in port_names ]
@@ -417,6 +420,37 @@ class ConnectionFileMixin(LoggingConfigurable):
             except (IOError, OSError):
                 pass
 
+    def _record_random_port_names(self):
+        """Records which of the ports are randomly assigned.
+
+        Records on first invocation, if the transport is tcp.
+        Does nothing on later invocations."""
+
+        if self.transport != 'tcp':
+            return
+        if self._random_port_names is not None:
+            return
+
+        self._random_port_names = []
+        for name in port_names:
+            if getattr(self, name) <= 0:
+                self._random_port_names.append(name)
+
+    def cleanup_random_ports(self):
+        """Forgets randomly assigned port numbers and cleans up the connection file.
+
+        Does nothing if no port numbers have been randomly assigned.
+        In particular, does nothing unless the transport is tcp.
+        """
+
+        if not self._random_port_names:
+            return
+
+        for name in self._random_port_names:
+            setattr(self, name, 0)
+
+        self.cleanup_connection_file()
+
     def write_connection_file(self):
         """Write connection info to JSON dict in self.connection_file."""
         if self._connection_file_written and os.path.exists(self.connection_file):
@@ -431,6 +465,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             kernel_name=self.kernel_name
         )
         # write_connection_file also sets default ports:
+        self._record_random_port_names()
         for name in port_names:
             setattr(self, name, cfg[name])
 
@@ -467,6 +502,7 @@ class ConnectionFileMixin(LoggingConfigurable):
         self.transport = info.get('transport', self.transport)
         self.ip = info.get('ip', self._ip_default())
 
+        self._record_random_port_names()
         for name in port_names:
             if getattr(self, name) == 0 and name in info:
                 # not overridden by config or cl_args

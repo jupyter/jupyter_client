@@ -326,11 +326,8 @@ class KernelManager(ConnectionFileMixin):
 
         self.cleanup(connection_file=not restart)
 
-    def restart_kernel(self, now=False, **kw):
+    def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
-
-        If the old kernel was launched with random ports, the same ports will be
-        used for the new kernel. The same connection file is used again.
 
         Parameters
         ----------
@@ -342,6 +339,14 @@ class KernelManager(ConnectionFileMixin):
             In all cases the kernel is restarted, the only difference is whether
             it is given a chance to perform a clean shutdown or not.
 
+        newports : bool, optional
+            If the old kernel was launched with random ports, this flag decides
+            whether the same ports and connection file will be used again.
+            If False, the same ports and connection file are used. This is
+            the default. If True, new random port numbers are chosen and a
+            new connection file is written. It is still possible that the newly
+            chosen random port numbers happen to be the same as the old ones.
+
         `**kw` : optional
             Any options specified here will overwrite those used to launch the
             kernel.
@@ -352,6 +357,9 @@ class KernelManager(ConnectionFileMixin):
         else:
             # Stop currently running kernel.
             self.shutdown_kernel(now=now, restart=True)
+
+            if newports:
+                self.cleanup_random_ports()
 
             # Start new kernel.
             self._launch_args.update(kw)
