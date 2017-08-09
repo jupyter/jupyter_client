@@ -148,7 +148,7 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
             new_permissions = permissions | stat.S_ISVTX
             if new_permissions != permissions:
                 try:
-                    os.chmod(path, permissions)
+                    os.chmod(path, new_permissions)
                 except OSError as e:
                     # failed to set sticky bit,
                     # probably not a big deal
