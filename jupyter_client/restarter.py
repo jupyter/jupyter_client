@@ -35,7 +35,7 @@ class KernelRestarter(LoggingConfigurable):
         help="""The number of consecutive autorestarts before the kernel is presumed dead."""
     )
 
-    random_ports_until_alive = Bool(False, config=True,
+    random_ports_until_alive = Bool(True, config=True,
         help="""Whether to choose new random ports when restarting before the kernel is alive."""
     )
     _restarting = Bool(False)
