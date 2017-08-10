@@ -10,6 +10,7 @@ related to writing and reading connections files.
 
 from __future__ import absolute_import
 
+import errno
 import glob
 import json
 import os
@@ -148,14 +149,19 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
             new_permissions = permissions | stat.S_ISVTX
             if new_permissions != permissions:
                 try:
-                    os.chmod(path, permissions)
+                    os.chmod(path, new_permissions)
                 except OSError as e:
-                    # failed to set sticky bit,
-                    # probably not a big deal
-                    warnings.warn(
-                        "Failed to set sticky bit on %r: %s" % (path, e),
-                        RuntimeWarning,
-                    )
+                    if e.errno == errno.EPERM and path == runtime_dir:
+                        # suppress permission errors setting sticky bit on runtime_dir,
+                        # which we may not own.
+                        pass
+                    else:
+                        # failed to set sticky bit, probably not a big deal
+                        warnings.warn(
+                            "Failed to set sticky bit on %r: %s"
+                            "\nProbably not a big deal, but runtime files may be cleaned up periodically." % (path, e),
+                            RuntimeWarning,
+                        )
 
     return fname, cfg
 
