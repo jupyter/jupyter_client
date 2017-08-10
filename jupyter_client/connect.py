@@ -299,6 +299,7 @@ class ConnectionFileMixin(LoggingConfigurable):
     _connection_file_written = Bool(False)
 
     transport = CaselessStrEnum(['tcp', 'ipc'], default_value='tcp', config=True)
+    kernel_name = Unicode()
 
     ip = Unicode(config=True,
         help="""Set the kernel\'s IP address [default localhost].
