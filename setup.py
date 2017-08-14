@@ -89,6 +89,12 @@ setup_args = dict(
     cmdclass         = {
         'bdist_egg': bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled,
     },
+    entry_points     = {
+        'console_scripts': [
+            'jupyter-kernelspec = jupyter_client.kernelspecapp:KernelSpecApp.launch_instance',
+            'jupyter-run = jupyter_client.runapp:RunApp.launch_instance',
+        ]
+    },
 )
 
 
