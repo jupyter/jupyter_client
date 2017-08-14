@@ -28,9 +28,8 @@ PY3 = (sys.version_info[0] >= 3)
 #-----------------------------------------------------------------------------
 
 import os
-from glob import glob
 
-from distutils.core import setup
+from setuptools import setup
 
 pjoin = os.path.join
 here = os.path.abspath(os.path.dirname(__file__))
@@ -45,16 +44,26 @@ version_ns = {}
 with open(pjoin(here, name, '_version.py')) as f:
     exec(f.read(), {}, version_ns)
 
+from setuptools.command.bdist_egg import bdist_egg
+
+class bdist_egg_disabled(bdist_egg):
+    """Disabled version of bdist_egg
+
+    Prevents setup.py install from performing setuptools' default easy_install,
+    which it should never ever do.
+    """
+    def run(self):
+        sys.exit("Aborting implicit building of eggs. Use `pip install .` to install from source.")
+
 
 setup_args = dict(
     name            = name,
     version         = version_ns['__version__'],
-    scripts         = glob(pjoin('scripts', '*')),
     packages        = packages,
     description     = "Jupyter protocol implementation and client libraries",
     author          = 'Jupyter Development Team',
     author_email    = 'jupyter@googlegroups.com',
-    url             = 'http://jupyter.org',
+    url             = 'https://jupyter.org',
     license         = 'BSD',
     platforms       = "Linux, Mac OS X, Windows",
     keywords        = ['Interactive', 'Interpreter', 'Shell', 'Web'],
@@ -68,38 +77,20 @@ setup_args = dict(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
     ],
+    install_requires = [
+        'traitlets',
+        'jupyter_core',
+        'pyzmq>=13',
+        'python-dateutil>=2.1',
+    ],
+    extras_require   = {
+        'test': ['ipykernel', 'ipython', 'mock', 'pytest'],
+    },
+    cmdclass         = {
+        'bdist_egg': bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled,
+    },
 )
 
-# require setuptools for these cases
-if 'develop' in sys.argv or any(a.startswith('bdist') for a in sys.argv):
-    import setuptools
-
-setuptools_args = {}
-install_requires = setuptools_args['install_requires'] = [
-    'traitlets',
-    'jupyter_core',
-    'pyzmq>=13',
-    'python-dateutil>=2.1',
-]
-
-extras_require = setuptools_args['extras_require'] = {
-    'test': ['ipykernel', 'ipython', 'mock', 'pytest'],
-}
-
-# always try to use setuptools if available
-try:
-    import setuptools
-except ImportError:
-    pass
-else:
-    setup_args.update(setuptools_args)
-    setup_args['entry_points'] = {
-        'console_scripts': [
-            'jupyter-kernelspec = jupyter_client.kernelspecapp:KernelSpecApp.launch_instance',
-            'jupyter-run = jupyter_client.runapp:RunApp.launch_instance',
-        ]
-    }
-    setup_args.pop('scripts', None)
 
 if __name__ == '__main__':
     setup(**setup_args)
