@@ -186,6 +186,10 @@ class KernelManager(ConnectionFileMixin):
         ns = dict(connection_file=self.connection_file,
                   prefix=sys.prefix,
                  )
+
+        if self.kernel_spec:
+            ns["resource_dir"] = self.kernel_spec.resource_dir
+
         ns.update(self._launch_args)
 
         pat = re.compile(r'\{([A-Za-z0-9_]+)\}')
