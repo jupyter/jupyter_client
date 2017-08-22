@@ -30,6 +30,12 @@ kernelspec - discovering kernels
       Additional kernel-specific metadata; clients can use this as needed,
       for instance to aid in kernel selection and filtering.
 
+      Metadata added here should be namespaced for the tool reading and
+      writing that metadata. Concretely, if you're adding a new field called
+      :code:`supported_versions` which your tool recognizes, then you should
+      add it as :code:`"mytool": {"supported_versions": [1, 2]}`, **not** as a
+      top-level field called :code:`supported_versions`.
+
    .. attribute:: resource_dir
 
       The path to the directory with this kernel's resources, such as icons.
