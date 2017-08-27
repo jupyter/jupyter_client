@@ -17,7 +17,8 @@ from zmq.eventloop import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets import (
-    Instance
+    Instance,
+    Type,
 )
 
 from jupyter_client.manager import KernelManager
@@ -40,12 +41,22 @@ class IOLoopKernelManager(KernelManager):
     def _loop_default(self):
         return ioloop.IOLoop.instance()
 
+    restarter_class = Type(
+        default_value=IOLoopKernelRestarter,
+        klass=IOLoopKernelRestarter,
+        help=(
+            'Type of KernelRestarter to use. '
+            'Must be a subclass of IOLoopKernelRestarter.\n'
+            'Override this to customize how kernel restarts are managed.'
+        ),
+        config=True,
+    )
     _restarter = Instance('jupyter_client.ioloop.IOLoopKernelRestarter', allow_none=True)
 
     def start_restarter(self):
         if self.autorestart and self.has_kernel:
             if self._restarter is None:
-                self._restarter = IOLoopKernelRestarter(
+                self._restarter = self.restarter_class(
                     kernel_manager=self, loop=self.loop,
                     parent=self, log=self.log
                 )
