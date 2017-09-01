@@ -214,7 +214,7 @@ class ThreadedKernelClient(KernelClient):
         super(ThreadedKernelClient, self).start_channels(shell, iopub, stdin, hb)
 
     def _check_kernel_info_reply(self, msg):
-        """This is run in the ioloop thread when the kernel info reply is recieved
+        """This is run in the ioloop thread when the kernel info reply is received
         """
         if msg['msg_type'] == 'kernel_info_reply':
             self._handle_kernel_info_reply(msg)
