@@ -1415,7 +1415,7 @@ Known affected frontends (as of 2017-06):
 
 - Jupyter Notebook < 5.1
 - JupyterLab < 0.24
-- nteract
+- nteract < 0.2.0
 - CoCalc
 - Jupyter Console and QtConsole with Python 2 on macOS and Windows
 
