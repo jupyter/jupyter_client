@@ -13,7 +13,9 @@ import warnings
 pjoin = os.path.join
 
 from ipython_genutils.py3compat import PY3
-from traitlets import HasTraits, List, Unicode, Dict, Set, Bool, Type
+from traitlets import (
+    HasTraits, List, Unicode, Dict, Set, Bool, Type, CaselessStrEnum
+)
 from traitlets.config import LoggingConfigurable
 
 from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PATH
@@ -28,6 +30,9 @@ class KernelSpec(HasTraits):
     language = Unicode()
     env = Dict()
     resource_dir = Unicode()
+    interrupt_mode = CaselessStrEnum(
+        ['message', 'signal'], default_value='signal'
+    )
     metadata = Dict()
 
     @classmethod
@@ -46,6 +51,7 @@ class KernelSpec(HasTraits):
                  env=self.env,
                  display_name=self.display_name,
                  language=self.language,
+                 interrupt_mode=self.interrupt_mode,
                  metadata=self.metadata,
                 )
 
@@ -227,7 +233,7 @@ class KernelSpecManager(LoggingConfigurable):
 
     def remove_kernel_spec(self, name):
         """Remove a kernel spec directory by name.
-        
+
         Returns the path that was deleted.
         """
         save_native = self.ensure_native_kernel
@@ -263,7 +269,7 @@ class KernelSpecManager(LoggingConfigurable):
         If ``user`` is False, it will attempt to install into the systemwide
         kernel registry. If the process does not have appropriate permissions,
         an :exc:`OSError` will be raised.
-        
+
         If ``prefix`` is given, the kernelspec will be installed to
         PREFIX/share/jupyter/kernels/KERNEL_NAME. This can be sys.prefix
         for installation inside virtual or conda envs.
@@ -284,16 +290,16 @@ class KernelSpecManager(LoggingConfigurable):
                 DeprecationWarning,
                 stacklevel=2,
             )
-        
+
         destination = self._get_destination_dir(kernel_name, user=user, prefix=prefix)
         self.log.debug('Installing kernelspec in %s', destination)
-        
+
         kernel_dir = os.path.dirname(destination)
         if kernel_dir not in self.kernel_dirs:
             self.log.warning("Installing to %s, which is not in %s. The kernelspec may not be found.",
                 kernel_dir, self.kernel_dirs,
             )
-        
+
         if os.path.isdir(destination):
             self.log.info('Removing existing kernelspec in %s', destination)
             shutil.rmtree(destination)
