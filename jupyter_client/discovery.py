@@ -8,8 +8,8 @@ from .manager import KernelManager
 
 log = logging.getLogger(__name__)
 
-class KernelFinderBase(six.with_metaclass(ABCMeta, object)):
-    id = None  # Should be a short string identifying the finder class.
+class KernelProviderBase(six.with_metaclass(ABCMeta, object)):
+    id = None  # Should be a short string identifying the provider class.
 
     @abstractmethod
     def find_kernels(self):
@@ -24,7 +24,7 @@ class KernelFinderBase(six.with_metaclass(ABCMeta, object)):
         """
         pass
 
-class KernelSpecFinder(KernelFinderBase):
+class KernelSpecProvider(KernelProviderBase):
     """Find kernels from installed kernelspec directories.
     """
     id = 'spec'
@@ -47,7 +47,7 @@ class KernelSpecFinder(KernelFinderBase):
         return KernelManager(kernel_cmd=spec.argv, extra_env=spec.env)
 
 
-class IPykernelFinder(KernelFinderBase):
+class IPykernelProvider(KernelProviderBase):
     """Find ipykernel on this Python version by trying to import it.
     """
     id = 'pyimport'
@@ -82,31 +82,46 @@ class IPykernelFinder(KernelFinderBase):
         return KernelManager(kernel_cmd=info['spec']['argv'])
 
 
-class MetaKernelFinder(object):
-    def __init__(self, finders):
-        self.finders = finders
+class KernelFinder(object):
+    """Manages a collection of kernel providers to find available kernels
+    """
+    def __init__(self, providers):
+        self.providers = providers
 
     @classmethod
     def from_entrypoints(cls):
-        finders = []
-        for ep in entrypoints.get_group_all('jupyter_client.kernel_finders'):
-            try:
-                finder = ep.load()()  # Load and instantiate
-            except Exception:
-                log.error('Error loading kernel finder', exc_info=True)
-            else:
-                finders.append(finder)
+        """Load all kernel providers advertised by entry points.
 
-        return cls(finders)
+        Kernel providers should use the "jupyter_client.kernel_providers"
+        entry point group.
+
+        Returns an instance of KernelFinder.
+        """
+        providers = []
+        for ep in entrypoints.get_group_all('jupyter_client.kernel_providers'):
+            try:
+                provider = ep.load()()  # Load and instantiate
+            except Exception:
+                log.error('Error loading kernel provider', exc_info=True)
+            else:
+                providers.append(provider)
+
+        return cls(providers)
 
     def find_kernels(self):
-        for finder in self.finders:
-            for kid, attributes in finder.find_kernels():
-                id = finder.id + '/' + kid
+        """Iterate over available kernels.
+
+        Yields 2-tuples of (id_str, attributes)
+        """
+        for provider in self.providers:
+            for kid, attributes in provider.find_kernels():
+                id = provider.id + '/' + kid
                 yield id, attributes
 
     def make_manager(self, id):
-        finder_id, kernel_id = id.split('/', 1)
-        for finder in self.finders:
-            if finder_id == finder.id:
-                return finder.make_manager(kernel_id)
+        """Make a KernelManager instance for a given kernel ID.
+        """
+        provider_id, kernel_id = id.split('/', 1)
+        for provider in self.providers:
+            if provider_id == provider.id:
+                return provider.make_manager(kernel_id)
