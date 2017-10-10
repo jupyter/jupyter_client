@@ -25,7 +25,7 @@ class KernelProviderBase(six.with_metaclass(ABCMeta, object)):
         pass
 
 class KernelSpecProvider(KernelProviderBase):
-    """Find kernels from installed kernelspec directories.
+    """Offers kernel types from installed kernelspec directories.
     """
     id = 'spec'
 
@@ -48,7 +48,9 @@ class KernelSpecProvider(KernelProviderBase):
 
 
 class IPykernelProvider(KernelProviderBase):
-    """Find ipykernel on this Python version by trying to import it.
+    """Offers a kernel type using the Python interpreter it's running in.
+
+    This checks if ipykernel is importable first.
     """
     id = 'pyimport'
 
@@ -83,7 +85,9 @@ class IPykernelProvider(KernelProviderBase):
 
 
 class KernelFinder(object):
-    """Manages a collection of kernel providers to find available kernels
+    """Manages a collection of kernel providers to find available kernel types
+
+    *providers* should be a list of kernel provider instances.
     """
     def __init__(self, providers):
         self.providers = providers
@@ -109,17 +113,17 @@ class KernelFinder(object):
         return cls(providers)
 
     def find_kernels(self):
-        """Iterate over available kernels.
+        """Iterate over available kernel types.
 
-        Yields 2-tuples of (id_str, attributes)
+        Yields 2-tuples of (prefixed_name, attributes)
         """
         for provider in self.providers:
             for kid, attributes in provider.find_kernels():
                 id = provider.id + '/' + kid
                 yield id, attributes
 
-    def make_manager(self, id):
-        """Make a KernelManager instance for a given kernel ID.
+    def make_manager(self, name):
+        """Make a KernelManager instance for a given kernel type.
         """
         provider_id, kernel_id = id.split('/', 1)
         for provider in self.providers:
