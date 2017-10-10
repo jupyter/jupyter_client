@@ -3,12 +3,18 @@ Kernel providers
 ================
 
 .. note::
-   This is a new interface under development. Not all Jupyter applications
-   use this yet. See :ref:`kernelspecs` for the established way of discovering
-   kernel types.
+   This is a new interface under development, and may still change.
+   Not all Jupyter applications use this yet.
+   See :ref:`kernelspecs` for the established way of discovering kernel types.
+
+Creating a kernel provider
+==========================
 
 By writing a kernel provider, you can extend how Jupyter applications discover
-and start kernels. To do so, subclass
+and start kernels. For example, you could find kernels in an environment system
+like conda, or kernels on remote systems which you can access.
+
+To write a kernel provider, subclass
 :class:`jupyter_client.discovery.KernelProviderBase`, giving your provider an ID
 and overriding two methods.
 
@@ -47,8 +53,8 @@ called *oblong*::
             if not which('oblong-kernel'):
                 return  # Check it's available
 
-            # Two variants - for a real kernel, these could be different
-            # environments
+            # Two variants - for a real kernel, these could be something like
+            # different conda environments.
             yield 'standard', {
                 'display_name': 'Oblong (standard)',
                 'language': {'name': 'oblong'},
@@ -85,8 +91,9 @@ Finding kernel types
 ====================
 
 To find and start kernels in client code, use
-:class:`jupyter_client.discovery.KernelFinder`. This has a similar API to kernel
-providers, but it wraps a set of kernel providers. The kernel names it works
+:class:`jupyter_client.discovery.KernelFinder`. This uses multiple kernel
+providers to find available kernels. Like a kernel provider, it has methods
+``find_kernels`` and ``make_manager``. The kernel names it works
 with have the provider ID as a prefix, e.g. ``oblong/rounded`` (from the example
 above).
 
@@ -116,8 +123,8 @@ above).
 
    .. automethod:: make_manager
 
-Included kernel providers
-=========================
+Kernel providers included in ``jupyter_client``
+===============================================
 
 ``jupyter_client`` includes two kernel providers:
 
@@ -135,9 +142,9 @@ Kernel instance
   Its state includes a namespace and an execution counter.
 
 Kernel type
-  Allows starting multiple, initially similar kernel instances. The kernel type
-  entails the combination of software to run the kernel, and the context in
-  which it starts. For instance, one kernel type may be associated with one
+  The software to run a kernel instance, along with the context in which a
+  kernel starts. One kernel type allows starting multiple, initially similar
+  kernel instances. For instance, one kernel type may be associated with one
   conda environment containing ``ipykernel``. The same kernel software in
   another environment would be a different kernel type. Another software package
   for a kernel, such as ``IRkernel``, would also be a different kernel type.
