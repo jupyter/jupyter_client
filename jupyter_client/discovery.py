@@ -125,7 +125,7 @@ class KernelFinder(object):
     def make_manager(self, name):
         """Make a KernelManager instance for a given kernel type.
         """
-        provider_id, kernel_id = id.split('/', 1)
+        provider_id, kernel_id = name.split('/', 1)
         for provider in self.providers:
             if provider_id == provider.id:
                 return provider.make_manager(kernel_id)
