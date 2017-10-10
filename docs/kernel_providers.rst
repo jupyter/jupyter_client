@@ -81,6 +81,9 @@ something like this::
         ]
     })
 
+Finding kernel types
+====================
+
 To find and start kernels in client code, use
 :class:`jupyter_client.discovery.KernelFinder`. This has a similar API to kernel
 providers, but it wraps a set of kernel providers. The kernel names it works
