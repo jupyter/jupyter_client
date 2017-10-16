@@ -22,7 +22,7 @@ import zmq
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
-    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName
+    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName, Dict
 )
 from jupyter_client import (
     launch_kernel,
@@ -87,23 +87,13 @@ class KernelManager(ConnectionFileMixin):
             self._kernel_spec = self.kernel_spec_manager.get_kernel_spec(self.kernel_name)
         return self._kernel_spec
 
-    kernel_cmd = List(Unicode(), config=True,
-        help="""DEPRECATED: Use kernel_name instead.
-
-        The Popen Command to launch the kernel.
-        Override this if you have a custom kernel.
-        If kernel_cmd is specified in a configuration file,
-        Jupyter does not pass any arguments to the kernel,
-        because it cannot make any assumptions about the
-        arguments that the kernel understands. In particular,
-        this means that the kernel does not receive the
-        option --debug if it given on the Jupyter command line.
-        """
+    kernel_cmd = List(Unicode(),
+        help="""The Popen Command to launch the kernel."""
     )
 
-    def _kernel_cmd_changed(self, name, old, new):
-        warnings.warn("Setting kernel_cmd is deprecated, use kernel_spec to "
-                      "start different kernels.")
+    extra_env = Dict(
+        help="""Extra environment variables to be set for the kernel."""
+    )
 
     @property
     def ipykernel(self):
@@ -254,6 +244,8 @@ class KernelManager(ConnectionFileMixin):
             # If kernel_cmd has been set manually, don't refer to a kernel spec
             # Environment variables from kernel spec are added to os.environ
             env.update(self.kernel_spec.env or {})
+        elif self.extra_env:
+            env.update(self.extra_env)
         
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)

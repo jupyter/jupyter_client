@@ -82,6 +82,7 @@ setup_args = dict(
         'jupyter_core',
         'pyzmq>=13',
         'python-dateutil>=2.1',
+        'entrypoints',
     ],
     extras_require   = {
         'test': ['ipykernel', 'ipython', 'mock', 'pytest'],
@@ -93,6 +94,10 @@ setup_args = dict(
         'console_scripts': [
             'jupyter-kernelspec = jupyter_client.kernelspecapp:KernelSpecApp.launch_instance',
             'jupyter-run = jupyter_client.runapp:RunApp.launch_instance',
+        ],
+        'jupyter_client.kernel_providers' : [
+            'spec = jupyter_client.discovery:KernelSpecProvider',
+            'pyimport = jupyter_client.discovery:IPykernelProvider',
         ]
     },
 )
