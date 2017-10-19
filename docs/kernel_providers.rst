@@ -42,7 +42,7 @@ For example, imagine we want to tell Jupyter about kernels for a new language
 called *oblong*::
 
     # oblong_provider.py
-    from jupyter_client.discover import KernelProviderBase
+    from jupyter_client.discovery import KernelProviderBase
     from jupyter_client import KernelManager
     from shutil import which
 
