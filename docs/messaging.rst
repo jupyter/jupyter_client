@@ -959,6 +959,27 @@ Message type: ``shutdown_reply``::
    socket, they simply send a forceful process termination signal, since a dead
    process is unlikely to respond in any useful way to messages.
 
+.. _msging_interrupt:
+
+Kernel interrupt
+----------------
+
+In case a kernel can not catch operating system interrupt signals (e.g. the used
+runtime handles signals and does not allow a user program to define a callback),
+a kernel can choose to be notified using a message instead. For this to work,
+the kernels kernelspec must set `interrupt_mode` to ``message``. An interruption
+will then result in the following message on the `control` channel:
+
+Message type: ``interrupt_request``::
+
+    content = {}
+
+Message type: ``interrupt_reply``::
+
+    content = {}
+
+.. versionadded:: 5.3
+
 
 Messages on the IOPub (PUB/SUB) channel
 =======================================
