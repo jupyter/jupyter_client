@@ -6,7 +6,7 @@ Making kernels for Jupyter
 
 A 'kernel' is a program that runs and introspects the user's code. IPython
 includes a kernel for Python code, and people have written kernels for
-`several other languages <https://github.com/ipython/ipython/wiki/IPython-kernels-for-other-languages>`_.
+`several other languages <https://github.com/jupyter/jupyter/wiki/Jupyter-kernels>`_.
 
 When Jupyter starts a kernel, it passes it a connection file. This specifies
 how to set up communications with the frontend.
