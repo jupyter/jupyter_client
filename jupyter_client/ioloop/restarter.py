@@ -4,37 +4,28 @@ This watches a kernel's state using KernelManager.is_alive and auto
 restarts the kernel if it dies.
 """
 
-#-----------------------------------------------------------------------------
-#  Copyright (c) The Jupyter Development Team
-#
-#  Distributed under the terms of the BSD License.  The full license is in
-#  the file COPYING, distributed as part of this software.
-#-----------------------------------------------------------------------------
-
-#-----------------------------------------------------------------------------
-# Imports
-#-----------------------------------------------------------------------------
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
 
 from __future__ import absolute_import
+import warnings
 
 from zmq.eventloop import ioloop
-
 
 from jupyter_client.restarter import KernelRestarter
 from traitlets import (
     Instance,
 )
 
-#-----------------------------------------------------------------------------
-# Code
-#-----------------------------------------------------------------------------
-
 class IOLoopKernelRestarter(KernelRestarter):
     """Monitor and autorestart a kernel."""
 
-    loop = Instance('zmq.eventloop.ioloop.IOLoop')
+    loop = Instance('tornado.ioloop.IOLoop')
     def _loop_default(self):
-        return ioloop.IOLoop.instance()
+        warnings.warn("IOLoopKernelRestarter.loop is deprecated in jupyter-client 5.2",
+            DeprecationWarning, stacklevel=4,
+        )
+        return ioloop.IOLoop.current()
 
     _pcallback = None
 
@@ -42,7 +33,7 @@ class IOLoopKernelRestarter(KernelRestarter):
         """Start the polling of the kernel."""
         if self._pcallback is None:
             self._pcallback = ioloop.PeriodicCallback(
-                self.poll, 1000*self.time_to_dead, self.loop
+                self.poll, 1000*self.time_to_dead,
             )
             self._pcallback.start()
 
