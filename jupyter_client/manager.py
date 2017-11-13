@@ -254,7 +254,7 @@ class KernelManager(ConnectionFileMixin):
             # If kernel_cmd has been set manually, don't refer to a kernel spec
             # Environment variables from kernel spec are added to os.environ
             env.update(self.kernel_spec.env or {})
-        
+
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
         self.kernel = self._launch_kernel(kernel_cmd, env=env,
@@ -411,11 +411,18 @@ class KernelManager(ConnectionFileMixin):
         platforms.
         """
         if self.has_kernel:
-            if sys.platform == 'win32':
-                from .win_interrupt import send_interrupt
-                send_interrupt(self.kernel.win32_interrupt_event)
-            else:
-                self.signal_kernel(signal.SIGINT)
+            interrupt_mode = self.kernel_spec.interrupt_mode
+            if interrupt_mode == 'signal':
+                if sys.platform == 'win32':
+                    from .win_interrupt import send_interrupt
+                    send_interrupt(self.kernel.win32_interrupt_event)
+                else:
+                    self.signal_kernel(signal.SIGINT)
+
+            elif interrupt_mode == 'message':
+                msg = self.session.msg("interrupt_request", content={})
+                self._connect_control_socket()
+                self.session.send(self._control_socket, msg)
         else:
             raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
 
