@@ -1,15 +1,7 @@
 """A kernel manager with a tornado IOLoop"""
 
-#-----------------------------------------------------------------------------
-#  Copyright (c) The Jupyter Development Team
-#
-#  Distributed under the terms of the BSD License.  The full license is in
-#  the file COPYING, distributed as part of this software.
-#-----------------------------------------------------------------------------
-
-#-----------------------------------------------------------------------------
-# Imports
-#-----------------------------------------------------------------------------
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
 
 from __future__ import absolute_import
 
@@ -24,10 +16,6 @@ from traitlets import (
 from jupyter_client.manager import KernelManager
 from .restarter import IOLoopKernelRestarter
 
-#-----------------------------------------------------------------------------
-# Code
-#-----------------------------------------------------------------------------
-
 
 def as_zmqstream(f):
     def wrapped(self, *args, **kwargs):
@@ -37,9 +25,9 @@ def as_zmqstream(f):
 
 class IOLoopKernelManager(KernelManager):
 
-    loop = Instance('zmq.eventloop.ioloop.IOLoop')
+    loop = Instance('tornado.ioloop.IOLoop')
     def _loop_default(self):
-        return ioloop.IOLoop.instance()
+        return ioloop.IOLoop.current()
 
     restarter_class = Type(
         default_value=IOLoopKernelRestarter,
