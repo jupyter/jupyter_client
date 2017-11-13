@@ -8,6 +8,10 @@ import os
 import sys
 import uuid
 from datetime import datetime
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 import pytest
 
@@ -34,6 +38,14 @@ class SessionTestCase(BaseZMQTestCase):
         self.session = ss.Session()
 
 
+@pytest.fixture
+def no_copy_threshold():
+    """Disable zero-copy optimizations in pyzmq >= 17"""
+    with mock.patch.object(zmq, 'COPY_THRESHOLD', 1):
+        yield
+
+
+@pytest.mark.usefixtures('no_copy_threshold')
 class TestSession(SessionTestCase):
 
     def test_msg(self):
