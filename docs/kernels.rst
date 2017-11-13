@@ -135,7 +135,7 @@ JSON serialised dictionary containing the following keys and values:
 - **interrupt_mode** (optional): May be either ``signal`` or ``message`` and
   specifies how a client is supposed to interrupt cell execution on this kernel,
   either by sending an interrupt ``signal`` via the operating system's
-  signalling facilities (e.g. `SIGTERM` on POSIX systems), or by sending an
+  signalling facilities (e.g. `SIGINT` on POSIX systems), or by sending an
   ``interrupt_request`` message on the control channel (see
   :ref:`msging_interrupt`). If this is not specified
   the client will default to ``signal`` mode.
