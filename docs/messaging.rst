@@ -21,7 +21,7 @@ Versioning
 
 The Jupyter message specification is versioned independently of the packages
 that use it.
-The current version of the specification is 5.2.
+The current version of the specification is 5.3.
 
 .. note::
    *New in* and *Changed in* messages in this document refer to versions of the
@@ -958,6 +958,27 @@ Message type: ``shutdown_reply``::
    When the clients detect a dead kernel thanks to inactivity on the heartbeat
    socket, they simply send a forceful process termination signal, since a dead
    process is unlikely to respond in any useful way to messages.
+
+.. _msging_interrupt:
+
+Kernel interrupt
+----------------
+
+In case a kernel can not catch operating system interrupt signals (e.g. the used
+runtime handles signals and does not allow a user program to define a callback),
+a kernel can choose to be notified using a message instead. For this to work,
+the kernels kernelspec must set `interrupt_mode` to ``message``. An interruption
+will then result in the following message on the `control` channel:
+
+Message type: ``interrupt_request``::
+
+    content = {}
+
+Message type: ``interrupt_reply``::
+
+    content = {}
+
+.. versionadded:: 5.3
 
 
 Messages on the IOPub (PUB/SUB) channel
