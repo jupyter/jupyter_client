@@ -96,9 +96,6 @@ def make_connection_file(ip=None, transport='tcp'):
     Parameters
     ----------
 
-    fname : unicode
-        The path to the file to write
-
     ip  : str, optional
         The ip address the kernel will bind to.
 
@@ -198,9 +195,11 @@ def build_popen_kwargs(cmd_template, connection_file, extra_env=None, cwd=None):
         env["IPY_INTERRUPT_EVENT"] = env["JPY_INTERRUPT_EVENT"]
 
         try:
+            # noinspection PyUnresolvedReferences
             from _winapi import DuplicateHandle, GetCurrentProcess, \
                 DUPLICATE_SAME_ACCESS, CREATE_NEW_PROCESS_GROUP
         except:
+            # noinspection PyUnresolvedReferences
             from _subprocess import DuplicateHandle, GetCurrentProcess, \
                 DUPLICATE_SAME_ACCESS, CREATE_NEW_PROCESS_GROUP
         # Launch the kernel process
@@ -230,11 +229,7 @@ def build_popen_kwargs(cmd_template, connection_file, extra_env=None, cwd=None):
 
     return kwargs
 
-class KernelLauncherBase(six.with_metaclass(ABCMeta, object)):
-    @abstractmethod
-    def launch(self):
-        """Launch the kernel."""
-
+class KernelLauncher(six.with_metaclass(ABCMeta, object)):
     @abstractmethod
     def is_alive(self):
         """Check whether the kernel is currently alive (e.g. the process exists)
@@ -256,22 +251,20 @@ class KernelLauncherBase(six.with_metaclass(ABCMeta, object)):
         """Clean up any resources."""
         pass
 
-class PopenKernelLauncher(KernelLauncherBase):
-    popen = None
-    connection_file = None
-    connection_info = None
+    @abstractmethod
+    def get_connection_info(self):
+        """Return a dictionary of connection information"""
+        pass
 
+class PopenKernelLauncher(KernelLauncher):
     def __init__(self, cmd_template, extra_env=None, cwd=None):
         self.cmd_template = cmd_template
         self.extra_env = extra_env
         self.cwd = cwd
-
-    def launch(self):
         self.connection_file, self.connection_info = make_connection_file()
         kwargs = build_popen_kwargs(self.cmd_template, self.connection_file,
                                     self.extra_env, self.cwd)
         self.popen = Popen(**kwargs)
-        return self.connection_info
 
     def poll(self):
         return self.popen.poll() is None
@@ -285,3 +278,6 @@ class PopenKernelLauncher(KernelLauncherBase):
     def cleanup(self):
         if self.connection_file:
             os.unlink(self.connection_file)
+
+    def get_connection_info(self):
+        return self.connection_info

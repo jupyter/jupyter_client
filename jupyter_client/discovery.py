@@ -4,7 +4,7 @@ import logging
 import six
 
 from .kernelspec import KernelSpecManager
-from .manager import KernelManager
+from .launcher2 import PopenKernelLauncher
 
 log = logging.getLogger(__name__)
 
@@ -17,12 +17,24 @@ class KernelProviderBase(six.with_metaclass(ABCMeta, object)):
         pass
 
     @abstractmethod
-    def make_manager(self, name):
-        """Make and return a KernelManager instance to start a specified kernel
+    def launch(self, name, cwd=None):
+        """Launch a kernel, return an object with the KernelLauncher interface.
 
         name will be one of the kernel names produced by find_kernels()
+
+        This method launches and manages the kernel in a blocking manner.
         """
         pass
+
+    def launch_async(self, name, cwd=None):
+        """Launch a kernel asynchronously using asyncio.
+
+        name will be one of the kernel names produced by find_kernels()
+
+        This method should return an asyncio future, which resolves to an object
+        with the AsyncKernelLauncher interface.
+        """
+        raise NotImplementedError()
 
 class KernelSpecProvider(KernelProviderBase):
     """Offers kernel types from installed kernelspec directories.
@@ -42,10 +54,16 @@ class KernelSpecProvider(KernelProviderBase):
                 'argv': spec.argv,
             }
 
-    def make_manager(self, name):
+    def launch(self, name, cwd=None):
         spec = self.ksm.get_kernel_spec(name)
-        return KernelManager(kernel_cmd=spec.argv, extra_env=spec.env)
+        return PopenKernelLauncher(cmd_template=spec.argv,
+                                   extra_env=spec.env, cwd=cwd)
 
+    def launch_async(self, name, cwd=None):
+        from .async_launcher import AsyncPopenKernelLauncher
+        spec = self.ksm.get_kernel_spec(name)
+        return AsyncPopenKernelLauncher.launch(cmd_template=spec.argv,
+                                               extra_env=spec.env, cwd=cwd)
 
 class IPykernelProvider(KernelProviderBase):
     """Offers a kernel type using the Python interpreter it's running in.
@@ -77,12 +95,20 @@ class IPykernelProvider(KernelProviderBase):
                 'argv': info['spec']['argv'],
             }
 
-    def make_manager(self, name):
+    def launch(self, name, cwd=None):
         info = self._check_for_kernel()
         if info is None:
             raise Exception("ipykernel is not importable")
-        return KernelManager(kernel_cmd=info['spec']['argv'])
+        return PopenKernelLauncher(cmd_template=info['spec']['argv'],
+                                   extra_env={}, cwd=cwd)
 
+    def launch_async(self, name, cwd=None):
+        from .async_launcher import AsyncPopenKernelLauncher
+        info = self._check_for_kernel()
+        if info is None:
+            raise Exception("ipykernel is not importable")
+        return AsyncPopenKernelLauncher.launch(
+                    cmd_template=info['spec']['argv'], extra_env={}, cwd=cwd)
 
 class KernelFinder(object):
     """Manages a collection of kernel providers to find available kernel types
@@ -122,10 +148,18 @@ class KernelFinder(object):
                 id = provider.id + '/' + kid
                 yield id, attributes
 
-    def make_manager(self, name):
-        """Make a KernelManager instance for a given kernel type.
+    def launch(self, name, cwd=None):
+        """Launch a kernel of a given kernel type.
         """
         provider_id, kernel_id = name.split('/', 1)
         for provider in self.providers:
             if provider_id == provider.id:
-                return provider.make_manager(kernel_id)
+                return provider.launch(kernel_id, cwd)
+
+    def launch_async(self, name, cwd=None):
+        """Launch a kernel of a given kernel type, using asyncio.
+        """
+        provider_id, kernel_id = name.split('/', 1)
+        for provider in self.providers:
+            if provider_id == provider.id:
+                return provider.launch_async(kernel_id, cwd)
