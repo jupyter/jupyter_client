@@ -1,7 +1,7 @@
 import sys
 
-from jupyter_client import KernelManager
 from jupyter_client import discovery
+from jupyter_client.launcher2 import KernelLauncher
 
 def test_ipykernel_provider():
     import ipykernel  # Fail clearly if ipykernel not installed
@@ -20,13 +20,32 @@ class DummyKernelProvider(discovery.KernelProviderBase):
     def find_kernels(self):
         yield 'sample', {'argv': ['dummy_kernel']}
 
-    def make_manager(self, name):
-        return KernelManager(kernel_cmd=['dummy_kernel'])
+    def launch(self, name, cwd=None):
+        return DummyKernelLauncher()
+
+class DummyKernelLauncher(KernelLauncher):
+    def is_alive(self):
+        """Check whether the kernel is currently alive (e.g. the process exists)
+        """
+        return True
+
+    def wait(self):
+        """Wait for the kernel process to exit.
+        """
+        return 0
+
+    def signal(self, signum):
+        """Send a signal to the kernel."""
+        pass
+
+    def get_connection_info(self):
+        """Return a dictionary of connection information"""
+        return {}
 
 def test_meta_kernel_finder():
     kf = discovery.KernelFinder(providers=[DummyKernelProvider()])
     assert list(kf.find_kernels()) == \
         [('dummy/sample', {'argv': ['dummy_kernel']})]
 
-    manager = kf.make_manager('dummy/sample')
-    assert manager.kernel_cmd == ['dummy_kernel']
+    launcher = kf.launch('dummy/sample')
+    assert isinstance(launcher, DummyKernelLauncher)
