@@ -193,9 +193,9 @@ class HBChannel(Thread):
             self.socket = None
 
     def call_handlers(self, since_last_heartbeat):
-        """This method is called in the ioloop thread when a message arrives.
+        """This method is called in the ioloop thread when the heartbeat fails.
 
-        Subclasses should override this method to handle incoming messages.
+        Subclasses should override this method to handle heartbeat failure.
         It is important to remember that this method is called in the thread
         so that some logic must be done to ensure that the application level
         handlers are called in the application thread.

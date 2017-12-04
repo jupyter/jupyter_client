@@ -13,8 +13,9 @@ import warnings
 
 from ipython_genutils.encoding import getdefaultencoding
 from ipython_genutils.py3compat import cast_bytes_py2
-from .localinterfaces import localhost
 from jupyter_core.paths import jupyter_runtime_dir
+from jupyter_core.utils import ensure_dir_exists
+from .localinterfaces import localhost
 
 def new_key():
     """Generate a new random key string.
@@ -105,7 +106,9 @@ def make_connection_file(ip=None, transport='tcp'):
     if not ip:
         ip = localhost()
 
-    fname = os.path.join(jupyter_runtime_dir(), 'kernel-%s.json' % new_key())
+    runtime_dir = jupyter_runtime_dir()
+    ensure_dir_exists(runtime_dir)
+    fname = os.path.join(runtime_dir, 'kernel-%s.json' % new_key())
 
     cfg = random_ports(ip=ip, transport=transport)
     cfg['ip'] = ip
@@ -173,6 +176,7 @@ def build_popen_kwargs(cmd_template, connection_file, extra_env=None, cwd=None):
     env.pop('PYTHONEXECUTABLE', None)
 
     if extra_env:
+        print(extra_env)
         env.update(extra_env)
 
     # TODO: where is this used?
