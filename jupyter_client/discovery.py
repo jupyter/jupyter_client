@@ -31,8 +31,9 @@ class KernelProviderBase(six.with_metaclass(ABCMeta, object)):
 
         name will be one of the kernel names produced by find_kernels()
 
-        This method should return an asyncio future, which resolves to an object
-        with the AsyncKernelLauncher interface.
+        This method should act as an asyncio coroutine, returning an object
+        with the AsyncKernelManager interface. This closely matches the
+        synchronous KernelManager2 interface, but all methods are coroutines.
         """
         raise NotImplementedError()
 
