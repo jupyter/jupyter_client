@@ -1,84 +1,111 @@
 """Launch and control kernels using asyncio.
 """
-from abc import ABC, abstractmethod
 # noinspection PyCompatibility
 import asyncio
+import os
 
 from .launcher2 import make_connection_file, build_popen_kwargs
-
-class AsyncKernelLauncher(ABC):
-    """Interface for async kernel launchers.
-
-    This is very similar to the KernelLauncher interface, but its methods
-    are asyncio coroutines. There is no poll method, but you can get a future
-    from the wait method and then poll it by checking ``future.done()``.
-    """
-    @abstractmethod
-    def wait(self):
-        """Wait for the kernel process to exit.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def send_signal(self, signum):
-        """Send a signal to the kernel."""
-        pass
-
-    def cleanup(self):
-        """Clean up any resources."""
-        pass
-
-    @abstractmethod
-    def get_connection_info(self):
-        """Return a dictionary of connection information"""
-        pass
-
+from .localinterfaces import is_local_ip, local_ips
+from .manager2 import KernelManager2, KernelManager2ABC
 
 # noinspection PyCompatibility
-class AsyncPopenKernelLauncher(AsyncKernelLauncher):
-    """Launch a kernel asynchronously in a subprocess.
+class AsyncPopenKernelManager(KernelManager2):
+    """Run a kernel asynchronously in a subprocess.
 
     This is the async counterpart to PopenKernelLauncher.
     """
-    process = None
-    connection_file = None
-    connection_info = None
-
-    def __init__(self, process, connection_file, connection_info):
-        self.process = process
-        self.connection_file = connection_file
-        self.connection_info = connection_info
-
-    # __init__ can't be async, so this is the preferred constructor:
-    @classmethod
-    @asyncio.coroutine
-    def launch(cls, cmd_template, extra_env, cwd):
-        connection_file, connection_info = make_connection_file()
-        kwargs = build_popen_kwargs(cmd_template, connection_file,
-                                    extra_env, cwd)
-        args = kwargs.pop('args')
-        p = yield from asyncio.create_subprocess_exec(*args, **kwargs)
-        return cls(p, connection_file, connection_info)
+    _exit_future = None
 
     @asyncio.coroutine
-    def wait(self):
-        return (yield from self.process.wait())
+    def start_kernel(self):
+        if self.transport == 'tcp' and not is_local_ip(self.ip):
+            raise RuntimeError("Can only launch a kernel on a local interface. "
+                               "Make sure that the '*_address' attributes are "
+                               "configured properly. "
+                               "Currently valid addresses are: %s" % local_ips()
+                               )
+
+        self.connection_file, self.connection_info = \
+            make_connection_file(self.ip, self.transport)
+
+        kw = build_popen_kwargs(self.kernel_cmd, self.connection_file,
+                                self.extra_env, self.cwd)
+
+        # launch the kernel subprocess
+        args = kw.pop('args')
+        self.log.debug("Starting kernel: %s", args)
+        self.kernel = yield from asyncio.create_subprocess_exec(*args, **kw)
+        self._exit_future = asyncio.ensure_future(self.kernel.wait())
 
     @asyncio.coroutine
-    def send_signal(self, signum):
-        return self.process.send_signal(signum)
+    def wait(self, timeout):
+        try:
+            yield from asyncio.wait_for(self.kernel.wait(), timeout)
+            return False
+        except asyncio.TimeoutError:
+            return True
+
+    @asyncio.coroutine
+    def is_alive(self):
+        return not (self._exit_future and self._exit_future.done())
+
+    @asyncio.coroutine
+    def signal(self, signum):
+        return self.kernel.send_signal(signum)
+
+    @asyncio.coroutine
+    def interrupt(self):
+        return super().interrupt()
+
+    @asyncio.coroutine
+    def kill(self):
+        return self.kernel.kill()
 
     @asyncio.coroutine
     def cleanup(self):
-        super().cleanup()
+        return super().cleanup()
 
     @asyncio.coroutine
     def get_connection_info(self):
-        return self.connection_info
-
+        return super().get_connection_info()
 
 # noinspection PyCompatibility
-class AsyncLauncherWrapper(AsyncKernelLauncher):
+@asyncio.coroutine
+def shutdown(client, manager, wait_time=5.0):
+    """Shutdown a kernel using a client and a manager.
+
+    Attempts a clean shutdown by sending a shutdown message. If the kernel
+    hasn't exited in wait_time seconds, it will be killed. Set wait_time=None
+    to wait indefinitely.
+    """
+    client.shutdown()
+    if (yield from manager.wait(wait_time)):
+        # OK, we've waited long enough.
+        manager.log.debug("Kernel is taking too long to finish, killing")
+        manager.kill()
+    manager.cleanup()
+
+# noinspection PyCompatibility
+@asyncio.coroutine
+def start_new_kernel(kernel_cmd, startup_timeout=60, cwd=None):
+    """Start a new kernel, and return its Manager and a blocking client"""
+    from .client2 import BlockingKernelClient2
+    cwd = cwd or os.getcwd()
+
+    km = AsyncPopenKernelManager(kernel_cmd, cwd=cwd)
+    yield from km.start_kernel()
+    # TODO: asyncio client
+    kc = BlockingKernelClient2(km.connection_info, manager=km)
+    try:
+        kc.wait_for_ready(timeout=startup_timeout)
+    except RuntimeError:
+        yield from shutdown(kc, km)
+        raise
+
+    return km, kc
+
+# noinspection PyCompatibility
+class AsyncLauncherWrapper(KernelManager2ABC):
     """Wrap a blocking KernelLauncher to be used asynchronously.
 
     This calls the blocking methods in the event loop's default executor.
@@ -91,16 +118,24 @@ class AsyncLauncherWrapper(AsyncKernelLauncher):
         return self.loop.run_in_executor(None, f, *args)
 
     @asyncio.coroutine
-    def launch(self):
-        return (yield from self.in_default_executor(self.wrapped.launch))
+    def is_alive(self):
+        return (yield from self.in_default_executor(self.wrapped.is_alive))
 
     @asyncio.coroutine
-    def wait(self):
-        return (yield from self.in_default_executor(self.wrapped.wait))
+    def wait(self, timeout):
+        return (yield from self.in_default_executor(self.wrapped.wait, timeout))
 
     @asyncio.coroutine
-    def send_signal(self, signum):
-        return (yield from self.in_default_executor(self.wrapped.send_signal, signum))
+    def signal(self, signum):
+        return (yield from self.in_default_executor(self.wrapped.signal, signum))
+
+    @asyncio.coroutine
+    def interrupt(self):
+        return (yield from self.in_default_executor(self.wrapped.interrupt))
+
+    @asyncio.coroutine
+    def kill(self):
+        return (yield from self.in_default_executor(self.wrapped.kill))
 
     @asyncio.coroutine
     def cleanup(self):
