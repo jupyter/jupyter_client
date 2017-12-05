@@ -3,7 +3,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 from functools import partial
 from getpass import getpass
@@ -52,7 +52,7 @@ def validate_string_dict(dct):
         if not isinstance(v, string_types):
             raise ValueError('value %r in dict must be a string' % v)
 
-class KernelClient2():
+class KernelClient2(object):
     """Communicates with a single kernel on any host via zmq channels.
 
     The messages that can be sent are exposed as methods of the
