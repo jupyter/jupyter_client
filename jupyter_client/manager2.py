@@ -5,10 +5,12 @@
 
 from __future__ import absolute_import
 
+from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 import os
 import signal
-from subprocess import Popen
+import six
+from subprocess import Popen, TimeoutExpired
 import sys
 import time
 
@@ -17,7 +19,63 @@ from traitlets.log import get_logger as get_app_logger
 from .launcher2 import make_connection_file, build_popen_kwargs
 from .localinterfaces import is_local_ip, local_ips, localhost
 
-class KernelManager2(object):
+
+class KernelManager2ABC(six.with_metaclass(ABCMeta, object)):
+    @abstractmethod
+    def is_alive(self):
+        """Check whether the kernel is currently alive (e.g. the process exists)
+        """
+        pass
+
+    @abstractmethod
+    def wait(self, timeout):
+        """Wait for the kernel process to exit.
+
+        If timeout is a number, it is a maximum time in seconds to wait.
+        timeout=None means wait indefinitely.
+
+        Returns True if the kernel is still alive after waiting, False if it
+        exited (like is_alive()).
+        """
+        pass
+
+    @abstractmethod
+    def signal(self, signum):
+        """Send a signal to the kernel."""
+        pass
+
+    @abstractmethod
+    def interrupt(self):
+        """Interrupt the kernel by sending it a signal or similar event
+
+        Kernels can request to get interrupts as messages rather than signals.
+        The manager is *not* expected to handle this.
+        :meth:`.KernelClient2.interrupt` should send an interrupt_request or
+        call this method as appropriate.
+        """
+        pass
+
+    @abstractmethod
+    def kill(self):
+        """Forcibly terminate the kernel.
+
+        This method may be used to dispose of a kernel that won't shut down.
+        Working kernels should usually be shut down by sending shutdown_request
+        from a client and giving it some time to clean up.
+        """
+        pass
+
+    def cleanup(self):
+        """Clean up any resources, such as files created by the manager."""
+        pass
+
+    @abstractmethod
+    def get_connection_info(self):
+        """Return a dictionary of connection information"""
+        pass
+
+
+class KernelManager2(KernelManager2ABC):
     """Manages a single kernel in a subprocess on this host.
 
     This version starts kernels with Popen to listen on TCP sockets.
@@ -76,22 +134,27 @@ class KernelManager2(object):
         self.log.debug("Starting kernel: %s", kw['args'])
         self.kernel = Popen(**kw)
 
-    def finish_shutdown(self, timeout=5.0, pollinterval=0.1):
-        """Wait for kernel shutdown, then kill process if it doesn't shutdown.
+    def wait(self, timeout):
+        """"""
+        if timeout is None:
+            # Wait indefinitely
+            self.kernel.wait()
+            return False
 
-        This does not send shutdown requests - use :meth:`.KernelClient2.shutdown`
-        first.
-        """
-        for i in range(int(timeout/pollinterval)):
-            if self.is_alive():
-                time.sleep(pollinterval)
-            else:
-                break
+        if six.PY3:
+            try:
+                self.kernel.wait(timeout)
+                return False
+            except TimeoutExpired:
+                return True
         else:
-            # OK, we've waited long enough.
-            if self.has_kernel:
-                self.log.debug("Kernel is taking too long to finish, killing")
-                self._kill_kernel()
+            pollinterval = 0.1
+            for i in range(int(timeout / pollinterval)):
+                if self.is_alive():
+                    time.sleep(pollinterval)
+                else:
+                    return False
+            return self.is_alive()
 
     def cleanup(self):
         """Clean up resources when the kernel is shut down"""
@@ -108,13 +171,10 @@ class KernelManager2(object):
         """Has a kernel been started that we are managing."""
         return self.kernel is not None
 
-    def _kill_kernel(self):
+    def kill(self):
         """Kill the running kernel.
-
-        This is a private method, callers should use shutdown_kernel(now=True).
         """
         if self.has_kernel:
-
             # Signal the kernel to terminate (sends SIGKILL on Unix and calls
             # TerminateProcess() on Win32).
             try:
@@ -138,7 +198,7 @@ class KernelManager2(object):
         else:
             raise RuntimeError("Cannot kill kernel. No kernel is running!")
 
-    def interrupt_kernel(self):
+    def interrupt(self):
         """Interrupts the kernel by sending it a signal.
 
         Unlike ``signal_kernel``, this operation is well supported on all
@@ -153,11 +213,11 @@ class KernelManager2(object):
                 from .win_interrupt import send_interrupt
                 send_interrupt(self.kernel.win32_interrupt_event)
             else:
-                self.signal_kernel(signal.SIGINT)
+                self.signal(signal.SIGINT)
         else:
             raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
 
-    def signal_kernel(self, signum):
+    def signal(self, signum):
         """Sends a signal to the process group of the kernel (this
         usually includes the kernel and any subprocesses spawned by
         the kernel).
@@ -188,6 +248,11 @@ class KernelManager2(object):
             # we don't have a kernel
             return False
 
+    def get_connection_info(self):
+        if self.connection_info is None:
+            raise RuntimeError("Kernel not started")
+        return self.connection_info
+
 class IPCKernelManager2(KernelManager2):
     """Start a kernel on this machine to listen on IPC (filesystem) sockets"""
     transport = 'ipc'
@@ -208,6 +273,19 @@ class IPCKernelManager2(KernelManager2):
 
         super(IPCKernelManager2, self).cleanup()
 
+def shutdown(client, manager, wait_time=5.0):
+    """Shutdown a kernel using a client and a manager.
+
+    Attempts a clean shutdown by sending a shutdown message. If the kernel
+    hasn't exited in wait_time seconds, it will be killed. Set wait_time=None
+    to wait indefinitely.
+    """
+    client.shutdown()
+    if manager.wait(wait_time):
+        # OK, we've waited long enough.
+        manager.log.debug("Kernel is taking too long to finish, killing")
+        manager.kill()
+    manager.cleanup()
 
 def start_new_kernel(kernel_cmd, startup_timeout=60, cwd=None):
     """Start a new kernel, and return its Manager and a blocking client"""
@@ -220,9 +298,7 @@ def start_new_kernel(kernel_cmd, startup_timeout=60, cwd=None):
     try:
         kc.wait_for_ready(timeout=startup_timeout)
     except RuntimeError:
-        kc.shutdown()
-        km.finish_shutdown()
-        km.cleanup()
+        shutdown(kc, km)
         raise
 
     return km, kc
@@ -241,6 +317,4 @@ def run_kernel(kernel_cmd, **kwargs):
     try:
         yield kc
     finally:
-        kc.shutdown()
-        km.finish_shutdown()
-        km.cleanup()
+        shutdown(kc, km)

@@ -1,4 +1,7 @@
-from abc import ABCMeta, abstractmethod
+"""Machinery for launching a kernel locally.
+
+Used by jupyter_client.manager2.
+"""
 from binascii import b2a_hex
 import errno
 import json
@@ -7,7 +10,7 @@ import re
 import six
 import socket
 import stat
-from subprocess import Popen, PIPE
+from subprocess import PIPE
 import sys
 import warnings
 
@@ -232,56 +235,3 @@ def build_popen_kwargs(cmd_template, connection_file, extra_env=None, cwd=None):
             env['JPY_PARENT_PID'] = str(os.getpid())
 
     return kwargs
-
-class KernelLauncher(six.with_metaclass(ABCMeta, object)):
-    @abstractmethod
-    def is_alive(self):
-        """Check whether the kernel is currently alive (e.g. the process exists)
-        """
-        pass
-
-    @abstractmethod
-    def wait(self):
-        """Wait for the kernel process to exit.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def signal(self, signum):
-        """Send a signal to the kernel."""
-        pass
-
-    def cleanup(self):
-        """Clean up any resources."""
-        pass
-
-    @abstractmethod
-    def get_connection_info(self):
-        """Return a dictionary of connection information"""
-        pass
-
-class PopenKernelLauncher(KernelLauncher):
-    def __init__(self, cmd_template, extra_env=None, cwd=None):
-        self.cmd_template = cmd_template
-        self.extra_env = extra_env
-        self.cwd = cwd
-        self.connection_file, self.connection_info = make_connection_file()
-        kwargs = build_popen_kwargs(self.cmd_template, self.connection_file,
-                                    self.extra_env, self.cwd)
-        self.popen = Popen(**kwargs)
-
-    def poll(self):
-        return self.popen.poll() is None
-
-    def wait(self):
-        return self.popen.wait()
-
-    def send_signal(self, signum):
-        self.popen.send_signal(signum)
-
-    def cleanup(self):
-        if self.connection_file:
-            os.unlink(self.connection_file)
-
-    def get_connection_info(self):
-        return self.connection_info

@@ -363,7 +363,7 @@ class KernelClient2():
             self._send(self.control_socket, msg)
             return msg['header']['msg_id']
         elif self.owned_kernel:
-            self.manager.interrupt_kernel()
+            self.manager.interrupt()
         else:
             self.log.warning("Can't send signal to non-owned kernel")
 

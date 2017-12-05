@@ -3,21 +3,18 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-
-import json
 import os
 
 pjoin = os.path.join
 import signal
-from subprocess import PIPE
 import sys
 import time
 from unittest import TestCase
 
-from traitlets.config.loader import Config
 from ipykernel.kernelspec import make_ipkernel_cmd
-from jupyter_core import paths
-from jupyter_client.manager2 import KernelManager2, run_kernel, start_new_kernel
+from jupyter_client.manager2 import (
+    KernelManager2, run_kernel, start_new_kernel, shutdown
+)
 from .utils import test_env, skip_win32
 
 TIMEOUT = 30
@@ -43,7 +40,7 @@ class TestKernelManager(TestCase):
                 'key', 'signature_scheme',
             })
         finally:
-            km.finish_shutdown(timeout=0)
+            km.kill()
             km.cleanup()
 
     @skip_win32
@@ -87,6 +84,4 @@ class TestKernelManager(TestCase):
             self.assertTrue(km.is_alive())
             self.assertTrue(kc.is_alive())
         finally:
-            kc.shutdown()
-            km.finish_shutdown()
-            km.cleanup()
+            shutdown(kc, km)
