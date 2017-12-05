@@ -193,14 +193,6 @@ def build_popen_kwargs(cmd_template, connection_file, extra_env=None, cwd=None):
             kwargs['cwd'] = cast_bytes_py2(cwd,
                                  sys.getfilesystemencoding() or 'ascii')
 
-        from .win_interrupt import create_interrupt_event
-        # Create a Win32 event for interrupting the kernel
-        # and store it in an environment variable.
-        interrupt_event = create_interrupt_event()
-        env["JPY_INTERRUPT_EVENT"] = str(interrupt_event)
-        # deprecated old env name:
-        env["IPY_INTERRUPT_EVENT"] = env["JPY_INTERRUPT_EVENT"]
-
         try:
             # noinspection PyUnresolvedReferences
             from _winapi import DuplicateHandle, GetCurrentProcess, \
@@ -235,3 +227,14 @@ def build_popen_kwargs(cmd_template, connection_file, extra_env=None, cwd=None):
             env['JPY_PARENT_PID'] = str(os.getpid())
 
     return kwargs
+
+def prepare_interrupt_event(env):
+    if sys.platform == 'win32':
+        from .win_interrupt import create_interrupt_event
+        # Create a Win32 event for interrupting the kernel
+        # and store it in an environment variable.
+        interrupt_event = create_interrupt_event()
+        env["JPY_INTERRUPT_EVENT"] = str(interrupt_event)
+        # deprecated old env name:
+        env["IPY_INTERRUPT_EVENT"] = env["JPY_INTERRUPT_EVENT"]
+        return interrupt_event

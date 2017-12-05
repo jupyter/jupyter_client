@@ -16,7 +16,9 @@ import time
 
 from traitlets.log import get_logger as get_app_logger
 
-from .launcher2 import make_connection_file, build_popen_kwargs
+from .launcher2 import (
+    make_connection_file, build_popen_kwargs, prepare_interrupt_event
+)
 from .localinterfaces import is_local_ip, local_ips, localhost
 
 
@@ -114,10 +116,12 @@ class KernelManager2(KernelManager2ABC):
 
         kw = build_popen_kwargs(kernel_cmd, self.connection_file,
                                 extra_env, cwd)
+        self._win_interrupt_evt = prepare_interrupt_event(kw['env'])
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kw['args'])
         self.kernel = Popen(**kw)
+        self.kernel.stdin.close()
 
     def wait(self, timeout):
         """"""
@@ -184,7 +188,7 @@ class KernelManager2(KernelManager2ABC):
         """
         if sys.platform == 'win32':
             from .win_interrupt import send_interrupt
-            send_interrupt(self.kernel.win32_interrupt_event)
+            send_interrupt(self._win_interrupt_evt)
         else:
             self.signal(signal.SIGINT)
 

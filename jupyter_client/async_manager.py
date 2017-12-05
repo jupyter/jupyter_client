@@ -6,9 +6,12 @@ import os
 
 from traitlets.log import get_logger as get_app_logger
 
-from .launcher2 import make_connection_file, build_popen_kwargs
+from .launcher2 import (
+    make_connection_file, build_popen_kwargs, prepare_interrupt_event
+)
 from .localinterfaces import is_local_ip, local_ips, localhost
 from .manager2 import KernelManager2, KernelManager2ABC
+from .util import inherit_docstring
 
 # noinspection PyCompatibility
 class AsyncPopenKernelManager(KernelManager2):
@@ -20,16 +23,35 @@ class AsyncPopenKernelManager(KernelManager2):
     """
     _exit_future = None
 
-    def __init__(self, kernel, connection_info, connection_file):
+    def __init__(self, kernel, connection_info, connection_file,
+                 win_interrupt_evt):
         self.kernel = kernel
         self.connection_info = connection_info
         self.connection_file = connection_file
+        self._win_interrupt_evt = win_interrupt_evt
         self.log = get_app_logger()
         self._exit_future = asyncio.ensure_future(self.kernel.wait())
 
     @classmethod
     @asyncio.coroutine
     def launch(cls, kernel_cmd, cwd, extra_env=None, ip=None):
+        """Main constructor for async kernel manager
+
+        Parameters
+        ----------
+
+        kernel_cmd : list of str
+          The Popen command template to launch the kernel
+        cwd : str
+          The working directory to launch the kernel in
+        extra_env : dict, optional
+          Dictionary of environment variables to update the existing environment
+        ip : str, optional
+          Set the kernel\'s IP address [default localhost].
+          If the IP address is something other than localhost, then
+          Consoles on other machines will be able to connect
+          to the Kernel, so be careful!
+        """
         if ip is None:
             ip = localhost()
 
@@ -43,15 +65,18 @@ class AsyncPopenKernelManager(KernelManager2):
         connection_file, connection_info = \
             make_connection_file(ip, cls.transport)
 
-        kw = build_popen_kwargs(kernel_cmd, connection_file,
-                                extra_env, cwd)
+        kw = build_popen_kwargs(kernel_cmd, connection_file, extra_env, cwd)
+        win_interrupt_evt = prepare_interrupt_event(kw['env'])
 
         # launch the kernel subprocess
         args = kw.pop('args')
         get_app_logger().debug("Starting kernel: %s", args)
         kernel = yield from asyncio.create_subprocess_exec(*args, **kw)
-        return cls(kernel, connection_info, connection_file)
+        kernel.stdin.close()
 
+        return cls(kernel, connection_info, connection_file, win_interrupt_evt)
+
+    @inherit_docstring(KernelManager2)
     @asyncio.coroutine
     def wait(self, timeout):
         try:
@@ -60,26 +85,32 @@ class AsyncPopenKernelManager(KernelManager2):
         except asyncio.TimeoutError:
             return True
 
+    @inherit_docstring(KernelManager2)
     @asyncio.coroutine
     def is_alive(self):
         return not self._exit_future.done()
 
+    @inherit_docstring(KernelManager2)
     @asyncio.coroutine
     def signal(self, signum):
         return super().signal(signum)
 
+    @inherit_docstring(KernelManager2)
     @asyncio.coroutine
     def interrupt(self):
         return super().interrupt()
 
+    @inherit_docstring(KernelManager2)
     @asyncio.coroutine
     def kill(self):
         return super().kill()
 
+    @inherit_docstring(KernelManager2)
     @asyncio.coroutine
     def cleanup(self):
         return super().cleanup()
 
+    @inherit_docstring(KernelManager2)
     @asyncio.coroutine
     def get_connection_info(self):
         return self.connection_info
