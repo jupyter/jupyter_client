@@ -10,7 +10,12 @@ install:
   - pip install --upgrade setuptools pip
   - pip install --upgrade --pre -e .[test] pytest-cov pytest-warnings codecov
 script:
-  - py.test --cov jupyter_client jupyter_client
+  - |
+    if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      py.test --cov jupyter_client jupyter_client --ignore jupyter_client/tests/test_async_manager.py
+    else
+      py.test --cov jupyter_client jupyter_client
+    fi
 after_success:
   - codecov
 matrix:
