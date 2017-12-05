@@ -10,7 +10,7 @@ from contextlib import contextmanager
 import os
 import signal
 import six
-from subprocess import Popen, TimeoutExpired
+import subprocess
 import sys
 import time
 
@@ -120,7 +120,7 @@ class KernelManager2(KernelManager2ABC):
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kw['args'])
-        self.kernel = Popen(**kw)
+        self.kernel = subprocess.Popen(**kw)
         self.kernel.stdin.close()
 
     def wait(self, timeout):
@@ -134,7 +134,7 @@ class KernelManager2(KernelManager2ABC):
             try:
                 self.kernel.wait(timeout)
                 return False
-            except TimeoutExpired:
+            except subprocess.TimeoutExpired:
                 return True
         else:
             pollinterval = 0.1
