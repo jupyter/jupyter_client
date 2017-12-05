@@ -5,22 +5,18 @@
 
 from __future__ import absolute_import
 
-import atexit
-import errno
 from functools import partial
 from getpass import getpass
 from six.moves import input
 import sys
-from threading import Thread
 import time
 import zmq
-from zmq import ZMQError
-from zmq.eventloop import ioloop, zmqstream
 
 from ipython_genutils.py3compat import string_types, iteritems
 from traitlets.log import get_logger as get_app_logger
 from .channels import major_protocol_version, HBChannel
 from .session import Session
+from .util import inherit_docstring
 
 try:
     monotonic = time.monotonic
@@ -56,13 +52,6 @@ def validate_string_dict(dct):
         if not isinstance(v, string_types):
             raise ValueError('value %r in dict must be a string' % v)
 
-def inherit_docstring(cls):
-    def decorator(func):
-        doc = getattr(cls, func.__name__).__doc__
-        func.__doc__ = doc
-        return func
-    return decorator
-
 class KernelClient2():
     """Communicates with a single kernel on any host via zmq channels.
 
@@ -71,7 +60,7 @@ class KernelClient2():
     send the message, they don't wait for a reply. To get results, use e.g.
     :meth:`get_shell_msg` to fetch messages from the shell channel.
     """
-    hb_channel = None
+    hb_monitor = None
 
     def __init__(self, connection_info, manager=None, use_heartbeat=True):
         self.connection_info = connection_info
@@ -97,6 +86,18 @@ class KernelClient2():
     def owned_kernel(self):
         """True if this client 'owns' the kernel, i.e. started it."""
         return self.manager is not None
+
+    def close(self):
+        """Close sockets of this client.
+
+        After calling this, the client can no longer be used.
+        """
+        self.iopub_socket.close()
+        self.shell_socket.close()
+        self.stdin_socket.close()
+        self.control_socket.close()
+        if self.hb_monitor:
+            self.hb_monitor.stop()
 
     # flag for whether execute requests should be allowed to call raw_input:
     allow_stdin = True
@@ -709,183 +710,3 @@ class BlockingKernelClient2(KernelClient2):
         if timeout is not None:
             timeout = max(0, deadline - monotonic())
         return self._recv_reply(msg_id, timeout=timeout)
-
-
-class IOLoopKernelClient2(KernelClient2):
-    """Runs a zmq IOLoop to send and receive messages.
-
-    Use ClientInThread to run this in a separate thread alongside your
-    application.
-    """
-    def __init__(self, **kwargs):
-        super(IOLoopKernelClient2, self).__init__(**kwargs)
-        self.ioloop = ioloop.IOLoop.instance()
-        self.handlers = {
-            'iopub': [],
-            'shell': [],
-            'stdin': [],
-        }
-        self.shell_stream = zmqstream.ZMQStream(self.shell_socket, self.ioloop)
-        self.shell_stream.on_recv(partial(self._handle_recv, 'shell'))
-        self.iopub_stream = zmqstream.ZMQStream(self.iopub_socket, self.ioloop)
-        self.iopub_stream.on_recv(partial(self._handle_recv, 'iopub'))
-        self.stdin_stream = zmqstream.ZMQStream(self.stdin_socket, self.ioloop)
-        self.stdin_stream.on_recv(partial(self._handle_recv, 'stdin'))
-
-    _inspect = None
-
-    def _handle_recv(self, channel, msg):
-        """Callback for stream.on_recv.
-
-        Unpacks message, and calls handlers with it.
-        """
-        ident,smsg = self.session.feed_identities(msg)
-        msg = self.session.deserialize(smsg)
-        # let client inspect messages
-        if self._inspect:
-            self._inspect(msg)
-        self._call_handlers(channel, msg)
-
-    def _call_handlers(self, channel, msg):
-        for handler in self.handlers[channel]:
-            try:
-                handler()
-            except Exception as e:
-                self.log.error("Exception from message handler %r", handler,
-                               exc_info=e)
-
-    def add_handler(self, channel, handler):
-        self.handlers[channel].append(handler)
-
-    def remove_handler(self, channel, handler):
-        self.handlers[channel].remove(handler)#
-
-class ClientInThread(Thread):
-    client = None
-    _exiting = False
-
-    def __init__(self, connection_info, manager=None):
-        super(ClientInThread, self).__init__()
-        self.daemon = True
-        self.connection_info = connection_info
-        self.manager = manager
-
-    @staticmethod
-    @atexit.register
-    def _notice_exit():
-        ClientInThread._exiting = True
-
-    def run(self):
-        """Run my loop, ignoring EINTR events in the poller"""
-        self.client = IOLoopKernelClient2()
-        while True:
-            try:
-                self.client.ioloop.start()
-            except ZMQError as e:
-                if e.errno == errno.EINTR:
-                    continue
-                else:
-                    raise
-            except Exception:
-                if self._exiting:
-                    break
-                else:
-                    raise
-            else:
-                break
-
-    @property
-    def ioloop(self):
-        if self.client:
-            return self.client.ioloop
-
-    def stop(self):
-        """Stop the channel's event loop and join its thread.
-
-        This calls :meth:`~threading.Thread.join` and returns when the thread
-        terminates. :class:`RuntimeError` will be raised if
-        :meth:`~threading.Thread.start` is called again.
-        """
-        if self.client is not None:
-            self.client.ioloop.stop()
-        self.join()
-        self.close()
-
-    def close(self):
-        if self.client is not None:
-            try:
-                self.client.ioloop.close(all_fds=True)
-            except Exception:
-                pass
-
-    def _call_in_thread(self, function, *args, **kwargs):
-        return self.ioloop.add_callback(function, *args, **kwargs)
-
-    # Client messaging methods --------------------------------
-    # These send as much work as possible to the IO thread, but we generate
-    # the header in the calling thread so we can return the message ID.
-
-    @inherit_docstring(KernelClient2)
-    def execute(self, *args, **kwargs):
-        hdr = self.client.session.msg_header('execute_request')
-        self._call_in_thread(self.client.execute, *args, _header=hdr, **kwargs)
-        return hdr['msg_id']
-
-    @inherit_docstring(KernelClient2)
-    def complete(self, *args, **kwargs):
-        hdr = self.client.session.msg_header('complete_request')
-        self._call_in_thread(self.client.complete, *args, _header=hdr, **kwargs)
-        return hdr['msg_id']
-
-    @inherit_docstring(KernelClient2)
-    def inspect(self, *args, **kwargs):
-        hdr = self.client.session.msg_header('inspect_request')
-        self._call_in_thread(self.client.inspect, *args, _header=hdr, **kwargs)
-        return hdr['msg_id']
-
-    @inherit_docstring(KernelClient2)
-    def history(self, *args, **kwargs):
-        hdr = self.client.session.msg_header('history_request')
-        self._call_in_thread(self.client.history, *args, _header=hdr, **kwargs)
-        return hdr['msg_id']
-
-    @inherit_docstring(KernelClient2)
-    def kernel_info(self, _header=None):
-        hdr = self.client.session.msg_header('kernel_info_request')
-        self._call_in_thread(self.client.kernel_info, _header=hdr)
-        return hdr['msg_id']
-
-    @inherit_docstring(KernelClient2)
-    def comm_info(self, target_name=None, _header=None):
-        hdr = self.client.session.msg_header('comm_info_request')
-        self._call_in_thread(self.client.comm_info, target_name, _header=hdr)
-        return hdr['msg_id']
-
-    @inherit_docstring(KernelClient2)
-    def shutdown(self, restart=False, _header=None):
-        hdr = self.client.session.msg_header('shutdown_request')
-        self._call_in_thread(self.client.shutdown, restart, _header=hdr)
-        return hdr['msg_id']
-
-    @inherit_docstring(KernelClient2)
-    def is_complete(self, code, _header=None):
-        hdr = self.client.session.msg_header('is_complete_request')
-        self._call_in_thread(self.client.is_complete, code, _header=hdr)
-        return hdr['msg_id']
-
-    @inherit_docstring(KernelClient2)
-    def interrupt(self, _header=None):
-        mode = self.connection_info.get('interrupt_mode', 'signal')
-        if mode == 'message':
-            hdr = self.client.session.msg_header('is_complete_request')
-            self._call_in_thread(self.client.interrupt, _header=hdr)
-            return hdr['msg_id']
-        else:
-            self.client.interrupt()
-
-    @inherit_docstring(KernelClient2)
-    def input(self, string, parent=None):
-        hdr = self.client.session.msg_header('input_reply')
-        self._call_in_thread(self.client.is_complete, string,
-                             parent=parent, _header=hdr)
-        return hdr['msg_id']
