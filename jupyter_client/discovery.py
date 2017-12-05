@@ -56,15 +56,13 @@ class KernelSpecProvider(KernelProviderBase):
 
     def launch(self, name, cwd=None):
         spec = self.ksm.get_kernel_spec(name)
-        km = KernelManager2(kernel_cmd=spec.argv, extra_env=spec.env, cwd=cwd)
-        km.start_kernel()
-        return km
+        return KernelManager2(kernel_cmd=spec.argv, extra_env=spec.env, cwd=cwd)
 
     def launch_async(self, name, cwd=None):
-        from .async_launcher import AsyncPopenKernelLauncher
+        from .async_manager import AsyncPopenKernelManager
         spec = self.ksm.get_kernel_spec(name)
-        return AsyncPopenKernelLauncher.launch(cmd_template=spec.argv,
-                                               extra_env=spec.env, cwd=cwd)
+        return AsyncPopenKernelManager.launch(
+            kernel_cmd=spec.argv, extra_env=spec.env, cwd=cwd)
 
 class IPykernelProvider(KernelProviderBase):
     """Offers a kernel type using the Python interpreter it's running in.
@@ -100,18 +98,16 @@ class IPykernelProvider(KernelProviderBase):
         info = self._check_for_kernel()
         if info is None:
             raise Exception("ipykernel is not importable")
-        km = KernelManager2(kernel_cmd=info['spec']['argv'], extra_env={},
-                            cwd=cwd)
-        km.start_kernel()
-        return km
+        return KernelManager2(kernel_cmd=info['spec']['argv'], extra_env={},
+                              cwd=cwd)
 
     def launch_async(self, name, cwd=None):
-        from .async_launcher import AsyncPopenKernelLauncher
+        from .async_manager import AsyncPopenKernelManager
         info = self._check_for_kernel()
         if info is None:
             raise Exception("ipykernel is not importable")
-        return AsyncPopenKernelLauncher.launch(
-                    cmd_template=info['spec']['argv'], extra_env={}, cwd=cwd)
+        return AsyncPopenKernelManager.launch(
+            kernel_cmd=info['spec']['argv'], extra_env={}, cwd=cwd)
 
 class KernelFinder(object):
     """Manages a collection of kernel providers to find available kernel types

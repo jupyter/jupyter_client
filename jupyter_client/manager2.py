@@ -97,27 +97,12 @@ class KernelManager2(KernelManager2ABC):
     """
     transport = 'tcp'
 
-    # The kernel process with which the KernelManager is communicating.
-    # generally a Popen instance
-    kernel = None
-
-    # The dictionary of info to connect to the kernel, and the file storing it
-    connection_info = None
-    connection_file = None
-
     def __init__(self, kernel_cmd, cwd, extra_env=None, ip=None):
-        self.kernel_cmd = kernel_cmd
-        self.cwd = cwd
-        self.extra_env = extra_env
         if ip is None:
             ip = localhost()
-        self.ip = ip
         self.log = get_app_logger()
 
-    def start_kernel(self):
-        """Starts a kernel on this host in a separate process.
-        """
-        if self.transport == 'tcp' and not is_local_ip(self.ip):
+        if self.transport == 'tcp' and not is_local_ip(ip):
             raise RuntimeError("Can only launch a kernel on a local interface. "
                                "Make sure that the '*_address' attributes are "
                                "configured properly. "
@@ -125,10 +110,10 @@ class KernelManager2(KernelManager2ABC):
                                )
 
         self.connection_file, self.connection_info = \
-            make_connection_file(self.ip, self.transport)
+            make_connection_file(ip, self.transport)
 
-        kw = build_popen_kwargs(self.kernel_cmd, self.connection_file,
-                                self.extra_env, self.cwd)
+        kw = build_popen_kwargs(kernel_cmd, self.connection_file,
+                                extra_env, cwd)
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kw['args'])
@@ -158,45 +143,34 @@ class KernelManager2(KernelManager2ABC):
 
     def cleanup(self):
         """Clean up resources when the kernel is shut down"""
-        if self.connection_file:
-            # cleanup connection files on full shutdown of kernel we started
-            try:
-                os.remove(self.connection_file)
-            except (IOError, OSError, AttributeError):
-                pass
-            self.connection_file = None
-
-    @property
-    def has_kernel(self):
-        """Has a kernel been started that we are managing."""
-        return self.kernel is not None
+        # cleanup connection files on full shutdown of kernel we started
+        try:
+            os.remove(self.connection_file)
+        except (IOError, OSError, AttributeError):
+            pass
 
     def kill(self):
         """Kill the running kernel.
         """
-        if self.has_kernel:
-            # Signal the kernel to terminate (sends SIGKILL on Unix and calls
-            # TerminateProcess() on Win32).
-            try:
-                self.kernel.kill()
-            except OSError as e:
-                # In Windows, we will get an Access Denied error if the process
-                # has already terminated. Ignore it.
-                if sys.platform == 'win32':
-                    if e.winerror != 5:
-                        raise
-                # On Unix, we may get an ESRCH error if the process has already
-                # terminated. Ignore it.
-                else:
-                    from errno import ESRCH
-                    if e.errno != ESRCH:
-                        raise
+        # Signal the kernel to terminate (sends SIGKILL on Unix and calls
+        # TerminateProcess() on Win32).
+        try:
+            self.kernel.kill()
+        except OSError as e:
+            # In Windows, we will get an Access Denied error if the process
+            # has already terminated. Ignore it.
+            if sys.platform == 'win32':
+                if e.winerror != 5:
+                    raise
+            # On Unix, we may get an ESRCH error if the process has already
+            # terminated. Ignore it.
+            else:
+                from errno import ESRCH
+                if e.errno != ESRCH:
+                    raise
 
-            # Block until the kernel terminates.
-            self.kernel.wait()
-            self.kernel = None
-        else:
-            raise RuntimeError("Cannot kill kernel. No kernel is running!")
+        # Block until the kernel terminates.
+        self.kernel.wait()
 
     def interrupt(self):
         """Interrupts the kernel by sending it a signal.
@@ -208,14 +182,11 @@ class KernelManager2(KernelManager2ABC):
         a signal. This method does *not* handle that. Use KernelClient.interrupt
         to send a message or a signal as appropriate.
         """
-        if self.has_kernel:
-            if sys.platform == 'win32':
-                from .win_interrupt import send_interrupt
-                send_interrupt(self.kernel.win32_interrupt_event)
-            else:
-                self.signal(signal.SIGINT)
+        if sys.platform == 'win32':
+            from .win_interrupt import send_interrupt
+            send_interrupt(self.kernel.win32_interrupt_event)
         else:
-            raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
+            self.signal(signal.SIGINT)
 
     def signal(self, signum):
         """Sends a signal to the process group of the kernel (this
@@ -225,47 +196,31 @@ class KernelManager2(KernelManager2ABC):
         Note that since only SIGTERM is supported on Windows, this function is
         only useful on Unix systems.
         """
-        if self.has_kernel:
-            if hasattr(os, "getpgid") and hasattr(os, "killpg"):
-                try:
-                    pgid = os.getpgid(self.kernel.pid)
-                    os.killpg(pgid, signum)
-                    return
-                except OSError:
-                    pass
-            self.kernel.send_signal(signum)
-        else:
-            raise RuntimeError("Cannot signal kernel. No kernel is running!")
+        if hasattr(os, "getpgid") and hasattr(os, "killpg"):
+            try:
+                pgid = os.getpgid(self.kernel.pid)
+                os.killpg(pgid, signum)
+                return
+            except OSError:
+                pass
+        self.kernel.send_signal(signum)
 
     def is_alive(self):
         """Is the kernel process still running?"""
-        if self.has_kernel:
-            if self.kernel.poll() is None:
-                return True
-            else:
-                return False
-        else:
-            # we don't have a kernel
-            return False
+        return self.kernel.poll() is None
 
     def get_connection_info(self):
-        if self.connection_info is None:
-            raise RuntimeError("Kernel not started")
         return self.connection_info
 
 class IPCKernelManager2(KernelManager2):
     """Start a kernel on this machine to listen on IPC (filesystem) sockets"""
     transport = 'ipc'
 
-    def _ports(self):
-        if not self.connection_info:
-            return []
-        return [v for (k, v) in self.connection_info.items()
-                if k.endswith('_port')]
-
     def cleanup(self):
-        for port in self._ports():
-            ipcfile = "%s-%i" % (self.ip, port)
+        ports = [v for (k, v) in self.connection_info.items()
+                 if k.endswith('_port')]
+        for port in ports:
+            ipcfile = "%s-%i" % (self.connection_info['ip'], port)
             try:
                 os.remove(ipcfile)
             except (IOError, OSError):
@@ -293,12 +248,12 @@ def start_new_kernel(kernel_cmd, startup_timeout=60, cwd=None):
     cwd = cwd or os.getcwd()
 
     km = KernelManager2(kernel_cmd, cwd=cwd)
-    km.start_kernel()
     kc = BlockingKernelClient2(km.connection_info, manager=km)
     try:
         kc.wait_for_ready(timeout=startup_timeout)
     except RuntimeError:
         shutdown(kc, km)
+        kc.close()
         raise
 
     return km, kc
@@ -318,3 +273,4 @@ def run_kernel(kernel_cmd, **kwargs):
         yield kc
     finally:
         shutdown(kc, km)
+        kc.close()

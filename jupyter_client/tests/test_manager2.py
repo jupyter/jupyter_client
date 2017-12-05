@@ -32,7 +32,6 @@ class TestKernelManager(TestCase):
 
     def test_get_connect_info(self):
         km = KernelManager2(make_ipkernel_cmd(), os.getcwd())
-        km.start_kernel()
         try:
             self.assertEqual(set(km.connection_info.keys()), {
                 'ip', 'transport',

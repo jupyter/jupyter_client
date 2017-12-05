@@ -21,8 +21,7 @@ class TestKernelManager(TestCase):
 
     @asyncio.coroutine
     def t_get_connect_info(self):
-        km = AsyncPopenKernelManager(make_ipkernel_cmd(), os.getcwd())
-        yield from km.start_kernel()
+        km = yield from AsyncPopenKernelManager.launch(make_ipkernel_cmd(), os.getcwd())
         try:
             info = yield from km.get_connection_info()
             self.assertEqual(set(info.keys()), {
