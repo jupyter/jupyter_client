@@ -1,8 +1,9 @@
 import atexit
 import errno
 from functools import partial
-from threading import Thread
-from zmq import ioloop, zmqstream, ZMQError
+from threading import Thread, Event
+from zmq import ZMQError
+from zmq.eventloop import ioloop, zmqstream
 
 from .client2 import KernelClient2
 from .util import inherit_docstring
@@ -14,8 +15,8 @@ class IOLoopKernelClient2(KernelClient2):
     Use ClientInThread to run this in a separate thread alongside your
     application.
     """
-    def __init__(self, **kwargs):
-        super(IOLoopKernelClient2, self).__init__(**kwargs)
+    def __init__(self, connection_info, **kwargs):
+        super(IOLoopKernelClient2, self).__init__(connection_info, **kwargs)
         self.ioloop = ioloop.IOLoop.current()
         self.handlers = {
             'iopub': [],
@@ -61,7 +62,9 @@ class IOLoopKernelClient2(KernelClient2):
         self._call_handlers(channel, msg)
 
     def _call_handlers(self, channel, msg):
-        for handler in self.handlers[channel]:
+        # [:] copies the list - handlers that remove themselves (or add other
+        # handlers) will not mess up iterating over it.
+        for handler in self.handlers[channel][:]:
             try:
                 handler(msg)
             except Exception as e:
@@ -98,11 +101,12 @@ class ClientInThread(Thread):
     client = None
     _exiting = False
 
-    def __init__(self, connection_info, manager=None):
+    def __init__(self, connection_info, manager=None, loop=None):
         super(ClientInThread, self).__init__()
         self.daemon = True
         self.connection_info = connection_info
         self.manager = manager
+        self.started = Event()
 
     @staticmethod
     @atexit.register
@@ -111,7 +115,9 @@ class ClientInThread(Thread):
 
     def run(self):
         """Run my loop, ignoring EINTR events in the poller"""
-        self.client = IOLoopKernelClient2()
+        loop = ioloop.IOLoop(make_current=True)
+        self.client = IOLoopKernelClient2(self.connection_info, manager=self.manager)
+        self.client.ioloop.add_callback(self.started.set)
         try:
             self._run_loop()
         finally:
