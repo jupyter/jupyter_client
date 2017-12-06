@@ -436,9 +436,9 @@ class BlockingKernelClient2(KernelClient2):
         if block:
             if timeout is not None:
                 timeout *= 1000  # seconds to ms
-            ready = self.shell_socket.poll(timeout)
+            ready = socket.poll(timeout)
         else:
-            ready = self.shell_socket.poll(timeout=0)
+            ready = socket.poll(timeout=0)
 
         if ready:
             return self._recv(socket)
