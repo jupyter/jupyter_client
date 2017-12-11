@@ -2,7 +2,7 @@ import os
 import signal
 import uuid
 
-from jupyter_core.application import JupyterApp
+from jupyter_core.application import JupyterApp, base_flags
 from tornado.ioloop import IOLoop
 from traitlets import Unicode
 
@@ -11,8 +11,10 @@ from .kernelspec import KernelSpecManager, NATIVE_KERNEL_NAME
 from .manager import KernelManager
 
 class KernelApp(JupyterApp):
+    """Launch a kernel by name in a local subprocess.
+    """
     version = __version__
-    description = "Run a kernel locally"
+    description = "Run a kernel locally in a subprocess"
 
     classes = [KernelManager, KernelSpecManager]
 
@@ -20,9 +22,10 @@ class KernelApp(JupyterApp):
         'kernel': 'KernelApp.kernel_name',
         'ip': 'KernelManager.ip',
     }
+    flags = {'debug': base_flags['debug']}
 
     kernel_name = Unicode(NATIVE_KERNEL_NAME,
-        help = 'The name of a kernel to start'
+        help = 'The name of a kernel type to start'
     ).tag(config=True)
 
     def initialize(self, argv=None):
@@ -34,6 +37,7 @@ class KernelApp(JupyterApp):
         self.loop = IOLoop.current()
 
     def setup_signals(self):
+        """Shutdown on SIGTERM or SIGINT (Ctrl-C)"""
         if os.name == 'nt':
             return
 
