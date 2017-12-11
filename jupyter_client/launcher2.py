@@ -228,12 +228,13 @@ def build_popen_kwargs(cmd_template, connection_file, extra_env=None, cwd=None):
 
     return kwargs
 
-def prepare_interrupt_event(env):
+def prepare_interrupt_event(env, interrupt_event=None):
     if sys.platform == 'win32':
         from .win_interrupt import create_interrupt_event
         # Create a Win32 event for interrupting the kernel
         # and store it in an environment variable.
-        interrupt_event = create_interrupt_event()
+        if interrupt_event is None:
+            interrupt_event = create_interrupt_event()
         env["JPY_INTERRUPT_EVENT"] = str(interrupt_event)
         # deprecated old env name:
         env["IPY_INTERRUPT_EVENT"] = env["JPY_INTERRUPT_EVENT"]

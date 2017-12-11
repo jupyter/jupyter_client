@@ -76,6 +76,17 @@ class KernelManager2ABC(six.with_metaclass(ABCMeta, object)):
         """Return a dictionary of connection information"""
         pass
 
+    @abstractmethod
+    def relaunch(self):
+        """Attempt to relaunch the kernel using the same ports.
+
+        This is meant to be called after the managed kernel has died. Calling
+        it while the kernel is still alive has undefined behaviour.
+
+        Returns True if this manager supports that.
+        """
+        pass
+
 
 class KernelManager2(KernelManager2ABC):
     """Manages a single kernel in a subprocess on this host.
@@ -100,8 +111,12 @@ class KernelManager2(KernelManager2ABC):
     transport = 'tcp'
 
     def __init__(self, kernel_cmd, cwd, extra_env=None, ip=None):
+        self.kernel_cmd = kernel_cmd
+        self.cwd = cwd
+        self.extra_env = extra_env
         if ip is None:
             ip = localhost()
+        self.ip = ip
         self.log = get_app_logger()
 
         if self.transport == 'tcp' and not is_local_ip(ip):
@@ -152,6 +167,24 @@ class KernelManager2(KernelManager2ABC):
             os.remove(self.connection_file)
         except (IOError, OSError, AttributeError):
             pass
+
+    def relaunch(self):
+        """Attempt to relaunch the kernel using the same ports.
+
+        This is meant to be called after the managed kernel has died. Calling
+        it while the kernel is still alive has undefined behaviour.
+
+        Returns True if this manager supports that.
+        """
+        kw = build_popen_kwargs(self.kernel_cmd, self.connection_file,
+                                self.extra_env, self.cwd)
+        prepare_interrupt_event(kw['env'], self._win_interrupt_evt)
+
+        # launch the kernel subprocess
+        self.log.debug("Starting kernel: %s", kw['args'])
+        self.kernel = subprocess.Popen(**kw)
+        self.kernel.stdin.close()
+        return True
 
     def kill(self):
         """Kill the running kernel.

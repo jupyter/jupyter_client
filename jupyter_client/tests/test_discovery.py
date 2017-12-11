@@ -48,6 +48,9 @@ class DummyKernelManager(KernelManager2ABC):
         """Return a dictionary of connection information"""
         return {}
 
+    def relaunch(self):
+        return True
+
 def test_meta_kernel_finder():
     kf = discovery.KernelFinder(providers=[DummyKernelProvider()])
     assert list(kf.find_kernels()) == \
