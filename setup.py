@@ -85,8 +85,9 @@ setup_args = dict(
         'entrypoints',
     ],
     extras_require   = {
-        'test': ['ipykernel', 'ipython', 'mock', 'pytest'],
+        'test': ['ipykernel', 'ipython', 'mock'],
         'test:python_version == "3.3"': ['pytest<3.3.0'],
+        'test:python_version >= "3.4" or python_version == "2.7"': ['pytest'],
     },
     cmdclass         = {
         'bdist_egg': bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled,
