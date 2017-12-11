@@ -24,10 +24,11 @@ class DummyKernelProvider(discovery.KernelProviderBase):
         return DummyKernelManager()
 
 class DummyKernelManager(KernelManager2ABC):
+    _alive = True
     def is_alive(self):
         """Check whether the kernel is currently alive (e.g. the process exists)
         """
-        return True
+        return self._alive
 
     def wait(self, timeout):
         """Wait for the kernel process to exit.
@@ -42,7 +43,7 @@ class DummyKernelManager(KernelManager2ABC):
         pass
 
     def kill(self):
-        pass
+        self._alive = False
 
     def get_connection_info(self):
         """Return a dictionary of connection information"""
