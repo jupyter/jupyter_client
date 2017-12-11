@@ -35,6 +35,7 @@ class KernelApp(JupyterApp):
         cf_basename = 'kernel-%s.json' % uuid.uuid4()
         self.km.connection_file = os.path.join(self.runtime_dir, cf_basename)
         self.loop = IOLoop.current()
+        self.loop.add_callback(self._record_started)
 
     def setup_signals(self):
         """Shutdown on SIGTERM or SIGINT (Ctrl-C)"""
@@ -55,6 +56,16 @@ class KernelApp(JupyterApp):
         cf = self.km.connection_file
         self.log.info('Connection file: %s', cf)
         self.log.info("To connect a client: --existing %s", os.path.basename(cf))
+
+    def _record_started(self):
+        """For tests, create a file to indicate that we've started
+
+        Do not rely on this except in our own tests!
+        """
+        fn = os.environ.get('JUPYTER_CLIENT_TEST_RECORD_STARTUP_PRIVATE')
+        if fn is not None:
+            with open(fn, 'wb'):
+                pass
 
     def start(self):
         self.log.info('Starting kernel %r', self.kernel_name)
