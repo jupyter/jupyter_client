@@ -7,7 +7,7 @@ from tornado.ioloop import IOLoop
 from traitlets import Unicode
 
 from . import __version__
-from .kernelspec import KernelSpecManager
+from .kernelspec import KernelSpecManager, NATIVE_KERNEL_NAME
 from .manager import KernelManager
 
 class KernelApp(JupyterApp):
@@ -21,7 +21,7 @@ class KernelApp(JupyterApp):
         'ip': 'KernelManager.ip',
     }
 
-    kernel_name = Unicode(
+    kernel_name = Unicode(NATIVE_KERNEL_NAME,
         help = 'The name of a kernel to start'
     ).tag(config=True)
 
