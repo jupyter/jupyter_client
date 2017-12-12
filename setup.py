@@ -84,7 +84,9 @@ setup_args = dict(
         'python-dateutil>=2.1',
     ],
     extras_require   = {
-        'test': ['ipykernel', 'ipython', 'mock', 'pytest'],
+        'test': ['ipykernel', 'ipython', 'mock'],
+        'test:python_version == "3.3"': ['pytest<3.3.0'],
+        'test:python_version >= "3.4" or python_version == "2.7"': ['pytest'],
     },
     cmdclass         = {
         'bdist_egg': bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled,
@@ -93,7 +95,8 @@ setup_args = dict(
         'console_scripts': [
             'jupyter-kernelspec = jupyter_client.kernelspecapp:KernelSpecApp.launch_instance',
             'jupyter-run = jupyter_client.runapp:RunApp.launch_instance',
-        ]
+            'jupyter-kernel = jupyter_client.kernelapp:main',
+        ],
     },
 )
 
