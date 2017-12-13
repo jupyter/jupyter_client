@@ -11,11 +11,6 @@ import re
 import signal
 import sys
 import time
-import warnings
-try:
-    from queue import Empty  # Py 3
-except ImportError:
-    from Queue import Empty  # Py 2
 
 import zmq
 
@@ -29,7 +24,6 @@ from jupyter_client import (
     kernelspec,
 )
 from .connect import ConnectionFileMixin
-from .session import Session
 from .managerabc import (
     KernelManagerABC
 )
@@ -164,8 +158,10 @@ class KernelManager(ConnectionFileMixin):
         else:
             cmd = self.kernel_spec.argv + extra_arguments
 
-        if cmd and cmd[0] == 'python':
-            # executable is 'python', use sys.executable.
+        if cmd and cmd[0] in {'python',
+                              'python%i' % sys.version_info[0],
+                              'python%i.%i' % sys.version_info[:2]}:
+            # executable is 'python' or 'python3', use sys.executable.
             # These will typically be the same,
             # but if the current process is in an env
             # and has been launched by abspath without
