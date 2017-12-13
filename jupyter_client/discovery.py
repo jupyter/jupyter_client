@@ -155,6 +155,7 @@ class KernelFinder(object):
         for provider in self.providers:
             if provider_id == provider.id:
                 return provider.launch(kernel_id, cwd)
+        raise KeyError(provider_id)
 
     def launch_async(self, name, cwd=None):
         """Launch a kernel of a given kernel type, using asyncio.
@@ -163,3 +164,4 @@ class KernelFinder(object):
         for provider in self.providers:
             if provider_id == provider.id:
                 return provider.launch_async(kernel_id, cwd)
+        raise KeyError(provider_id)

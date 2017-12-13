@@ -1,14 +1,14 @@
 import os
 import signal
-import uuid
 
 from jupyter_core.application import JupyterApp, base_flags
 from tornado.ioloop import IOLoop
 from traitlets import Unicode
 
 from . import __version__
-from .kernelspec import KernelSpecManager, NATIVE_KERNEL_NAME
-from .manager import KernelManager
+from .discovery import KernelFinder
+from .client2 import BlockingKernelClient2
+from .manager2 import shutdown
 
 class KernelApp(JupyterApp):
     """Launch a kernel by name in a local subprocess.
@@ -16,24 +16,21 @@ class KernelApp(JupyterApp):
     version = __version__
     description = "Run a kernel locally in a subprocess"
 
-    classes = [KernelManager, KernelSpecManager]
-
     aliases = {
         'kernel': 'KernelApp.kernel_name',
-        'ip': 'KernelManager.ip',
+        #'ip': 'KernelManager.ip', # TODO
     }
     flags = {'debug': base_flags['debug']}
 
-    kernel_name = Unicode(NATIVE_KERNEL_NAME,
+    kernel_name = Unicode("pyimport/kernel",
         help = 'The name of a kernel type to start'
     ).tag(config=True)
 
     def initialize(self, argv=None):
         super(KernelApp, self).initialize(argv)
-        self.km = KernelManager(kernel_name=self.kernel_name,
-                                config=self.config)
-        cf_basename = 'kernel-%s.json' % uuid.uuid4()
-        self.km.connection_file = os.path.join(self.runtime_dir, cf_basename)
+        self.kernel_finder = KernelFinder.from_entrypoints()
+        if '/' not in self.kernel_name:
+            self.kernel_name = 'spec/' + self.kernel_name
         self.loop = IOLoop.current()
         self.loop.add_callback(self._record_started)
 
@@ -49,11 +46,13 @@ class KernelApp(JupyterApp):
 
     def shutdown(self, signo):
         self.log.info('Shutting down on signal %d' % signo)
-        self.km.shutdown_kernel()
+        client = BlockingKernelClient2(self.manager.get_connection_info())
+        shutdown(client, self.manager)
+        client.close()
         self.loop.stop()
 
     def log_connection_info(self):
-        cf = self.km.connection_file
+        cf = self.manager.connection_file
         self.log.info('Connection file: %s', cf)
         self.log.info("To connect a client: --existing %s", os.path.basename(cf))
 
@@ -69,13 +68,13 @@ class KernelApp(JupyterApp):
 
     def start(self):
         self.log.info('Starting kernel %r', self.kernel_name)
+        self.manager = self.kernel_finder.launch(self.kernel_name)
         try:
-            self.km.start_kernel()
             self.log_connection_info()
             self.setup_signals()
             self.loop.start()
         finally:
-            self.km.cleanup()
+            self.manager.cleanup()
 
 
 main = KernelApp.launch_instance
