@@ -372,7 +372,10 @@ class KernelManager(ConnectionFileMixin):
             # Signal the kernel to terminate (sends SIGKILL on Unix and calls
             # TerminateProcess() on Win32).
             try:
-                self.kernel.kill()
+                if hasattr(signal, 'SIGKILL'):
+                    self.signal_kernel(signal.SIGKILL)
+                else:
+                    self.kernel.kill()
             except OSError as e:
                 # In Windows, we will get an Access Denied error if the process
                 # has already terminated. Ignore it.
