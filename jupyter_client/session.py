@@ -191,9 +191,9 @@ class SessionFactory(LoggingConfigurable):
     session = Instance('jupyter_client.session.Session',
                        allow_none=True)
 
-    loop = Instance('zmq.eventloop.ioloop.IOLoop')
+    loop = Instance('tornado.ioloop.IOLoop')
     def _loop_default(self):
-        return IOLoop.instance()
+        return IOLoop.current()
 
     def __init__(self, **kwargs):
         super(SessionFactory, self).__init__(**kwargs)
