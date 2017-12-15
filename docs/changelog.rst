@@ -28,6 +28,7 @@ Changes in Jupyter Client
   about kernels—see :ref:`kernelspecs` (:ghpull:`274`).
 - Make the ``KernelRestarter`` class used by a ``KernelManager`` configurable
   (:ghpull:`290`).
+- When killing a kernel on Unix, kill its process group (:ghpull:`314`).
 - If a kernel dies soon after starting, reassign random ports before restarting
   it, in case one of the previously chosen ports has been bound by another
   process (:ghpull:`279`).
