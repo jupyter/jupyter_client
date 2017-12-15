@@ -3,6 +3,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import errno
 import io
 import json
 import os
@@ -199,15 +200,39 @@ class KernelSpecManager(LoggingConfigurable):
 
         return self.kernel_spec_class.from_resource_dir(resource_dir)
 
+    def _find_spec_directory(self, kernel_name):
+        """Find the resource directory of a named kernel spec"""
+        for kernel_dir in self.kernel_dirs:
+            try:
+                files = os.listdir(kernel_dir)
+            except OSError as e:
+                if e.errno in (errno.ENOTDIR, errno.ENOENT):
+                    continue
+                raise
+            for f in files:
+                path = pjoin(kernel_dir, f)
+                if f.lower() == kernel_name and _is_kernel_dir(path):
+                    return path
+
+        if kernel_name == NATIVE_KERNEL_NAME:
+            try:
+                from ipykernel.kernelspec import RESOURCES
+            except ImportError:
+                pass
+            else:
+                return RESOURCES
+
     def get_kernel_spec(self, kernel_name):
         """Returns a :class:`KernelSpec` instance for the given kernel_name.
 
         Raises :exc:`NoSuchKernel` if the given kernel name is not found.
         """
-        d = self.find_kernel_specs()
-        try:
-            resource_dir = d[kernel_name.lower()]
-        except KeyError:
+        if not _is_valid_kernel_name(kernel_name):
+            self.log.warning("Kernelspec name %r is invalid: %s", kernel_name,
+                             _kernel_name_description)
+
+        resource_dir = self._find_spec_directory(kernel_name.lower())
+        if resource_dir is None:
             raise NoSuchKernel(kernel_name)
 
         return self._get_kernel_spec_by_name(kernel_name, resource_dir)
