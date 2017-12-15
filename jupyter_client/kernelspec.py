@@ -251,10 +251,17 @@ class KernelSpecManager(LoggingConfigurable):
             }
         """
         d = self.find_kernel_specs()
-        return {kname: {
-                "resource_dir": d[kname],
-                "spec": self._get_kernel_spec_by_name(kname, d[kname]).to_dict()
-                } for kname in d}
+        res = {}
+        for kname, resource_dir in d.items():
+            try:
+                spec = self._get_kernel_spec_by_name(kname, resource_dir)
+                res[kname] = {
+                    "resource_dir": resource_dir,
+                    "spec": spec.to_dict()
+                }
+            except Exception:
+                self.log.warning("Error loading kernelspec %r", kname, exc_info=True)
+        return res
 
     def remove_kernel_spec(self, name):
         """Remove a kernel spec directory by name.
