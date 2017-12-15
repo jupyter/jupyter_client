@@ -4,6 +4,42 @@
 Changes in Jupyter Client
 =========================
 
+5.2
+===
+
+`5.2 on GitHub <https://github.com/jupyter/jupyter_client/milestones/5.2>`__
+
+- Define Jupyter protocol version 5.3:
+
+  - Kernels can now opt to be interrupted by a message sent on the control channel
+    instead of a system signal. See :ref:`kernelspecs` and :ref:`msging_interrupt`
+    (:ghpull:`294`).
+
+- New ``jupyter kernel`` command to launch an installed kernel by name
+  (:ghpull:`240`).
+- Kernelspecs where the command starts with e.g. ``python3`` or
+  ``python3.6``—matching the version ``jupyter_client`` is running on—are now
+  launched with the same Python executable as the launching process (:ghpull:`306`).
+  This extends the special handling of ``python`` added in 5.0.
+- Command line arguments specified by a kernelspec can now include
+  ``{resource_dir}``, which will be substituted with the kernelspec resource
+  directory path when the kernel is launched (:ghpull:`289`).
+- Kernelspecs now have an optional ``metadata`` field to hold arbitrary metadata
+  about kernels—see :ref:`kernelspecs` (:ghpull:`274`).
+- Make the ``KernelRestarter`` class used by a ``KernelManager`` configurable
+  (:ghpull:`290`).
+- If a kernel dies soon after starting, reassign random ports before restarting
+  it, in case one of the previously chosen ports has been bound by another
+  process (:ghpull:`279`).
+- Check for non-contiguous buffers before trying to send them through ZMQ
+  (:ghpull:`258`).
+- Compatibility with upcoming Tornado version 5.0 (:ghpull:`304`).
+- Simplify setup code by always using setuptools (:ghpull:`284`).
+- Soften warnings when setting the sticky bit on runtime files fails
+  (:ghpull:`286`).
+- Various corrections and improvements to documentation.
+
+
 5.1
 ===
 
