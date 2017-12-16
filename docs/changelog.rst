@@ -32,6 +32,11 @@ Changes in Jupyter Client
 - If a kernel dies soon after starting, reassign random ports before restarting
   it, in case one of the previously chosen ports has been bound by another
   process (:ghpull:`279`).
+- Avoid unnecessary filesystem operations when finding a kernelspec with
+  :meth:`.KernelSpecManager.get_kernel_spec` (:ghpull:`311`).
+- :meth:`.KernelSpecManager.get_all_specs` will no longer raise an exception on
+  encountering an invalid ``kernel.json`` file. It will raise a warning and
+  continue (:ghpull:`310`).
 - Check for non-contiguous buffers before trying to send them through ZMQ
   (:ghpull:`258`).
 - Compatibility with upcoming Tornado version 5.0 (:ghpull:`304`).
