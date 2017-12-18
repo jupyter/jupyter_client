@@ -34,6 +34,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
+    'sphinxcontrib_github_alt',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -54,6 +55,8 @@ master_doc = 'index'
 project = 'jupyter_client'
 copyright = '2015, Jupyter Development Team'
 author = 'Jupyter Development Team'
+
+github_project_url = "https://github.com/jupyter/jupyter_client"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
