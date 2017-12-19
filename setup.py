@@ -82,6 +82,7 @@ setup_args = dict(
         'jupyter_core',
         'pyzmq>=13',
         'python-dateutil>=2.1',
+        'tornado>=4.1',
     ],
     extras_require   = {
         'test': ['ipykernel', 'ipython', 'mock'],
