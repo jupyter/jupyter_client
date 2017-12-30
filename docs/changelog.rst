@@ -4,6 +4,13 @@
 Changes in Jupyter Client
 =========================
 
+5.2.1
+=====
+
+- Add parenthesis to conditional pytest requirement to work around a bug in the
+  ``wheel`` package, that generate a ``.whl`` which otherwise always depends on
+  ``pytest`` see :ghissue:`324` and :ghpull:`325`
+
 5.2
 ===
 
