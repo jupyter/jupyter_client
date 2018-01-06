@@ -17,3 +17,6 @@ after_success:
 matrix:
     allow_failures:
         - python: nightly
+branches:
+  except:
+    - /^auto-backport-of-pr-[0-9]+$/
