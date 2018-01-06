@@ -219,9 +219,10 @@ class KernelManager(ConnectionFileMixin):
         """
         if self.transport == 'tcp' and not is_local_ip(self.ip):
             raise RuntimeError("Can only launch a kernel on a local interface. "
+                               "This one is not: %s."
                                "Make sure that the '*_address' attributes are "
                                "configured properly. "
-                               "Currently valid addresses are: %s" % local_ips()
+                               "Currently valid addresses are: %s" % (self.ip, local_ips())
                                )
 
         # write connection file / get default ports
