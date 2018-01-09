@@ -36,9 +36,9 @@ from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_wri
 
 
 def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
-                         control_port=0, ip='', key=b'', transport='tcp',
-                         signature_scheme='hmac-sha256', kernel_name=''
-                         ):
+                          control_port=0, ip='', key=b'', transport='tcp',
+                          signature_scheme='hmac-sha256', kernel_name=''
+                          ):
     """Generates a JSON config file, including the selection of random ports.
 
     Parameters
@@ -253,7 +253,7 @@ def tunnel_to_kernel(connection_info, sshserver, sshkey=None):
     (shell, iopub, stdin, hb) : ints
         The four ports on localhost that have been forwarded to the kernel.
     """
-    from zmq.ssh import tunnel
+    from jupyter_core.ssh import tunnel
     if isinstance(connection_info, string_types):
         # it's a path, unpack it
         with open(connection_info) as f:
