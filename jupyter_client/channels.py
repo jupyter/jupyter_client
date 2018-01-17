@@ -80,7 +80,10 @@ class HBChannel(Thread):
     @staticmethod
     @atexit.register
     def _notice_exit():
-        HBChannel._exiting = True
+        # Class definitions can be torn down during interpreter shutdown.
+        # We only need to set _exiting flag if this hasn't happened.
+        if HBChannel is not None:
+            HBChannel._exiting = True
 
     def _create_socket(self):
         if self.socket is not None:
