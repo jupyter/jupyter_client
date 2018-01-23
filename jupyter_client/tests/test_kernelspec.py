@@ -4,6 +4,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import copy
 import io
 import json
 from logging import StreamHandler
@@ -11,6 +12,7 @@ import os
 from os.path import join as pjoin
 from subprocess import Popen, PIPE, STDOUT
 import sys
+import tempfile
 import unittest
 
 import pytest
@@ -156,7 +158,7 @@ class KernelSpecTests(unittest.TestCase):
             'Haskell-1-2-3',
         ]:
             assert kernelspec._is_valid_kernel_name(good)
-        
+
         for bad in [
             'has space',
             u'ünicode',
@@ -165,4 +167,33 @@ class KernelSpecTests(unittest.TestCase):
         ]:
             assert not kernelspec._is_valid_kernel_name(bad)
 
+    def test_subclass(self):
+        """Test get_all_specs in subclasses that override find_kernel_specs"""
+        ksm = self.ksm
+        resource_dir = tempfile.gettempdir()
+        native_name = kernelspec.NATIVE_KERNEL_NAME
+        native_kernel = ksm.get_kernel_spec(native_name)
 
+        class MyKSM(kernelspec.KernelSpecManager):
+            def get_kernel_spec(self, name):
+                spec = copy.copy(native_kernel)
+                if name == 'fake':
+                    spec.name = name
+                    spec.resource_dir = resource_dir
+                elif name == native_name:
+                    pass
+                else:
+                    raise KeyError(name)
+                return spec
+
+            def find_kernel_specs(self):
+                return {
+                    'fake': resource_dir,
+                    native_name: native_kernel.resource_dir,
+                }
+
+        # ensure that get_all_specs doesn't raise if only
+        # find_kernel_specs and get_kernel_spec are defined
+        myksm = MyKSM()
+        specs = myksm.get_all_specs()
+        assert sorted(specs) == ['fake', native_name]
