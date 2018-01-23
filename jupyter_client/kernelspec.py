@@ -254,7 +254,14 @@ class KernelSpecManager(LoggingConfigurable):
         res = {}
         for kname, resource_dir in d.items():
             try:
-                spec = self._get_kernel_spec_by_name(kname, resource_dir)
+                if self.__class__ is KernelSpecManager:
+                    spec = self._get_kernel_spec_by_name(kname, resource_dir)
+                else:
+                    # avoid calling private methods in subclasses,
+                    # which may have overridden find_kernel_specs
+                    # and get_kernel_spec, but not the newer get_all_specs
+                    spec = self.get_kernel_spec(kname)
+
                 res[kname] = {
                     "resource_dir": resource_dir,
                     "spec": spec.to_dict()
