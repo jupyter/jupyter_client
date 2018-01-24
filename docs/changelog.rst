@@ -4,39 +4,12 @@
 Changes in Jupyter Client
 =========================
 
-5.2.3
-=====
-
-`5.2.3 on GitHub <https://github.com/jupyter/jupyter_client/milestones/5.2.3>`__
-
-- Fix hang on close in :class:`.ThreadedKernelClient` (used in QtConsole)
-  when using tornado with asyncio
-  (default behavior of tornado 5, see :ghpull:`352`).
-- Fix errors when using deprecated :attr:`.KernelManager.kernel_cmd`
-  (:ghpull:`343`, :ghpull:`344`).
-
-5.2.2
-=====
-
-`5.2.2 on GitHub <https://github.com/jupyter/jupyter_client/milestones/5.2.2>`__
-
-- Fix :meth:`.KernelSpecManager.get_all_specs` method in subclasses
-  that only override :meth:`.KernelSpecManager.find_kernel_specs`
-  and :meth:`.KernelSpecManager.get_kernel_spec`.
-  See :ghissue:`338` and :ghpull:`339`.
-- Eliminate occasional error messages during process exit (:ghpull:`336`).
-- Improve error message when attempting to bind on invalid address (:ghpull:`330`).
-- Add missing direct dependency on tornado (:ghpull:`323`).
-
-
 5.2.1
 =====
 
-`5.2.1 on GitHub <https://github.com/jupyter/jupyter_client/milestones/5.2.1>`__
-
 - Add parenthesis to conditional pytest requirement to work around a bug in the
   ``wheel`` package, that generate a ``.whl`` which otherwise always depends on
-  ``pytest`` see :ghissue:`324` and :ghpull:`325`.
+  ``pytest`` see :ghissue:`324` and :ghpull:`325`
 
 5.2
 ===
