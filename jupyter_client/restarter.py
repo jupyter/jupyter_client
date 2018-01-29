@@ -133,7 +133,7 @@ class KernelRestarter(LoggingConfigurable):
             self._restarting = False
 
     def is_kernel_response_timedout(self):
-        if self.kernel_monitor_enabled:
+        if self.kernel_monitor_enabled and self.startup_time > 0:
             if not self._kernel_info_requested:
                 self.kernel_client = self.kernel_manager.client()
                 self._kernel_info_timeout = time.time() + self.startup_time
