@@ -133,6 +133,12 @@ class KernelRestarter(LoggingConfigurable):
             self._restarting = False
 
     def is_kernel_response_timedout(self):
+        """
+        Sends kernel_info request and checks a response. If the response is not received within kernel info timeout
+        then returns True, and sets marks kernel as _restarting. If the response received or kernel startup timeout
+        is not expired then returns False.
+        :return: bool
+        """
         if self.kernel_monitor_enabled and self.startup_time > 0:
             if not self._kernel_info_requested:
                 self.kernel_client = self.kernel_manager.client()
