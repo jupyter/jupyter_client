@@ -160,6 +160,8 @@ class BlockingKernelClient(KernelClient):
     inspect = reqrep(KernelClient.inspect)
     kernel_info = reqrep(KernelClient.kernel_info)
     comm_info = reqrep(KernelClient.comm_info)
+    comm_open = reqrep(KernelClient.comm_open)
+    comm_message = reqrep(KernelClient.comm_message)
     shutdown = reqrep(KernelClient.shutdown)
 
 
