@@ -137,18 +137,18 @@ class KernelRestarter(LoggingConfigurable):
             if not self._kernel_info_requested:
                 self.kernel_client = self.kernel_manager.client()
                 self._kernel_info_timeout = time.time() + self.startup_time
-                self.log.info("KernelRestarter: Requesting kernel info")
+                self.log.debug("KernelRestarter: Requesting kernel info")
                 self.kernel_client.kernel_info()
                 self._kernel_info_requested = True
             if time.time() > self._kernel_info_timeout:
-                self.log.info("KernelRestarter: Kernel Info reply timed out")
+                self.log.warning("KernelRestarter: Kernel Info reply timed out. Restarting kernel")
                 self._kernel_info_requested = False
                 self._restarting = True
                 return True
             try:
                 msg = self.kernel_client.shell_channel.get_msg(block=True, timeout=0)
             except Empty:
-                self.log.info("KernelRestarter: No message received")
+                self.log.debug("KernelRestarter: No message received")
                 pass
             else:
                 if msg['msg_type'] == 'kernel_info_reply':
