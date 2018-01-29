@@ -256,9 +256,8 @@ class KernelClient(ConnectionFileMixin):
                        user_expressions=user_expressions,
                        allow_stdin=allow_stdin, stop_on_error=stop_on_error
                        )
-        msg = self.session.msg('execute_request', content)
-        self.shell_channel.send(msg)
-        return msg['header']['msg_id']
+        return self._send_shell_message(msg_type='execute_request',
+                                        content=content)
 
     def send_comm_open(self, target_name, comm_id=''):
         content = dict(comm_id=comm_id, target_name=target_name)
@@ -289,9 +288,8 @@ class KernelClient(ConnectionFileMixin):
         if cursor_pos is None:
             cursor_pos = len(code)
         content = dict(code=code, cursor_pos=cursor_pos)
-        msg = self.session.msg('complete_request', content)
-        self.shell_channel.send(msg)
-        return msg['header']['msg_id']
+        return self._send_shell_message(msg_type='complete_request',
+                                        content=content)
 
     def inspect(self, code, cursor_pos=None, detail_level=0):
         """Get metadata information about an object in the kernel's namespace.
@@ -318,9 +316,8 @@ class KernelClient(ConnectionFileMixin):
         content = dict(code=code, cursor_pos=cursor_pos,
             detail_level=detail_level,
         )
-        msg = self.session.msg('inspect_request', content)
-        self.shell_channel.send(msg)
-        return msg['header']['msg_id']
+        return self._send_shell_message(msg_type='inspect_request',
+                                        content=content)
 
     def history(self, raw=True, output=False, hist_access_type='range', **kwargs):
         """Get entries from the kernel's history list.
@@ -359,9 +356,8 @@ class KernelClient(ConnectionFileMixin):
             kwargs.setdefault('start', 0)
         content = dict(raw=raw, output=output, hist_access_type=hist_access_type,
                                                                     **kwargs)
-        msg = self.session.msg('history_request', content)
-        self.shell_channel.send(msg)
-        return msg['header']['msg_id']
+        return self._send_shell_message(msg_type='history_request',
+                                        content=content)
 
     def kernel_info(self):
         """Request kernel info
@@ -370,9 +366,7 @@ class KernelClient(ConnectionFileMixin):
         -------
         The msg_id of the message sent
         """
-        msg = self.session.msg('kernel_info_request')
-        self.shell_channel.send(msg)
-        return msg['header']['msg_id']
+        return self._send_shell_message(msg_type='kernel_info_request')
 
     def comm_info(self, target_name=None):
         """Request comm info
@@ -385,9 +379,8 @@ class KernelClient(ConnectionFileMixin):
             content = {}
         else:
             content = dict(target_name=target_name)
-        msg = self.session.msg('comm_info_request', content)
-        self.shell_channel.send(msg)
-        return msg['header']['msg_id']
+        return self._send_shell_message(msg_type='comm_info_request',
+                                        content=content)
 
     def _handle_kernel_info_reply(self, msg):
         """handle kernel info reply
@@ -416,15 +409,13 @@ class KernelClient(ConnectionFileMixin):
         """
         # Send quit message to kernel. Once we implement kernel-side setattr,
         # this should probably be done that way, but for now this will do.
-        msg = self.session.msg('shutdown_request', {'restart':restart})
-        self.shell_channel.send(msg)
-        return msg['header']['msg_id']
+        return self._send_shell_message(msg_type='shutdown_request',
+                                        content={'restart': restart})
 
     def is_complete(self, code):
         """Ask the kernel whether some code is complete and ready to execute."""
-        msg = self.session.msg('is_complete_request', {'code': code})
-        self.shell_channel.send(msg)
-        return msg['header']['msg_id']
+        return self._send_shell_message(msg_type='is_complete_request',
+                                        content={'code': code})
 
     def input(self, string):
         """Send a string of raw input to the kernel.
