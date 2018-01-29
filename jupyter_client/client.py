@@ -197,6 +197,12 @@ class KernelClient(ConnectionFileMixin):
 
 
     # Methods to send specific messages on channels
+
+    def _send_shell_message(self, msg_type, content=None):
+        msg = self.session.msg(msg_type, content)
+        self.shell_channel.send(msg)
+        return msg['header']['msg_id']
+
     def execute(self, code, silent=False, store_history=True,
                 user_expressions=None, allow_stdin=None, stop_on_error=True):
         """Execute code in the kernel.
@@ -253,6 +259,16 @@ class KernelClient(ConnectionFileMixin):
         msg = self.session.msg('execute_request', content)
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
+
+    def send_comm_open(self, target_name, comm_id=''):
+        content = dict(comm_id=comm_id, target_name=target_name)
+        return self._send_shell_message(msg_type='comm_open',
+                                        content=content)
+
+    def send_comm_message(self, data, target_name, comm_id=''):
+        content = dict(comm_id=comm_id, data=data, target_name=target_name)
+        return self._send_shell_message(msg_type='comm_msg',
+                                        content=content)
 
     def complete(self, code, cursor_pos=None):
         """Tab complete text in the kernel's namespace.
