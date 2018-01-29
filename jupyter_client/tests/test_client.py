@@ -73,6 +73,17 @@ class TestKernelClient(TestCase):
         reply = kc.kernel_info(reply=True, timeout=TIMEOUT)
         self._check_reply('kernel_info', reply)
 
+    def test_comm_open(self):
+        kc = self.kc
+        msg_id = kc.comm_open(target_name='acquired', comm_id='doom')
+        self.assertIsInstance(msg_id, string_types)
+
+    def test_comm_message(self):
+        kc = self.kc
+        msg_id = kc.comm_message(data={'some': 'data'},
+                                 target_name='acquired', comm_id='doom')
+        self.assertIsInstance(msg_id, string_types)
+
     def test_comm_info(self):
         kc = self.kc
         msg_id = kc.comm_info()
