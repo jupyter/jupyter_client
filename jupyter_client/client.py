@@ -259,16 +259,6 @@ class KernelClient(ConnectionFileMixin):
         return self._send_shell_message(msg_type='execute_request',
                                         content=content)
 
-    def send_comm_open(self, target_name, comm_id=''):
-        content = dict(comm_id=comm_id, target_name=target_name)
-        return self._send_shell_message(msg_type='comm_open',
-                                        content=content)
-
-    def send_comm_message(self, data, target_name, comm_id=''):
-        content = dict(comm_id=comm_id, data=data, target_name=target_name)
-        return self._send_shell_message(msg_type='comm_msg',
-                                        content=content)
-
     def complete(self, code, cursor_pos=None):
         """Tab complete text in the kernel's namespace.
 
@@ -367,6 +357,28 @@ class KernelClient(ConnectionFileMixin):
         The msg_id of the message sent
         """
         return self._send_shell_message(msg_type='kernel_info_request')
+
+    def comm_open(self, target_name, comm_id=''):
+        """Open a comm
+
+        Returns
+        -------
+        The msg_id of the message sent
+        """
+        content = dict(target_name=target_name, comm_id=comm_id)
+        return self._send_shell_message(msg_type='comm_open',
+                                        content=content)
+
+    def comm_message(self, data, target_name, comm_id=''):
+        """Send a message to a comm
+
+        Returns
+        -------
+        The msg_id of the message sent
+        """
+        content = dict(comm_id=comm_id, target_name=target_name, data=data)
+        return self._send_shell_message(msg_type='comm_msg',
+                                        content=content)
 
     def comm_info(self, target_name=None):
         """Request comm info
