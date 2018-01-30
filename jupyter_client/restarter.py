@@ -36,7 +36,7 @@ class KernelRestarter(LoggingConfigurable):
         help="""Kernel heartbeat interval in seconds."""
     )
 
-    startup_time = Float(20.0, config=True,
+    startup_time = Float(0.0, config=True,
         help="""Waiting time for kernel_info reply during initial startup.
         0 indicates that kernel_info reply check disabled."""
     )
