@@ -111,6 +111,10 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
                                      DUPLICATE_SAME_ACCESS)
             env['JPY_PARENT_PID'] = str(int(handle))
 
+        # Prevent creating new console window on pythonw
+        if redirect_out:
+            kwargs['creationflags'] = kwargs.setdefault('creationflags', 0) | 0x08000000 # CREATE_NO_WINDOW
+
     else:
         # Create a new session.
         # This makes it easier to interrupt the kernel,
