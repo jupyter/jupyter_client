@@ -99,6 +99,9 @@ class KernelRestarter(LoggingConfigurable):
         for callback in self.callbacks[event]:
             try:
                 callback(**kwargs)
+            except TypeError:
+                self.log.warning("KernelRestarter: arguments are not supported by callback. Arguments will not be set")
+                callback()
             except Exception as e:
                 self.log.error("KernelRestarter: %s callback %r failed", event, callback, exc_info=True)
 
