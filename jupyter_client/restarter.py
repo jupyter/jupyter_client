@@ -37,7 +37,8 @@ class KernelRestarter(LoggingConfigurable):
     )
 
     startup_time = Float(20.0, config=True,
-        help="""Waiting time for kernel_info reply during initial startup"""
+        help="""Waiting time for kernel_info reply during initial startup.
+        0 indicates that kernel_info reply check disabled."""
     )
 
     restart_limit = Integer(5, config=True,
@@ -48,14 +49,12 @@ class KernelRestarter(LoggingConfigurable):
         help="""Whether to choose new random ports when restarting before the kernel is alive."""
     )
 
-    kernel_monitor_enabled = Bool(True, config=True,
-        help="""Whether to restart kernel with new ports if response is not received within startup_time timeout"""
-    )
     _restarting = Bool(False)
     _restart_count = Integer(0)
     _initial_startup = Bool(True)
     _kernel_info_requested = Bool(False)
     _kernel_info_timeout = Float(0)
+    _kernel_monitor_enabled = Bool(True)
     kernel_client = None
 
     callbacks = Dict()
@@ -139,7 +138,7 @@ class KernelRestarter(LoggingConfigurable):
         is not expired then returns False.
         :return: bool
         """
-        if self.kernel_monitor_enabled and self.startup_time > 0:
+        if self._kernel_monitor_enabled and self.startup_time > 0:
             if not self._kernel_info_requested:
                 self.kernel_client = self.kernel_manager.client()
                 self._kernel_info_timeout = time.time() + self.startup_time
@@ -160,7 +159,7 @@ class KernelRestarter(LoggingConfigurable):
                 if msg['msg_type'] == 'kernel_info_reply':
                     self.kernel_client._handle_kernel_info_reply(msg)
                     self.log.info("KernelRestarter: Kernel info reply received")
-                    self.kernel_monitor_enabled = False
+                    self._kernel_monitor_enabled = False
                     if self._initial_startup:
                         self._initial_startup = False
         return False
