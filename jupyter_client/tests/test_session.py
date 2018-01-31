@@ -41,7 +41,7 @@ class SessionTestCase(BaseZMQTestCase):
 @pytest.fixture
 def no_copy_threshold():
     """Disable zero-copy optimizations in pyzmq >= 17"""
-    with mock.patch.object(zmq, 'COPY_THRESHOLD', 1):
+    with mock.patch.object(zmq, 'COPY_THRESHOLD', 1, create=True):
         yield
 
 
