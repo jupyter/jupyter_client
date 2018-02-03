@@ -75,13 +75,12 @@ class TestKernelClient(TestCase):
 
     def test_comm_open(self):
         kc = self.kc
-        msg_id = kc.comm_open(target_name='acquired', comm_id='doom')
+        msg_id = kc.comm_open(comm_id='doom', target_name='acquired')
         self.assertIsInstance(msg_id, string_types)
 
     def test_comm_message(self):
         kc = self.kc
-        msg_id = kc.comm_message(data={'some': 'data'},
-                                 target_name='acquired', comm_id='doom')
+        msg_id = kc.comm_message(comm_id='doom', data={'some': 'data'})
         self.assertIsInstance(msg_id, string_types)
 
     def test_comm_info(self):

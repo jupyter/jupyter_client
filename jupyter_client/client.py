@@ -358,25 +358,27 @@ class KernelClient(ConnectionFileMixin):
         """
         return self._send_shell_message(msg_type='kernel_info_request')
 
-    def comm_open(self, target_name, comm_id=''):
+    def comm_open(self, target_name, comm_id):
         """Open a comm.
 
         Returns
         -------
         The msg_id of the message sent
         """
-        content = dict(target_name=target_name, comm_id=comm_id)
+        content = dict(comm_id=comm_id, target_name=target_name)
         return self._send_shell_message(msg_type='comm_open',
                                         content=content)
 
-    def comm_message(self, data, target_name, comm_id=''):
+    def comm_message(self, comm_id, data=None):
         """Send a message to a comm.
 
         Returns
         -------
         The msg_id of the message sent
         """
-        content = dict(comm_id=comm_id, target_name=target_name, data=data)
+        if data is None:
+            data = {}
+        content = dict(comm_id=comm_id, data=data)
         return self._send_shell_message(msg_type='comm_msg',
                                         content=content)
 
