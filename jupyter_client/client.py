@@ -350,7 +350,7 @@ class KernelClient(ConnectionFileMixin):
                                         content=content)
 
     def kernel_info(self):
-        """Request kernel info
+        """Request kernel info.
 
         Returns
         -------
@@ -359,7 +359,7 @@ class KernelClient(ConnectionFileMixin):
         return self._send_shell_message(msg_type='kernel_info_request')
 
     def comm_open(self, target_name, comm_id=''):
-        """Open a comm
+        """Open a comm.
 
         Returns
         -------
@@ -370,7 +370,7 @@ class KernelClient(ConnectionFileMixin):
                                         content=content)
 
     def comm_message(self, data, target_name, comm_id=''):
-        """Send a message to a comm
+        """Send a message to a comm.
 
         Returns
         -------
@@ -381,7 +381,7 @@ class KernelClient(ConnectionFileMixin):
                                         content=content)
 
     def comm_info(self, target_name=None):
-        """Request comm info
+        """Request comm info.
         
         Returns
         -------
@@ -395,7 +395,7 @@ class KernelClient(ConnectionFileMixin):
                                         content=content)
 
     def _handle_kernel_info_reply(self, msg):
-        """handle kernel info reply
+        """Handle kernel info reply.
 
         sets protocol adaptation version. This might
         be run from a separate thread.
