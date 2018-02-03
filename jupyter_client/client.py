@@ -382,6 +382,19 @@ class KernelClient(ConnectionFileMixin):
         return self._send_shell_message(msg_type='comm_msg',
                                         content=content)
 
+    def comm_close(self, comm_id, data=None):
+        """Notify that a comm has been destroyed.
+
+        Returns
+        -------
+        The msg_id of the message sent
+        """
+        if data is None:
+            data = {}
+        content = dict(comm_id=comm_id, data=data)
+        return self._send_shell_message(msg_type='comm_close',
+                                        content=content)
+
     def comm_info(self, target_name=None):
         """Request comm info.
         
