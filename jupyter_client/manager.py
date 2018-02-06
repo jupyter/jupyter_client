@@ -78,7 +78,7 @@ class KernelManager(ConnectionFileMixin):
 
     @property
     def kernel_spec(self):
-        if self._kernel_spec is None:
+        if self._kernel_spec is None and self.kernel_name is not '':
             self._kernel_spec = self.kernel_spec_manager.get_kernel_spec(self.kernel_name)
         return self._kernel_spec
 
