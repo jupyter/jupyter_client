@@ -35,9 +35,9 @@ from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir
 
 
 def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
-                         control_port=0, ip='', key=b'', transport='tcp',
-                         signature_scheme='hmac-sha256', kernel_name=''
-                         ):
+                          control_port=0, ip='', key=b'', transport='tcp',
+                          signature_scheme='hmac-sha256', kernel_name=''
+                          ):
     """Generates a JSON config file, including the selection of random ports.
 
     Parameters
@@ -193,7 +193,7 @@ def find_connection_file(filename='kernel-*.json', path=None, profile=None):
         path = ['.', jupyter_runtime_dir()]
     if isinstance(path, string_types):
         path = [path]
-    
+
     try:
         # first, try explicit name
         return filefind(filename, path)
@@ -208,11 +208,11 @@ def find_connection_file(filename='kernel-*.json', path=None, profile=None):
     else:
         # accept any substring match
         pat = '*%s*' % filename
-    
+
     matches = []
     for p in path:
         matches.extend(glob.glob(os.path.join(p, pat)))
-    
+
     matches = [ os.path.abspath(m) for m in matches ]
     if not matches:
         raise IOError("Could not find %r in %r" % (filename, path))
@@ -249,7 +249,7 @@ def tunnel_to_kernel(connection_info, sshserver, sshkey=None):
     (shell, iopub, stdin, hb) : ints
         The four ports on localhost that have been forwarded to the kernel.
     """
-    from zmq.ssh import tunnel
+    from .ssh import tunnel
     if isinstance(connection_info, string_types):
         # it's a path, unpack it
         with open(connection_info) as f:
@@ -289,11 +289,11 @@ port_names = [ "%s_port" % channel for channel in ('shell', 'stdin', 'iopub', 'h
 
 class ConnectionFileMixin(LoggingConfigurable):
     """Mixin for configurable classes that work with connection files"""
-    
+
     data_dir = Unicode()
     def _data_dir_default(self):
         return jupyter_data_dir()
-    
+
     # The addresses for the communication channels
     connection_file = Unicode('', config=True,
     help="""JSON file in which to store connection info [default: kernel-<pid>.json]
@@ -480,7 +480,7 @@ class ConnectionFileMixin(LoggingConfigurable):
 
     def load_connection_file(self, connection_file=None):
         """Load connection info from JSON dict in self.connection_file.
-        
+
         Parameters
         ----------
         connection_file: unicode, optional
@@ -496,10 +496,10 @@ class ConnectionFileMixin(LoggingConfigurable):
 
     def load_connection_info(self, info):
         """Load connection info from a dict containing connection info.
-        
+
         Typically this data comes from a connection file
         and is called by load_connection_file.
-        
+
         Parameters
         ----------
         info: dict
