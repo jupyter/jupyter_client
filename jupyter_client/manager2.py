@@ -7,12 +7,15 @@ from __future__ import absolute_import
 
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
+import logging
 import os
 import signal
 import six
 import subprocess
 import sys
 import time
+
+log = logging.getLogger(__name__)
 
 from traitlets.log import get_logger as get_app_logger
 
@@ -275,7 +278,7 @@ def shutdown(client, manager, wait_time=5.0):
     client.shutdown()
     if manager.wait(wait_time):
         # OK, we've waited long enough.
-        manager.log.debug("Kernel is taking too long to finish, killing")
+        log.debug("Kernel is taking too long to finish, killing")
         manager.kill()
     manager.cleanup()
 
