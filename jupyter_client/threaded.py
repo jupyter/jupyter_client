@@ -182,7 +182,7 @@ class IOLoopThread(Thread):
         :meth:`~threading.Thread.start` is called again.
         """
         if self.ioloop is not None:
-            self.ioloop.stop()
+            self.ioloop.add_callback(self.ioloop.stop)
         self.join()
         self.close()
 
