@@ -4,6 +4,17 @@
 Changes in Jupyter Client
 =========================
 
+5.2.3
+=====
+
+`5.2.3 on GitHub <https://github.com/jupyter/jupyter_client/milestones/5.2.3>`__
+
+- Fix hang on close in :class:`.ThreadedKernelClient` (used in QtConsole)
+  when using tornado with asyncio
+  (default behavior of tornado 5, see :ghpull:`352`).
+- Fix errors when using deprecated :attr:`.KernelManager.kernel_cmd`
+  (:ghpull:`343`, :ghpull:`344`).
+
 5.2.2
 =====
 
