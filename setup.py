@@ -92,7 +92,7 @@ setup_args = dict(
         'entrypoints',
         'tornado>=4.1',
     ],
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, >=3.3',
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <=4',
     extras_require   = {
         'test': ['ipykernel', 'ipython', 'mock'],
         'test:python_version == "3.3"': ['pytest<3.3.0'],
