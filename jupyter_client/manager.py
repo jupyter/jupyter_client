@@ -281,6 +281,10 @@ class KernelManager(ConnectionFileMixin):
             if self.is_alive():
                 time.sleep(pollinterval)
             else:
+                # If there's still a proc, wait and clear
+                if self.has_kernel:
+                    self.kernel.wait()
+                    self.kernel = None
                 break
         else:
             # OK, we've waited long enough.
