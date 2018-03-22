@@ -54,6 +54,7 @@ class IOLoopKernelManager(KernelManager):
         if self.autorestart:
             if self._restarter is not None:
                 self._restarter.stop()
+                self._restarter = None
 
     connect_shell = as_zmqstream(KernelManager.connect_shell)
     connect_iopub = as_zmqstream(KernelManager.connect_iopub)

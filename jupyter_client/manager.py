@@ -286,6 +286,7 @@ class KernelManager(ConnectionFileMixin):
 
         self.cleanup_ipc_files()
         self._close_control_socket()
+        self.session.parent = None
 
     def shutdown_kernel(self, now=False, restart=False):
         """Attempts to stop the kernel process cleanly.
