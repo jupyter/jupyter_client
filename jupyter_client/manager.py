@@ -18,7 +18,7 @@ import zmq
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
-    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName
+    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName, Dict
 )
 from jupyter_client import (
     launch_kernel,
@@ -99,6 +99,10 @@ class KernelManager(ConnectionFileMixin):
     def _kernel_cmd_changed(self, name, old, new):
         warnings.warn("Setting kernel_cmd is deprecated, use kernel_spec to "
                       "start different kernels.")
+
+    extra_env = Dict(
+        help="""Extra environment variables to be set for the kernel."""
+    )
 
     @property
     def ipykernel(self):
@@ -252,6 +256,9 @@ class KernelManager(ConnectionFileMixin):
             # If kernel_cmd has been set manually, don't refer to a kernel spec
             # Environment variables from kernel spec are added to os.environ
             env.update(self.kernel_spec.env or {})
+
+        if self.extra_env:
+            env.update(self.extra_env)
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
