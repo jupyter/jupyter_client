@@ -86,11 +86,11 @@ class MultiKernelManager(LoggingConfigurable):
         """Start a new kernel.
 
         The caller can pick a kernel_id by passing one in as a keyword arg,
-        otherwise one will be picked using a uuid.
+        otherwise one will be generated using new_kernel_id().
 
         The kernel ID for the newly started kernel is returned.
         """
-        kernel_id = kwargs.pop('kernel_id', unicode_type(uuid.uuid4()))
+        kernel_id = kwargs.pop('kernel_id', self.new_kernel_id(**kwargs))
         if kernel_id in self:
             raise DuplicateKernelError('Kernel already exists: %s' % kernel_id)
 
@@ -315,3 +315,12 @@ class MultiKernelManager(LoggingConfigurable):
         =======
         stream : zmq Socket or ZMQStream
         """
+
+    def new_kernel_id(self, **kwargs):
+        """
+        Returns the id to associate with the kernel for this request. Subclasses may override
+        this method to substitute other sources of kernel ids.
+        :param kwargs:
+        :return: string-ized version 4 uuid
+        """
+        return unicode_type(uuid.uuid4())
