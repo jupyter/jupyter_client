@@ -1122,6 +1122,41 @@ Frontends can choose how they update prior outputs (or if they regard this as a
 regular ``display_data`` message). Within the jupyter and nteract_ notebooks,
 all displays that match the ``display_id`` are updated (even if there are multiple).
 
+Transient Display Data
+----------------------
+
+.. versionadded:: 5.3
+
+This message is very similar to `display_data` but its is content is meant to be
+transient (e.g. not saved in output areas of notebooks). Contents that can be sent
+through this message type can include but not limited to status information of long
+calculation and debug information.
+
+.. _transient_display_data:
+
+Message type: ``transient_display_data``::
+
+    content = {
+
+        # Description of the data
+        'title': string,
+
+        # The data dict contains key/value pairs, where the keys are MIME
+        # types and the values are the raw data of the representation in that
+        # format.
+        'data' : dict,
+
+        # A boolean flag, which, if True, will not clear existing displayed
+        # message with the same title.
+        'append': False,
+    }
+
+
+Frontends can choose where and how to display and update `transient_display_data`.
+Due to the transient nature of such messages, a `transient_display_data` message
+would generally replace prior output although multiple messages with the same
+`title` can be grouped with `append=True`.
+
 Code inputs
 -----------
 
