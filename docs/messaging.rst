@@ -1127,10 +1127,10 @@ Transient Display Data
 
 .. versionadded:: 5.3
 
-This message is very similar to `display_data` but its is content is meant to be
-transient (e.g. not saved in output areas of notebooks). Contents that can be sent
-through this message type can include but not limited to status information of long
-calculation and debug information.
+The `transient_display_data` message has the same `data` as `display_data` with
+an additional `title`, as well as a different intent. These messages are not to be
+persisted to notebooks or other formats. Examples of how this could be used are
+status of a long calculation, debug information, and help messages.
 
 .. _transient_display_data:
 
@@ -1138,24 +1138,43 @@ Message type: ``transient_display_data``::
 
     content = {
 
-        # Description of the data
+        # Description and identifier of the message
         'title': string,
 
-        # The data dict contains key/value pairs, where the keys are MIME
-        # types and the values are the raw data of the representation in that
-        # format.
+        # The data dict contains key/value pairs, where the keys are MIME types
+        # and the values are the raw data of the representation in that format
         'data' : dict,
 
-        # A boolean flag, which, if True, will not clear existing displayed
-        # message with the same title.
-        'append': False,
+        # metadata of the message
+        'metadata' : dict,
     }
 
 
 Frontends can choose where and how to display and update `transient_display_data`.
 Due to the transient nature of such messages, a `transient_display_data` message
-would generally replace prior output although multiple messages with the same
-`title` can be grouped with `append=True`.
+would generally be displayed in a common area and be replaced by the next
+`transient_display_data` message. Two `metadata` are currently defined to adjust
+this behavior:
+
+.. sourcecode:: python
+
+    metadata = {
+
+        # A boolean flag, which, if True, will append the message to previous
+        # messages with the same title
+        'append' : false,
+
+        # Name of a 'page' to display the message. By default all messages will
+        # be sent to an "Info" panel but a different panel with specified
+        # name (e.g. `Help`) can be created and used
+        'page' : string,
+    }
+
+
+Basically, `append` allows the aggregation of multiple `transient_display_data`
+messages (e.g. debug information) with the same `title` and `page` allows the
+separation of `transient_display_data` messages into different groups.
+
 
 Code inputs
 -----------
