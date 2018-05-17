@@ -95,7 +95,7 @@ setup_args = dict(
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*',
     extras_require   = {
         'test': ['ipykernel', 'ipython', 'mock'],
-        'test:python_version == "3.3"': ['pytest<3.3.0'],
+        'test:python_version == "3.3"': ['pytest>=3,<3.3.0'],
         'test:(python_version >= "3.4" or python_version == "2.7")': ['pytest'],
     },
     cmdclass         = {

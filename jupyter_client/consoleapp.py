@@ -18,7 +18,7 @@ import warnings
 from traitlets.config.application import boolean_flag
 from ipython_genutils.path import filefind
 from traitlets import (
-    Dict, List, Unicode, CUnicode, CBool, Any
+    Dict, List, Unicode, CUnicode, CBool, Any, Type
 )
 
 from jupyter_core.application import base_flags, base_aliases
@@ -110,7 +110,11 @@ class JupyterConsoleApp(ConnectionFileMixin):
     classes = classes
     flags = Dict(flags)
     aliases = Dict(aliases)
-    kernel_manager_class = KernelManager
+    kernel_manager_class = Type(
+        default_value=KernelManager,
+        config=True,
+        help='The kernel manager class to use.'
+    )
     kernel_client_class = BlockingKernelClient
 
     kernel_argv = List(Unicode())
