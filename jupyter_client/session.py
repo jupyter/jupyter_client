@@ -779,7 +779,8 @@ class Session(Configurable):
             to_send.extend(ident)
 
         to_send.append(DELIM)
-        to_send.append(self.sign(msg_list))
+        # Don't include buffers in signature (per spec).
+        to_send.append(self.sign(msg_list[0:4]))
         to_send.extend(msg_list)
         stream.send_multipart(to_send, flags, copy=copy)
 
