@@ -122,6 +122,14 @@ A message is defined by the following four-dictionary structure::
       'buffers': list,
     }
 
+.. note::
+
+A client session value, in message headers from a client, should be unique among
+all clients connected to a kernel and should be constant over the lifetime of
+the client. A kernel session value, in message headers from a kernel, should be
+generated on kernel startup or restart and should be constant for the lifetime
+of the kernel.
+
 .. versionchanged:: 5.0
 
    ``version`` key added to the header.
