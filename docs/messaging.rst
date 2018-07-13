@@ -943,8 +943,7 @@ multiple cases:
 
 The client sends a shutdown request to the kernel, and once it receives the
 reply message (which is otherwise empty), it can assume that the kernel has
-completed shutdown safely.  The request can be sent on either the `control` or
-`shell` channels.
+completed shutdown safely.  The request is sent on the `control` channel.
 
 Upon their own shutdown, client applications will typically execute a last
 minute sanity check and forcefully terminate any kernel that is still alive, to
@@ -967,6 +966,12 @@ Message type: ``shutdown_reply``::
    When the clients detect a dead kernel thanks to inactivity on the heartbeat
    socket, they simply send a forceful process termination signal, since a dead
    process is unlikely to respond in any useful way to messages.
+
+.. versionchanged:: 5.4
+
+    Sending a ``shutdown_request`` message on the ``shell`` channel is deprecated.
+
+
 
 .. _msging_interrupt:
 
