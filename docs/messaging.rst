@@ -147,8 +147,9 @@ Compatibility
 =============
 
 Kernels must implement the :ref:`execute <execute>` and :ref:`kernel info
-<msging_kernel_info>` messages in order to be usable. All other message types
-are optional, although we recommend implementing :ref:`completion
+<msging_kernel_info>` messages, along with the associated busy and idle
+:ref:`status` messages. All other message types are
+optional, although we recommend implementing :ref:`completion
 <msging_completion>` if possible. Kernels do not need to send any reply for
 messages they don't handle, and frontends should provide sensible behaviour if
 no reply arrives (except for the required execution and kernel info messages).
