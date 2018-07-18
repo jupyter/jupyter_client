@@ -124,15 +124,26 @@ A message is defined by the following four-dictionary structure::
 
 .. note::
 
-A client session value, in message headers from a client, should be unique among
-all clients connected to a kernel and should be constant over the lifetime of
-the client. A kernel session value, in message headers from a kernel, should be
-generated on kernel startup or restart and should be constant for the lifetime
-of the kernel.
+    The ``session`` id in a message header identifies a unique entity with state,
+    such as a kernel process or client process.
+
+    A client session id, in message headers from a client, should be unique among
+    all clients connected to a kernel. When a client reconnects to a kernel, it
+    should use the same client session id in its message headers. When a client
+    restarts, it should generate a new client session id.
+
+    A kernel session id, in message headers from a kernel, should identify a
+    particular kernel process. If a kernel is restarted, the kernel session id
+    should be regenerated.
+
+    The session id in a message header can be used to identify the sending entity.
+    For example, if a client disconnects and reconnects to a kernel, and messages
+    from the kernel have a different kernel session id than prior to the disconnect,
+    the client should assume that the kernel was restarted.
 
 .. versionchanged:: 5.0
 
-   ``version`` key added to the header.
+    ``version`` key added to the header.
 
 .. versionchanged:: 5.1
 
