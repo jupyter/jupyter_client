@@ -118,7 +118,6 @@ class KernelClient(ConnectionFileMixin):
             self.hb_channel.start()
         if control:
             self.control_channel.start()
-            self.kernel_info()
 
     def stop_channels(self):
         """Stops all the running channels for this kernel.
