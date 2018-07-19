@@ -297,7 +297,7 @@ class KernelManager(ConnectionFileMixin):
 
         This attempts to shutdown the kernels cleanly by:
 
-        1. Sending it a shutdown message over the shell channel.
+        1. Sending it a shutdown message over the control channel.
         2. If that fails, the kernel is shutdown forcibly by sending it
            a signal.
 

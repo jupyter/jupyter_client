@@ -230,14 +230,14 @@ class ThreadedKernelClient(KernelClient):
 
     ioloop_thread = Instance(IOLoopThread, allow_none=True)
 
-    def start_channels(self, shell=True, iopub=True, stdin=True, hb=True):
+    def start_channels(self, shell=True, iopub=True, stdin=True, hb=True, control=True):
         self.ioloop_thread = IOLoopThread()
         self.ioloop_thread.start()
 
         if shell:
             self.shell_channel._inspect = self._check_kernel_info_reply
 
-        super(ThreadedKernelClient, self).start_channels(shell, iopub, stdin, hb)
+        super(ThreadedKernelClient, self).start_channels(shell, iopub, stdin, hb, control)
 
     def _check_kernel_info_reply(self, msg):
         """This is run in the ioloop thread when the kernel info reply is received
@@ -255,3 +255,4 @@ class ThreadedKernelClient(KernelClient):
     shell_channel_class = Type(ThreadedZMQSocketChannel)
     stdin_channel_class = Type(ThreadedZMQSocketChannel)
     hb_channel_class = Type(HBChannel)
+    control_channel_class = Type(ThreadedZMQSocketChannel)
