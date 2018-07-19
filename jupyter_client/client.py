@@ -407,8 +407,24 @@ class KernelClient(ConnectionFileMixin):
         if adapt_version != major_protocol_version:
             self.session.adapt_version = adapt_version
 
+    def is_complete(self, code):
+        """Ask the kernel whether some code is complete and ready to execute."""
+        msg = self.session.msg('is_complete_request', {'code': code})
+        self.shell_channel.send(msg)
+        return msg['header']['msg_id']
+
+    def input(self, string):
+        """Send a string of raw input to the kernel.
+
+        This should only be called in response to the kernel sending an
+        ``input_request`` message on the stdin channel.
+        """
+        content = dict(value=string)
+        msg = self.session.msg('input_reply', content)
+        self.stdin_channel.send(msg)
+
     def shutdown(self, restart=False):
-        """Request an immediate kernel shutdown.
+        """Request an immediate kernel shutdown on the control channel.
 
         Upon receipt of the (empty) reply, client code can safely assume that
         the kernel has shut down and it's safe to forcefully terminate it if
@@ -427,22 +443,5 @@ class KernelClient(ConnectionFileMixin):
         msg = self.session.msg('shutdown_request', {'restart':restart})
         self.control_channel.send(msg)
         return msg['header']['msg_id']
-
-    def is_complete(self, code):
-        """Ask the kernel whether some code is complete and ready to execute."""
-        msg = self.session.msg('is_complete_request', {'code': code})
-        self.shell_channel.send(msg)
-        return msg['header']['msg_id']
-
-    def input(self, string):
-        """Send a string of raw input to the kernel.
-
-        This should only be called in response to the kernel sending an
-        ``input_request`` message on the stdin channel.
-        """
-        content = dict(value=string)
-        msg = self.session.msg('input_reply', content)
-        self.stdin_channel.send(msg)
-
 
 KernelClientABC.register(KernelClient)
