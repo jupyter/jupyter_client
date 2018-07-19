@@ -36,7 +36,7 @@ except NameError:
     TimeoutError = RuntimeError
 
 
-def reqrep(meth):
+def reqrep(meth, channel='shell'):
     def wrapped(self, *args, **kwargs):
         reply = kwargs.pop('reply', False)
         timeout = kwargs.pop('timeout', None)
@@ -44,7 +44,7 @@ def reqrep(meth):
         if not reply:
             return msg_id
 
-        return self._recv_reply(msg_id, timeout=timeout)
+        return self._recv_reply(msg_id, timeout=timeout, channel=channel)
     
     if not meth.__doc__:
         # python -OO removes docstrings,
@@ -135,9 +135,10 @@ class BlockingKernelClient(KernelClient):
     iopub_channel_class = Type(ZMQSocketChannel)
     stdin_channel_class = Type(ZMQSocketChannel)
     hb_channel_class = Type(HBChannel)
+    control_channel_class = Type(ZMQSocketChannel)
 
 
-    def _recv_reply(self, msg_id, timeout=None):
+    def _recv_reply(self, msg_id, timeout=None, channel='shell'):
         """Receive and return the reply for a given request"""
         if timeout is not None:
             deadline = monotonic() + timeout
@@ -145,7 +146,10 @@ class BlockingKernelClient(KernelClient):
             if timeout is not None:
                 timeout = max(0, deadline - monotonic())
             try:
-                reply = self.get_shell_msg(timeout=timeout)
+                if channel == 'control':
+                    reply = self.get_control_msg(timeout=timeout)
+                else:
+                    reply = self.get_shell_msg(timeout=timeout)
             except Empty:
                 raise TimeoutError("Timeout waiting for reply")
             if reply['parent_header'].get('msg_id') != msg_id:
@@ -154,13 +158,16 @@ class BlockingKernelClient(KernelClient):
             return reply
 
 
+    # replies come on the shell channel
     execute = reqrep(KernelClient.execute)
     history = reqrep(KernelClient.history)
     complete = reqrep(KernelClient.complete)
     inspect = reqrep(KernelClient.inspect)
     kernel_info = reqrep(KernelClient.kernel_info)
     comm_info = reqrep(KernelClient.comm_info)
-    shutdown = reqrep(KernelClient.shutdown)
+
+    # replies come on the control channel
+    shutdown = reqrep(KernelClient.shutdown, channel='control')
 
 
     def _stdin_hook_default(self, msg):
