@@ -148,7 +148,6 @@ class HBChannel(Thread):
                 continue
 
             since_last_heartbeat = 0.0
-            # io.rprint('Ping from HB channel') # dbg
             # no need to catch EFSM here, because the previous event was
             # either a recv or connect, which cannot be followed by EFSM
             self.socket.send(b'ping')
