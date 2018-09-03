@@ -285,10 +285,8 @@ class JupyterConsoleApp(ConnectionFileMixin):
             self.exit(1)
 
         self.kernel_manager.client_factory = self.kernel_client_class
-        # FIXME: remove special treatment of IPython kernels
         kwargs = {}
-        if self.kernel_manager.ipykernel:
-            kwargs['extra_arguments'] = self.kernel_argv
+        kwargs['extra_arguments'] = self.kernel_argv
         self.kernel_manager.start_kernel(**kwargs)
         atexit.register(self.kernel_manager.cleanup_ipc_files)
 
