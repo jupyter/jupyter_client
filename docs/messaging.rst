@@ -1153,7 +1153,7 @@ Message type: ``transient_display_data``::
 Frontends can choose where and how to display and update `transient_display_data`.
 Due to the transient nature of such messages, a `transient_display_data` message
 would generally be displayed in a common area and be replaced by the next
-`transient_display_data` message. Two `metadata` are currently defined to adjust
+`transient_display_data` message. Three `metadata` are currently defined to adjust
 this behavior:
 
 .. sourcecode:: python
@@ -1168,12 +1168,18 @@ this behavior:
         # be sent to an "Info" panel but a different panel with specified
         # name (e.g. `Help`) can be created and used
         'page' : string,
+
+        # Importance of the message type so that messages of low priority
+        # (e.g. logging messages) can be accumulated in the background when
+        # more important messages are being displayed.
+        'rank' : int,
     }
 
 
 Basically, `append` allows the aggregation of multiple `transient_display_data`
-messages (e.g. debug information) with the same `title` and `page` allows the
-separation of `transient_display_data` messages into different groups.
+messages (e.g. debug information) with the same `title`, `page` allows the
+separation of `transient_display_data` messages into different groups, and
+`rank` avoids frequent UI updates caused by less important messages.
 
 
 Code inputs
