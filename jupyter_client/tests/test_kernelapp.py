@@ -37,7 +37,7 @@ def test_kernelapp_lifecycle():
     try:
         p = _launch({'JUPYTER_RUNTIME_DIR': runtime_dir,
                      'JUPYTER_CLIENT_TEST_RECORD_STARTUP_PRIVATE': started,
-                    })
+                     },)
         # Wait for start
         for _ in range(WAIT_TIME * POLL_FREQ):
             if os.path.isfile(started):
@@ -47,18 +47,10 @@ def test_kernelapp_lifecycle():
             raise AssertionError("No started file created in {} seconds"
                                  .format(WAIT_TIME))
 
-        # Connection file should be there by now
-        files = os.listdir(runtime_dir)
-        assert len(files) == 1
-        cf = files[0]
-        assert cf.startswith('kernel')
-        assert cf.endswith('.json')
-
         # Send SIGTERM to shut down
         p.terminate()
         if PY3:
             _, stderr = p.communicate(timeout=WAIT_TIME)
-            assert cf in stderr.decode('utf-8', 'replace')
         else:
             hacky_wait(p)
     finally:

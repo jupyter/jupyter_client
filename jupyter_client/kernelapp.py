@@ -32,8 +32,6 @@ class KernelApp(JupyterApp):
         super(KernelApp, self).initialize(argv)
         self.km = KernelManager(kernel_name=self.kernel_name,
                                 config=self.config)
-        cf_basename = 'kernel-%s.json' % uuid.uuid4()
-        self.km.connection_file = os.path.join(self.runtime_dir, cf_basename)
         self.loop = IOLoop.current()
         self.loop.add_callback(self._record_started)
 
