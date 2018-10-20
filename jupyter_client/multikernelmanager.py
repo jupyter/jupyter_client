@@ -6,6 +6,7 @@
 from __future__ import absolute_import
 
 import os
+import sys
 import uuid
 
 import zmq
@@ -47,7 +48,7 @@ class MultiKernelManager(LoggingConfigurable):
     )
 
     kernel_spec_manager = Instance(KernelSpecManager, allow_none=True)
-    
+
     kernel_manager_class = DottedObjectName(
         "jupyter_client.ioloop.IOLoopKernelManager", config=True,
         help="""The kernel manager class.  This is configurable to allow
@@ -82,13 +83,10 @@ class MultiKernelManager(LoggingConfigurable):
     def __contains__(self, kernel_id):
         return kernel_id in self._kernels
 
-    def start_kernel(self, kernel_name=None, **kwargs):
-        """Start a new kernel.
-
-        The caller can pick a kernel_id by passing one in as a keyword arg,
-        otherwise one will be generated using new_kernel_id().
-
-        The kernel ID for the newly started kernel is returned.
+    def _start_kernel(self, kernel_name, **kwargs):
+        """
+        Core logic of start_kernel which is shared between the synchronous
+        `start_kernel` method and the asynchronous `start_kernel_async`.
         """
         kernel_id = kwargs.pop('kernel_id', self.new_kernel_id(**kwargs))
         if kernel_id in self:
@@ -107,7 +105,21 @@ class MultiKernelManager(LoggingConfigurable):
                     parent=self, log=self.log, kernel_name=kernel_name,
                     **constructor_kwargs
         )
+
+        return kernel_id, kernel_name, km
+
+    def start_kernel(self, kernel_name=None, **kwargs):
+        """Start a new kernel.
+
+        The caller can pick a kernel_id by passing one in as a keyword arg,
+        otherwise one will be generated using new_kernel_id().
+
+        The kernel ID for the newly started kernel is returned.
+        """
+        kernel_id, kernel_name, km = self._start_kernel(kernel_name, **kwargs)
+
         km.start_kernel(**kwargs)
+
         self._kernels[kernel_id] = km
         return kernel_id
 
@@ -324,3 +336,10 @@ class MultiKernelManager(LoggingConfigurable):
         :return: string-ized version 4 uuid
         """
         return unicode_type(uuid.uuid4())
+
+if sys.version_info >= (3, 5):
+    from .multikernelmanager_async_patch import start_kernel_async
+        # this looks weird as we are extra indented, but we are
+        # indeed defining a conditional method depending on the version
+        # of Python.
+    MultiKernelManager.start_kernel_async = start_kernel_async
