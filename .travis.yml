@@ -9,7 +9,7 @@ python:
 sudo: false
 install:
   - pip install --upgrade setuptools pip
-  - pip install --upgrade --pre -e .[test] pytest-cov pytest-warnings codecov
+  - pip install --upgrade --pre -e .[test] pytest-cov pytest-warnings codecov 'coverage<5'
 script:
   - py.test --cov jupyter_client jupyter_client
 after_success:
