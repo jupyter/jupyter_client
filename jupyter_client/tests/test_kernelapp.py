@@ -9,11 +9,11 @@ import time
 
 PY3 = sys.version_info[0] >= 3
 
-def _launch(extra_env):
+def _launch(extra_env, connection_file):
     env = os.environ.copy()
     env.update(extra_env)
     return Popen([sys.executable, '-c',
-                  'from jupyter_client.kernelapp import main; main()'],
+                  'from jupyter_client.kernelapp import main; main([\'--KernelManager.connection_file=' +connection_file + '\'])'],
                  env=env, stderr=(PIPE if PY3 else None))
 
 WAIT_TIME = 10
@@ -34,10 +34,12 @@ def test_kernelapp_lifecycle():
     runtime_dir = mkdtemp()
     startup_dir = mkdtemp()
     started = os.path.join(startup_dir, 'started')
+    connection_file = runtime_dir+'/connection.json'
     try:
         p = _launch({'JUPYTER_RUNTIME_DIR': runtime_dir,
                      'JUPYTER_CLIENT_TEST_RECORD_STARTUP_PRIVATE': started,
-                     },)
+                     },connection_file)
+
         # Wait for start
         for _ in range(WAIT_TIME * POLL_FREQ):
             if os.path.isfile(started):
@@ -46,6 +48,14 @@ def test_kernelapp_lifecycle():
         else:
             raise AssertionError("No started file created in {} seconds"
                                  .format(WAIT_TIME))
+        print('Runtime dir:' + runtime_dir)
+        print('Startup dir:' + started)
+        # Connection file should be there by now
+        files = os.listdir(runtime_dir)
+        assert len(files) == 1
+        cf = files[0]
+        assert cf.startswith('connection')
+        assert cf.endswith('.json')
 
         # Send SIGTERM to shut down
         p.terminate()
