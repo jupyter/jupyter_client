@@ -1127,19 +1127,16 @@ Transient Display Data
 
 .. versionadded:: 5.3
 
-The `transient_display_data` message has the same `data` as `display_data` with
-an additional `title`, as well as a different intent. These messages are not to be
-persisted to notebooks or other formats. Examples of how this could be used are
-status of a long calculation, debug information, and help messages.
+The `transient_display_data` message is identical to `display_data` in format but
+has a different intent. These messages are not to be persisted to notebooks or other
+formats. Examples of how this could be used are status of a long calculation, debug
+information, and help messages.
 
 .. _transient_display_data:
 
 Message type: ``transient_display_data``::
 
     content = {
-
-        # Description and identifier of the message
-        'title': string,
 
         # The data dict contains key/value pairs, where the keys are MIME types
         # and the values are the raw data of the representation in that format
@@ -1150,36 +1147,18 @@ Message type: ``transient_display_data``::
     }
 
 
-Frontends can choose where and how to display and update `transient_display_data`.
-Due to the transient nature of such messages, a `transient_display_data` message
-would generally be displayed in a common area and be replaced by the next
-`transient_display_data` message. Three `metadata` are currently defined to adjust
-this behavior:
+A `metadata` is allowed but no field is defined.
 
 .. sourcecode:: python
 
     metadata = {
-
-        # A boolean flag, which, if True, will append the message to previous
-        # messages with the same title
-        'append' : false,
-
-        # Name of a 'page' to display the message. By default all messages will
-        # be sent to an "Info" panel but a different panel with specified
-        # name (e.g. `Help`) can be created and used
-        'page' : string,
-
-        # Importance of the message type so that messages of low priority
-        # (e.g. logging messages) can be accumulated in the background when
-        # more important messages are being displayed.
-        'rank' : int,
     }
 
 
-Basically, `append` allows the aggregation of multiple `transient_display_data`
-messages (e.g. debug information) with the same `title`, `page` allows the
-separation of `transient_display_data` messages into different groups, and
-`rank` avoids frequent UI updates caused by less important messages.
+Frontends can choose where and how to display and update `transient_display_data`,
+or just ignore them. Due to the transient nature of such messages,
+`transient_display_data` messages would generally be displayed in a common area
+sequentially, with limited history.
 
 
 Code inputs
