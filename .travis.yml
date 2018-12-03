@@ -8,11 +8,11 @@ python:
     - "3.5"
 install:
   - |
-  # install pip 10 on python 3.3
-  # to get requires_python support
-  if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then
-    pip install pip==10.*
-  fi
+    # install pip 10 on python 3.3
+    # to get requires_python support
+    if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then
+      pip install pip==10.*
+    fi
   - pip install --upgrade setuptools pip
   - pip install --upgrade --upgrade-strategy eager --pre -e .[test] pytest-cov codecov 'coverage<5'
   - pip freeze
