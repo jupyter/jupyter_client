@@ -8,6 +8,12 @@ python:
     - 2.7
 sudo: false
 install:
+  - |
+  # install pip 10 on python 3.3
+  # to get requires_python support
+  if [[ $TRAVIS_PYTHON_VERSION == "3.3" ]]; then
+    pip install pip==10.*
+  fi
   - pip install --upgrade setuptools pip
   - pip install --upgrade --pre -e .[test] pytest-cov pytest-warnings codecov
 script:
