@@ -101,7 +101,8 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
         except:
             from _subprocess import DuplicateHandle, GetCurrentProcess, \
                 DUPLICATE_SAME_ACCESS, CREATE_NEW_PROCESS_GROUP
-        # Launch the kernel process
+
+        # create a handle on the parent to be inherited
         if independent:
             kwargs['creationflags'] = CREATE_NEW_PROCESS_GROUP
         else:
@@ -115,6 +116,11 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
         if redirect_out:
             kwargs['creationflags'] = kwargs.setdefault('creationflags', 0) | 0x08000000 # CREATE_NO_WINDOW
 
+        # Avoid closing the above parent and interrupt handles.
+        # close_fds is True by default on Python >=3.7
+        # or when no stream is captured on Python <3.7
+        # (we always capture stdin, so this is already False by default on <3.7)
+        kwargs['close_fds'] = False
     else:
         # Create a new session.
         # This makes it easier to interrupt the kernel,
