@@ -4,6 +4,14 @@
 Changes in Jupyter Client
 =========================
 
+5.2.4
+=====
+
+`5.2.4 on GitHub <https://github.com/jupyter/jupyter_client/milestones/5.2.4>`__
+
+- Prevent creating new console windows on Windows (:ghpull:`346`)
+- Fix interrupts on Python 3.7 on Windows (:ghpull:`408`)
+
 5.2.3
 =====
 
