@@ -18,6 +18,7 @@ import socket
 import stat
 import tempfile
 import warnings
+import sys
 from getpass import getpass
 
 import zmq
@@ -137,7 +138,7 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
     with open(fname, 'w') as f:
         f.write(json.dumps(cfg, indent=2))
 
-    if hasattr(stat, 'S_ISVTX'):
+    if hasattr(stat, 'S_ISVTX') and not sys.platform.startswith('openbsd'):
         # set the sticky bit on the file and its parent directory
         # to avoid periodic cleanup
         paths = [fname]
