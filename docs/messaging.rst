@@ -435,7 +435,7 @@ Execution results
 Message type: ``execute_reply``::
 
     content = {
-      # One of: 'ok' OR 'error' OR 'abort'
+      # One of: 'ok' OR 'error' OR 'aborted'
       'status' : str,
 
       # The global kernel counter that increases by one with each request that
