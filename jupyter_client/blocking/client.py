@@ -18,7 +18,7 @@ import time
 
 import zmq
 
-from traitlets import Type
+from traitlets import Type, default
 from jupyter_client.channels import HBChannel
 from jupyter_client.client import KernelClient
 from .channels import ZMQSocketChannel
@@ -163,7 +163,8 @@ class BlockingKernelClient(KernelClient):
     shutdown = reqrep(KernelClient.shutdown)
 
 
-    def _stdin_hook_default(self, msg):
+    @default('stdin_hook')
+    def _default_stdin_hook(self, msg):
         """Handle an input request"""
         content = msg['content']
         if content.get('password', False):
@@ -187,7 +188,8 @@ class BlockingKernelClient(KernelClient):
         if not (self.stdin_channel.msg_ready() or self.shell_channel.msg_ready()):
             self.input(raw_data)
 
-    def _output_hook_default(self, msg):
+    @default('output_hook')
+    def _default_output_hook(self, msg):
         """Default hook for redisplaying plain-text output"""
         msg_type = msg['header']['msg_type']
         content = msg['content']
@@ -282,7 +284,7 @@ class BlockingKernelClient(KernelClient):
                               stop_on_error=stop_on_error,
         )
         if stdin_hook is None:
-            stdin_hook = self._stdin_hook_default
+            stdin_hook = self._default_stdin_hook
         if output_hook is None:
             # detect IPython kernel
             if 'IPython' in sys.modules:
@@ -298,7 +300,7 @@ class BlockingKernelClient(KernelClient):
                     )
         if output_hook is None:
             # default: redisplay plain-text outputs
-            output_hook = self._output_hook_default
+            output_hook = self._default_output_hook
 
         # set deadline based on timeout
         if timeout is not None:

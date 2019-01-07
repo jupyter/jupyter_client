@@ -15,7 +15,7 @@ pjoin = os.path.join
 
 from ipython_genutils.py3compat import PY3
 from traitlets import (
-    HasTraits, List, Unicode, Dict, Set, Bool, Type, CaselessStrEnum
+    HasTraits, List, Unicode, Dict, Set, Bool, Type, CaselessStrEnum, default, observe
 )
 from traitlets.config import LoggingConfigurable
 
@@ -127,11 +127,13 @@ class KernelSpecManager(LoggingConfigurable):
     )
 
     data_dir = Unicode()
-    def _data_dir_default(self):
+    @default('data_dir')
+    def _default_data_dir(self):
         return jupyter_data_dir()
 
     user_kernel_dir = Unicode()
-    def _user_kernel_dir_default(self):
+    @default('user_kernel_dir')
+    def _default_user_kernel_dir(self):
         return pjoin(self.data_dir, 'kernels')
 
     whitelist = Set(config=True,
@@ -143,7 +145,8 @@ class KernelSpecManager(LoggingConfigurable):
     kernel_dirs = List(
         help="List of kernel directories to search. Later ones take priority over earlier."
     )
-    def _kernel_dirs_default(self):
+    @default('kernel_dirs')
+    def _default_kernel_dirs(self):
         dirs = jupyter_path('kernels')
         # At some point, we should stop adding .ipython/kernels to the path,
         # but the cost to keeping it is very small.

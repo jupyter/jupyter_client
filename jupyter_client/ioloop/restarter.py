@@ -14,14 +14,16 @@ from zmq.eventloop import ioloop
 
 from jupyter_client.restarter import KernelRestarter
 from traitlets import (
-    Instance,
+    Instance, default
+
 )
 
 class IOLoopKernelRestarter(KernelRestarter):
     """Monitor and autorestart a kernel."""
 
     loop = Instance('tornado.ioloop.IOLoop')
-    def _loop_default(self):
+    @default('loop')
+    def _default_loop(self):
         warnings.warn("IOLoopKernelRestarter.loop is deprecated in jupyter-client 5.2",
             DeprecationWarning, stacklevel=4,
         )

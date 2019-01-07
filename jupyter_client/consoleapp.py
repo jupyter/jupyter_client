@@ -18,7 +18,7 @@ import warnings
 from traitlets.config.application import boolean_flag
 from ipython_genutils.path import filefind
 from traitlets import (
-    Dict, List, Unicode, CUnicode, CBool, Any
+    Dict, List, Unicode, CUnicode, CBool, Any, default, observe
 )
 
 from jupyter_core.application import base_flags, base_aliases
@@ -122,7 +122,8 @@ class JupyterConsoleApp(ConnectionFileMixin):
     sshkey = Unicode('', config=True,
         help="""Path to the ssh key to use for logging in to the ssh server.""")
     
-    def _connection_file_default(self):
+    @default('connection_file')
+    def _default_connection_file(self):
         return 'kernel-%i.json' % os.getpid()
 
     existing = CUnicode('', config=True,

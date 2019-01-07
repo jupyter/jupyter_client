@@ -11,7 +11,7 @@ It is an incomplete base class, and must be subclassed.
 
 from traitlets.config.configurable import LoggingConfigurable
 from traitlets import (
-    Instance, Float, Dict, Bool, Integer,
+    Instance, Float, Dict, Bool, Integer, default
 )
 
 
@@ -43,7 +43,8 @@ class KernelRestarter(LoggingConfigurable):
     _initial_startup = Bool(True)
 
     callbacks = Dict()
-    def _callbacks_default(self):
+    @default('callbacks')
+    def _default_callbacks(self):
         return dict(restart=[], dead=[])
 
     def start(self):

@@ -12,12 +12,11 @@ import zmq
 
 from traitlets.config.configurable import LoggingConfigurable
 from ipython_genutils.importstring import import_item
-from traitlets import (
-    Instance, Dict, List, Unicode, Any, DottedObjectName
-)
+from traitlets import Instance, Dict, List, Unicode, Any, DottedObjectName, default, observe
 from ipython_genutils.py3compat import unicode_type
 
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
+
 
 class DuplicateKernelError(Exception):
     pass
@@ -25,6 +24,7 @@ class DuplicateKernelError(Exception):
 
 def kernel_method(f):
     """decorator for proxying MKM.method(kernel_id) to individual KMs by ID"""
+
     def wrapped(self, kernel_id, *args, **kwargs):
         # get the kernel
         km = self.get_kernel(kernel_id)
@@ -36,36 +36,45 @@ def kernel_method(f):
         f(self, kernel_id, *args, **kwargs)
         # return the method result
         return r
+
     return wrapped
 
 
 class MultiKernelManager(LoggingConfigurable):
     """A class for managing multiple kernels."""
 
-    default_kernel_name = Unicode(NATIVE_KERNEL_NAME, config=True,
-        help="The name of the default kernel to start"
+    default_kernel_name = Unicode(
+        NATIVE_KERNEL_NAME, config=True, help="The name of the default kernel to start"
     )
 
     kernel_spec_manager = Instance(KernelSpecManager, allow_none=True)
-    
+
     kernel_manager_class = DottedObjectName(
-        "jupyter_client.ioloop.IOLoopKernelManager", config=True,
+        "jupyter_client.ioloop.IOLoopKernelManager",
+        config=True,
         help="""The kernel manager class.  This is configurable to allow
         subclassing of the KernelManager for customized behavior.
-        """
+        """,
     )
-    def _kernel_manager_class_changed(self, name, old, new):
+
+    @observe("kernel_manager_class")
+    def _observe_kernel_manager_class(self, change):
+        new = change["new"]
         self.kernel_manager_factory = import_item(new)
 
     kernel_manager_factory = Any(help="this is kernel_manager_class after import")
-    def _kernel_manager_factory_default(self):
+
+    @default("kernel_manager_factory")
+    def _default_kernel_manager_factory(self):
         return import_item(self.kernel_manager_class)
 
-    context = Instance('zmq.Context')
-    def _context_default(self):
+    context = Instance("zmq.Context")
+
+    @default("context")
+    def _default_context(self):
         return zmq.Context.instance()
 
-    connection_dir = Unicode('')
+    connection_dir = Unicode("")
 
     _kernels = Dict()
 
@@ -90,9 +99,9 @@ class MultiKernelManager(LoggingConfigurable):
 
         The kernel ID for the newly started kernel is returned.
         """
-        kernel_id = kwargs.pop('kernel_id', unicode_type(uuid.uuid4()))
+        kernel_id = kwargs.pop("kernel_id", unicode_type(uuid.uuid4()))
         if kernel_id in self:
-            raise DuplicateKernelError('Kernel already exists: %s' % kernel_id)
+            raise DuplicateKernelError("Kernel already exists: %s" % kernel_id)
 
         if kernel_name is None:
             kernel_name = self.default_kernel_name
@@ -101,11 +110,15 @@ class MultiKernelManager(LoggingConfigurable):
         # including things like its transport and ip.
         constructor_kwargs = {}
         if self.kernel_spec_manager:
-            constructor_kwargs['kernel_spec_manager'] = self.kernel_spec_manager
-        km = self.kernel_manager_factory(connection_file=os.path.join(
-                    self.connection_dir, "kernel-%s.json" % kernel_id),
-                    parent=self, log=self.log, kernel_name=kernel_name,
-                    **constructor_kwargs
+            constructor_kwargs["kernel_spec_manager"] = self.kernel_spec_manager
+        km = self.kernel_manager_factory(
+            connection_file=os.path.join(
+                self.connection_dir, "kernel-%s.json" % kernel_id
+            ),
+            parent=self,
+            log=self.log,
+            kernel_name=kernel_name,
+            **constructor_kwargs
         )
         km.start_kernel(**kwargs)
         self._kernels[kernel_id] = km
@@ -227,11 +240,11 @@ class MultiKernelManager(LoggingConfigurable):
         return self._kernels[kernel_id]
 
     @kernel_method
-    def add_restart_callback(self, kernel_id, callback, event='restart'):
+    def add_restart_callback(self, kernel_id, callback, event="restart"):
         """add a callback for the KernelRestarter"""
 
     @kernel_method
-    def remove_restart_callback(self, kernel_id, callback, event='restart'):
+    def remove_restart_callback(self, kernel_id, callback, event="restart"):
         """remove a callback for the KernelRestarter"""
 
     @kernel_method

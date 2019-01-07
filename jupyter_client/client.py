@@ -10,7 +10,7 @@ from ipython_genutils.py3compat import string_types, iteritems
 import zmq
 
 from traitlets import (
-    Any, Instance, Type,
+    Any, Instance, Type, default, observe
 )
 
 from .channelsabc import (ChannelABC, HBChannelABC)
@@ -50,7 +50,8 @@ class KernelClient(ConnectionFileMixin):
 
     # The PyZMQ Context to use for communication with the kernel.
     context = Instance(zmq.Context)
-    def _context_default(self):
+    @default('context')
+    def _default_context(self):
         return zmq.Context.instance()
 
     # The classes to use for the various channels

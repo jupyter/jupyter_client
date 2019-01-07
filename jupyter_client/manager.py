@@ -18,7 +18,7 @@ import zmq
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
-    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName
+    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName, default, observe
 )
 from jupyter_client import (
     launch_kernel,
@@ -38,16 +38,19 @@ class KernelManager(ConnectionFileMixin):
 
     # The PyZMQ Context to use for communication with the kernel.
     context = Instance(zmq.Context)
-    def _context_default(self):
+    @default('context')
+    def _default_context(self):
         return zmq.Context.instance()
 
     # the class to create with our `client` method
     client_class = DottedObjectName('jupyter_client.blocking.BlockingKernelClient')
     client_factory = Type(klass='jupyter_client.KernelClient')
-    def _client_factory_default(self):
+    @default('client_factory')
+    def _default_client_factory(self):
         return import_item(self.client_class)
 
-    def _client_class_changed(self, name, old, new):
+    @observe('client_class')
+    def _observe_client_class(self, change):
         self.client_factory = import_item(str(new))
 
     # The kernel process with which the KernelManager is communicating.
@@ -56,10 +59,12 @@ class KernelManager(ConnectionFileMixin):
 
     kernel_spec_manager = Instance(kernelspec.KernelSpecManager)
 
-    def _kernel_spec_manager_default(self):
+    @default('kernel_spec_manager')
+    def _default_kernel_spec_manager(self):
         return kernelspec.KernelSpecManager(data_dir=self.data_dir)
 
-    def _kernel_spec_manager_changed(self):
+    @observe('kernel_spec_manager')
+    def _observe_kernel_spec_manager(self, change):
         self._kernel_spec = None
 
     shutdown_wait_time = Float(
@@ -69,8 +74,10 @@ class KernelManager(ConnectionFileMixin):
 
     kernel_name = Unicode(kernelspec.NATIVE_KERNEL_NAME)
 
-    def _kernel_name_changed(self, name, old, new):
+    @observe('kernel_name')
+    def _observe_kernel_name(self, change):
         self._kernel_spec = None
+        new = change['new']
         if new == 'python':
             self.kernel_name = kernelspec.NATIVE_KERNEL_NAME
 
@@ -96,7 +103,8 @@ class KernelManager(ConnectionFileMixin):
         """
     )
 
-    def _kernel_cmd_changed(self, name, old, new):
+    @observe('kernel_cmd')
+    def _observe_kernel_cmd(self, change):
         warnings.warn("Setting kernel_cmd is deprecated, use kernel_spec to "
                       "start different kernels.")
 

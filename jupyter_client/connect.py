@@ -19,6 +19,7 @@ import stat
 import tempfile
 import warnings
 from getpass import getpass
+from traitlets import default, observe
 
 import zmq
 
@@ -291,7 +292,8 @@ class ConnectionFileMixin(LoggingConfigurable):
     """Mixin for configurable classes that work with connection files"""
     
     data_dir = Unicode()
-    def _data_dir_default(self):
+    @default('data_dir')
+    def _default_data_dir(self):
         return jupyter_data_dir()
     
     # The addresses for the communication channels
@@ -314,7 +316,8 @@ class ConnectionFileMixin(LoggingConfigurable):
         to the Kernel, so be careful!"""
     )
 
-    def _ip_default(self):
+    @default('ip')
+    def _default_ip(self):
         if self.transport == 'ipc':
             if self.connection_file:
                 return os.path.splitext(self.connection_file)[0] + '-ipc'
@@ -323,7 +326,9 @@ class ConnectionFileMixin(LoggingConfigurable):
         else:
             return localhost()
 
-    def _ip_changed(self, name, old, new):
+    @observe('ip')
+    def _observe_ip(self, change):
+        new = change['new']
         if new == '*':
             self.ip = '0.0.0.0'
 
@@ -349,7 +354,8 @@ class ConnectionFileMixin(LoggingConfigurable):
 
     # The Session to use for communication with the kernel.
     session = Instance('jupyter_client.session.Session')
-    def _session_default(self):
+    @default('session')
+    def _default_session(self):
         from jupyter_client.session import Session
         return Session(parent=self)
 
@@ -507,7 +513,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             See the connection_file spec for details.
         """
         self.transport = info.get('transport', self.transport)
-        self.ip = info.get('ip', self._ip_default())
+        self.ip = info.get('ip', self._default_ip())
 
         self._record_random_port_names()
         for name in port_names:

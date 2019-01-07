@@ -13,7 +13,7 @@ from traitlets.config.application import Application
 from jupyter_core.application import (
     JupyterApp, base_flags, base_aliases
 )
-from traitlets import Instance, Dict, Unicode, Bool, List
+from traitlets import Instance, Dict, Unicode, Bool, List, default
 
 from . import __version__
 from .kernelspec import KernelSpecManager
@@ -36,7 +36,8 @@ class ListKernelSpecs(JupyterApp):
              'debug': base_flags['debug'],
             }
 
-    def _kernel_spec_manager_default(self):
+    @default('kernel_spec_manager')
+    def _default_kernel_spec_manager(self):
         return KernelSpecManager(parent=self, data_dir=self.data_dir)
 
     def start(self):
@@ -83,14 +84,16 @@ class InstallKernelSpec(JupyterApp):
     usage = "jupyter kernelspec install SOURCE_DIR [--options]"
     kernel_spec_manager = Instance(KernelSpecManager)
 
-    def _kernel_spec_manager_default(self):
+    @default('kernel_spec_manager')
+    def _default_kernel_spec_manager(self):
         return KernelSpecManager(data_dir=self.data_dir)
 
     sourcedir = Unicode()
     kernel_name = Unicode("", config=True,
         help="Install the kernel spec with this name"
     )
-    def _kernel_name_default(self):
+    @default('kernel_name')
+    def _default_kernel_name(self):
         return os.path.basename(self.sourcedir)
 
     user = Bool(False, config=True,
@@ -164,7 +167,8 @@ class RemoveKernelSpec(JupyterApp):
     spec_names = List(Unicode())
     
     kernel_spec_manager = Instance(KernelSpecManager)
-    def _kernel_spec_manager_default(self):
+    @default('kernel_spec_manager')
+    def _default_kernel_spec_manager(self):
         return KernelSpecManager(data_dir=self.data_dir, parent=self)
     
     flags = {
@@ -213,7 +217,8 @@ class InstallNativeKernelSpec(JupyterApp):
     description = """[DEPRECATED] Install the IPython kernel spec directory for this Python."""
     kernel_spec_manager = Instance(KernelSpecManager)
 
-    def _kernel_spec_manager_default(self):
+    @default('kernel_spec_manager')
+    def _default_kernel_spec_manager(self):
         return KernelSpecManager(data_dir=self.data_dir)
 
     user = Bool(False, config=True,

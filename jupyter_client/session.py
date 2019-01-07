@@ -21,6 +21,7 @@ import pprint
 import random
 import warnings
 from datetime import datetime
+from traitlets import default, observe
 
 try:
     import cPickle
@@ -180,19 +181,23 @@ class SessionFactory(LoggingConfigurable):
     """
 
     logname = Unicode('')
-    def _logname_changed(self, name, old, new):
+    @observe('logname')
+    def _observe_logname(self,  change):
+        new = change['new']
         self.log = logging.getLogger(new)
 
     # not configurable:
     context = Instance('zmq.Context')
-    def _context_default(self):
+    @default('context')
+    def defaultcontext(self):
         return zmq.Context.instance()
 
     session = Instance('jupyter_client.session.Session',
                        allow_none=True)
 
     loop = Instance('tornado.ioloop.IOLoop')
-    def _loop_default(self):
+    @default('loop')
+    def defaultloop(self):
         return IOLoop.current()
 
     def __init__(self, **kwargs):
@@ -310,8 +315,10 @@ class Session(Configurable):
     packer = DottedObjectName('json',config=True,
             help="""The name of the packer for serializing messages.
             Should be one of 'json', 'pickle', or an import name
-            for a custom callable serializer.""")
-    def _packer_changed(self, name, old, new):
+            for a custom callable serializer.""" )
+    @observe('packer')
+    def _observe_packer(self,  change):
+        new = change['new']
         if new.lower() == 'json':
             self.pack = json_packer
             self.unpack = json_unpacker
@@ -326,7 +333,9 @@ class Session(Configurable):
     unpacker = DottedObjectName('json', config=True,
         help="""The name of the unpacker for unserializing messages.
         Only used with custom functions for `packer`.""")
-    def _unpacker_changed(self, name, old, new):
+    @observe('unpacker')
+    def _observe_unpacker(self,  change):
+        new = change['new']
         if new.lower() == 'json':
             self.pack = json_packer
             self.unpack = json_unpacker
@@ -340,12 +349,16 @@ class Session(Configurable):
 
     session = CUnicode(u'', config=True,
         help="""The UUID identifying this session.""")
-    def _session_default(self):
+
+    @default('session')
+    @default('session')
+    def defaultsession(self):
         u = new_id()
         self.bsession = u.encode('ascii')
         return u
 
-    def _session_changed(self, name, old, new):
+    @observe('session')
+    def _observe_session(self, change):
         self.bsession = self.session.encode('ascii')
 
     # bsession is the session as bytes
@@ -365,16 +378,20 @@ class Session(Configurable):
 
     key = CBytes(config=True,
         help="""execution key, for signing messages.""")
-    def _key_default(self):
+    @default('key')
+    def _default_key(self):
         return new_id_bytes()
 
-    def _key_changed(self):
+    @observe('key')
+    def _observe_key(self, change):
         self._new_auth()
 
     signature_scheme = Unicode('hmac-sha256', config=True,
         help="""The digest scheme used to construct the message signatures.
         Must have the form 'hmac-HASH'.""")
-    def _signature_scheme_changed(self, name, old, new):
+    @observe('signature_scheme')
+    def _observe_signature_scheme(self, change):
+        new = change['new']
         if not new.startswith('hmac-'):
             raise TraitError("signature_scheme must start with 'hmac-', got %r" % new)
         hash_name = new.split('-', 1)[1]
@@ -385,7 +402,8 @@ class Session(Configurable):
         self._new_auth()
 
     digest_mod = Any()
-    def _digest_mod_default(self):
+    @default('digest_mod')
+    def defaultdigest_mod(self):
         return hashlib.sha256
     
     auth = Instance(hmac.HMAC, allow_none=True)
@@ -406,7 +424,9 @@ class Session(Configurable):
 
     keyfile = Unicode('', config=True,
         help="""path to file containing execution key.""")
-    def _keyfile_changed(self, name, old, new):
+    @observe('keyfile')
+    def _observe_keyfile(self,  change):
+        new = change['new']
         with open(new, 'rb') as f:
             self.key = f.read().strip()
 
@@ -416,12 +436,16 @@ class Session(Configurable):
     # serialization traits:
 
     pack = Any(default_packer) # the actual packer function
-    def _pack_changed(self, name, old, new):
+    @observe('pack')
+    def _observe_pack(self,  change):
+        new = change['new']
         if not callable(new):
             raise TypeError("packer must be callable, not %s"%type(new))
 
     unpack = Any(default_unpacker) # the actual packer function
-    def _unpack_changed(self, name, old, new):
+    @observe('unpack')
+    def _observe_unpack(self,  change):
+        new = change['new']
         # unpacker is not checked - it is assumed to be
         if not callable(new):
             raise TypeError("unpacker must be callable, not %s"%type(new))

@@ -11,6 +11,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 from traitlets import (
     Instance,
     Type,
+    default
 )
 
 from jupyter_client.manager import KernelManager
@@ -26,7 +27,8 @@ def as_zmqstream(f):
 class IOLoopKernelManager(KernelManager):
 
     loop = Instance('tornado.ioloop.IOLoop')
-    def _loop_default(self):
+    @default('loop')
+    def _default_loop(self):
         return ioloop.IOLoop.current()
 
     restarter_class = Type(
