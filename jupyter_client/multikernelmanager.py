@@ -7,9 +7,9 @@ from __future__ import absolute_import
 
 import os
 import uuid
-
 import zmq
 
+from tornado import gen
 from traitlets.config.configurable import LoggingConfigurable
 from ipython_genutils.importstring import import_item
 from traitlets import (
@@ -82,6 +82,7 @@ class MultiKernelManager(LoggingConfigurable):
     def __contains__(self, kernel_id):
         return kernel_id in self._kernels
 
+    @gen.coroutine
     def start_kernel(self, kernel_name=None, **kwargs):
         """Start a new kernel.
 
@@ -107,9 +108,9 @@ class MultiKernelManager(LoggingConfigurable):
                     parent=self, log=self.log, kernel_name=kernel_name,
                     **constructor_kwargs
         )
-        km.start_kernel(**kwargs)
+        yield gen.maybe_future(km.start_kernel(**kwargs))
         self._kernels[kernel_id] = km
-        return kernel_id
+        raise gen.Return(kernel_id)
 
     @kernel_method
     def shutdown_kernel(self, kernel_id, now=False, restart=False):
@@ -186,15 +187,25 @@ class MultiKernelManager(LoggingConfigurable):
         """
         self.log.info("Signaled Kernel %s with %s" % (kernel_id, signum))
 
-    @kernel_method
+    @gen.coroutine
     def restart_kernel(self, kernel_id, now=False):
         """Restart a kernel by its uuid, keeping the same ports.
 
         Parameters
         ==========
         kernel_id : uuid
-            The id of the kernel to interrupt.
+            The id of the kernel to restart.
+
+        now : bool, optional
+            If True, the kernel is forcefully restarted *immediately*, without
+            having a chance to do any cleanup action.  Otherwise the kernel is
+            given 1s to clean up before a forceful restart is issued.
+
+            In all cases the kernel is restarted, the only difference is whether
+            it is given a chance to perform a clean shutdown or not.
         """
+        km = self.get_kernel(kernel_id)
+        yield gen.maybe_future(km.restart_kernel(now))
         self.log.info("Kernel restarted: %s" % kernel_id)
 
     @kernel_method

@@ -13,7 +13,7 @@ import sys
 import time
 
 import zmq
-
+from tornado import gen
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
@@ -205,6 +205,7 @@ class KernelManager(ConnectionFileMixin):
         self._control_socket.close()
         self._control_socket = None
 
+    @gen.coroutine
     def start_kernel(self, **kw):
         """Starts a kernel on this host in a separate process.
 
@@ -246,8 +247,7 @@ class KernelManager(ConnectionFileMixin):
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
-        self.kernel = self._launch_kernel(kernel_cmd, env=env,
-                                    **kw)
+        self.kernel = yield gen.maybe_future(self._launch_kernel(kernel_cmd, env=env, **kw))
         self.start_restarter()
         self._connect_control_socket()
 
@@ -324,6 +324,7 @@ class KernelManager(ConnectionFileMixin):
 
         self.cleanup(connection_file=not restart)
 
+    @gen.coroutine
     def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
 
@@ -361,7 +362,7 @@ class KernelManager(ConnectionFileMixin):
 
             # Start new kernel.
             self._launch_args.update(kw)
-            self.start_kernel(**self._launch_args)
+            yield gen.maybe_future(self.start_kernel(**self._launch_args))
 
     @property
     def has_kernel(self):
