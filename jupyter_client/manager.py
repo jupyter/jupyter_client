@@ -27,6 +27,7 @@ from .connect import ConnectionFileMixin
 from .managerabc import (
     KernelManagerABC
 )
+from .kernelmetrics import KERNEL_METRIC_TYPES
 
 
 class KernelManager(ConnectionFileMixin):
@@ -454,6 +455,37 @@ class KernelManager(ConnectionFileMixin):
             # we don't have a kernel
             return False
 
+    def kernel_metrics(self, *desired_metrics):
+        """
+        Returns a dict containing the results of the gathered
+        statistics.
+
+        Parameters
+        ----------
+
+        *desired_metrics: A list of strings representing the kinds of
+                metrics they are interested in polling.
+
+        Usage
+        -----
+        >>> ks = km.kernel_metrics("memory_usage", "latency")
+        The function call above will return a dict with two key-value
+        pairs (assuming there are function to gather those stats).
+        The keys are exactly the same as the inputs.
+        >>> print ks["memory_usage"]
+        Line above will print the memory usage of the kernel.
+
+        """
+        results = {}
+        for metric_name in desired_metrics:
+            try:
+                cls = KERNEL_METRIC_TYPES[metric_name]
+            except KeyError:
+                continue
+            else:
+                metric = cls(self)
+                results[metric_name] = metric.poll()
+        return results
 
 KernelManagerABC.register(KernelManager)
 

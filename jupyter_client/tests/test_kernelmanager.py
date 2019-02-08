@@ -127,3 +127,15 @@ class TestKernelManager(TestCase):
 
         self.assertTrue(km.is_alive())
         self.assertTrue(kc.is_alive())
+
+    def test_kernel_stats(self):
+        c = Config()
+        km = KernelManager(config=c)
+        km.start_kernel(stdout=PIPE, stderr=PIPE)
+        # Call the kernel_stats function requesting the
+        # memory usage of the kernel.
+        ks = km.kernel_metrics("memory_usage")
+        km.shutdown_kernel(now=True)
+        # An arbitrary check for a value of a certain key in the result
+        # of `kernel_stats`, in this case its the memory usage one.
+        assert type(ks["memory_usage"]) is int
