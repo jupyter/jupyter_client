@@ -410,6 +410,12 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
+    def resource_info_request(self, expression):
+        msg = self.session.msg('resource_info_request', {'hi': expression})
+        self.shell_channel.send(msg)
+        return msg['header']['msg_id']
+
+
     def input(self, string):
         """Send a string of raw input to the kernel.
 
