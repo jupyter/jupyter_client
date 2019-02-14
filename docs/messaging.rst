@@ -351,9 +351,9 @@ Message type: ``execute_request``::
     # should not send these messages.
     'allow_stdin' : True,
 
-    # A boolean flag, which, if True, does not abort the execution queue, if an exception is encountered.
-    # This allows the queued execution of multiple execute_requests, even if they generate exceptions.
-    'stop_on_error' : False,
+    # A boolean flag, which, if True, aborts the execution queue if an exception is encountered.
+    # If False, queued execute_requests will execute even if this request generates an exception.
+    'stop_on_error' : True,
     }
 
 .. versionchanged:: 5.0
