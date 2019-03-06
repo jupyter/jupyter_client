@@ -143,7 +143,7 @@ JSON serialised dictionary containing the following keys and values:
   These will be added to the current environment variables before the kernel is
   started.
 - **metadata** (optional): A dictionary of additional attributes about this
-  kernel; used by clients to aid clients in kernel selection. Metadata added
+  kernel; used by clients to aid in kernel selection. Metadata added
   here should be namespaced for the tool reading and writing that metadata.
 
 For example, the kernel.json file for IPython looks like this::
