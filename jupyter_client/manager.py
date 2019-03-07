@@ -13,7 +13,7 @@ import sys
 import time
 
 import zmq
-
+from tornado import gen
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
@@ -192,6 +192,15 @@ class KernelManager(ConnectionFileMixin):
         """
         return launch_kernel(kernel_cmd, **kw)
 
+    @gen.coroutine
+    def launch_kernel_async(self, kernel_cmd, **kw):
+        """actually launch the kernel
+
+        override in a subclass to launch kernel subprocesses differently
+        """
+        res = yield gen.maybe_future(launch_kernel(kernel_cmd, **kw))
+        raise gen.Return(res)
+
     # Control socket used for polite kernel shutdown
 
     def _connect_control_socket(self):
@@ -205,8 +214,8 @@ class KernelManager(ConnectionFileMixin):
         self._control_socket.close()
         self._control_socket = None
 
-    def start_kernel(self, **kw):
-        """Starts a kernel on this host in a separate process.
+    def pre_start_kernel(self, **kw):
+        """Prepares a kernel for startup in a separate process.
 
         If random ports (port=0) are being used, this method must be called
         before the channels are created.
@@ -243,13 +252,52 @@ class KernelManager(ConnectionFileMixin):
             env.update(self.kernel_spec.env or {})
         elif self.extra_env:
             env.update(self.extra_env)
+        kw['env'] = env
+
+        return kernel_cmd, kw
+
+    def post_start_kernel(self, **kw):
+        self.start_restarter()
+        self._connect_control_socket()
+
+    def start_kernel(self, **kw):
+        """Starts a kernel on this host in a separate process.
+
+        If random ports (port=0) are being used, this method must be called
+        before the channels are created.
+
+        Parameters
+        ----------
+        `**kw` : optional
+             keyword arguments that are passed down to build the kernel_cmd
+             and launching the kernel (e.g. Popen kwargs).
+        """
+        kernel_cmd, kw = self.pre_start_kernel(**kw)
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
-        self.kernel = self._launch_kernel(kernel_cmd, env=env,
-                                    **kw)
-        self.start_restarter()
-        self._connect_control_socket()
+        self.kernel = self._launch_kernel(kernel_cmd, **kw)
+        self.post_start_kernel(**kw)
+
+    @gen.coroutine
+    def start_kernel_async(self, **kw):
+        """Starts a kernel in a separate process in an asynchronous manner.
+
+        If random ports (port=0) are being used, this method must be called
+        before the channels are created.
+
+        Parameters
+        ----------
+        `**kw` : optional
+             keyword arguments that are passed down to build the kernel_cmd
+             and launching the kernel (e.g. Popen kwargs).
+        """
+        kernel_cmd, kw = self.pre_start_kernel(**kw)
+
+        # launch the kernel subprocess
+        self.log.debug("Starting kernel (async): %s", kernel_cmd)
+        self.kernel = yield self.launch_kernel_async(kernel_cmd, **kw)
+        self.post_start_kernel(**kw)
 
     def request_shutdown(self, restart=False):
         """Send a shutdown request via control channel

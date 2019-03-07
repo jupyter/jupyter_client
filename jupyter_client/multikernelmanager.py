@@ -10,6 +10,7 @@ import uuid
 
 import zmq
 
+from tornado import gen
 from traitlets.config.configurable import LoggingConfigurable
 from ipython_genutils.importstring import import_item
 from traitlets import (
@@ -82,14 +83,8 @@ class MultiKernelManager(LoggingConfigurable):
     def __contains__(self, kernel_id):
         return kernel_id in self._kernels
 
-    def start_kernel(self, kernel_name=None, **kwargs):
-        """Start a new kernel.
-
-        The caller can pick a kernel_id by passing one in as a keyword arg,
-        otherwise one will be generated using new_kernel_id().
-
-        The kernel ID for the newly started kernel is returned.
-        """
+    def pre_start_kernel(self, kernel_name=None, **kwargs):
+        """Prepare kernel manager for startup """
         kernel_id = kwargs.pop('kernel_id', self.new_kernel_id(**kwargs))
         if kernel_id in self:
             raise DuplicateKernelError('Kernel already exists: %s' % kernel_id)
@@ -107,9 +102,34 @@ class MultiKernelManager(LoggingConfigurable):
                     parent=self, log=self.log, kernel_name=kernel_name,
                     **constructor_kwargs
         )
+        return kernel_id, km
+
+    def start_kernel(self, kernel_name=None, **kwargs):
+        """Start a new kernel.
+
+        The caller can pick a kernel_id by passing one in as a keyword arg,
+        otherwise one will be generated using new_kernel_id().
+
+        The kernel ID for the newly started kernel is returned.
+        """
+        kernel_id, km = self.pre_start_kernel(kernel_name, **kwargs)
         km.start_kernel(**kwargs)
         self._kernels[kernel_id] = km
         return kernel_id
+
+    @gen.coroutine
+    def start_kernel_async(self, kernel_name=None, **kwargs):
+        """Start a new kernel asynchronously.
+
+        The caller can pick a kernel_id by passing one in as a keyword arg,
+        otherwise one will be generated using new_kernel_id().
+
+        The kernel ID for the newly started kernel is returned.
+        """
+        kernel_id, km = self.pre_start_kernel(kernel_name, **kwargs)
+        yield km.start_kernel_async(**kwargs)
+        self._kernels[kernel_id] = km
+        raise gen.Return(kernel_id)
 
     @kernel_method
     def shutdown_kernel(self, kernel_id, now=False, restart=False):
