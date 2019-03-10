@@ -4,7 +4,7 @@ from ._version import version_info, __version__, protocol_version_info, protocol
 from .connect import *
 from .launcher import *
 from .client import KernelClient
-from .manager import KernelManager, run_kernel
+from .manager import KernelManager, AsyncKernelManager, run_kernel
 from .blocking import BlockingKernelClient
 from .asynchronous import AsyncKernelClient
-from .multikernelmanager import MultiKernelManager
+from .multikernelmanager import MultiKernelManager, AsyncMultiKernelManager

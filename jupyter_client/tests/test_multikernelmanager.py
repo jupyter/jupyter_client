@@ -7,10 +7,12 @@ import multiprocessing as mp
 
 from subprocess import PIPE
 from unittest import TestCase
-from traitlets.config.loader import Config
-from jupyter_client import KernelManager
-from jupyter_client.multikernelmanager import MultiKernelManager
+from tornado.testing import AsyncTestCase, gen_test, gen
 
+from traitlets.config.loader import Config
+from ..localinterfaces import localhost
+from jupyter_client import KernelManager, AsyncKernelManager
+from jupyter_client.multikernelmanager import MultiKernelManager, AsyncMultiKernelManager
 from .utils import skip_win32
 from ..localinterfaces import localhost
 
@@ -130,3 +132,88 @@ class TestKernelManager(TestCase):
             proc.join()
 
         assert proc.exitcode == 0
+
+
+class TestAsyncKernelManager(AsyncTestCase):
+
+    def _get_tcp_km(self):
+        c = Config()
+        km = AsyncMultiKernelManager(config=c)
+        return km
+
+    def _get_ipc_km(self):
+        c = Config()
+        c.KernelManager.transport = 'ipc'
+        c.KernelManager.ip = 'test'
+        km = AsyncMultiKernelManager(config=c)
+        return km
+
+    @gen.coroutine
+    def _run_lifecycle(self, km):
+        kid = yield km.start_kernel(stdout=PIPE, stderr=PIPE)
+        is_alive = yield km.is_alive(kid)
+        self.assertTrue(is_alive)
+        self.assertTrue(kid in km)
+        self.assertTrue(kid in km.list_kernel_ids())
+        self.assertEqual(len(km),1)
+        yield km.restart_kernel(kid, now=True)
+        is_alive = yield km.is_alive(kid)
+        self.assertTrue(is_alive)
+        self.assertTrue(kid in km.list_kernel_ids())
+        yield km.interrupt_kernel(kid)
+        k = km.get_kernel(kid)
+        self.assertTrue(isinstance(k, KernelManager))
+        yield km.shutdown_kernel(kid, now=True)
+        self.assertNotIn(kid, km)
+
+    @gen.coroutine
+    def _run_cinfo(self, km, transport, ip):
+        kid = yield km.start_kernel(stdout=PIPE, stderr=PIPE)
+        k = km.get_kernel(kid)
+        cinfo = km.get_connection_info(kid)
+        self.assertEqual(transport, cinfo['transport'])
+        self.assertEqual(ip, cinfo['ip'])
+        self.assertTrue('stdin_port' in cinfo)
+        self.assertTrue('iopub_port' in cinfo)
+        stream = km.connect_iopub(kid)
+        stream.close()
+        self.assertTrue('shell_port' in cinfo)
+        stream = km.connect_shell(kid)
+        stream.close()
+        self.assertTrue('hb_port' in cinfo)
+        stream = km.connect_hb(kid)
+        stream.close()
+        yield km.shutdown_kernel(kid, now=True)
+        self.assertNotIn(kid, km)
+
+    @gen_test
+    def test_tcp_lifecycle(self):
+        km = self._get_tcp_km()
+        yield self._run_lifecycle(km)
+
+    @gen_test
+    def test_shutdown_all(self):
+        km = self._get_tcp_km()
+        kid = yield km.start_kernel(stdout=PIPE, stderr=PIPE)
+        self.assertIn(kid, km)
+        yield km.shutdown_all()
+        self.assertNotIn(kid, km)
+        # shutdown again is okay, because we have no kernels
+        yield km.shutdown_all()
+
+    @gen_test
+    def test_tcp_cinfo(self):
+        km = self._get_tcp_km()
+        yield self._run_cinfo(km, 'tcp', localhost())
+
+    @skip_win32
+    @gen_test
+    def test_ipc_lifecycle(self):
+        km = self._get_ipc_km()
+        yield self._run_lifecycle(km)
+
+    @skip_win32
+    @gen_test
+    def test_ipc_cinfo(self):
+        km = self._get_ipc_km()
+        yield self._run_cinfo(km, 'ipc', 'test')
