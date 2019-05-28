@@ -154,6 +154,7 @@ class BlockingKernelClient(KernelClient):
             return reply
 
 
+    fork = reqrep(KernelClient.fork)
     execute = reqrep(KernelClient.execute)
     history = reqrep(KernelClient.history)
     complete = reqrep(KernelClient.complete)
