@@ -27,7 +27,7 @@ from .connect import ConnectionFileMixin
 from .managerabc import (
     KernelManagerABC
 )
-from .kernelmetrics import KERNEL_METRIC_TYPES
+from .kernelmetrics import KernelMetricStore
 
 
 class KernelManager(ConnectionFileMixin):
@@ -479,7 +479,7 @@ class KernelManager(ConnectionFileMixin):
         results = {}
         for metric_name in desired_metrics:
             try:
-                cls = KERNEL_METRIC_TYPES[metric_name]
+                cls = KernelMetricStore.TYPES[metric_name]
             except KeyError:
                 continue
             else:

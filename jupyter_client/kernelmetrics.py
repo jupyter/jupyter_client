@@ -5,19 +5,45 @@ import re
 METRIC_NAME_PREFIX = "KernelMetric"
 
 
-class KernelMetricMeta(ABCMeta):
+class KernelMetricStore(ABCMeta):
     """
-    Meta class for all of the kernel metric classes.
-    When defining a class, will check for its name, that it has the
-    predefined prefix.
-    If not, throws an assertion error.
+    KernelMetricStore Is acting as a store of all the metric classes created using KernelMetric base class.
+    TYPES is a dictionary that maps the names of the metrics to the metric classes themselves.
+
+    Additionally it defines defines a standard for how kernel metric classes should be named.
+    Example:
+    If the name of the class that exposes a metric is "KernelMetricMemoryUsage",
+    the dictionary will remove the must have prefix "KernelMetric",
+    split the rest by camel case letters with a "_" delimiter, and then turn them all to lower case.
+    the name that maps to the class of the metric will be "memory_usage".
+
+    *ALL KERNEL METRIC CLASSES MUST INHERIT FROM THE BASE CLASS `KernelMetric`
+    *ALL KERNEL METRIC CLASSES MUST HAVE THE PREFIX IN THEIR NAME
+
+    When we define a metric class to inherit from the `KernelMetric`, this class will automatically
+    check that its name has the need prefix, and will add it to the TYPES dict.
     """
+    TYPES = {}
+
     def __new__(mcs, name, bases, dct):
+        mcs._check_name_prefix(mcs, name)
+        new_metric_class = super(KernelMetricStore, mcs).__new__(mcs, name, bases, dct)
+        if new_metric_class.__name__ == "KernelMetric":
+            return new_metric_class
+        mcs._add_new_metric(mcs, new_metric_class)
+        return new_metric_class
+
+    def _add_new_metric(self, new_metric):
+        metric_name = new_metric.__name__[len(METRIC_NAME_PREFIX):]
+        metric_name = re.sub('(?!^)([A-Z][a-z]+)', r' \1', metric_name).split()
+        metric_name = "_".join(metric_name).lower()
+        self.TYPES[metric_name] = new_metric
+
+    def _check_name_prefix(self, name):
         assert name.startswith(METRIC_NAME_PREFIX)
-        return super(KernelMetricMeta, mcs).__new__(mcs, name, bases, dct)
 
 
-@add_metaclass(KernelMetricMeta)
+@add_metaclass(KernelMetricStore)
 class KernelMetric(object):
     """
     An abstract base class for all of the metric classes.
@@ -52,29 +78,4 @@ class KernelMetricMemoryUsage(KernelMetric):
 
     def _bytes_to_mb(self, num):
         return int(num / 1024 ** 2)
-
-
-"""
-KERNEL_METRIC_TYPES is a dictionary that maps the names of the metrics
-to the metric classes themselves.
-
-Example:
-If the name of the class that exposes a metric is "KernelMetricMemoryUsage",
-the dictionary will remove the must have prefix "KernelMetric", 
-split the rest by camel case letters with a "_" delimiter, and then turn them all to lower case.
-the name that maps to the class of the metric will be "memory_usage".
-
-*ALL KERNEL METRIC CLASSES MUST BE DEFINED ABOVE, INHERITING FROM THE BASE CLASS `KernelMetric`
-*ALL KERNEL METRIC CLASSES MUST HAVE THE PREFIX DEFINED AT THE TOP OF THE FILE
-*ALL KERNEL METRIC CLASSES MUST RECEIVE ONLY THE KERNEL MANAGER AS ITS FIRST AND ONLY PARAMETER
-*ALL KERNEL METRIC CLASSES MUST DEFINE THE `poll` METHOD THAT RETURNS THE DESIRED METRIC
-"""
-KERNEL_METRIC_TYPES = {}
-for cls in KernelMetric.__subclasses__():
-    metric_name = cls.__name__[len(METRIC_NAME_PREFIX):]
-    metric_name = re.sub('(?!^)([A-Z][a-z]+)', r' \1', metric_name).split()
-    metric_name = "_".join(metric_name).lower()
-    KERNEL_METRIC_TYPES[metric_name] = cls
-
-
 
