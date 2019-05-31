@@ -8,10 +8,10 @@ A 'kernel' is a program that runs and introspects the user's code. IPython
 includes a kernel for Python code, and people have written kernels for
 `several other languages <https://github.com/jupyter/jupyter/wiki/Jupyter-kernels>`_.
 
-When Jupyter starts a kernel, it passes it a connection file. This specifies
+At kernel startup, Jupyter passes the kernel a connection file. This specifies
 how to set up communications with the frontend.
 
-There are two options for writing a kernel:
+There are three options for writing a kernel:
 
 1. You can reuse the IPython kernel machinery to handle the communications, and
    just describe how to execute your code. This is much simpler if the target
@@ -19,6 +19,17 @@ There are two options for writing a kernel:
 2. You can implement the kernel machinery in your target language. This is more
    work initially, but the people using your kernel might be more likely to
    contribute to it if it's in the language they know.
+3. You can use the `xeus <https://github.com/QuantStack/xeus>`_ library that is
+   a C++ implementation of the Jupyter kernel protocol. Kernel authors only need to
+   implement the language-specific logic in their implementation
+   (execute code, auto-completion...). This is the simplest
+   solution if your target language can be driven from C or C++: e.g. if it has
+   a C-API like most scripting languages. Check out the
+   `xeus documentation <https://xeus.readthedocs.io/>`_ for more details.
+   Examples of kernels based on xeus include:
+     - `xeus-cling <https://github.com/QuantStack/xeus-cling>`_
+     - `xeus-python <https://github.com/QuantStack/xeus-python>`_
+     - `JuniperKernel <https://github.com/JuniperKernel/JuniperKernel>`_
 
 Connection files
 ================
@@ -143,7 +154,7 @@ JSON serialised dictionary containing the following keys and values:
   These will be added to the current environment variables before the kernel is
   started.
 - **metadata** (optional): A dictionary of additional attributes about this
-  kernel; used by clients to aid clients in kernel selection. Metadata added
+  kernel; used by clients to aid in kernel selection. Metadata added
   here should be namespaced for the tool reading and writing that metadata.
 
 For example, the kernel.json file for IPython looks like this::
