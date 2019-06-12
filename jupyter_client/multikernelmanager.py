@@ -285,6 +285,22 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
+    def connect_control(self, kernel_id, identity=None):
+        """Return a zmq Socket connected to the control channel.
+
+        Parameters
+        ==========
+        kernel_id : uuid
+            The id of the kernel
+        identity : bytes (optional)
+            The zmq identity of the socket
+
+        Returns
+        =======
+        stream : zmq Socket or ZMQStream
+        """
+
+    @kernel_method
     def connect_stdin(self, kernel_id, identity=None):
         """Return a zmq Socket connected to the stdin channel.
 
