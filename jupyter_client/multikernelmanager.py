@@ -47,7 +47,7 @@ class MultiKernelManager(LoggingConfigurable):
     )
 
     kernel_spec_manager = Instance(KernelSpecManager, allow_none=True)
-    
+
     kernel_manager_class = DottedObjectName(
         "jupyter_client.ioloop.IOLoopKernelManager", config=True,
         help="""The kernel manager class.  This is configurable to allow
@@ -63,7 +63,7 @@ class MultiKernelManager(LoggingConfigurable):
 
     context = Instance('zmq.Context')
     def _context_default(self):
-        return zmq.Context.instance()
+        return zmq.Context()
 
     connection_dir = Unicode('')
 
