@@ -83,7 +83,7 @@ class TestSession(SessionTestCase):
         self.assertIsInstance(self.session.auth, hmac.HMAC)
 
     def test_send(self):
-        ctx = zmq.Context.instance()
+        ctx = zmq.Context()
         A = ctx.socket(zmq.PAIR)
         B = ctx.socket(zmq.PAIR)
         A.bind("inproc://test")
@@ -316,7 +316,7 @@ class TestSession(SessionTestCase):
         self._datetime_test(session)
 
     def test_send_raw(self):
-        ctx = zmq.Context.instance()
+        ctx = zmq.Context()
         A = ctx.socket(zmq.PAIR)
         B = ctx.socket(zmq.PAIR)
         A.bind("inproc://test")
