@@ -1,14 +1,21 @@
 """Tests for the notebook kernel and session manager."""
 
-from subprocess import PIPE
+import os
 import time
-from unittest import TestCase
+import threading
+import multiprocessing as mp
 
+from subprocess import PIPE
+from unittest import TestCase
 from traitlets.config.loader import Config
-from ..localinterfaces import localhost
 from jupyter_client import KernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager
+
 from .utils import skip_win32
+from ..localinterfaces import localhost
+
+TIMEOUT = 30
+
 
 class TestKernelManager(TestCase):
 
@@ -83,3 +90,43 @@ class TestKernelManager(TestCase):
     def test_ipc_cinfo(self):
         km = self._get_ipc_km()
         self._run_cinfo(km, 'ipc', 'test')
+
+    def test_start_sequence_tcp_kernels(self):
+        """Ensure that a sequence of kernel startups doesn't break anything."""
+        self._run_lifecycle(self._get_tcp_km())
+        self._run_lifecycle(self._get_tcp_km())
+        self._run_lifecycle(self._get_tcp_km())
+
+
+    def test_start_sequence_tcp_kernels(self):
+        """Ensure that a sequence of kernel startups doesn't break anything."""
+        self._run_lifecycle(self._get_ipc_km())
+        self._run_lifecycle(self._get_ipc_km())
+        self._run_lifecycle(self._get_ipc_km())
+
+    def test_start_parallel_thread_kernels(self):
+        self.test_tcp_lifecycle()
+
+        thread = threading.Thread(target=self.test_tcp_lifecycle)
+        thread2 = threading.Thread(target=self.test_tcp_lifecycle)
+        try:
+            thread.start()
+            thread2.start()
+        finally:
+            thread.join()
+            thread2.join()
+
+    def test_start_parallel_process_kernels(self):
+        self.test_tcp_lifecycle()
+
+        thread = threading.Thread(target=self.test_tcp_lifecycle)
+        proc = mp.Process(target=self.test_tcp_lifecycle)
+
+        try:
+            thread.start()
+            proc.start()
+        finally:
+            thread.join()
+            proc.join()
+
+        assert proc.exitcode == 0
