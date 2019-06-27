@@ -1,11 +1,10 @@
 dist: xenial
 language: python
 python:
-    - "nightly"
-    - "3.8"
-    - "3.7"
-    - "3.6"
-    - "3.5"
+    - 3.6
+    - 3.5
+    - 2.7
+sudo: false
 install:
   - |
     # install pip 10 on python 3.3
