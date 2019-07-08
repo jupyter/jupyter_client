@@ -634,6 +634,11 @@ Message type: ``complete_request``::
 Message type: ``complete_reply``::
 
     content = {
+    # status should be 'ok' unless an exception was raised during the request,
+    # in which case it should be 'error', along with the usual error message content
+    # in other messages.
+    'status' : 'ok'
+
     # The list of all matches to the completion request, such as
     # ['a.isalnum', 'a.isalpha'] for the above example.
     'matches' : list,
@@ -645,11 +650,6 @@ Message type: ``complete_reply``::
 
     # Information that frontend plugins might use for extra display information about completions.
     'metadata' : dict,
-
-    # status should be 'ok' unless an exception was raised during the request,
-    # in which case it should be 'error', along with the usual error message content
-    # in other messages.
-    'status' : 'ok'
     }
 
 .. versionchanged:: 5.0
@@ -855,6 +855,9 @@ Message type: ``kernel_info_request``::
 Message type: ``kernel_info_reply``::
 
     content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status' : 'ok',
+
         # Version of messaging protocol.
         # The first integer indicates major version.  It is incremented when
         # there is any backward incompatible change.
