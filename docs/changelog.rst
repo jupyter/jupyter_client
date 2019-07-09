@@ -4,6 +4,30 @@
 Changes in Jupyter Client
 =========================
 
+5.3.1
+=====
+
+- Fix bug with control channel socket introduced in 5.3.0 (:ghpull:`456`).
+
+5.3.0
+=====
+`5.3.0 on GitHub <https://github.com/jupyter/jupyter_client/milestones/5.3.0>`__
+
+New Features:
+
+- Multiprocessing and Threading support (:ghpull:`437`) and (:ghpull:`450`)
+- Setup package long_description (:ghpull:`411`) 
+
+Changes:
+
+- Control channel now in the public API (:ghpull:`447`)
+- Closing Jupyter Client is now faster (:ghpull:`420`)
+- Pip support improvements (:ghpull:`421`)
+
+Breaking changes:
+
+- Dropped support for Python 3.3 and 3.4 (upstream packages dropped support already)
+
 5.2.4
 =====
 
