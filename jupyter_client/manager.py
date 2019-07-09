@@ -207,7 +207,7 @@ class KernelManager(ConnectionFileMixin):
 
     def _connect_control_socket(self):
         if self._control_socket is None:
-            self._control_socket = self.connect_control()
+            self._control_socket = self._create_connected_socket('control')
             self._control_socket.linger = 100
 
     def _close_control_socket(self):
