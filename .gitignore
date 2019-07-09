@@ -14,7 +14,6 @@ __pycache__
 .coverage
 .cache
 absolute.json
-*.swp
 
 # Sphinx documentation
 _build
