@@ -30,7 +30,7 @@ from ipython_genutils.py3compat import (
     bytes_to_str, cast_bytes, cast_bytes_py2, string_types,
 )
 from traitlets import (
-    Bool, Integer, Unicode, CaselessStrEnum, Instance, Type,
+    Bool, Integer, Unicode, CaselessStrEnum, Instance, Type, observe
 )
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
 
@@ -327,8 +327,9 @@ class ConnectionFileMixin(LoggingConfigurable):
         else:
             return localhost()
 
-    def _ip_changed(self, name, old, new):
-        if new == '*':
+    @observe('ip')
+    def _ip_changed(self, change):
+        if change['new'] == '*':
             self.ip = '0.0.0.0'
 
     # protected traits

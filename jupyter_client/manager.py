@@ -18,7 +18,8 @@ import zmq
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
-    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName
+    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName,
+    observe
 )
 from jupyter_client import (
     launch_kernel,
@@ -47,8 +48,9 @@ class KernelManager(ConnectionFileMixin):
     def _client_factory_default(self):
         return import_item(self.client_class)
 
-    def _client_class_changed(self, name, old, new):
-        self.client_factory = import_item(str(new))
+    @observe('client_class')
+    def _client_class_changed(self, change):
+        self.client_factory = import_item(str(change['new']))
 
     # The kernel process with which the KernelManager is communicating.
     # generally a Popen instance
@@ -69,9 +71,10 @@ class KernelManager(ConnectionFileMixin):
 
     kernel_name = Unicode(kernelspec.NATIVE_KERNEL_NAME)
 
-    def _kernel_name_changed(self, name, old, new):
+    @observe('kernel_name')
+    def _kernel_name_changed(self, change):
         self._kernel_spec = None
-        if new == 'python':
+        if change['new'] == 'python':
             self.kernel_name = kernelspec.NATIVE_KERNEL_NAME
 
     _kernel_spec = None
