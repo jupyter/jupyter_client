@@ -1,11 +1,12 @@
+dist: xenial
 language: python
 python:
     - "nightly"
-    - "3.7-dev"
-    - 3.6
-    - 3.5
-    - 2.7
-sudo: false
+    - "3.8-dev"
+    - "3.7"
+    - "3.6"
+    - "3.5"
+    - "2.7"
 install:
   - pip install --upgrade setuptools pip
   - pip install --upgrade --upgrade-strategy eager --pre -e .[test] pytest-cov codecov 'coverage<5'
