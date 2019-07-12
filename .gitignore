@@ -14,6 +14,7 @@ __pycache__
 .coverage
 .cache
 absolute.json
+htmlcov/
 
 # Sphinx documentation
 _build

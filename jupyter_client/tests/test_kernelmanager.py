@@ -131,7 +131,7 @@ class TestKernelManager(TestCase):
         self.assertTrue(km.is_alive())
         self.assertTrue(kc.is_alive())
 
-@pytest.mark.parallel
+
 class TestParallel:
 
     @pytest.fixture(autouse=True)
