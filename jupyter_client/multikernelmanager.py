@@ -13,7 +13,7 @@ import zmq
 from traitlets.config.configurable import LoggingConfigurable
 from ipython_genutils.importstring import import_item
 from traitlets import (
-    Instance, Dict, List, Unicode, Any, DottedObjectName
+    Instance, Dict, Unicode, Any, DottedObjectName, observe
 )
 from ipython_genutils.py3compat import unicode_type
 
@@ -54,8 +54,10 @@ class MultiKernelManager(LoggingConfigurable):
         subclassing of the KernelManager for customized behavior.
         """
     )
-    def _kernel_manager_class_changed(self, name, old, new):
-        self.kernel_manager_factory = import_item(new)
+
+    @observe('kernel_manager_class')
+    def _kernel_manager_class_changed(self, change):
+        self.kernel_manager_factory = import_item(change['new'])
 
     kernel_manager_factory = Any(help="this is kernel_manager_class after import")
     def _kernel_manager_factory_default(self):

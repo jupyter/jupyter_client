@@ -5,7 +5,7 @@
 
 from __future__ import absolute_import
 
-from zmq.eventloop import ioloop
+from tornado import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets import (
