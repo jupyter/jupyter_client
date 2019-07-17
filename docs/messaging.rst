@@ -325,6 +325,9 @@ All reply messages have a ``'status'`` field, which will have one of the followi
   but with no information about the error.
   No fields should be present other that `status`.
 
+As a special case, ``execute_reply`` messages (see :ref:`execution_results`)
+have an ``execution_count`` field regardless of their status.
+
 .. versionchanged:: 5.1
 
     ``status='abort'`` has not proved useful, and is considered deprecated.
