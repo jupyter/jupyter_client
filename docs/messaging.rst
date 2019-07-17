@@ -1187,7 +1187,7 @@ Message type: ``error``::
 
     content = {
        # Similar content to the execute_reply messages for the 'error' case,
-       # except the 'status' field is omitted.
+       # except the 'status' and 'execution_count' fields are omitted.
     }
 
 .. versionchanged:: 5.0
