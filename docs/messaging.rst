@@ -1228,7 +1228,8 @@ Message type: ``status``::
     content = {
         # When the kernel starts to handle a message, it will enter the 'busy'
         # state and when it finishes, it will enter the 'idle' state.
-        execution_state : ('busy', 'idle', other optional states)
+        # The kernel will publish state 'starting' exactly once at process startup.
+        execution_state : ('busy', 'idle', 'starting')
     }
 
 When a kernel receives a request and begins processing it,
@@ -1238,10 +1239,6 @@ and has finished publishing associated IOPub messages, if any,
 it shall publish a status message with ``execution_state: 'idle'``.
 Thus, the outputs associated with a given execution shall generally arrive
 between the busy and idle status messages associated with a given request.
-
-A kernel may send optional status messages with execution states other than
-`busy` or `idle`. For example, a kernel may send a status message with a
-`starting` execution state exactly once at process startup.
 
 .. note::
 
