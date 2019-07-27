@@ -47,12 +47,16 @@ class KernelClientABC(with_metaclass(abc.ABCMeta, object)):
     def stdin_channel_class(self):
         pass
 
+    @abc.abstractproperty
+    def control_channel_class(self):
+        pass
+
     #--------------------------------------------------------------------------
     # Channel management methods
     #--------------------------------------------------------------------------
 
     @abc.abstractmethod
-    def start_channels(self, shell=True, iopub=True, stdin=True, hb=True):
+    def start_channels(self, shell=True, iopub=True, stdin=True, hb=True, control=True):
         pass
 
     @abc.abstractmethod
@@ -77,4 +81,8 @@ class KernelClientABC(with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def hb_channel(self):
+        pass
+
+    @abc.abstractproperty
+    def control_channel(self):
         pass

@@ -72,6 +72,7 @@ app_aliases = dict(
     shell = 'JupyterConsoleApp.shell_port',
     iopub = 'JupyterConsoleApp.iopub_port',
     stdin = 'JupyterConsoleApp.stdin_port',
+    control = 'JupyterConsoleApp.control_port',
     existing = 'JupyterConsoleApp.existing',
     f = 'JupyterConsoleApp.connection_file',
 
@@ -222,7 +223,8 @@ class JupyterConsoleApp(ConnectionFileMixin):
                     shell_port=self.shell_port,
                     iopub_port=self.iopub_port,
                     stdin_port=self.stdin_port,
-                    hb_port=self.hb_port
+                    hb_port=self.hb_port,
+                    control_port=self.control_port
         )
         
         self.log.info("Forwarding connections to %s via %s"%(ip, self.sshserver))
@@ -236,7 +238,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
             self.log.error("Could not setup tunnels", exc_info=True)
             self.exit(1)
         
-        self.shell_port, self.iopub_port, self.stdin_port, self.hb_port = newports
+        self.shell_port, self.iopub_port, self.stdin_port, self.hb_port, self.control_port = newports
         
         cf = self.connection_file
         root, ext = os.path.splitext(cf)
@@ -275,6 +277,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
                                     iopub_port=self.iopub_port,
                                     stdin_port=self.stdin_port,
                                     hb_port=self.hb_port,
+                                    control_port=self.control_port,
                                     connection_file=self.connection_file,
                                     kernel_name=self.kernel_name,
                                     parent=self,
@@ -300,6 +303,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         self.iopub_port=km.iopub_port
         self.stdin_port=km.stdin_port
         self.hb_port=km.hb_port
+        self.control_port=km.control_port
         self.connection_file = km.connection_file
 
         atexit.register(self.kernel_manager.cleanup_connection_file)
@@ -316,6 +320,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
                                 iopub_port=self.iopub_port,
                                 stdin_port=self.stdin_port,
                                 hb_port=self.hb_port,
+                                control_port=self.control_port,
                                 connection_file=self.connection_file,
                                 parent=self,
             )

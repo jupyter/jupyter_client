@@ -122,9 +122,28 @@ A message is defined by the following four-dictionary structure::
       'buffers': list,
     }
 
+.. note::
+
+    The ``session`` id in a message header identifies a unique entity with state,
+    such as a kernel process or client process.
+
+    A client session id, in message headers from a client, should be unique among
+    all clients connected to a kernel. When a client reconnects to a kernel, it
+    should use the same client session id in its message headers. When a client
+    restarts, it should generate a new client session id.
+
+    A kernel session id, in message headers from a kernel, should identify a
+    particular kernel process. If a kernel is restarted, the kernel session id
+    should be regenerated.
+
+    The session id in a message header can be used to identify the sending entity.
+    For example, if a client disconnects and reconnects to a kernel, and messages
+    from the kernel have a different kernel session id than prior to the disconnect,
+    the client should assume that the kernel was restarted.
+
 .. versionchanged:: 5.0
 
-   ``version`` key added to the header.
+    ``version`` key added to the header.
 
 .. versionchanged:: 5.1
 
@@ -139,8 +158,9 @@ Compatibility
 =============
 
 Kernels must implement the :ref:`execute <execute>` and :ref:`kernel info
-<msging_kernel_info>` messages in order to be usable. All other message types
-are optional, although we recommend implementing :ref:`completion
+<msging_kernel_info>` messages, along with the associated busy and idle
+:ref:`status` messages. All other message types are
+optional, although we recommend implementing :ref:`completion
 <msging_completion>` if possible. Kernels do not need to send any reply for
 messages they don't handle, and frontends should provide sensible behaviour if
 no reply arrives (except for the required execution and kernel info messages).
@@ -940,8 +960,7 @@ multiple cases:
 
 The client sends a shutdown request to the kernel, and once it receives the
 reply message (which is otherwise empty), it can assume that the kernel has
-completed shutdown safely.  The request can be sent on either the `control` or
-`shell` channels.
+completed shutdown safely.  The request is sent on the `control` channel.
 
 Upon their own shutdown, client applications will typically execute a last
 minute sanity check and forcefully terminate any kernel that is still alive, to
@@ -964,6 +983,12 @@ Message type: ``shutdown_reply``::
    When the clients detect a dead kernel thanks to inactivity on the heartbeat
    socket, they simply send a forceful process termination signal, since a dead
    process is unlikely to respond in any useful way to messages.
+
+.. versionchanged:: 5.4
+
+    Sending a ``shutdown_request`` message on the ``shell`` channel is deprecated.
+
+
 
 .. _msging_interrupt:
 
@@ -1197,6 +1222,8 @@ Message type: ``error``::
 
     ``pyerr`` renamed to ``error``
 
+.. _status:
+
 Kernel status
 -------------
 
@@ -1234,14 +1261,6 @@ between the busy and idle status messages associated with a given request.
 
     Busy and idle messages should be sent before/after handling every request,
     not just execution.
-
-.. note::
-
-    Extra status messages are added between the notebook webserver and websocket clients
-    that are not sent by the kernel. These are:
-
-    - restarting (kernel has died, but will be automatically restarted)
-    - dead (kernel has died, restarting has failed)
 
 Clear output
 ------------

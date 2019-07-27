@@ -226,7 +226,7 @@ def find_connection_file(filename='kernel-*.json', path=None, profile=None):
 def tunnel_to_kernel(connection_info, sshserver, sshkey=None):
     """tunnel connections to a kernel via ssh
 
-    This will open four SSH tunnels from localhost on this machine to the
+    This will open five SSH tunnels from localhost on this machine to the
     ports associated with the kernel.  They can be either direct
     localhost-localhost tunnels, or if an intermediate server is necessary,
     the kernel must be listening on a public IP.
@@ -246,8 +246,8 @@ def tunnel_to_kernel(connection_info, sshserver, sshkey=None):
     Returns
     -------
 
-    (shell, iopub, stdin, hb) : ints
-        The four ports on localhost that have been forwarded to the kernel.
+    (shell, iopub, stdin, hb, control) : ints
+        The five ports on localhost that have been forwarded to the kernel.
     """
     from .ssh import tunnel
     if isinstance(connection_info, string_types):
@@ -257,8 +257,8 @@ def tunnel_to_kernel(connection_info, sshserver, sshkey=None):
 
     cf = connection_info
 
-    lports = tunnel.select_random_ports(4)
-    rports = cf['shell_port'], cf['iopub_port'], cf['stdin_port'], cf['hb_port']
+    lports = tunnel.select_random_ports(5)
+    rports = cf['shell_port'], cf['iopub_port'], cf['stdin_port'], cf['hb_port'], cf['control_port']
 
     remote_ip = cf['ip']
 
