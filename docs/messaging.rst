@@ -1491,6 +1491,8 @@ Frontends claiming to implement protocol 5.2 **MUST** identify cursor_pos as the
 Kernels may choose to expect the UTF-16 offset from requests implementing protocol 5.1 and earlier, in order to behave correctly with the most popular frontends.
 But they should know that doing so *introduces* the inverse bug for the frontends that do not have this bug.
 
+As an example, use a python3 kernel and evaluate ``𨭎𨭎𨭎𨭎𨭎 = 10``.  Then type ``𨭎𨭎`` followed by the tab key and see if it properly completes.
+
 Known affected frontends (as of 2017-06):
 
 - Jupyter Notebook < 5.1
