@@ -5,6 +5,9 @@
 
 import json
 import os
+import stat
+import tempfile
+import shutil
 
 from traitlets.config import Config
 from jupyter_core.application import JupyterApp
@@ -14,6 +17,7 @@ from ipython_genutils.py3compat import str_to_bytes
 from jupyter_client import connect, KernelClient
 from jupyter_client.consoleapp import JupyterConsoleApp
 from jupyter_client.session import Session
+from jupyter_client.connect import secure_write
 
 
 class DummyConsoleApp(JupyterApp, JupyterConsoleApp):
@@ -142,7 +146,7 @@ def test_find_connection_file_local():
         abs_cf = os.path.abspath(cf)
         with open(cf, 'w') as f:
             f.write('{}')
-        
+
         for query in (
             'test.json',
             'test',
@@ -160,7 +164,7 @@ def test_find_connection_file_relative():
         abs_cf = os.path.abspath(cf)
         with open(cf, 'w') as f:
             f.write('{}')
-        
+
         for query in (
             os.path.join('.', 'subdir', 'test.json'),
             os.path.join('subdir', 'test.json'),
@@ -199,3 +203,26 @@ def test_mixin_cleanup_random_ports():
         assert not os.path.exists(filename)
         for name in dc._random_port_names:
             assert getattr(dc, name) == 0
+
+
+def test_secure_write():
+    directory = tempfile.mkdtemp()
+    fname = os.path.join(directory, 'check_perms')
+    try:
+        with secure_write(fname) as f:
+            f.write('test 1')
+        mode = os.stat(fname).st_mode
+        assert '0600' == oct(stat.S_IMODE(mode)).replace('0o', '0')
+        with open(fname, 'r') as f:
+            assert f.read() == 'test 1'
+
+        # Try changing file permissions ahead of time
+        os.chmod(fname, 0o755)
+        with secure_write(fname) as f:
+            f.write('test 2')
+        mode = os.stat(fname).st_mode
+        assert '0600' == oct(stat.S_IMODE(mode)).replace('0o', '0')
+        with open(fname, 'r') as f:
+            assert f.read() == 'test 2'
+    finally:
+        shutil.rmtree(directory)
