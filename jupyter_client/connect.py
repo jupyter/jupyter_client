@@ -47,8 +47,16 @@ def secure_write(fname):
     fname : unicode
         The path to the file to write
     """
-    with os.fdopen(os.open(fname, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600), 'w') as f:
-        yield f
+    try:
+        with os.fdopen(os.open(fname, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600), 'w') as f:
+            yield f
+    finally:
+        try:
+            # Ensure existing files have their permissions changed
+            os.chmod(fname, 0o600)
+        except:
+            os.remove(fname)
+            raise
 
 
 def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
