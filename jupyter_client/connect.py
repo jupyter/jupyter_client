@@ -19,6 +19,7 @@ import stat
 import tempfile
 import warnings
 from getpass import getpass
+from contextlib import contextmanager
 
 import zmq
 
@@ -32,6 +33,22 @@ from traitlets import (
     Bool, Integer, Unicode, CaselessStrEnum, Instance, Type, observe
 )
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir
+
+
+@contextmanager
+def secure_write(fname):
+    """Opens a file in the most restricted pattern available for
+    writing content. This limits the file mode to `600` and yields
+    the resulting opened filed handle.
+
+    Parameters
+    ----------
+
+    fname : unicode
+        The path to the file to write
+    """
+    with os.fdopen(os.open(fname, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600), 'w') as f:
+        yield f
 
 
 def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
@@ -134,7 +151,10 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
     cfg['signature_scheme'] = signature_scheme
     cfg['kernel_name'] = kernel_name
 
-    with open(fname, 'w') as f:
+    # Only ever write this file as user read/writeable
+    # This would otherwise introduce a vulnerability as a file has secrets
+    # which would let others execute arbitrarily code as you
+    with secure_write(fname) as f:
         f.write(json.dumps(cfg, indent=2))
 
     if hasattr(stat, 'S_ISVTX'):
