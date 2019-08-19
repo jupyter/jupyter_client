@@ -48,15 +48,15 @@ kernel has dedicated sockets for the following functions:
    each frontend and the kernel.
 
 2. **IOPub**: this socket is the 'broadcast channel' where the kernel publishes all
-   side effects (stdout, stderr, etc.) as well as the requests coming from any
-   client over the shell socket and its own requests on the stdin socket.  There
-   are a number of actions in Python which generate side effects: :func:`print`
-   writes to ``sys.stdout``, errors generate tracebacks, etc.  Additionally, in
-   a multi-client scenario, we want all frontends to be able to know what each
-   other has sent to the kernel (this can be useful in collaborative scenarios,
-   for example).  This socket allows both side effects and the information
-   about communications taking place with one client over the shell channel
-   to be made available to all clients in a uniform manner.
+   side effects (stdout, stderr, debugging events etc.) as well as the requests
+   coming from any client over the shell socket and its own requests on the
+   stdin socket.  There are a number of actions in Python which generate side
+   effects: :func:`print` writes to ``sys.stdout``, errors generate tracebacks,
+   etc.  Additionally, in a multi-client scenario, we want all frontends to be
+   able to know what each other has sent to the kernel (this can be useful in
+   collaborative scenarios, for example).  This socket allows both side effects
+   and the information about communications taking place with one client over
+   the shell channel to be made available to all clients in a uniform manner.
 
 3. **stdin**: this ROUTER socket is connected to all frontends, and it allows
    the kernel to request input from the active frontend when :func:`raw_input` is called.
@@ -72,8 +72,9 @@ kernel has dedicated sockets for the following functions:
    which ones are from other clients, so they can display each type
    appropriately.
 
-4. **Control**: This channel is identical to Shell, but operates on a separate socket,
-   to allow important messages to avoid queueing behind execution requests (e.g. shutdown or abort).
+4. **Control**: This channel is identical to Shell, but operates on a separate
+   socket to avoid queueing behind execution requests. The control channel is 
+   used for shutdown and restart messages, as well as for debugging messages.
 
 5. **Heartbeat**: This socket allows for simple bytestring messages to be sent
    between the frontend and the kernel to ensure that they are still connected.
@@ -837,8 +838,6 @@ Message type: ``comm_info_reply``::
 
 .. versionadded:: 5.1
 
-    ``comm_info`` is a proposed addition for msgspec v5.1.
-
 .. _msging_kernel_info:
 
 Kernel info
@@ -943,6 +942,9 @@ and `codemirror modes <http://codemirror.net/mode/index.html>`_ for those fields
 
     ``language`` moved to ``language_info.name``
 
+Messages on the Control (ROUTER/DEALER) channel
+===============================================
+
 .. _msging_shutdown:
 
 Kernel shutdown
@@ -988,8 +990,6 @@ Message type: ``shutdown_reply``::
 
     Sending a ``shutdown_request`` message on the ``shell`` channel is deprecated.
 
-
-
 .. _msging_interrupt:
 
 Kernel interrupt
@@ -1011,11 +1011,31 @@ Message type: ``interrupt_reply``::
 
 .. versionadded:: 5.3
 
+Debug request
+-------------
+
+This message type is used with debugging kernels to request specific actions
+to be performed by the debugger such as adding a breakpoint or stepping into
+a code.
+
+Message type: ``debug_request``::
+
+    content = {}
+
+Message type: ``debug_reply``::
+
+    content = {}
+
+The ``content`` dict can be any JSON information used by debugging frontends
+and kernels.
+
+Debug requests and replies are sent over the `control` channel to prevent queuing
+behind execution requests.
+
+.. versionadded:: 5.5
 
 Messages on the IOPub (PUB/SUB) channel
 =======================================
-
-
 
 Streams (stdout,  stderr, etc)
 ------------------------------
@@ -1284,6 +1304,22 @@ Message type: ``clear_output``::
     The selective clearing keys are ignored in v4 and the default behavior remains the same,
     so v4 clear_output messages will be safely handled by a v4.1 frontend.
 
+.. _debug_event:
+
+Debug event
+-----------
+
+This message type is used by debugging kernels to send debugging events to the
+frontend.
+
+Message type: ``debug_event``::
+
+    content = {}
+
+The ``content`` dict can be any JSON information used by debugging frontends.
+
+.. versionadded:: 5.5
+
 .. _stdin_messages:
 
 Messages on the stdin (ROUTER/DEALER) channel
@@ -1355,7 +1391,6 @@ Heartbeat for kernels
 Clients send ping messages on a REQ socket, which are echoed right back
 from the Kernel's REP socket. These are simple bytestrings, not full JSON messages described above.
 
-
 Custom Messages
 ===============
 
@@ -1367,8 +1402,7 @@ To do this, IPython adds a notion of a ``Comm``, which exists on both sides,
 and can communicate in either direction.
 
 These messages are fully symmetrical - both the Kernel and the Frontend can send each message,
-and no messages expect a reply.
-The Kernel listens for these messages on the Shell channel,
+and no messages expect a reply. The Kernel listens for these messages on the Shell channel,
 and the Frontend listens for them on the IOPub channel.
 
 Opening a Comm
