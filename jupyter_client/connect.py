@@ -84,7 +84,7 @@ def secure_write(fname):
     """
     try:
         os.remove(fname)
-    except IOError:
+    except (IOError, OSError):
         # Skip any issues with file not existing
         pass
 
