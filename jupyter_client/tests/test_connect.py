@@ -5,6 +5,7 @@
 
 import json
 import os
+import re
 import stat
 import tempfile
 import shutil
@@ -206,13 +207,44 @@ def test_mixin_cleanup_random_ports():
 
 
 def test_secure_write():
+    def fetch_win32_permissions(filename):
+        '''Extracts file permissions on windows using icacls'''
+        role_permissions = {}
+        for index, line in enumerate(os.popen("icacls %s" % filename).read().splitlines()):
+            if index == 0:
+                line = line.split(filename)[-1].strip().lower()
+            match = re.match(r'\s*([^:]+):\(([^\)]*)\)', line)
+            if match:
+                usergroup, permissions = match.groups()
+                usergroup = usergroup.lower().split('\\')[-1]
+                permissions = set(p.lower() for p in permissions.split(','))
+                role_permissions[usergroup] = permissions
+            elif not line.strip():
+                break
+        return role_permissions
+
+    def check_user_only_permissions(fname):
+        # Windows has it's own permissions ACL patterns
+        if os.name == 'nt':
+            import win32api
+            username = win32api.GetUserName().lower()
+            permissions = fetch_win32_permissions(fname)
+            assert username in permissions
+            assert permissions[username] == set(['r', 'w'])
+            assert 'administrators' in permissions
+            assert permissions['administrators'] == set(['f'])
+            assert 'everyone' not in permissions
+            assert len(permissions) == 2
+        else:
+            mode = os.stat(fname).st_mode
+            assert '0600' == oct(stat.S_IMODE(mode)).replace('0o', '0')
+
     directory = tempfile.mkdtemp()
     fname = os.path.join(directory, 'check_perms')
     try:
         with secure_write(fname) as f:
             f.write('test 1')
-        mode = os.stat(fname).st_mode
-        assert '0600' == oct(stat.S_IMODE(mode)).replace('0o', '0')
+        check_user_only_permissions(fname)
         with open(fname, 'r') as f:
             assert f.read() == 'test 1'
 
@@ -220,8 +252,7 @@ def test_secure_write():
         os.chmod(fname, 0o755)
         with secure_write(fname) as f:
             f.write('test 2')
-        mode = os.stat(fname).st_mode
-        assert '0600' == oct(stat.S_IMODE(mode)).replace('0o', '0')
+        check_user_only_permissions(fname)
         with open(fname, 'r') as f:
             assert f.read() == 'test 2'
     finally:

@@ -35,6 +35,41 @@ from traitlets import (
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir
 
 
+# TODO: Move to jupyter_core
+def win32_restrict_file_to_user(fname):
+    """Secure a windows file to read-only access for the user.
+    Follows guidance from win32 library creator:
+    http://timgolden.me.uk/python/win32_how_do_i/add-security-to-a-file.html
+
+    This method should be executed against an already generated file which
+    has no secrets written to it yet.
+
+    Parameters
+    ----------
+
+    fname : unicode
+        The path to the file to secure
+    """
+    import win32api
+    import win32security
+    import ntsecuritycon as con
+
+    # everyone, _domain, _type = win32security.LookupAccountName("", "Everyone")
+    admins, _domain, _type = win32security.LookupAccountName("", "Administrators")
+    user, _domain, _type = win32security.LookupAccountName("", win32api.GetUserName())
+    
+    sd = win32security.GetFileSecurity(fname, win32security.DACL_SECURITY_INFORMATION)
+
+    dacl = win32security.ACL()
+    # dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_ALL_ACCESS, everyone)
+    dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_GENERIC_READ | con.FILE_GENERIC_WRITE, user)
+    dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_ALL_ACCESS, admins)
+    
+    sd.SetSecurityDescriptorDacl(1, dacl, 0)
+    win32security.SetFileSecurity(fname, win32security.DACL_SECURITY_INFORMATION, sd)
+
+
+# TODO: Move to jupyter_core
 @contextmanager
 def secure_write(fname):
     """Opens a file in the most restricted pattern available for
@@ -48,15 +83,25 @@ def secure_write(fname):
         The path to the file to write
     """
     try:
-        with os.fdopen(os.open(fname, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600), 'w') as f:
-            yield f
-    finally:
-        try:
-            # Ensure existing files have their permissions changed
-            os.chmod(fname, 0o600)
-        except:
-            os.remove(fname)
-            raise
+        os.remove(fname)
+    except IOError:
+        # Skip any issues with file not existing
+        pass
+
+    # Touch file
+    fd = os.open(fname, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600)
+    os.close(fd)
+    
+    if os.name == 'nt':
+        # Python on windows does not respect the group and public bits for chmod, so we need
+        # to take additional steps to secure the contents.
+        win32_restrict_file_to_user(fname)
+    else:
+        # Enforce that the file got the requested permissions.
+        assert '0600' == oct(stat.S_IMODE(os.stat(fname).st_mode)).replace('0o', '0')
+
+    with os.fdopen(os.open(fname, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600), 'w') as f:
+        yield f
 
 
 def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
