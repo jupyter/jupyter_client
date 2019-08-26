@@ -100,32 +100,29 @@ class HBChannel(Thread):
 
         self.poller.register(self.socket, zmq.POLLIN)
 
-    def _poll(self, start_time):
+    def _poll(self, until_dead):
         """poll for heartbeat replies until we reach self.time_to_dead.
 
         Ignores interrupts, and returns the result of poll(), which
         will be an empty list if no messages arrived before the timeout,
         or the event tuple if there is a message to receive.
         """
-
-        until_dead = self.time_to_dead - (time.time() - start_time)
+        start_time = time.time()
         # ensure poll at least once
         until_dead = max(until_dead, 1e-3)
         events = []
         while True:
             try:
                 events = self.poller.poll(1000 * until_dead)
-            except ZMQError as e:
-                if e.errno == errno.EINTR:
-                    # ignore interrupts during heartbeat
-                    # this may never actually happen
-                    until_dead = self.time_to_dead - (time.time() - start_time)
-                    until_dead = max(until_dead, 1e-3)
-                    pass
-                else:
-                    raise
-            except Exception:
-                if self._exiting:
+            except Exception as e:
+                if isinstance(e, ZMQError):
+                    if e.errno == errno.EINTR:
+                        # ignore interrupts during heartbeat
+                        # this may never actually happen
+                        until_dead -= (time.time() - start_time)
+                        until_dead = max(until_dead, 1e-3)
+                        continue
+                if self._exiting or self._exit.is_set():
                     break
                 else:
                     raise
@@ -152,7 +149,10 @@ class HBChannel(Thread):
             # either a recv or connect, which cannot be followed by EFSM
             self.socket.send(b'ping')
             request_time = time.time()
-            ready = self._poll(request_time)
+            ready = False
+            while (not ready and not self._exit.is_set()
+                   and self.time_to_dead > (time.time() - request_time)):
+                ready = self._poll(.5)
             if ready:
                 self._beating = True
                 # the poll above guarantees we have something to recv
@@ -163,6 +163,8 @@ class HBChannel(Thread):
                     self._exit.wait(remainder)
                 continue
             else:
+                if self._exit.is_set():
+                    return
                 # nothing was received within the time limit, signal heart failure
                 self._beating = False
                 since_last_heartbeat = time.time() - request_time
