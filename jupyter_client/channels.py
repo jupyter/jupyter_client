@@ -111,19 +111,19 @@ class HBChannel(Thread):
         # ensure poll at least once
         until_dead = max(until_dead, 1e-3)
         events = []
-        while True:
+        while not self._exit.is_set():
             try:
                 events = self.poller.poll(1000 * until_dead)
             except Exception as e:
-                if isinstance(e, ZMQError):
+                if self._exiting or self._exit.is_set():
+                    break
+                elif isinstance(e, ZMQError):
                     if e.errno == errno.EINTR:
                         # ignore interrupts during heartbeat
                         # this may never actually happen
                         until_dead -= (time.time() - start_time)
                         until_dead = max(until_dead, 1e-3)
                         continue
-                if self._exiting or self._exit.is_set():
-                    break
                 else:
                     raise
             else:
@@ -138,7 +138,7 @@ class HBChannel(Thread):
         self._running = True
         self._beating = True
 
-        while self._running:
+        while not self._exit.is_set():
             if self._pause:
                 # just sleep, and skip the rest of the loop
                 self._exit.wait(self.time_to_dead)
