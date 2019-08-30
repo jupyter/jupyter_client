@@ -777,6 +777,109 @@ class Session(Configurable):
 
         return msg
 
+
+    async def send_async(self, stream, msg_or_type, content=None, parent=None, ident=None,
+             buffers=None, track=False, header=None, metadata=None):
+        """Build and send a message via stream or socket.
+
+        The message format used by this function internally is as follows:
+
+        [ident1,ident2,...,DELIM,HMAC,p_header,p_parent,p_content,
+         buffer1,buffer2,...]
+
+        The serialize/deserialize methods convert the nested message dict into this
+        format.
+
+        Parameters
+        ----------
+
+        stream : zmq.Socket or ZMQStream
+            The socket-like object used to send the data.
+        msg_or_type : str or Message/dict
+            Normally, msg_or_type will be a msg_type unless a message is being
+            sent more than once. If a header is supplied, this can be set to
+            None and the msg_type will be pulled from the header.
+
+        content : dict or None
+            The content of the message (ignored if msg_or_type is a message).
+        header : dict or None
+            The header dict for the message (ignored if msg_to_type is a message).
+        parent : Message or dict or None
+            The parent or parent header describing the parent of this message
+            (ignored if msg_or_type is a message).
+        ident : bytes or list of bytes
+            The zmq.IDENTITY routing path.
+        metadata : dict or None
+            The metadata describing the message
+        buffers : list or None
+            The already-serialized buffers to be appended to the message.
+        track : bool
+            Whether to track.  Only for use with Sockets, because ZMQStream
+            objects cannot track messages.
+
+
+        Returns
+        -------
+        msg : dict
+            The constructed message.
+        """
+        if not isinstance(stream, zmq.Socket):
+            # ZMQStreams and dummy sockets do not support tracking.
+            track = False
+
+        if isinstance(msg_or_type, (Message, dict)):
+            # We got a Message or message dict, not a msg_type so don't
+            # build a new Message.
+            msg = msg_or_type
+            buffers = buffers or msg.get('buffers', [])
+        else:
+            msg = self.msg(msg_or_type, content=content, parent=parent,
+                           header=header, metadata=metadata)
+        if self.check_pid and not os.getpid() == self.pid:
+            get_logger().warning("WARNING: attempted to send message from fork\n%s",
+                msg
+            )
+            return
+        buffers = [] if buffers is None else buffers
+        for idx, buf in enumerate(buffers):
+            if isinstance(buf, memoryview):
+                view = buf
+            else:
+                try:
+                    # check to see if buf supports the buffer protocol.
+                    view = memoryview(buf)
+                except TypeError:
+                    raise TypeError("Buffer objects must support the buffer protocol.")
+            # memoryview.contiguous is new in 3.3,
+            # just skip the check on Python 2
+            if hasattr(view, 'contiguous') and not view.contiguous:
+                # zmq requires memoryviews to be contiguous
+                raise ValueError("Buffer %i (%r) is not contiguous" % (idx, buf))
+
+        if self.adapt_version:
+            msg = adapt(msg, self.adapt_version)
+        to_send = self.serialize(msg, ident)
+        to_send.extend(buffers)
+        longest = max([ len(s) for s in to_send ])
+        copy = (longest < self.copy_threshold)
+
+        # import pdb; pdb.set_trace()
+        if buffers and track and not copy:
+            # only really track when we are doing zero-copy buffers
+            tracker = await stream.send_multipart(to_send, copy=False, track=True)
+        else:
+            # use dummy tracker, which will be done immediately
+            tracker = DONE
+            await stream.send_multipart(to_send, copy=copy)
+
+        if self.debug:
+            pprint.pprint(msg)
+            pprint.pprint(to_send)
+            pprint.pprint(buffers)
+
+        msg['tracker'] = tracker
+        return msg
+
     def send_raw(self, stream, msg_list, flags=0, copy=True, ident=None):
         """Send a raw message via ident path.
 
