@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
+import os
 
 from subprocess import Popen, PIPE
 import sys
@@ -38,6 +39,8 @@ class SignalTestKernel(Kernel):
             reply['user_expressions']['pid'] = self.children[-1].pid
         elif code == 'check':
             reply['user_expressions']['poll'] = [ child.poll() for child in self.children ]
+        elif code == 'env':
+            reply['user_expressions']['env'] = os.getenv("TEST_VARS", "")
         elif code == 'sleep':
             try:
                 time.sleep(10)
