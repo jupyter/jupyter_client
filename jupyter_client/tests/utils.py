@@ -29,6 +29,7 @@ class test_env(object):
             'JUPYTER_DATA_DIR': pjoin(td.name, 'jupyter_data'),
             'JUPYTER_RUNTIME_DIR': pjoin(td.name, 'jupyter_runtime'),
             'IPYTHONDIR': pjoin(td.name, 'ipython'),
+            'TEST_VARS': 'test_var_1',
         })
         self.env_patch.start()
     
