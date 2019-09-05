@@ -152,7 +152,10 @@ JSON serialised dictionary containing the following keys and values:
   the client will default to ``signal`` mode.
 - **env** (optional): A dictionary of environment variables to set for the kernel.
   These will be added to the current environment variables before the kernel is
-  started.
+  started.  Existing environment variables can be referenced using ``${<ENV_VAR>}`` and
+  will be substituted with the corresponding value.  Administrators should note that use
+  of ``${<ENV_VAR>}`` can expose sensitive variables and should use only in controlled
+  circumstances.
 - **metadata** (optional): A dictionary of additional attributes about this
   kernel; used by clients to aid in kernel selection. Metadata added
   here should be namespaced for the tool reading and writing that metadata.
