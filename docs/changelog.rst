@@ -4,6 +4,11 @@
 Changes in Jupyter Client
 =========================
 
+5.3.2
+=====
+
+- Important files creation now checks umask permissions (:ghpull:`469`).
+
 5.3.1
 =====
 
@@ -16,7 +21,7 @@ Changes in Jupyter Client
 New Features:
 
 - Multiprocessing and Threading support (:ghpull:`437`) and (:ghpull:`450`)
-- Setup package long_description (:ghpull:`411`) 
+- Setup package long_description (:ghpull:`411`)
 
 Changes:
 
@@ -120,9 +125,9 @@ Breaking changes:
 - Define Jupyter protocol version 5.2,
   resolving ambiguity of ``cursor_pos`` field in the presence
   of unicode surrogate pairs.
-  
+
   .. seealso::
-  
+
       :ref:`cursor_pos_unicode_note`
 
 - Add :meth:`Session.clone` for making a copy of a Session object

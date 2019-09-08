@@ -5,6 +5,10 @@
 
 import json
 import os
+import re
+import stat
+import tempfile
+import shutil
 
 from traitlets.config import Config
 from jupyter_core.application import JupyterApp
@@ -14,6 +18,7 @@ from ipython_genutils.py3compat import str_to_bytes
 from jupyter_client import connect, KernelClient
 from jupyter_client.consoleapp import JupyterConsoleApp
 from jupyter_client.session import Session
+from jupyter_client.connect import secure_write
 
 
 class DummyConsoleApp(JupyterApp, JupyterConsoleApp):
@@ -142,7 +147,7 @@ def test_find_connection_file_local():
         abs_cf = os.path.abspath(cf)
         with open(cf, 'w') as f:
             f.write('{}')
-        
+
         for query in (
             'test.json',
             'test',
@@ -160,7 +165,7 @@ def test_find_connection_file_relative():
         abs_cf = os.path.abspath(cf)
         with open(cf, 'w') as f:
             f.write('{}')
-        
+
         for query in (
             os.path.join('.', 'subdir', 'test.json'),
             os.path.join('subdir', 'test.json'),
@@ -199,3 +204,56 @@ def test_mixin_cleanup_random_ports():
         assert not os.path.exists(filename)
         for name in dc._random_port_names:
             assert getattr(dc, name) == 0
+
+
+def test_secure_write():
+    def fetch_win32_permissions(filename):
+        '''Extracts file permissions on windows using icacls'''
+        role_permissions = {}
+        for index, line in enumerate(os.popen("icacls %s" % filename).read().splitlines()):
+            if index == 0:
+                line = line.split(filename)[-1].strip().lower()
+            match = re.match(r'\s*([^:]+):\(([^\)]*)\)', line)
+            if match:
+                usergroup, permissions = match.groups()
+                usergroup = usergroup.lower().split('\\')[-1]
+                permissions = set(p.lower() for p in permissions.split(','))
+                role_permissions[usergroup] = permissions
+            elif not line.strip():
+                break
+        return role_permissions
+
+    def check_user_only_permissions(fname):
+        # Windows has it's own permissions ACL patterns
+        if os.name == 'nt':
+            import win32api
+            username = win32api.GetUserName().lower()
+            permissions = fetch_win32_permissions(fname)
+            assert username in permissions
+            assert permissions[username] == set(['r', 'w'])
+            assert 'administrators' in permissions
+            assert permissions['administrators'] == set(['f'])
+            assert 'everyone' not in permissions
+            assert len(permissions) == 2
+        else:
+            mode = os.stat(fname).st_mode
+            assert '0600' == oct(stat.S_IMODE(mode)).replace('0o', '0')
+
+    directory = tempfile.mkdtemp()
+    fname = os.path.join(directory, 'check_perms')
+    try:
+        with secure_write(fname) as f:
+            f.write('test 1')
+        check_user_only_permissions(fname)
+        with open(fname, 'r') as f:
+            assert f.read() == 'test 1'
+
+        # Try changing file permissions ahead of time
+        os.chmod(fname, 0o755)
+        with secure_write(fname) as f:
+            f.write('test 2')
+        check_user_only_permissions(fname)
+        with open(fname, 'r') as f:
+            assert f.read() == 'test 2'
+    finally:
+        shutil.rmtree(directory)
