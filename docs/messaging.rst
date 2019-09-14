@@ -916,6 +916,9 @@ Message type: ``kernel_info_reply``::
         'help_links': [
             {'text': str, 'url': str}
         ],
+
+        # status should be 'ok'.
+        'status' : 'ok',
     }
 
 Refer to the lists of available `Pygments lexers <http://pygments.org/docs/lexers/>`_
