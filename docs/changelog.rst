@@ -4,6 +4,11 @@
 Changes in Jupyter Client
 =========================
 
+5.3.3
+=====
+
+- Fixed issue with non-english windows permissions (:ghpull:`478`). Potential issue still open in use with jupyerlab.
+
 5.3.2
 =====
 
