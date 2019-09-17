@@ -55,7 +55,7 @@ def win32_restrict_file_to_user(fname):
     import ntsecuritycon as con
 
     # everyone, _domain, _type = win32security.LookupAccountName("", "Everyone")
-    admins, _domain, _type = win32security.LookupAccountName("", "Administrators")
+    admins = win32security.CreateWellKnownSid(win32security.WinBuiltinAdministratorsSid)
     user, _domain, _type = win32security.LookupAccountName("", win32api.GetUserName())
     
     sd = win32security.GetFileSecurity(fname, win32security.DACL_SECURITY_INFORMATION)
