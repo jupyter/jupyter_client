@@ -88,7 +88,7 @@ setup_args = dict(
     ],
     install_requires = [
         'traitlets',
-        'jupyter_core',
+        'jupyter_core>=4.5.0',
         'pyzmq>=13',
         'python-dateutil>=2.1',
         'tornado>=4.1',
