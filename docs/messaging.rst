@@ -974,7 +974,7 @@ Message type: ``kernel_info_reply``::
             # Only needed if it differs from the 'name' field.
             'pygments_lexer': str,
 
-            # Codemirror mode, for for highlighting in the notebook.
+            # Codemirror mode, for highlighting in the notebook.
             # Only needed if it differs from the 'name' field.
             'codemirror_mode': str or dict,
 
@@ -986,7 +986,11 @@ Message type: ``kernel_info_reply``::
 
         # A banner of information about the kernel,
         # which may be desplayed in console environments.
-        'banner' : str,
+        'banner': str,
+
+        # A boolean flag which tells if the kernel supports debugging in the notebook.
+        # Default is False
+        'debugger': bool,
 
         # Optional: A list of dictionaries, each with keys 'text' and 'url'.
         # These will be displayed in the help menu in the notebook UI.
