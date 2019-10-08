@@ -4,6 +4,11 @@
 Changes in Jupyter Client
 =========================
 
+5.3.4
+=====
+
+- Changed secure_write to be imported from jupyter_core with fix for extended usernames in Windows (:ghpull:`483`).
+
 5.3.3
 =====
 
