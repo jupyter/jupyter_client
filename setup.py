@@ -92,7 +92,6 @@ setup_args = dict(
         'pyzmq>=13',
         'python-dateutil>=2.1',
         'tornado>=4.1',
-        "pywin32 >=1.0 ; sys_platform == 'win32'"
     ],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     extras_require   = {
