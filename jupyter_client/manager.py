@@ -19,7 +19,7 @@ from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
     Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName,
-    observe
+    default, observe
 )
 from jupyter_client import (
     launch_kernel,
@@ -102,6 +102,12 @@ class KernelManager(ConnectionFileMixin):
     def _kernel_cmd_changed(self, name, old, new):
         warnings.warn("Setting kernel_cmd is deprecated, use kernel_spec to "
                       "start different kernels.")
+
+    cache_ports = Bool(help='True if the MultiKernelManager should cache ports for this KernelManager instance')
+
+    @default('cache_ports')
+    def _default_cache_ports(self):
+        return self.transport == 'tcp'
 
     @property
     def ipykernel(self):
