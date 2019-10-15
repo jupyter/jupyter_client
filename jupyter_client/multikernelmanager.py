@@ -14,7 +14,7 @@ import zmq
 from traitlets.config.configurable import LoggingConfigurable
 from ipython_genutils.importstring import import_item
 from traitlets import (
-    Instance, Dict, Unicode, Any, DottedObjectName, observe, default
+    Any, Bool, Dict, DottedObjectName, Instance, Unicode, default, observe
 )
 from ipython_genutils.py3compat import unicode_type
 
@@ -78,7 +78,7 @@ class MultiKernelManager(LoggingConfigurable):
         def create_kernel_manager(*args, **kwargs):
             km = kernel_manager_ctor(*args, **kwargs)
 
-            if km.transport == 'tcp':
+            if km.cache_ports:
                 km.shell_port = self._find_available_port(km.ip)
                 km.iopub_port = self._find_available_port(km.ip)
                 km.stdin_port = self._find_available_port(km.ip)
@@ -168,17 +168,17 @@ class MultiKernelManager(LoggingConfigurable):
         """
         self.log.info("Kernel shutdown: %s" % kernel_id)
 
-        kernel = self.get_kernel(kernel_id)
+        km = self.get_kernel(kernel_id)
 
         ports = (
-            kernel.shell_port, kernel.iopub_port, kernel.stdin_port,
-            kernel.hb_port, kernel.control_port
+            km.shell_port, km.iopub_port, km.stdin_port,
+            km.hb_port, km.control_port
         )
 
-        kernel.shutdown_kernel(now=now, restart=restart)
+        km.shutdown_kernel(now=now, restart=restart)
         self.remove_kernel(kernel_id)
 
-        if not restart and kernel.transport == 'tcp':
+        if km.cache_ports and not restart:
             for port in ports:
                 self.currently_used_ports.remove(port)
 
