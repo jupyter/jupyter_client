@@ -18,7 +18,7 @@ from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
     Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName, Dict,
-    observe
+    default, observe
 )
 from jupyter_client import (
     launch_kernel,
@@ -91,6 +91,12 @@ class KernelManager(ConnectionFileMixin):
     extra_env = Dict(
         help="""Extra environment variables to be set for the kernel."""
     )
+
+    cache_ports = Bool(help='True if the MultiKernelManager should cache ports for this KernelManager instance')
+
+    @default('cache_ports')
+    def _default_cache_ports(self):
+        return self.transport == 'tcp'
 
     @property
     def ipykernel(self):
