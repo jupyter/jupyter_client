@@ -527,10 +527,12 @@ class Session(Configurable):
         new_session.digest_history.update(self.digest_history)
         return new_session
 
+    message_count = 0
     @property
     def msg_id(self):
-        """always return new uuid"""
-        return new_id()
+        message_number = self.message_count
+        self.message_count += 1
+        return '{}_{}'.format(self.session, message_number)
 
     def _check_packers(self):
         """check packers for datetime support."""
