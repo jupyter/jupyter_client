@@ -2,11 +2,18 @@ from abc import ABCMeta, abstractmethod
 import entrypoints
 import logging
 import six
+import warnings
 
 from .kernelspec import KernelSpecManager
 from .manager import KernelManager
 
 log = logging.getLogger(__name__)
+
+warnings.warn(
+    "jupyter_client.discovery.* is deprecated. Use jupyter_kernel_mgmt.discovery.",
+    DeprecationWarning, stacklevel=2,
+)
+
 
 class KernelProviderBase(six.with_metaclass(ABCMeta, object)):
     id = None  # Should be a short string identifying the provider class.
@@ -23,6 +30,7 @@ class KernelProviderBase(six.with_metaclass(ABCMeta, object)):
         name will be one of the kernel names produced by find_kernels()
         """
         pass
+
 
 class KernelSpecProvider(KernelProviderBase):
     """Offers kernel types from installed kernelspec directories.
