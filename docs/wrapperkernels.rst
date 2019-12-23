@@ -63,7 +63,10 @@ following methods and attributes:
 
      Your method should return a dict containing the fields described in
      :ref:`execution_results`. To display output, it can send messages
-     using :meth:`~ipykernel.kernelbase.Kernel.send_response`.
+     using :meth:`~ipykernel.kernelbase.Kernel.send_response`. If an error
+     occurs during execution, an message of type `error` should be sent
+     through :meth:`~ipykernel.kernelbase.Kernel.send_response`
+     in addition to an :ref:`execution_results` with an `status` of `error`.
      See :doc:`messaging` for details of the different message types.
 
 .. automethod:: ipykernel.kernelbase.Kernel.send_response
