@@ -1018,13 +1018,39 @@ This message type is used with debugging kernels to request specific actions
 to be performed by the debugger such as adding a breakpoint or stepping into
 a code.
 
+The contents of debug requests and replies respectively follow the schemas of the
+``Request`` and ``Response`` messages of the *Debug Adapter Protocol* (DAP_).
+
 Message type: ``debug_request``::
 
-    content = {}
+    content = {
+        # The type of debug message
+        'type': 'request',
+        # A unique sequence number
+        'seq': int,
+        # The command to execute
+        'command': str,
+        # Optional: arguments for the command
+        'arguments': {}
+    }
 
 Message type: ``debug_reply``::
 
-    content = {}
+    content = {
+        # The type of debug message
+        'type': 'response',
+        # Sequence number of the corresponding request
+        'request_seq': int
+        # Outcome of the request.
+        #  - True if the request was successful. Then the 'body' attribute may contain the result of the request.
+        #  - False if the request failed. Then the 'message' attribute contains the short-form error,
+        # and 'body' may contain additional information.
+        'success': bool,
+        # Optional: short-form error in case of failure
+        'message': str,
+        # Optional: request result in case of success, and further failure information otherwise.
+        'body': any
+    }
 
 The ``content`` dict can be any JSON information used by debugging frontends
 and kernels.
@@ -1312,9 +1338,21 @@ Debug event
 This message type is used by debugging kernels to send debugging events to the
 frontend.
 
+The content of the debug events follows the schema of the ``Event`` message of
+the *Debug Adapter Protocol* (DAP_).
+
 Message type: ``debug_event``::
 
-    content = {}
+    content = {
+        # The type of debug message
+        'type': 'event',
+        # A unique sequence number
+        'seq': int,
+        # Type of event
+        'event': str,
+        # Optional: event-specific information
+        'body': {}
+    }
 
 The ``content`` dict can be any JSON information used by debugging frontends.
 
@@ -1511,3 +1549,4 @@ Known *not* affected frontends:
 
 .. _ZeroMQ: http://zeromq.org
 .. _nteract: https://nteract.io
+.. _DAP: https://microsoft.github.io/debug-adapter-protocol/specification
