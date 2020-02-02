@@ -1,4 +1,4 @@
-"""Base classes to manage a Client's interaction with a running kernel"""
+"""Async channels"""
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
@@ -10,7 +10,7 @@ except ImportError:
 
 
 class ZMQSocketChannel(object):
-    """A ZMQ socket in a simple async API"""
+    """A ZMQ socket in an async API"""
     session = None
     socket = None
     stream = None
