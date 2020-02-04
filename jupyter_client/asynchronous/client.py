@@ -2,14 +2,9 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 from functools import partial
 from getpass import getpass
-try:
-    from queue import Empty  # Python 3
-except ImportError:
-    from Queue import Empty  # Python 2
+from queue import Empty
 import sys
 import time
 
