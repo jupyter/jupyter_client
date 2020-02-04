@@ -3,10 +3,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-try:
-    from queue import Queue, Empty  # Py 3
-except ImportError:
-    from Queue import Queue, Empty  # Py 2
+from queue import Queue, Empty
 
 
 class ZMQSocketChannel(object):

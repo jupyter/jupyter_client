@@ -22,18 +22,6 @@ from jupyter_client.channels import HBChannel
 from jupyter_client.client import KernelClient
 from .channels import ZMQSocketChannel
 
-try:
-    monotonic = time.monotonic
-except AttributeError:
-    # py2
-    monotonic = time.time # close enough
-
-try:
-    TimeoutError
-except NameError:
-    # py2
-    TimeoutError = RuntimeError
-
 
 def reqrep(meth, channel='shell'):
     def wrapped(self, *args, **kwargs):
@@ -177,10 +165,10 @@ class AsyncKernelClient(KernelClient):
     async def _recv_reply(self, msg_id, timeout=None, channel='shell'):
         """Receive and return the reply for a given request"""
         if timeout is not None:
-            deadline = monotonic() + timeout
+            deadline = time.monotonic() + timeout
         while True:
             if timeout is not None:
-                timeout = max(0, deadline - monotonic())
+                timeout = max(0, deadline - time.monotonic())
             try:
                 if channel == 'control':
                     reply = await self.get_control_msg(timeout=timeout)
@@ -211,8 +199,6 @@ class AsyncKernelClient(KernelClient):
         content = msg['content']
         if content.get('password', False):
             prompt = getpass
-        elif sys.version_info < (3,):
-            prompt = raw_input
         else:
             prompt = input
 
@@ -264,8 +250,6 @@ class AsyncKernelClient(KernelClient):
 
         You can pass a custom output_hook callable that will be called
         with every IOPub message that is produced instead of the default redisplay.
-
-        .. versionadded:: 5.0
 
         Parameters
         ----------
@@ -345,7 +329,7 @@ class AsyncKernelClient(KernelClient):
 
         # set deadline based on timeout
         if timeout is not None:
-            deadline = monotonic() + timeout
+            deadline = time.monotonic() + timeout
         else:
             timeout_ms = None
 
@@ -361,7 +345,7 @@ class AsyncKernelClient(KernelClient):
         # wait for output and redisplay it
         while True:
             if timeout is not None:
-                timeout = max(0, deadline - monotonic())
+                timeout = max(0, deadline - time.monotonic())
                 timeout_ms = 1e3 * timeout
             events = dict(poller.poll(timeout_ms))
             if not events:
@@ -387,5 +371,5 @@ class AsyncKernelClient(KernelClient):
 
         # output is done, get the reply
         if timeout is not None:
-            timeout = max(0, deadline - monotonic())
+            timeout = max(0, deadline - time.monotonic())
         return await self._recv_reply(msg_id, timeout=timeout)
