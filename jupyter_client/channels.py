@@ -9,6 +9,7 @@ import atexit
 import errno
 from threading import Thread, Event
 import time
+import asyncio
 
 import zmq
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
@@ -47,7 +48,7 @@ class HBChannel(Thread):
     _pause = None
     _beating = None
 
-    def __init__(self, context=None, session=None, address=None):
+    def __init__(self, context=None, session=None, address=None, loop=None):
         """Create the heartbeat monitor thread.
 
         Parameters
@@ -61,6 +62,8 @@ class HBChannel(Thread):
         """
         super(HBChannel, self).__init__()
         self.daemon = True
+
+        self.loop = loop
 
         self.context = context
         self.session = session
@@ -132,6 +135,8 @@ class HBChannel(Thread):
 
     def run(self):
         """The thread's main activity.  Call start() instead."""
+        if self.loop is not None:
+            asyncio.set_event_loop(self.loop)
         self._create_socket()
         self._running = True
         self._beating = True
