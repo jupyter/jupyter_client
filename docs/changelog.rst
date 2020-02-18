@@ -79,9 +79,11 @@ Breaking changes:
 5.2.1
 =====
 
+`5.2.1 on GitHub <https://github.com/jupyter/jupyter_client/milestones/5.2.1>`__
+
 - Add parenthesis to conditional pytest requirement to work around a bug in the
   ``wheel`` package, that generate a ``.whl`` which otherwise always depends on
-  ``pytest`` see :ghissue:`324` and :ghpull:`325`
+  ``pytest`` see :ghissue:`324` and :ghpull:`325`.
 
 5.2
 ===

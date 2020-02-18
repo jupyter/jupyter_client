@@ -19,7 +19,6 @@ import stat
 import tempfile
 import warnings
 from getpass import getpass
-from contextlib import contextmanager
 
 import zmq
 
