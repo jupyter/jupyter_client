@@ -1,8 +1,6 @@
 MANIFEST
 build
 dist
-_build
-docs/gh-pages
 *.py[co]
 __pycache__
 *.egg-info
@@ -16,3 +14,16 @@ __pycache__
 .coverage
 .cache
 absolute.json
+htmlcov/
+
+# Sphinx documentation
+_build
+docs/_build/
+docs/gh-pages
+
+# PyBuilder
+target/
+
+# PyCharm
+.idea/
+*.iml

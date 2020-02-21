@@ -141,7 +141,7 @@ class TestSession(SessionTestCase):
 
         # buffers must be contiguous
         buf = memoryview(os.urandom(16))
-        if sys.version_info >= (3,3):
+        if sys.version_info >= (3,4):
             with self.assertRaises(ValueError):
                 self.session.send(A, msg, ident=b'foo', buffers=[buf[::2]])
 
@@ -339,7 +339,7 @@ class TestSession(SessionTestCase):
         A.close()
         B.close()
         ctx.term()
-    
+
     def test_clone(self):
         s = self.session
         s._add_digest('initial')

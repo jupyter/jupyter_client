@@ -41,6 +41,7 @@ class TestKernelManager(TestCase):
                          '-m', 'jupyter_client.tests.signalkernel',
                          '-f', '{connection_file}'],
                 'display_name': "Signal Test Kernel",
+                'env': {'TEST_VARS': '${TEST_VARS}:test_var_2'},
             }))
 
     def _get_tcp_km(self):
@@ -131,7 +132,64 @@ class TestKernelManager(TestCase):
         self.assertTrue(km.is_alive())
         self.assertTrue(kc.is_alive())
 
-@pytest.mark.parallel
+    def _env_test_body(self, kc):
+
+        def execute(cmd):
+            kc.execute(cmd)
+            reply = kc.get_shell_msg(TIMEOUT)
+            content = reply['content']
+            self.assertEqual(content['status'], 'ok')
+            return content
+
+        reply = execute('env')
+        self.assertIsNotNone(reply)
+        self.assertEquals(reply['user_expressions']['env'], 'test_var_1:test_var_2')
+
+    def test_templated_kspec_env(self):
+        self._install_test_kernel()
+        km, kc = start_new_kernel(kernel_name='signaltest')
+        self.addCleanup(kc.stop_channels)
+        self.addCleanup(km.shutdown_kernel)
+
+        self.assertTrue(km.is_alive())
+        self.assertTrue(kc.is_alive())
+
+        self._env_test_body(kc)
+
+    def _start_kernel_with_cmd(self, kernel_cmd, extra_env, **kwargs):
+        """Start a new kernel, and return its Manager and Client"""
+        km = KernelManager(kernel_name='signaltest')
+        km.kernel_cmd = kernel_cmd
+        km.extra_env = extra_env
+        km.start_kernel(**kwargs)
+        kc = km.client()
+        kc.start_channels()
+        try:
+            kc.wait_for_ready(timeout=60)
+        except RuntimeError:
+            kc.stop_channels()
+            km.shutdown_kernel()
+            raise
+
+        return km, kc
+
+    def test_templated_extra_env(self):
+        self._install_test_kernel()
+        kernel_cmd = [sys.executable,
+                         '-m', 'jupyter_client.tests.signalkernel',
+                         '-f', '{connection_file}']
+        extra_env = {'TEST_VARS': '${TEST_VARS}:test_var_2'}
+
+        km, kc = self._start_kernel_with_cmd(kernel_cmd, extra_env)
+        self.addCleanup(kc.stop_channels)
+        self.addCleanup(km.shutdown_kernel)
+
+        self.assertTrue(km.is_alive())
+        self.assertTrue(kc.is_alive())
+
+        self._env_test_body(kc)
+
+
 class TestParallel:
 
     @pytest.fixture(autouse=True)

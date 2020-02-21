@@ -35,12 +35,13 @@ def validate_string_dict(dct):
 class KernelClient(ConnectionFileMixin):
     """Communicates with a single kernel on any host via zmq channels.
 
-    There are four channels associated with each kernel:
+    There are five channels associated with each kernel:
 
     * shell: for request/reply calls to the kernel.
     * iopub: for the kernel to publish results to frontends.
     * hb: for monitoring the kernel's heartbeat.
     * stdin: for frontends to reply to raw_input calls in the kernel.
+    * control: for kernel management calls to the kernel.
 
     The messages that can be sent on these channels are exposed as methods of the
     client (KernelClient.execute, complete, history, etc.). These methods only
@@ -58,12 +59,14 @@ class KernelClient(ConnectionFileMixin):
     iopub_channel_class = Type(ChannelABC)
     stdin_channel_class = Type(ChannelABC)
     hb_channel_class = Type(HBChannelABC)
+    control_channel_class = Type(ChannelABC)
 
     # Protected traits
     _shell_channel = Any()
     _iopub_channel = Any()
     _stdin_channel = Any()
     _hb_channel = Any()
+    _control_channel = Any()
 
     # flag for whether execute requests should be allowed to call raw_input:
     allow_stdin = True
@@ -84,11 +87,15 @@ class KernelClient(ConnectionFileMixin):
         """Get a message from the stdin channel"""
         return self.stdin_channel.get_msg(*args, **kwargs)
 
+    def get_control_msg(self, *args, **kwargs):
+        """Get a message from the control channel"""
+        return self.control_channel.get_msg(*args, **kwargs)
+
     #--------------------------------------------------------------------------
     # Channel management methods
     #--------------------------------------------------------------------------
 
-    def start_channels(self, shell=True, iopub=True, stdin=True, hb=True):
+    def start_channels(self, shell=True, iopub=True, stdin=True, hb=True, control=True):
         """Starts the channels for this kernel.
 
         This will create the channels if they do not exist and then start
@@ -109,6 +116,8 @@ class KernelClient(ConnectionFileMixin):
             self.allow_stdin = False
         if hb:
             self.hb_channel.start()
+        if control:
+            self.control_channel.start()
 
     def stop_channels(self):
         """Stops all the running channels for this kernel.
@@ -123,12 +132,15 @@ class KernelClient(ConnectionFileMixin):
             self.stdin_channel.stop()
         if self.hb_channel.is_alive():
             self.hb_channel.stop()
+        if self.control_channel.is_alive():
+            self.control_channel.stop()
 
     @property
     def channels_running(self):
         """Are any of the channels created and running?"""
         return (self.shell_channel.is_alive() or self.iopub_channel.is_alive() or
-                self.stdin_channel.is_alive() or self.hb_channel.is_alive())
+                self.stdin_channel.is_alive() or self.hb_channel.is_alive() or
+                self.control_channel.is_alive())
 
     ioloop = None  # Overridden in subclasses that use pyzmq event loop
 
@@ -178,6 +190,18 @@ class KernelClient(ConnectionFileMixin):
                 self.context, self.session, url
             )
         return self._hb_channel
+
+    @property
+    def control_channel(self):
+        """Get the control channel object for this kernel."""
+        if self._control_channel is None:
+            url = self._make_url('control')
+            self.log.debug("connecting control channel to %s", url)
+            socket = self.connect_control(identity=self.session.bsession)
+            self._control_channel = self.control_channel_class(
+                socket, self.session, self.ioloop
+            )
+        return self._control_channel
 
     def is_alive(self):
         """Is the kernel process still running?"""
@@ -383,27 +407,6 @@ class KernelClient(ConnectionFileMixin):
         if adapt_version != major_protocol_version:
             self.session.adapt_version = adapt_version
 
-    def shutdown(self, restart=False):
-        """Request an immediate kernel shutdown.
-
-        Upon receipt of the (empty) reply, client code can safely assume that
-        the kernel has shut down and it's safe to forcefully terminate it if
-        it's still alive.
-
-        The kernel will send the reply via a function registered with Python's
-        atexit module, ensuring it's truly done as the kernel is done with all
-        normal operation.
-
-        Returns
-        -------
-        The msg_id of the message sent
-        """
-        # Send quit message to kernel. Once we implement kernel-side setattr,
-        # this should probably be done that way, but for now this will do.
-        msg = self.session.msg('shutdown_request', {'restart':restart})
-        self.shell_channel.send(msg)
-        return msg['header']['msg_id']
-
     def is_complete(self, code):
         """Ask the kernel whether some code is complete and ready to execute."""
         msg = self.session.msg('is_complete_request', {'code': code})
@@ -420,5 +423,25 @@ class KernelClient(ConnectionFileMixin):
         msg = self.session.msg('input_reply', content)
         self.stdin_channel.send(msg)
 
+    def shutdown(self, restart=False):
+        """Request an immediate kernel shutdown on the control channel.
+
+        Upon receipt of the (empty) reply, client code can safely assume that
+        the kernel has shut down and it's safe to forcefully terminate it if
+        it's still alive.
+
+        The kernel will send the reply via a function registered with Python's
+        atexit module, ensuring it's truly done as the kernel is done with all
+        normal operation.
+
+        Returns
+        -------
+        The msg_id of the message sent
+        """
+        # Send quit message to kernel. Once we implement kernel-side setattr,
+        # this should probably be done that way, but for now this will do.
+        msg = self.session.msg('shutdown_request', {'restart':restart})
+        self.control_channel.send(msg)
+        return msg['header']['msg_id']
 
 KernelClientABC.register(KernelClient)

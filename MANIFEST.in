@@ -5,6 +5,7 @@ include README.md
 # Documentation
 graft docs
 exclude docs/\#*
+exclude docs/_*
 
 # Examples
 graft examples

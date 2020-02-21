@@ -18,7 +18,8 @@ import zmq
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
-    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName
+    Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName,
+    default, observe
 )
 from jupyter_client import (
     launch_kernel,
@@ -47,8 +48,9 @@ class KernelManager(ConnectionFileMixin):
     def _client_factory_default(self):
         return import_item(self.client_class)
 
-    def _client_class_changed(self, name, old, new):
-        self.client_factory = import_item(str(new))
+    @observe('client_class')
+    def _client_class_changed(self, change):
+        self.client_factory = import_item(str(change['new']))
 
     # The kernel process with which the KernelManager is communicating.
     # generally a Popen instance
@@ -69,9 +71,10 @@ class KernelManager(ConnectionFileMixin):
 
     kernel_name = Unicode(kernelspec.NATIVE_KERNEL_NAME)
 
-    def _kernel_name_changed(self, name, old, new):
+    @observe('kernel_name')
+    def _kernel_name_changed(self, change):
         self._kernel_spec = None
-        if new == 'python':
+        if change['new'] == 'python':
             self.kernel_name = kernelspec.NATIVE_KERNEL_NAME
 
     _kernel_spec = None
@@ -99,6 +102,12 @@ class KernelManager(ConnectionFileMixin):
     def _kernel_cmd_changed(self, name, old, new):
         warnings.warn("Setting kernel_cmd is deprecated, use kernel_spec to "
                       "start different kernels.")
+
+    cache_ports = Bool(help='True if the MultiKernelManager should cache ports for this KernelManager instance')
+
+    @default('cache_ports')
+    def _default_cache_ports(self):
+        return self.transport == 'tcp'
 
     @property
     def ipykernel(self):
@@ -249,16 +258,33 @@ class KernelManager(ConnectionFileMixin):
         # If set, it can bork all the things.
         env.pop('PYTHONEXECUTABLE', None)
         if not self.kernel_cmd:
-            # If kernel_cmd has been set manually, don't refer to a kernel spec
-            # Environment variables from kernel spec are added to os.environ
-            env.update(self.kernel_spec.env or {})
+            # If kernel_cmd has been set manually, don't refer to a kernel spec.
+            # Environment variables from kernel spec are added to os.environ.
+            env.update(self._get_env_substitutions(self.kernel_spec.env, env))
+        elif self.extra_env:
+            env.update(self._get_env_substitutions(self.extra_env, env))
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
-        self.kernel = self._launch_kernel(kernel_cmd, env=env,
-                                    **kw)
+        self.kernel = self._launch_kernel(kernel_cmd, env=env, **kw)
         self.start_restarter()
         self._connect_control_socket()
+
+    def _get_env_substitutions(self, templated_env, substitution_values):
+        """ Walks env entries in templated_env and applies possible substitutions from current env
+            (represented by substitution_values).
+            Returns the substituted list of env entries.
+        """
+        substituted_env = {}
+        if templated_env:
+            from string import Template
+
+            # For each templated env entry, fill any templated references
+            # matching names of env variables with those values and build
+            # new dict with substitutions.
+            for k, v in templated_env.items():
+                substituted_env.update({k: Template(v).safe_substitute(substitution_values)})
+        return substituted_env
 
     def request_shutdown(self, restart=False):
         """Send a shutdown request via control channel
@@ -281,6 +307,10 @@ class KernelManager(ConnectionFileMixin):
             if self.is_alive():
                 time.sleep(pollinterval)
             else:
+                # If there's still a proc, wait and clear
+                if self.has_kernel:
+                    self.kernel.wait()
+                    self.kernel = None
                 break
         else:
             # OK, we've waited long enough.
@@ -295,13 +325,14 @@ class KernelManager(ConnectionFileMixin):
 
         self.cleanup_ipc_files()
         self._close_control_socket()
+        self.session.parent = None
 
     def shutdown_kernel(self, now=False, restart=False):
         """Attempts to stop the kernel process cleanly.
 
         This attempts to shutdown the kernels cleanly by:
 
-        1. Sending it a shutdown message over the shell channel.
+        1. Sending it a shutdown message over the control channel.
         2. If that fails, the kernel is shutdown forcibly by sending it
            a signal.
 

@@ -18,7 +18,7 @@ import warnings
 from traitlets.config.application import boolean_flag
 from ipython_genutils.path import filefind
 from traitlets import (
-    Dict, List, Unicode, CUnicode, CBool, Any
+    Dict, List, Unicode, CUnicode, CBool, Any, Type
 )
 
 from jupyter_core.application import base_flags, base_aliases
@@ -72,6 +72,7 @@ app_aliases = dict(
     shell = 'JupyterConsoleApp.shell_port',
     iopub = 'JupyterConsoleApp.iopub_port',
     stdin = 'JupyterConsoleApp.stdin_port',
+    control = 'JupyterConsoleApp.control_port',
     existing = 'JupyterConsoleApp.existing',
     f = 'JupyterConsoleApp.connection_file',
 
@@ -110,7 +111,11 @@ class JupyterConsoleApp(ConnectionFileMixin):
     classes = classes
     flags = Dict(flags)
     aliases = Dict(aliases)
-    kernel_manager_class = KernelManager
+    kernel_manager_class = Type(
+        default_value=KernelManager,
+        config=True,
+        help='The kernel manager class to use.'
+    )
     kernel_client_class = BlockingKernelClient
 
     kernel_argv = List(Unicode())
@@ -218,7 +223,8 @@ class JupyterConsoleApp(ConnectionFileMixin):
                     shell_port=self.shell_port,
                     iopub_port=self.iopub_port,
                     stdin_port=self.stdin_port,
-                    hb_port=self.hb_port
+                    hb_port=self.hb_port,
+                    control_port=self.control_port
         )
         
         self.log.info("Forwarding connections to %s via %s"%(ip, self.sshserver))
@@ -232,7 +238,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
             self.log.error("Could not setup tunnels", exc_info=True)
             self.exit(1)
         
-        self.shell_port, self.iopub_port, self.stdin_port, self.hb_port = newports
+        self.shell_port, self.iopub_port, self.stdin_port, self.hb_port, self.control_port = newports
         
         cf = self.connection_file
         root, ext = os.path.splitext(cf)
@@ -271,6 +277,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
                                     iopub_port=self.iopub_port,
                                     stdin_port=self.stdin_port,
                                     hb_port=self.hb_port,
+                                    control_port=self.control_port,
                                     connection_file=self.connection_file,
                                     kernel_name=self.kernel_name,
                                     parent=self,
@@ -281,10 +288,8 @@ class JupyterConsoleApp(ConnectionFileMixin):
             self.exit(1)
 
         self.kernel_manager.client_factory = self.kernel_client_class
-        # FIXME: remove special treatment of IPython kernels
         kwargs = {}
-        if self.kernel_manager.ipykernel:
-            kwargs['extra_arguments'] = self.kernel_argv
+        kwargs['extra_arguments'] = self.kernel_argv
         self.kernel_manager.start_kernel(**kwargs)
         atexit.register(self.kernel_manager.cleanup_ipc_files)
 
@@ -298,6 +303,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         self.iopub_port=km.iopub_port
         self.stdin_port=km.stdin_port
         self.hb_port=km.hb_port
+        self.control_port=km.control_port
         self.connection_file = km.connection_file
 
         atexit.register(self.kernel_manager.cleanup_connection_file)
@@ -314,6 +320,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
                                 iopub_port=self.iopub_port,
                                 stdin_port=self.stdin_port,
                                 hb_port=self.hb_port,
+                                control_port=self.control_port,
                                 connection_file=self.connection_file,
                                 parent=self,
             )

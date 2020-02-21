@@ -61,9 +61,9 @@ from ipython_genutils.importstring import import_item
 from jupyter_client.jsonutil import extract_dates, squash_dates, date_default
 from ipython_genutils.py3compat import (str_to_bytes, str_to_unicode, unicode_type,
                                      iteritems)
-from traitlets import (CBytes, Unicode, Bool, Any, Instance, Set,
-                                        DottedObjectName, CUnicode, Dict, Integer,
-                                        TraitError,
+from traitlets import (
+    CBytes, Unicode, Bool, Any, Instance, Set, DottedObjectName, CUnicode,
+    Dict, Integer, TraitError, observe
 )
 from jupyter_client import protocol_version
 from jupyter_client.adapter import adapt
@@ -180,8 +180,10 @@ class SessionFactory(LoggingConfigurable):
     """
 
     logname = Unicode('')
-    def _logname_changed(self, name, old, new):
-        self.log = logging.getLogger(new)
+
+    @observe('logname')
+    def _logname_changed(self, change):
+        self.log = logging.getLogger(change['new'])
 
     # not configurable:
     context = Instance('zmq.Context')
@@ -311,7 +313,10 @@ class Session(Configurable):
             help="""The name of the packer for serializing messages.
             Should be one of 'json', 'pickle', or an import name
             for a custom callable serializer.""")
-    def _packer_changed(self, name, old, new):
+
+    @observe('packer')
+    def _packer_changed(self, change):
+        new = change['new']
         if new.lower() == 'json':
             self.pack = json_packer
             self.unpack = json_unpacker
@@ -326,7 +331,10 @@ class Session(Configurable):
     unpacker = DottedObjectName('json', config=True,
         help="""The name of the unpacker for unserializing messages.
         Only used with custom functions for `packer`.""")
-    def _unpacker_changed(self, name, old, new):
+
+    @observe('unpacker')
+    def _unpacker_changed(self, change):
+        new = change['new']
         if new.lower() == 'json':
             self.pack = json_packer
             self.unpack = json_unpacker
@@ -345,7 +353,8 @@ class Session(Configurable):
         self.bsession = u.encode('ascii')
         return u
 
-    def _session_changed(self, name, old, new):
+    @observe('session')
+    def _session_changed(self, change):
         self.bsession = self.session.encode('ascii')
 
     # bsession is the session as bytes
@@ -368,13 +377,17 @@ class Session(Configurable):
     def _key_default(self):
         return new_id_bytes()
 
-    def _key_changed(self):
+    @observe('key')
+    def _key_changed(self, change):
         self._new_auth()
 
     signature_scheme = Unicode('hmac-sha256', config=True,
         help="""The digest scheme used to construct the message signatures.
         Must have the form 'hmac-HASH'.""")
-    def _signature_scheme_changed(self, name, old, new):
+
+    @observe('signature_scheme')
+    def _signature_scheme_changed(self, change):
+        new = change['new']
         if not new.startswith('hmac-'):
             raise TraitError("signature_scheme must start with 'hmac-', got %r" % new)
         hash_name = new.split('-', 1)[1]
@@ -406,8 +419,10 @@ class Session(Configurable):
 
     keyfile = Unicode('', config=True,
         help="""path to file containing execution key.""")
-    def _keyfile_changed(self, name, old, new):
-        with open(new, 'rb') as f:
+
+    @observe('keyfile')
+    def _keyfile_changed(self, change):
+        with open(change['new'], 'rb') as f:
             self.key = f.read().strip()
 
     # for protecting against sends from forks
@@ -416,13 +431,19 @@ class Session(Configurable):
     # serialization traits:
 
     pack = Any(default_packer) # the actual packer function
-    def _pack_changed(self, name, old, new):
+
+    @observe('pack')
+    def _pack_changed(self, change):
+        new = change['new']
         if not callable(new):
             raise TypeError("packer must be callable, not %s"%type(new))
 
     unpack = Any(default_unpacker) # the actual packer function
-    def _unpack_changed(self, name, old, new):
+
+    @observe('unpack')
+    def _unpack_changed(self, change):
         # unpacker is not checked - it is assumed to be
+        new = change['new']
         if not callable(new):
             raise TypeError("unpacker must be callable, not %s"%type(new))
 
@@ -506,10 +527,12 @@ class Session(Configurable):
         new_session.digest_history.update(self.digest_history)
         return new_session
 
+    message_count = 0
     @property
     def msg_id(self):
-        """always return new uuid"""
-        return new_id()
+        message_number = self.message_count
+        self.message_count += 1
+        return '{}_{}'.format(self.session, message_number)
 
     def _check_packers(self):
         """check packers for datetime support."""
@@ -779,7 +802,8 @@ class Session(Configurable):
             to_send.extend(ident)
 
         to_send.append(DELIM)
-        to_send.append(self.sign(msg_list))
+        # Don't include buffers in signature (per spec).
+        to_send.append(self.sign(msg_list[0:4]))
         to_send.extend(msg_list)
         stream.send_multipart(to_send, flags, copy=copy)
 

@@ -7,13 +7,14 @@ from __future__ import absolute_import
 
 import os
 import uuid
+import socket
 
 import zmq
 
 from traitlets.config.configurable import LoggingConfigurable
 from ipython_genutils.importstring import import_item
 from traitlets import (
-    Instance, Dict, List, Unicode, Any, DottedObjectName
+    Any, Bool, Dict, DottedObjectName, Instance, Unicode, default, observe
 )
 from ipython_genutils.py3compat import unicode_type
 
@@ -54,12 +55,54 @@ class MultiKernelManager(LoggingConfigurable):
         subclassing of the KernelManager for customized behavior.
         """
     )
-    def _kernel_manager_class_changed(self, name, old, new):
-        self.kernel_manager_factory = import_item(new)
+
+    def __init__(self, *args, **kwargs):
+        super(MultiKernelManager, self).__init__(*args, **kwargs)
+
+        # Cache all the currently used ports
+        self.currently_used_ports = set()
+
+    @observe('kernel_manager_class')
+    def _kernel_manager_class_changed(self, change):
+        self.kernel_manager_factory = self._create_kernel_manager_factory()
 
     kernel_manager_factory = Any(help="this is kernel_manager_class after import")
+
+    @default('kernel_manager_factory')
     def _kernel_manager_factory_default(self):
-        return import_item(self.kernel_manager_class)
+        return self._create_kernel_manager_factory()
+
+    def _create_kernel_manager_factory(self):
+        kernel_manager_ctor = import_item(self.kernel_manager_class)
+
+        def create_kernel_manager(*args, **kwargs):
+            km = kernel_manager_ctor(*args, **kwargs)
+
+            if km.cache_ports:
+                km.shell_port = self._find_available_port(km.ip)
+                km.iopub_port = self._find_available_port(km.ip)
+                km.stdin_port = self._find_available_port(km.ip)
+                km.hb_port = self._find_available_port(km.ip)
+                km.control_port = self._find_available_port(km.ip)
+
+            return km
+
+        return create_kernel_manager
+
+    def _find_available_port(self, ip):
+        while True:
+            tmp_sock = socket.socket()
+            tmp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, b'\0' * 8)
+            tmp_sock.bind((ip, 0))
+            port = tmp_sock.getsockname()[1]
+            tmp_sock.close()
+
+            # This is a workaround for https://github.com/jupyter/jupyter_client/issues/487
+            # We prevent two kernels to have the same ports.
+            if port not in self.currently_used_ports:
+                self.currently_used_ports.add(port)
+
+                return port
 
     context = Instance('zmq.Context')
     def _context_default(self):
@@ -86,11 +129,11 @@ class MultiKernelManager(LoggingConfigurable):
         """Start a new kernel.
 
         The caller can pick a kernel_id by passing one in as a keyword arg,
-        otherwise one will be picked using a uuid.
+        otherwise one will be generated using new_kernel_id().
 
         The kernel ID for the newly started kernel is returned.
         """
-        kernel_id = kwargs.pop('kernel_id', unicode_type(uuid.uuid4()))
+        kernel_id = kwargs.pop('kernel_id', self.new_kernel_id(**kwargs))
         if kernel_id in self:
             raise DuplicateKernelError('Kernel already exists: %s' % kernel_id)
 
@@ -111,7 +154,6 @@ class MultiKernelManager(LoggingConfigurable):
         self._kernels[kernel_id] = km
         return kernel_id
 
-    @kernel_method
     def shutdown_kernel(self, kernel_id, now=False, restart=False):
         """Shutdown a kernel by its kernel uuid.
 
@@ -125,7 +167,20 @@ class MultiKernelManager(LoggingConfigurable):
             Will the kernel be restarted?
         """
         self.log.info("Kernel shutdown: %s" % kernel_id)
+
+        km = self.get_kernel(kernel_id)
+
+        ports = (
+            km.shell_port, km.iopub_port, km.stdin_port,
+            km.hb_port, km.control_port
+        )
+
+        km.shutdown_kernel(now=now, restart=restart)
         self.remove_kernel(kernel_id)
+
+        if km.cache_ports and not restart:
+            for port in ports:
+                self.currently_used_ports.remove(port)
 
     @kernel_method
     def request_shutdown(self, kernel_id, restart=False):
@@ -331,3 +386,12 @@ class MultiKernelManager(LoggingConfigurable):
         =======
         stream : zmq Socket or ZMQStream
         """
+
+    def new_kernel_id(self, **kwargs):
+        """
+        Returns the id to associate with the kernel for this request. Subclasses may override
+        this method to substitute other sources of kernel ids.
+        :param kwargs:
+        :return: string-ized version 4 uuid
+        """
+        return unicode_type(uuid.uuid4())
