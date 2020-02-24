@@ -1,5 +1,4 @@
 import os
-import sphinx.util
 import sys
 import shutil
 import time
