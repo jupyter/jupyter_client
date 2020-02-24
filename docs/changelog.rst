@@ -4,6 +4,37 @@
 Changes in Jupyter Client
 =========================
 
+6.0.0
+=====
+
+The git history had to be reworked heavily in merging 5.x and master, so a link to all the changes at once in github had been left out as it's just confusing.
+
+An exciting change in this release is some async support (huge thanks to @davidbrochart for doing most of the work)! See linked PR below for more details, we're working on integrating this into nbclient as well in the near future.
+
+New Features:
+
+- Added async API (:ghpull:`506`)
+
+Changes:
+
+- Python 3.8 testing and support added (:ghpull:`509`)
+- Session.msg_id optimization (:ghpull:`493`)
+- Only cache ports if the cache_ports flag is set to True (:ghpull:`492`)
+- Removed direct dependency on pywin32 as this is now in jupyter core (:ghpull:`489`)
+
+Fixes:
+
+- Prevent two kernels to have the same ports (:ghpull:`490`)
+
+Docs:
+
+- Document the handling of error in do_execute (:ghpull:`500`)
+
+Breaking changes:
+
+- Dropped support for Python 2.7!
+
+
 5.3.4
 =====
 
