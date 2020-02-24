@@ -122,7 +122,7 @@ class AsyncKernelClient(KernelClient):
             while not self.is_alive():
                 if time.time() > abs_timeout:
                     raise RuntimeError("Kernel didn't respond to heartbeats in %d seconds and timed out" % timeout)
-                time.sleep(0.2)
+                await asyncio.sleep(0.2)
 
         # Wait for kernel info reply on shell channel
         while True:
