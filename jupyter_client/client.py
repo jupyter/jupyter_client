@@ -3,9 +3,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import absolute_import
 from jupyter_client.channels import major_protocol_version
-from ipython_genutils.py3compat import string_types, iteritems
 
 import zmq
 
@@ -25,10 +23,10 @@ def validate_string_dict(dct):
     """Validate that the input is a dict with string keys and values.
 
     Raises ValueError if not."""
-    for k,v in iteritems(dct):
-        if not isinstance(k, string_types):
+    for k,v in dct.items():
+        if not isinstance(k, str):
             raise ValueError('key %r in dict must be a string' % k)
-        if not isinstance(v, string_types):
+        if not isinstance(v, str):
             raise ValueError('value %r in dict must be a string' % v)
 
 
@@ -264,7 +262,7 @@ class KernelClient(ConnectionFileMixin):
 
 
         # Don't waste network traffic if inputs are invalid
-        if not isinstance(code, string_types):
+        if not isinstance(code, str):
             raise ValueError('code %r must be a string' % code)
         validate_string_dict(user_expressions)
 
@@ -384,7 +382,7 @@ class KernelClient(ConnectionFileMixin):
 
     def comm_info(self, target_name=None):
         """Request comm info
-        
+
         Returns
         -------
         The msg_id of the message sent

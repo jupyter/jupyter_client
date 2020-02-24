@@ -18,11 +18,6 @@ from traitlets import Instance, Dict, Unicode, Bool, List
 from . import __version__
 from .kernelspec import KernelSpecManager
 
-try:
-    raw_input
-except NameError:
-    # py3
-    raw_input = input
 
 class ListKernelSpecs(JupyterApp):
     version = __version__
@@ -30,7 +25,7 @@ class ListKernelSpecs(JupyterApp):
     kernel_spec_manager = Instance(KernelSpecManager)
     json_output = Bool(False, help='output spec name and location as machine-readable json.',
             config=True)
-    
+
     flags = {'json': ({'ListKernelSpecs': {'json_output': True}},
                 "output spec name and location as machine-readable json."),
              'debug': base_flags['debug'],
@@ -71,7 +66,7 @@ class ListKernelSpecs(JupyterApp):
 class InstallKernelSpec(JupyterApp):
     version = __version__
     description = """Install a kernel specification directory.
-    
+
     Given a SOURCE DIRECTORY containing a kernel spec,
     jupyter will copy that directory into one of the Jupyter kernel directories.
     The default is to install kernelspecs for all users.
@@ -157,21 +152,21 @@ class RemoveKernelSpec(JupyterApp):
     version = __version__
     description = """Remove one or more Jupyter kernelspecs by name."""
     examples = """jupyter kernelspec remove python2 [my_kernel ...]"""
-    
+
     force = Bool(False, config=True,
         help="""Force removal, don't prompt for confirmation."""
     )
     spec_names = List(Unicode())
-    
+
     kernel_spec_manager = Instance(KernelSpecManager)
     def _kernel_spec_manager_default(self):
         return KernelSpecManager(data_dir=self.data_dir, parent=self)
-    
+
     flags = {
         'f': ({'RemoveKernelSpec': {'force': True}}, force.get_metadata('help')),
     }
     flags.update(JupyterApp.flags)
-    
+
     def parse_command_line(self, argv):
         super(RemoveKernelSpec, self).parse_command_line(argv)
         # accept positional arg as profile name
@@ -179,22 +174,22 @@ class RemoveKernelSpec(JupyterApp):
             self.spec_names = sorted(set(self.extra_args)) # remove duplicates
         else:
             self.exit("No kernelspec specified.")
-    
+
     def start(self):
         self.kernel_spec_manager.ensure_native_kernel = False
         spec_paths = self.kernel_spec_manager.find_kernel_specs()
         missing = set(self.spec_names).difference(set(spec_paths))
         if missing:
             self.exit("Couldn't find kernel spec(s): %s" % ', '.join(missing))
-        
+
         if not self.force:
             print("Kernel specs to remove:")
             for name in self.spec_names:
                 print("  %s\t%s" % (name.ljust(20), spec_paths[name]))
-            answer = raw_input("Remove %i kernel specs [y/N]: " % len(self.spec_names))
+            answer = input("Remove %i kernel specs [y/N]: " % len(self.spec_names))
             if not answer.lower().startswith('y'):
                 return
-        
+
         for kernel_name in self.spec_names:
             try:
                 path = self.kernel_spec_manager.remove_kernel_spec(kernel_name)

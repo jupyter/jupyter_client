@@ -12,8 +12,7 @@ from dateutil.parser import parse as _dateutil_parse
 from dateutil.tz import tzlocal
 
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import string_types, iteritems
-next_attr_name = '__next__' if py3compat.PY3 else 'next'
+next_attr_name = '__next__' # Not sure what downstream library uses this, but left it to be safe
 
 #-----------------------------------------------------------------------------
 # Globals and constants
@@ -33,7 +32,7 @@ datetime.strptime("1", "%d")
 
 def _ensure_tzinfo(dt):
     """Ensure a datetime object has tzinfo
-    
+
     If no tzinfo is present, add tzlocal
     """
     if not dt.tzinfo:
@@ -46,7 +45,7 @@ def _ensure_tzinfo(dt):
 
 def parse_date(s):
     """parse an ISO8601 date string
-    
+
     If it is None or not a valid ISO8601 timestamp,
     it will be returned unmodified.
     Otherwise, it will return a datetime object.
@@ -63,12 +62,12 @@ def extract_dates(obj):
     """extract ISO8601 dates from unpacked JSON"""
     if isinstance(obj, dict):
         new_obj = {} # don't clobber
-        for k,v in iteritems(obj):
+        for k,v in obj.items():
             new_obj[k] = extract_dates(v)
         obj = new_obj
     elif isinstance(obj, (list, tuple)):
         obj = [ extract_dates(o) for o in obj ]
-    elif isinstance(obj, string_types):
+    elif isinstance(obj, str):
         obj = parse_date(obj)
     return obj
 
@@ -76,7 +75,7 @@ def squash_dates(obj):
     """squash datetime objects into ISO8601 strings"""
     if isinstance(obj, dict):
         obj = dict(obj) # don't clobber
-        for k,v in iteritems(obj):
+        for k,v in obj.items():
             obj[k] = squash_dates(v)
     elif isinstance(obj, (list, tuple)):
         obj = [ squash_dates(o) for o in obj ]

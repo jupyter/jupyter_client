@@ -2,10 +2,9 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 import logging
 import signal
+import queue
 import time
 import sys
 
@@ -19,11 +18,6 @@ from jupyter_core.application import (
 
 from . import __version__
 from .consoleapp import JupyterConsoleApp, app_aliases, app_flags
-
-try:
-    import queue
-except ImportError:
-    import Queue as queue
 
 OUTPUT_TIMEOUT = 10
 

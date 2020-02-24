@@ -4,24 +4,19 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import pytest
 import copy
 import io
 import json
-from logging import StreamHandler
 import os
-from os.path import join as pjoin
-from subprocess import Popen, PIPE, STDOUT
 import sys
 import tempfile
 import unittest
 
-import pytest
-
-if str is bytes: # py2
-    StringIO = io.BytesIO
-else:
-    StringIO = io.StringIO
-
+from io import StringIO
+from os.path import join as pjoin
+from subprocess import Popen, PIPE, STDOUT
+from logging import StreamHandler
 from ipython_genutils.tempdir import TemporaryDirectory
 from jupyter_client import kernelspec
 from jupyter_core import paths
@@ -32,7 +27,7 @@ sample_kernel_json = {'argv':['cat', '{connection_file}'],
                      }
 
 class KernelSpecTests(unittest.TestCase):
-    
+
     def _install_sample_kernel(self, kernels_dir):
         """install a sample kernel in a kernels directory"""
         sample_kernel_dir = pjoin(kernels_dir, 'sample')
@@ -41,7 +36,7 @@ class KernelSpecTests(unittest.TestCase):
         with open(json_file, 'w') as f:
             json.dump(sample_kernel_json, f)
         return sample_kernel_dir
-    
+
     def setUp(self):
         self.env_patch = test_env()
         self.env_patch.start()
@@ -75,7 +70,7 @@ class KernelSpecTests(unittest.TestCase):
         kernels = self.ksm.get_all_specs()
         self.assertEqual(kernels['sample']['resource_dir'], self.sample_kernel_dir)
         self.assertIsNotNone(kernels['sample']['spec'])
-    
+
     def test_kernel_spec_priority(self):
         td = TemporaryDirectory()
         self.addCleanup(td.cleanup)
@@ -92,7 +87,7 @@ class KernelSpecTests(unittest.TestCase):
                                      kernel_name='tstinstalled',
                                      user=True)
         self.assertIn('tstinstalled', self.ksm.find_kernel_specs())
-        
+
         # install again works
         self.ksm.install_kernel_spec(self.installable_kernel,
                                      kernel_name='tstinstalled',
@@ -115,7 +110,7 @@ class KernelSpecTests(unittest.TestCase):
         # add prefix to path, so we find the spec
         self.ksm.kernel_dirs.append(pjoin(td.name, 'share', 'jupyter', 'kernels'))
         self.assertIn('tstinstalled', self.ksm.find_kernel_specs())
-    
+
         # Run it again, no warning this time because we've added it to the path
         capture = StringIO()
         handler = StreamHandler(capture)

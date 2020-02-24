@@ -3,8 +3,6 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import absolute_import
-
 from tornado import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 

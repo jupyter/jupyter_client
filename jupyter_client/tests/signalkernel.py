@@ -3,7 +3,6 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
 import os
 
 from subprocess import Popen, PIPE
@@ -54,10 +53,10 @@ class SignalTestKernel(Kernel):
             reply['evalue'] = code
             reply['traceback'] = ['no such command: %s' % code]
         return reply
-    
+
     def kernel_info_request(self, *args, **kwargs):
         """Add delay to kernel_info_request
-        
+
         triggers slow-response code in KernelClient.wait_for_ready
         """
         return super(SignalTestKernel, self).kernel_info_request(*args, **kwargs)

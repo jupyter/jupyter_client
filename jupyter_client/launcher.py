@@ -8,7 +8,7 @@ import sys
 from subprocess import Popen, PIPE
 
 from ipython_genutils.encoding import getdefaultencoding
-from ipython_genutils.py3compat import cast_bytes_py2, PY3
+from ipython_genutils.py3compat import cast_bytes_py2
 from traitlets.log import get_logger
 
 
@@ -127,10 +127,7 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
         # because we want to interrupt the whole process group.
         # We don't use setpgrp, which is known to cause problems for kernels starting
         # certain interactive subprocesses, such as bash -i.
-        if PY3:
-            kwargs['start_new_session'] = True
-        else:
-            kwargs['preexec_fn'] = lambda: os.setsid()
+        kwargs['start_new_session'] = True
         if not independent:
             env['JPY_PARENT_PID'] = str(os.getpid())
 

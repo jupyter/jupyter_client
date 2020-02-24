@@ -29,27 +29,13 @@ except:
     cPickle = None
     import pickle
 
-try:
-    # py3
-    PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
-except AttributeError:
-    PICKLE_PROTOCOL = pickle.HIGHEST_PROTOCOL
+PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
 
-try:
-    # We are using compare_digest to limit the surface of timing attacks
-    from hmac import compare_digest
-except ImportError:
-    # Python < 2.7.7: When digests don't match no feedback is provided,
-    # limiting the surface of attack
-    def compare_digest(a,b): return a == b
+# We are using compare_digest to limit the surface of timing attacks
+from hmac import compare_digest
 
-try:
-    from datetime import timezone
-    utc = timezone.utc
-except ImportError:
-    # Python 2
-    from dateutil.tz import tzutc
-    utc = tzutc()
+from datetime import timezone
+utc = timezone.utc
 
 import zmq
 from zmq.utils import jsonapi

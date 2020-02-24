@@ -7,9 +7,6 @@ related to writing and reading connections files.
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-
-from __future__ import absolute_import
-
 import errno
 import glob
 import json
@@ -27,7 +24,7 @@ from traitlets.config import LoggingConfigurable
 from .localinterfaces import localhost
 from ipython_genutils.path import filefind
 from ipython_genutils.py3compat import (
-    bytes_to_str, cast_bytes, cast_bytes_py2, string_types,
+    bytes_to_str, cast_bytes, cast_bytes_py2,
 )
 from traitlets import (
     Bool, Integer, Unicode, CaselessStrEnum, Instance, Type, observe
@@ -195,7 +192,7 @@ def find_connection_file(filename='kernel-*.json', path=None, profile=None):
         warnings.warn("Jupyter has no profiles. profile=%s has been ignored." % profile)
     if path is None:
         path = ['.', jupyter_runtime_dir()]
-    if isinstance(path, string_types):
+    if isinstance(path, str):
         path = [path]
 
     try:
@@ -254,7 +251,7 @@ def tunnel_to_kernel(connection_info, sshserver, sshkey=None):
         The five ports on localhost that have been forwarded to the kernel.
     """
     from .ssh import tunnel
-    if isinstance(connection_info, string_types):
+    if isinstance(connection_info, str):
         # it's a path, unpack it
         with open(connection_info) as f:
             connection_info = json.loads(f.read())

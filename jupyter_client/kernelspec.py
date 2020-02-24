@@ -13,7 +13,6 @@ import warnings
 
 pjoin = os.path.join
 
-from ipython_genutils.py3compat import PY3
 from traitlets import (
     HasTraits, List, Unicode, Dict, Set, Bool, Type, CaselessStrEnum
 )
@@ -22,7 +21,7 @@ from traitlets.config import LoggingConfigurable
 from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PATH
 
 
-NATIVE_KERNEL_NAME = 'python3' if PY3 else 'python2'
+NATIVE_KERNEL_NAME = 'python3'
 
 
 class KernelSpec(HasTraits):

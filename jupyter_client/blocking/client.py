@@ -5,35 +5,19 @@ Useful for test suites and blocking terminal interfaces.
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 from functools import partial
 from getpass import getpass
-try:
-    from queue import Empty  # Python 3
-except ImportError:
-    from Queue import Empty  # Python 2
+from queue import Empty
 import sys
 import time
 
 import zmq
 
+from time import monotonic
 from traitlets import Type
 from jupyter_client.channels import HBChannel
 from jupyter_client.client import KernelClient
 from .channels import ZMQSocketChannel
-
-try:
-    monotonic = time.monotonic
-except AttributeError:
-    # py2
-    monotonic = time.time # close enough
-
-try:
-    TimeoutError
-except NameError:
-    # py2
-    TimeoutError = RuntimeError
 
 
 def reqrep(meth, channel='shell'):
@@ -45,12 +29,12 @@ def reqrep(meth, channel='shell'):
             return msg_id
 
         return self._recv_reply(msg_id, timeout=timeout, channel=channel)
-    
+
     if not meth.__doc__:
         # python -OO removes docstrings,
         # so don't bother building the wrapped docstring
         return wrapped
-    
+
     basedoc, _ = meth.__doc__.split('Returns\n', 1)
     parts = [basedoc.strip()]
     if 'Parameters' not in basedoc:
@@ -76,14 +60,14 @@ def reqrep(meth, channel='shell'):
 
 class BlockingKernelClient(KernelClient):
     """A KernelClient with blocking APIs
-    
+
     ``get_[channel]_msg()`` methods wait for and return messages on channels,
     raising :exc:`queue.Empty` if no message arrives within ``timeout`` seconds.
     """
-    
+
     def wait_for_ready(self, timeout=None):
         """Waits for a response when a client is blocked
-        
+
         - Sets future time for timeout
         - Blocks on shell channel until a message is received
         - Exit if the kernel has died

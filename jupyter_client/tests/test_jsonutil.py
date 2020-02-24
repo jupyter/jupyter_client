@@ -4,17 +4,12 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import datetime
-from datetime import timedelta
 import json
-
-try:
-    from unittest import mock
-except ImportError:
-    # py2
-    import mock
-
 import pytest
+import datetime
+
+from datetime import timedelta
+from unittest import mock
 from dateutil.tz import tzlocal, tzoffset
 from jupyter_client import jsonutil
 from jupyter_client.session import utcnow
@@ -62,7 +57,7 @@ def test_extract_dates():
 def test_parse_ms_precision():
     base = '2013-07-03T16:34:52'
     digits = '1234567890'
-    
+
     parsed = jsonutil.parse_date(base+'Z')
     assert isinstance(parsed, datetime.datetime)
     for i in range(len(digits)):

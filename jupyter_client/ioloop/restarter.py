@@ -7,7 +7,6 @@ restarts the kernel if it dies.
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import absolute_import
 import warnings
 
 from zmq.eventloop import ioloop

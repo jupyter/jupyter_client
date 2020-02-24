@@ -4,32 +4,12 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
+import os
+import sys
+from setuptools import setup
 
 # the name of the project
 name = 'jupyter_client'
-
-#-----------------------------------------------------------------------------
-# Minimal Python version sanity check
-#-----------------------------------------------------------------------------
-
-import sys
-
-v = sys.version_info
-if v[:2] < (2, 7) or (v[0] >= 3 and v[:2] < (3, 5)):
-    error = "ERROR: %s requires Python version 2.7 or 3.5 or above." % name
-    print(error, file=sys.stderr)
-    sys.exit(1)
-
-PY3 = (sys.version_info[0] >= 3)
-
-#-----------------------------------------------------------------------------
-# get on with it
-#-----------------------------------------------------------------------------
-
-import os
-
-from setuptools import setup
 
 pjoin = os.path.join
 here = os.path.abspath(os.path.dirname(__file__))
@@ -83,12 +63,11 @@ setup_args = dict(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     install_requires = [
         'traitlets',
@@ -97,7 +76,7 @@ setup_args = dict(
         'python-dateutil>=2.1',
         'tornado>=4.1',
     ],
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
+    python_requires  = '>=3.5',
     extras_require   = {
         'test': ['ipykernel', 'ipython', 'mock', 'pytest'],
     },
