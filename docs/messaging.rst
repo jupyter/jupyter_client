@@ -86,7 +86,7 @@ are reasonably representable in JSON.
 General Message Format
 ======================
 
-A message is defined by the following four-dictionary structure::
+A message can be represented as the following structure::
 
     {
       # The message header contains a pair of unique identifiers for the
@@ -105,7 +105,7 @@ A message is defined by the following four-dictionary structure::
                     'msg_type' : str,
                     # the message protocol version
                     'version' : '5.0',
-         },
+      },
 
       # In a chain of messages, the header from the parent is copied so that
       # clients can track where messages come from.
@@ -122,6 +122,15 @@ A message is defined by the following four-dictionary structure::
       # that support binary extensions to the protocol.
       'buffers': list,
     }
+
+.. note::
+
+    This dictionary structure is *not* part of the Jupyter protocol
+    that must be implemented by kernels and frontends;
+    that would be :ref:`wire_protocol`,
+    which dictates how this information is serialized over the wire.
+    Deserialization is up to the Kernel or frontend implementation,
+    but a dict like this would be a logical choice in most contexts.
 
 .. note::
 
@@ -182,14 +191,17 @@ The Wire Protocol
 =================
 
 
-This message format exists at a high level,
+The above message format is only a logical representation of the contents of Jupyter messages,
 but does not describe the actual *implementation* at the wire level in zeromq.
-The canonical implementation of the message spec is our :class:`~jupyter_client.session.Session` class.
+This section describes the protocol that must be implemented by Jupyter kernels and clients
+talking to each other over zeromq.
+
+The reference implementation of the message spec is our :class:`~jupyter_client.session.Session` class.
 
 .. note::
 
     This section should only be relevant to non-Python consumers of the protocol.
-    Python consumers should simply import and the use implementation of the wire
+    Python consumers should import and the use implementation of the wire
     protocol in :class:`jupyter_client.session.Session`.
 
 Every message is serialized to a sequence of at least six blobs of bytes:
