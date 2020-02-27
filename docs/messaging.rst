@@ -86,51 +86,32 @@ are reasonably representable in JSON.
 General Message Format
 ======================
 
-A message can be represented as the following structure::
+A message is composed of four dictionaries.
+
+Message Header
+--------------
+
+The message `header` contains information about the message,
+such as unique identifiers for the originating session and the actual message id,
+the type of message, the version of the Jupyter protocol,
+and the date the message was created.
+In addition, there is a username field, e.g. for the process that generated the message, if applicable.
+This can be useful in collaborative settings where multiple users may be interacting with the same kernel simultaneously,
+so that frontends can label the various messages in a meaningful way.
+
+.. sourcecode:: python
 
     {
-      # The message header contains a pair of unique identifiers for the
-      # originating session and the actual message id, in addition to the
-      # username for the process that generated the message.  This is useful in
-      # collaborative settings where multiple users may be interacting with the
-      # same kernel simultaneously, so that frontends can label the various
-      # messages in a meaningful way.
-      'header' : {
-                    'msg_id' : str, # typically UUID, must be unique per message
-                    'username' : str,
-                    'session' : str, # typically UUID, should be unique per session
-                    # ISO 8601 timestamp for when the message is created
-                    'date': str,
-                    # All recognized message type strings are listed below.
-                    'msg_type' : str,
-                    # the message protocol version
-                    'version' : '5.0',
-      },
-
-      # In a chain of messages, the header from the parent is copied so that
-      # clients can track where messages come from.
-      'parent_header' : dict,
-
-      # Any metadata associated with the message.
-      'metadata' : dict,
-
-      # The actual content of the message must be a dict, whose structure
-      # depends on the message type.
-      'content' : dict,
-
-      # optional: buffers is a list of binary data buffers for implementations
-      # that support binary extensions to the protocol.
-      'buffers': list,
+        'msg_id' : str, # typically UUID, must be unique per message
+        'session' : str, # typically UUID, should be unique per session
+        'username' : str,
+        # ISO 8601 timestamp for when the message is created
+        'date': str,
+        # All recognized message type strings are listed below.
+        'msg_type' : str,
+        # the message protocol version
+        'version' : '5.0',
     }
-
-.. note::
-
-    This dictionary structure is *not* part of the Jupyter protocol
-    that must be implemented by kernels and frontends;
-    that would be :ref:`wire_protocol`,
-    which dictates how this information is serialized over the wire.
-    Deserialization is up to the Kernel or frontend implementation,
-    but a dict like this would be a logical choice in most contexts.
 
 .. note::
 
@@ -161,6 +142,78 @@ A message can be represented as the following structure::
     but it has always been in the canonical implementation,
     so implementers are strongly encouraged to include it.
     It will be mandatory in 5.1.
+
+Parent header
+-------------
+
+When a message is the "result" of another message,
+such as a side-effect (output or status) or direct reply,
+the ``parent_header`` is a copy of the ``header`` of the message
+that "caused" the current message.
+``_reply`` messages MUST have a ``parent_header``,
+and side-effects *typically* have a parent.
+If there is no parent, an empty dict should be used.
+This parent is used by clients to route message handling to the right place,
+such as outputs to a cell.
+
+.. sourcecode::
+
+    {
+        # parent_header is a copy of the request's header
+        'msg_id': '...',
+        ...
+    }
+
+Metadata
+--------
+
+The `metadata` dict contains information about the message that is not part of the content.
+This is not often used, but can be an extra location to store information about requests and replies,
+such as extensions adding information about request or execution context.
+
+Content
+-------
+
+The ``content`` dict is the body of the message.
+Its structure is dictated by the ``msg_type`` field in the header,
+described in detail for each message below.
+
+Buffers
+-------
+
+Finally, a list of additional binary buffers can be associated with a message.
+While this is part of the protocol,
+no official messages make use of these buffers.
+They are used by extension messages, such as IPython Parallel's ``apply``
+and some of ipywidgets' ``comm`` messages.
+
+A full message
+--------------
+
+Combining all of these together,
+a complete message can be represented as the following dictionary of dictionaries (and one list)::
+
+    {
+        "header" : {
+            "msg_id": "...",
+            "msg_type": "...",
+            ...
+        },
+        "parent_header": {},
+        "metadata": {},
+        "content": {},
+        "buffers": [],
+    }
+
+
+.. note::
+
+    This dictionary structure is *not* part of the Jupyter protocol
+    that must be implemented by kernels and frontends;
+    that would be :ref:`wire_protocol`,
+    which dictates how this information is serialized over the wire.
+    Deserialization is up to the Kernel or frontend implementation,
+    but a dict like this would be a logical choice in most contexts.
 
 .. _msging_compatibility:
 
@@ -280,7 +333,7 @@ which can be used in custom messages, such as comms and extensions to the protoc
 Python API
 ==========
 
-As messages are dicts, they map naturally to a ``func(**kw)`` call form.  We
+As messages can be represented as dicts, they map naturally to a ``func(**kw)`` call form.  We
 should develop, at a few key points, functional forms of all the requests that
 take arguments in this manner and automatically construct the necessary dict
 for sending.
@@ -297,9 +350,10 @@ messages upon deserialization to the following form for convenience::
       'parent_header' : dict,
       'content' : dict,
       'metadata' : dict,
+      'buffers': list,
     }
 
-All messages sent to or received by any IPython process should have this
+All messages sent to or received by any IPython message handler should have this
 extended structure.
 
 
