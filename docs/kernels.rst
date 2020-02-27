@@ -27,9 +27,10 @@ There are three options for writing a kernel:
    a C-API like most scripting languages. Check out the
    `xeus documentation <https://xeus.readthedocs.io/>`_ for more details.
    Examples of kernels based on xeus include:
-     - `xeus-cling <https://github.com/QuantStack/xeus-cling>`_
-     - `xeus-python <https://github.com/QuantStack/xeus-python>`_
-     - `JuniperKernel <https://github.com/JuniperKernel/JuniperKernel>`_
+
+   - `xeus-cling <https://github.com/QuantStack/xeus-cling>`_
+   - `xeus-python <https://github.com/QuantStack/xeus-python>`_
+   - `JuniperKernel <https://github.com/JuniperKernel/JuniperKernel>`_
 
 Connection files
 ================
