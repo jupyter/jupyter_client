@@ -1,16 +1,14 @@
 """Tests for the notebook kernel and session manager."""
 
-import os
-import time
+import asyncio
 import threading
 import multiprocessing as mp
 
 from subprocess import PIPE
 from unittest import TestCase
-from tornado.testing import AsyncTestCase, gen_test, gen
+from tornado.testing import AsyncTestCase, gen_test
 
 from traitlets.config.loader import Config
-from ..localinterfaces import localhost
 from jupyter_client import KernelManager, AsyncKernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager, AsyncMultiKernelManager
 from .utils import skip_win32
@@ -38,7 +36,7 @@ class TestKernelManager(TestCase):
         self.assertTrue(km.is_alive(kid))
         self.assertTrue(kid in km)
         self.assertTrue(kid in km.list_kernel_ids())
-        self.assertEqual(len(km),1)
+        self.assertEqual(len(km), 1)
         km.restart_kernel(kid, now=True)
         self.assertTrue(km.is_alive(kid))
         self.assertTrue(kid in km.list_kernel_ids())
@@ -46,7 +44,7 @@ class TestKernelManager(TestCase):
         k = km.get_kernel(kid)
         self.assertTrue(isinstance(k, KernelManager))
         km.shutdown_kernel(kid, now=True)
-        self.assertTrue(not kid in km)
+        self.assertNotIn(kid, km)
 
     def _run_cinfo(self, km, transport, ip):
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -99,18 +97,22 @@ class TestKernelManager(TestCase):
         self._run_lifecycle(self._get_tcp_km())
         self._run_lifecycle(self._get_tcp_km())
 
-
-    def test_start_sequence_tcp_kernels(self):
+    def test_start_sequence_ipc_kernels(self):
         """Ensure that a sequence of kernel startups doesn't break anything."""
         self._run_lifecycle(self._get_ipc_km())
         self._run_lifecycle(self._get_ipc_km())
         self._run_lifecycle(self._get_ipc_km())
 
+    def tcp_lifecycle_with_loop(self):
+        # Ensure each thread has an event loop
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        self.test_tcp_lifecycle()
+
     def test_start_parallel_thread_kernels(self):
         self.test_tcp_lifecycle()
 
-        thread = threading.Thread(target=self.test_tcp_lifecycle)
-        thread2 = threading.Thread(target=self.test_tcp_lifecycle)
+        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
+        thread2 = threading.Thread(target=self.tcp_lifecycle_with_loop)
         try:
             thread.start()
             thread2.start()
@@ -121,7 +123,7 @@ class TestKernelManager(TestCase):
     def test_start_parallel_process_kernels(self):
         self.test_tcp_lifecycle()
 
-        thread = threading.Thread(target=self.test_tcp_lifecycle)
+        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
         proc = mp.Process(target=self.test_tcp_lifecycle)
 
         try:
@@ -148,27 +150,25 @@ class TestAsyncKernelManager(AsyncTestCase):
         km = AsyncMultiKernelManager(config=c)
         return km
 
-    @gen.coroutine
-    def _run_lifecycle(self, km):
-        kid = yield km.start_kernel(stdout=PIPE, stderr=PIPE)
-        is_alive = yield km.is_alive(kid)
+    async def _run_lifecycle(self, km):
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        is_alive = km.is_alive(kid)
         self.assertTrue(is_alive)
         self.assertTrue(kid in km)
         self.assertTrue(kid in km.list_kernel_ids())
-        self.assertEqual(len(km),1)
-        yield km.restart_kernel(kid, now=True)
-        is_alive = yield km.is_alive(kid)
+        self.assertEqual(len(km), 1)
+        await km.restart_kernel(kid, now=True)
+        is_alive = km.is_alive(kid)
         self.assertTrue(is_alive)
         self.assertTrue(kid in km.list_kernel_ids())
-        yield km.interrupt_kernel(kid)
+        await km.interrupt_kernel(kid)
         k = km.get_kernel(kid)
-        self.assertTrue(isinstance(k, KernelManager))
-        yield km.shutdown_kernel(kid, now=True)
+        self.assertTrue(isinstance(k, AsyncKernelManager))
+        await km.shutdown_kernel(kid, now=True)
         self.assertNotIn(kid, km)
 
-    @gen.coroutine
-    def _run_cinfo(self, km, transport, ip):
-        kid = yield km.start_kernel(stdout=PIPE, stderr=PIPE)
+    async def _run_cinfo(self, km, transport, ip):
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
         k = km.get_kernel(kid)
         cinfo = km.get_connection_info(kid)
         self.assertEqual(transport, cinfo['transport'])
@@ -183,37 +183,90 @@ class TestAsyncKernelManager(AsyncTestCase):
         self.assertTrue('hb_port' in cinfo)
         stream = km.connect_hb(kid)
         stream.close()
-        yield km.shutdown_kernel(kid, now=True)
+        await km.shutdown_kernel(kid, now=True)
         self.assertNotIn(kid, km)
 
     @gen_test
-    def test_tcp_lifecycle(self):
-        km = self._get_tcp_km()
-        yield self._run_lifecycle(km)
+    async def test_tcp_lifecycle(self):
+        await self.raw_tcp_lifecycle()
 
     @gen_test
-    def test_shutdown_all(self):
+    async def test_shutdown_all(self):
         km = self._get_tcp_km()
-        kid = yield km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
         self.assertIn(kid, km)
-        yield km.shutdown_all()
+        await km.shutdown_all()
         self.assertNotIn(kid, km)
         # shutdown again is okay, because we have no kernels
-        yield km.shutdown_all()
+        await km.shutdown_all()
 
     @gen_test
-    def test_tcp_cinfo(self):
+    async def test_tcp_cinfo(self):
         km = self._get_tcp_km()
-        yield self._run_cinfo(km, 'tcp', localhost())
+        await self._run_cinfo(km, 'tcp', localhost())
 
     @skip_win32
     @gen_test
-    def test_ipc_lifecycle(self):
+    async def test_ipc_lifecycle(self):
         km = self._get_ipc_km()
-        yield self._run_lifecycle(km)
+        await self._run_lifecycle(km)
 
     @skip_win32
     @gen_test
-    def test_ipc_cinfo(self):
+    async def test_ipc_cinfo(self):
         km = self._get_ipc_km()
-        yield self._run_cinfo(km, 'ipc', 'test')
+        await self._run_cinfo(km, 'ipc', 'test')
+
+    @gen_test
+    async def test_start_sequence_tcp_kernels(self):
+        """Ensure that a sequence of kernel startups doesn't break anything."""
+        await self._run_lifecycle(self._get_tcp_km())
+        await self._run_lifecycle(self._get_tcp_km())
+        await self._run_lifecycle(self._get_tcp_km())
+
+    @gen_test
+    async def test_start_sequence_ipc_kernels(self):
+        """Ensure that a sequence of kernel startups doesn't break anything."""
+        await self._run_lifecycle(self._get_ipc_km())
+        await self._run_lifecycle(self._get_ipc_km())
+        await self._run_lifecycle(self._get_ipc_km())
+
+    def tcp_lifecycle_with_loop(self):
+        # Ensure each thread has an event loop
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        asyncio.get_event_loop().run_until_complete(self.raw_tcp_lifecycle())
+
+    async def raw_tcp_lifecycle(self):
+        # Since @gen_test creates an event loop, we need a raw form of
+        # test_tcp_lifecycle that assumes the loop already exists.
+        km = self._get_tcp_km()
+        await self._run_lifecycle(km)
+
+    @gen_test
+    async def test_start_parallel_thread_kernels(self):
+        await self.raw_tcp_lifecycle()
+
+        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
+        thread2 = threading.Thread(target=self.tcp_lifecycle_with_loop)
+        try:
+            thread.start()
+            thread2.start()
+        finally:
+            thread.join()
+            thread2.join()
+
+    @gen_test
+    async def test_start_parallel_process_kernels(self):
+        await self.raw_tcp_lifecycle()
+
+        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
+        proc = mp.Process(target=self.raw_tcp_lifecycle)
+
+        try:
+            thread.start()
+            proc.start()
+        finally:
+            proc.join()
+            thread.join()
+
+        assert proc.exitcode == 0

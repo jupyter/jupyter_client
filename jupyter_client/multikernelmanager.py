@@ -9,7 +9,6 @@ import socket
 
 import zmq
 
-from tornado import gen
 from traitlets.config.configurable import LoggingConfigurable
 from ipython_genutils.importstring import import_item
 from traitlets import (
@@ -19,6 +18,7 @@ from ipython_genutils.py3compat import unicode_type
 
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import AsyncKernelManager
+
 
 class DuplicateKernelError(Exception):
     pass
@@ -411,8 +411,7 @@ class AsyncMultiKernelManager(MultiKernelManager):
         """
     )
 
-    @gen.coroutine
-    def start_kernel(self, kernel_name=None, **kwargs):
+    async def start_kernel(self, kernel_name=None, **kwargs):
         """Start a new kernel.
 
         The caller can pick a kernel_id by passing one in as a keyword arg,
@@ -424,12 +423,11 @@ class AsyncMultiKernelManager(MultiKernelManager):
         if not isinstance(km, AsyncKernelManager):
             self.log.warning("Kernel manager class ({km_class}) is not an instance of 'AsyncKernelManager'!".
                              format(km_class=self.kernel_manager_class.__class__))
-        yield km.start_kernel(**kwargs)
+        await km.start_kernel(**kwargs)
         self._kernels[kernel_id] = km
-        raise gen.Return(kernel_id)
+        return kernel_id
 
-    @gen.coroutine
-    def shutdown_kernel(self, kernel_id, now=False, restart=False):
+    async def shutdown_kernel(self, kernel_id, now=False, restart=False):
         """Shutdown a kernel by its kernel uuid.
 
         Parameters
@@ -442,32 +440,18 @@ class AsyncMultiKernelManager(MultiKernelManager):
             Will the kernel be restarted?
         """
         km = self.get_kernel(kernel_id)
-        yield km.shutdown_kernel(now, restart)
+        await km.shutdown_kernel(now, restart)
         self.log.info("Kernel shutdown: %s" % kernel_id)
         self.remove_kernel(kernel_id)
 
-    @gen.coroutine
-    def request_shutdown(self, kernel_id, restart=False):
-        """Ask a kernel to shut down by its kernel uuid"""
-        km = self.get_kernel(kernel_id)
-        yield km.request_shutdown(restart)
-
-    @gen.coroutine
-    def finish_shutdown(self, kernel_id, waittime=None, pollinterval=0.1):
+    async def finish_shutdown(self, kernel_id, waittime=None, pollinterval=0.1):
         """Wait for a kernel to finish shutting down, and kill it if it doesn't
         """
         km = self.get_kernel(kernel_id)
-        yield km.finish_shutdown(waittime, pollinterval)
+        await km.finish_shutdown(waittime, pollinterval)
         self.log.info("Kernel shutdown: %s" % kernel_id)
 
-    @gen.coroutine
-    def cleanup(self, kernel_id, connection_file=True):
-        """Clean up a kernel's resources"""
-        km = self.get_kernel(kernel_id)
-        yield km.cleanup(connection_file)
-
-    @gen.coroutine
-    def interrupt_kernel(self, kernel_id):
+    async def interrupt_kernel(self, kernel_id):
         """Interrupt (SIGINT) the kernel by its uuid.
 
         Parameters
@@ -476,11 +460,10 @@ class AsyncMultiKernelManager(MultiKernelManager):
             The id of the kernel to interrupt.
         """
         km = self.get_kernel(kernel_id)
-        yield km.interrupt_kernel()
+        await km.interrupt_kernel()
         self.log.info("Kernel interrupted: %s" % kernel_id)
 
-    @gen.coroutine
-    def signal_kernel(self, kernel_id, signum):
+    async def signal_kernel(self, kernel_id, signum):
         """Sends a signal to the kernel by its uuid.
 
         Note that since only SIGTERM is supported on Windows, this function
@@ -492,11 +475,10 @@ class AsyncMultiKernelManager(MultiKernelManager):
             The id of the kernel to signal.
         """
         km = self.get_kernel(kernel_id)
-        yield km.signal_kernel(signum)
+        await km.signal_kernel(signum)
         self.log.info("Signaled Kernel %s with %s" % (kernel_id, signum))
 
-    @gen.coroutine
-    def restart_kernel(self, kernel_id, now=False):
+    async def restart_kernel(self, kernel_id, now=False):
         """Restart a kernel by its uuid, keeping the same ports.
 
         Parameters
@@ -505,33 +487,15 @@ class AsyncMultiKernelManager(MultiKernelManager):
             The id of the kernel to interrupt.
         """
         km = self.get_kernel(kernel_id)
-        yield km.restart_kernel(now)
+        await km.restart_kernel(now)
         self.log.info("Kernel restarted: %s" % kernel_id)
 
-    @gen.coroutine
-    def is_alive(self, kernel_id):
-        """Is the kernel alive.
-
-        This calls KernelManager.is_alive() which calls Popen.poll on the
-        actual kernel subprocess.
-
-        Parameters
-        ==========
-        kernel_id : uuid
-            The id of the kernel.
-        """
-        # get the kernel
-        km = self.get_kernel(kernel_id)
-        is_alive = yield km.is_alive()
-        raise gen.Return(is_alive)
-
-    @gen.coroutine
-    def shutdown_all(self, now=False):
+    async def shutdown_all(self, now=False):
         """Shutdown all kernels."""
         kids = self.list_kernel_ids()
         for kid in kids:
-            yield self.request_shutdown(kid)
+            self.request_shutdown(kid)
         for kid in kids:
-            yield self.finish_shutdown(kid)
-            yield self.cleanup(kid)
+            await self.finish_shutdown(kid)
+            self.cleanup(kid)
             self.remove_kernel(kid)

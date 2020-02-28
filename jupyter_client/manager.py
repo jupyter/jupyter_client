@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from contextlib import contextmanager
+import asyncio
 import os
 import re
 import signal
@@ -512,17 +513,17 @@ class KernelManager(ConnectionFileMixin):
 class AsyncKernelManager(KernelManager):
     """Manages kernels in an asynchronous manner """
 
-    @gen.coroutine
-    def _launch_kernel(self, kernel_cmd, **kw):
+    client_factory = Type(klass='jupyter_client.asynchronous.AsyncKernelClient')
+
+    async def _launch_kernel(self, kernel_cmd, **kw):
         """actually launch the kernel
 
         override in a subclass to launch kernel subprocesses differently
         """
-        res = yield gen.maybe_future(launch_kernel(kernel_cmd, **kw))
-        raise gen.Return(res)
+        res = launch_kernel(kernel_cmd, **kw)
+        return res
 
-    @gen.coroutine
-    def start_kernel(self, **kw):
+    async def start_kernel(self, **kw):
         """Starts a kernel in a separate process in an asynchronous manner.
 
         If random ports (port=0) are being used, this method must be called
@@ -538,17 +539,10 @@ class AsyncKernelManager(KernelManager):
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel (async): %s", kernel_cmd)
-        self.kernel = yield self._launch_kernel(kernel_cmd, **kw)
+        self.kernel = await self._launch_kernel(kernel_cmd, **kw)
         self.post_start_kernel(**kw)
 
-    @gen.coroutine
-    def request_shutdown(self, restart=False):
-        """Send a shutdown request via control channel
-        """
-        yield gen.maybe_future(super(AsyncKernelManager, self).request_shutdown(restart))
-
-    @gen.coroutine
-    def finish_shutdown(self, waittime=None, pollinterval=0.1):
+    async def finish_shutdown(self, waittime=None, pollinterval=0.1):
         """Wait for kernel shutdown, then kill process if it doesn't shutdown.
 
         This does not send shutdown requests - use :meth:`request_shutdown`
@@ -557,28 +551,22 @@ class AsyncKernelManager(KernelManager):
         if waittime is None:
             waittime = max(self.shutdown_wait_time, 0)
         for i in range(int(waittime/pollinterval)):
-            is_alive = yield self.is_alive()
+            is_alive = self.is_alive()
             if is_alive:
-                yield gen.sleep(pollinterval)
+                await asyncio.sleep(pollinterval)
             else:
                 # If there's still a proc, wait and clear
                 if self.has_kernel:
-                    yield gen.maybe_future(self.kernel.wait())
+                    self.kernel.wait()
                     self.kernel = None
                 break
         else:
             # OK, we've waited long enough.
             if self.has_kernel:
                 self.log.debug("Kernel is taking too long to finish, killing")
-                yield self._kill_kernel()
+                await self._kill_kernel()
 
-    @gen.coroutine
-    def cleanup(self, connection_file=True):
-        """Clean up resources when the kernel is shut down"""
-        yield gen.maybe_future(super(AsyncKernelManager, self).cleanup(connection_file))
-
-    @gen.coroutine
-    def shutdown_kernel(self, now=False, restart=False):
+    async def shutdown_kernel(self, now=False, restart=False):
         """Attempts to stop the kernel process cleanly.
 
         This attempts to shutdown the kernels cleanly by:
@@ -600,18 +588,17 @@ class AsyncKernelManager(KernelManager):
         self.stop_restarter()
 
         if now:
-            yield self._kill_kernel()
+            await self._kill_kernel()
         else:
-            yield self.request_shutdown(restart=restart)
+            self.request_shutdown(restart=restart)
             # Don't send any additional kernel kill messages immediately, to give
             # the kernel a chance to properly execute shutdown actions. Wait for at
             # most 1s, checking every 0.1s.
-            yield self.finish_shutdown()
+            await self.finish_shutdown()
 
-        yield self.cleanup(connection_file=not restart)
+        self.cleanup(connection_file=not restart)
 
-    @gen.coroutine
-    def restart_kernel(self, now=False, newports=False, **kw):
+    async def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
 
         Parameters
@@ -641,18 +628,17 @@ class AsyncKernelManager(KernelManager):
                                "No previous call to 'start_kernel'.")
         else:
             # Stop currently running kernel.
-            yield self.shutdown_kernel(now=now, restart=True)
+            await self.shutdown_kernel(now=now, restart=True)
 
             if newports:
                 self.cleanup_random_ports()
 
             # Start new kernel.
             self._launch_args.update(kw)
-            yield self.start_kernel(**self._launch_args)
-        raise gen.Return(None)
+            await self.start_kernel(**self._launch_args)
+        return None
 
-    @gen.coroutine
-    def _kill_kernel(self):
+    async def _kill_kernel(self):
         """Kill the running kernel.
 
         This is a private method, callers should use shutdown_kernel(now=True).
@@ -663,9 +649,9 @@ class AsyncKernelManager(KernelManager):
             # TerminateProcess() on Win32).
             try:
                 if hasattr(signal, 'SIGKILL'):
-                    yield self.signal_kernel(signal.SIGKILL)
+                    await self.signal_kernel(signal.SIGKILL)
                 else:
-                    yield gen.maybe_future(self.kernel.kill())
+                    await self.kernel.kill()
             except OSError as e:
                 # In Windows, we will get an Access Denied error if the process
                 # has already terminated. Ignore it.
@@ -679,14 +665,18 @@ class AsyncKernelManager(KernelManager):
                     if e.errno != ESRCH:
                         raise
 
-            # Block until the kernel terminates.
-            yield gen.maybe_future(self.kernel.wait())
+            # Wait until the kernel terminates.
+            try:
+                await asyncio.wait_for(gen.maybe_future(self.kernel.wait()), timeout=5.0)
+            except asyncio.TimeoutError:
+                # Wait timed out, just log warning but continue - not much more we can do.
+                self.log.warning("Wait for final termination of kernel timed out - continuing...")
+                pass
             self.kernel = None
         else:
             raise RuntimeError("Cannot kill kernel. No kernel is running!")
 
-    @gen.coroutine
-    def interrupt_kernel(self):
+    async def interrupt_kernel(self):
         """Interrupts the kernel by sending it a signal.
 
         Unlike ``signal_kernel``, this operation is well supported on all
@@ -699,7 +689,7 @@ class AsyncKernelManager(KernelManager):
                     from .win_interrupt import send_interrupt
                     send_interrupt(self.kernel.win32_interrupt_event)
                 else:
-                    yield self.signal_kernel(signal.SIGINT)
+                    await self.signal_kernel(signal.SIGINT)
 
             elif interrupt_mode == 'message':
                 msg = self.session.msg("interrupt_request", content={})
@@ -708,8 +698,7 @@ class AsyncKernelManager(KernelManager):
         else:
             raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
 
-    @gen.coroutine
-    def signal_kernel(self, signum):
+    async def signal_kernel(self, signum):
         """Sends a signal to the process group of the kernel (this
         usually includes the kernel and any subprocesses spawned by
         the kernel).
@@ -725,20 +714,9 @@ class AsyncKernelManager(KernelManager):
                     return
                 except OSError:
                     pass
-            yield gen.maybe_future(self.kernel.send_signal(signum))
+            self.kernel.send_signal(signum)
         else:
             raise RuntimeError("Cannot signal kernel. No kernel is running!")
-
-    @gen.coroutine
-    def is_alive(self):
-        """Is the kernel process still running?"""
-        is_alive = False
-        if self.has_kernel:
-            ret = yield gen.maybe_future(self.kernel.poll())
-            if ret is None:
-                is_alive = True
-
-        raise gen.Return(is_alive)
 
 
 KernelManagerABC.register(KernelManager)
@@ -760,21 +738,20 @@ def start_new_kernel(startup_timeout=60, kernel_name='python', **kwargs):
     return km, kc
 
 
-@gen.coroutine
-def start_new_async_kernel(startup_timeout=60, kernel_name='python', **kwargs):
+async def start_new_async_kernel(startup_timeout=60, kernel_name='python', **kwargs):
     """Start a new kernel, and return its Manager and Client"""
     km = AsyncKernelManager(kernel_name=kernel_name)
-    yield km.start_kernel(**kwargs)
+    await km.start_kernel(**kwargs)
     kc = km.client()
     kc.start_channels()
     try:
-        kc.wait_for_ready(timeout=startup_timeout)
+        await kc.wait_for_ready(timeout=startup_timeout)
     except RuntimeError:
         kc.stop_channels()
-        yield km.shutdown_kernel()
+        await km.shutdown_kernel()
         raise
 
-    raise gen.Return((km, kc))
+    return (km, kc)
 
 
 @contextmanager

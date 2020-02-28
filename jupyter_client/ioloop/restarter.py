@@ -56,11 +56,10 @@ class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
             )
             self._pcallback.start()
 
-    @gen.coroutine
-    def poll(self):
+    async def poll(self):
         if self.debug:
             self.log.debug('Polling kernel...')
-        is_alive = yield gen.maybe_future(self.kernel_manager.is_alive())
+        is_alive = self.kernel_manager.is_alive()
         if not is_alive:
             if self._restarting:
                 self._restart_count += 1
@@ -81,7 +80,7 @@ class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
                     'new' if newports else 'keep'
                 )
                 self._fire_callbacks('restart')
-                yield self.kernel_manager.restart_kernel(now=True, newports=newports)
+                await self.kernel_manager.restart_kernel(now=True, newports=newports)
                 self._restarting = True
         else:
             if self._initial_startup:

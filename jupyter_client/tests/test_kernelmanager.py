@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 
+import asyncio
 import json
 import os
 pjoin = os.path.join
@@ -146,7 +147,7 @@ class TestKernelManager(TestCase):
 
         reply = execute('env')
         self.assertIsNotNone(reply)
-        self.assertEquals(reply['user_expressions']['env'], 'test_var_1:test_var_2')
+        self.assertEqual(reply['user_expressions']['env'], 'test_var_1:test_var_2')
 
     def test_templated_kspec_env(self):
         self._install_test_kernel()
@@ -341,28 +342,25 @@ class TestAsyncKernelManager(AsyncTestCase):
         km = AsyncKernelManager(config=c)
         return km
 
-    @gen.coroutine
-    def _run_lifecycle(self, km):
-        yield km.start_kernel(stdout=PIPE, stderr=PIPE)
-        is_alive = yield km.is_alive()
-        self.assertTrue(is_alive)
-        yield km.restart_kernel(now=True)
-        is_alive = yield km.is_alive()
-        self.assertTrue(is_alive)
-        yield km.interrupt_kernel()
+    async def _run_lifecycle(self, km):
+        await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        self.assertTrue(km.is_alive())
+        await km.restart_kernel(now=True)
+        self.assertTrue(km.is_alive())
+        await km.interrupt_kernel()
         self.assertTrue(isinstance(km, AsyncKernelManager))
-        yield km.shutdown_kernel(now=True)
+        await km.shutdown_kernel(now=True)
 
     @gen_test
-    def test_tcp_lifecycle(self):
+    async def test_tcp_lifecycle(self):
         km = self._get_tcp_km()
-        yield self._run_lifecycle(km)
+        await self._run_lifecycle(km)
 
     @skip_win32
     @gen_test
-    def test_ipc_lifecycle(self):
+    async def test_ipc_lifecycle(self):
         km = self._get_ipc_km()
-        yield self._run_lifecycle(km)
+        await self._run_lifecycle(km)
 
     def test_get_connect_info(self):
         km = self._get_tcp_km()
@@ -376,14 +374,14 @@ class TestAsyncKernelManager(AsyncTestCase):
         self.assertEqual(keys, expected)
 
     @skip_win32
-    @gen_test
-    def test_signal_kernel_subprocesses(self):
+    @gen_test(timeout=10.0)
+    async def test_signal_kernel_subprocesses(self):
         self._install_test_kernel()
-        km, kc = yield start_new_async_kernel(kernel_name='signaltest')
+        km, kc = await start_new_async_kernel(kernel_name='signaltest')
 
-        def execute(cmd):
+        async def execute(cmd):
             kc.execute(cmd)
-            reply = kc.get_shell_msg(TIMEOUT)
+            reply = await kc.get_shell_msg(TIMEOUT)
             content = reply['content']
             self.assertEqual(content['status'], 'ok')
             return content
@@ -393,43 +391,42 @@ class TestAsyncKernelManager(AsyncTestCase):
         try:
             N = 5
             for i in range(N):
-                execute("start")
-            time.sleep(1)  # make sure subprocs stay up
-            reply = execute('check')
+                await execute("start")
+            await asyncio.sleep(1)  # make sure subprocs stay up
+            reply = await execute('check')
             self.assertEqual(reply['user_expressions']['poll'], [None] * N)
 
             # start a job on the kernel to be interrupted
             kc.execute('sleep')
-            time.sleep(1)  # ensure sleep message has been handled before we interrupt
-            yield km.interrupt_kernel()
-            reply = kc.get_shell_msg(TIMEOUT)
+            await asyncio.sleep(1)  # ensure sleep message has been handled before we interrupt
+            await km.interrupt_kernel()
+            reply = await kc.get_shell_msg(TIMEOUT)
             content = reply['content']
             self.assertEqual(content['status'], 'ok')
             self.assertEqual(content['user_expressions']['interrupted'], True)
             # wait up to 5s for subprocesses to handle signal
             for i in range(50):
-                reply = execute('check')
+                reply = await execute('check')
                 if reply['user_expressions']['poll'] != [-signal.SIGINT] * N:
-                    time.sleep(0.1)
+                    await asyncio.sleep(0.1)
                 else:
                     break
             # verify that subprocesses were interrupted
             self.assertEqual(reply['user_expressions']['poll'], [-signal.SIGINT] * N)
         finally:
-            yield km.shutdown_kernel(now=True)
+            await km.shutdown_kernel(now=True)
             kc.stop_channels()
 
-    @gen_test
-    def test_start_new_async_kernel(self):
+    @gen_test(timeout=10.0)
+    async def test_start_new_async_kernel(self):
         self._install_test_kernel()
-        km, kc = yield start_new_async_kernel(kernel_name='signaltest')
+        km, kc = await start_new_async_kernel(kernel_name='signaltest')
         # Ensure that shutdown_kernel and stop_channels are called at the end of the test.
         # Note: we cannot use addCleanup(<func>) for these since it doesn't properly handle
         # coroutines - which km.shutdown_kernel now is.
         try:
-            is_alive = yield km.is_alive()
-            self.assertTrue(is_alive)
+            self.assertTrue(km.is_alive())
             self.assertTrue(kc.is_alive())
         finally:
-            yield km.shutdown_kernel(now=True)
+            await km.shutdown_kernel(now=True)
             kc.stop_channels()
