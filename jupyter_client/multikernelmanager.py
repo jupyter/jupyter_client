@@ -439,10 +439,21 @@ class AsyncMultiKernelManager(MultiKernelManager):
         restart : bool
             Will the kernel be restarted?
         """
-        km = self.get_kernel(kernel_id)
-        await km.shutdown_kernel(now, restart)
         self.log.info("Kernel shutdown: %s" % kernel_id)
+
+        km = self.get_kernel(kernel_id)
+
+        ports = (
+            km.shell_port, km.iopub_port, km.stdin_port,
+            km.hb_port, km.control_port
+        )
+
+        await km.shutdown_kernel(now, restart)
         self.remove_kernel(kernel_id)
+
+        if km.cache_ports and not restart:
+            for port in ports:
+                self.currently_used_ports.remove(port)
 
     async def finish_shutdown(self, kernel_id, waittime=None, pollinterval=0.1):
         """Wait for a kernel to finish shutting down, and kill it if it doesn't

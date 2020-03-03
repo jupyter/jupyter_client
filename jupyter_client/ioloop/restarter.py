@@ -48,14 +48,6 @@ class IOLoopKernelRestarter(KernelRestarter):
 
 class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
 
-    def start(self):
-        """Start the polling of the kernel."""
-        if self._pcallback is None:
-            self._pcallback = ioloop.PeriodicCallback(
-                self.poll, 1000*self.time_to_dead,
-            )
-            self._pcallback.start()
-
     async def poll(self):
         if self.debug:
             self.log.debug('Polling kernel...')

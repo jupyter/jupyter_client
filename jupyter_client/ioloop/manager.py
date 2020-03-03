@@ -75,7 +75,7 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
         klass=AsyncIOLoopKernelRestarter,
         help=(
             'Type of KernelRestarter to use. '
-            'Must be a subclass of IOLoopKernelRestarter.\n'
+            'Must be a subclass of AsyncIOLoopKernelManager.\n'
             'Override this to customize how kernel restarts are managed.'
         ),
         config=True,

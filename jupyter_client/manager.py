@@ -14,7 +14,6 @@ import warnings
 
 import zmq
 
-from tornado import gen
 from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
@@ -550,21 +549,16 @@ class AsyncKernelManager(KernelManager):
         """
         if waittime is None:
             waittime = max(self.shutdown_wait_time, 0)
-        for i in range(int(waittime/pollinterval)):
-            is_alive = self.is_alive()
-            if is_alive:
-                await asyncio.sleep(pollinterval)
-            else:
-                # If there's still a proc, wait and clear
-                if self.has_kernel:
-                    self.kernel.wait()
-                    self.kernel = None
-                break
+        try:
+            await asyncio.wait_for(self._async_wait(pollinterval=pollinterval), timeout=waittime)
+        except asyncio.TimeoutError:
+            self.log.debug("Kernel is taking too long to finish, killing")
+            await self._kill_kernel()
         else:
-            # OK, we've waited long enough.
-            if self.has_kernel:
-                self.log.debug("Kernel is taking too long to finish, killing")
-                await self._kill_kernel()
+            # Process is no longer alive, wait and clear
+            if self.kernel is not None:
+                self.kernel.wait()
+                self.kernel = None
 
     async def shutdown_kernel(self, now=False, restart=False):
         """Attempts to stop the kernel process cleanly.
@@ -644,7 +638,6 @@ class AsyncKernelManager(KernelManager):
         This is a private method, callers should use shutdown_kernel(now=True).
         """
         if self.has_kernel:
-
             # Signal the kernel to terminate (sends SIGKILL on Unix and calls
             # TerminateProcess() on Win32).
             try:
@@ -667,11 +660,15 @@ class AsyncKernelManager(KernelManager):
 
             # Wait until the kernel terminates.
             try:
-                await asyncio.wait_for(gen.maybe_future(self.kernel.wait()), timeout=5.0)
+                await asyncio.wait_for(self._async_wait(), timeout=5.0)
             except asyncio.TimeoutError:
                 # Wait timed out, just log warning but continue - not much more we can do.
                 self.log.warning("Wait for final termination of kernel timed out - continuing...")
                 pass
+            else:
+                # Process is no longer alive, wait and clear
+                if self.kernel is not None:
+                    self.kernel.wait()
             self.kernel = None
         else:
             raise RuntimeError("Cannot kill kernel. No kernel is running!")
@@ -717,6 +714,14 @@ class AsyncKernelManager(KernelManager):
             self.kernel.send_signal(signum)
         else:
             raise RuntimeError("Cannot signal kernel. No kernel is running!")
+
+    async def _async_wait(self, pollinterval=0.1):
+        # Use busy loop at 100ms intervals, polling until the process is
+        # not alive.  If we find the process is no longer alive, complete
+        # its cleanup via the blocking wait().  Callers are responsible for
+        # issuing calls to wait() using a timeout (see _kill_kernel()).
+        while self.is_alive():
+            await asyncio.sleep(pollinterval)
 
 
 KernelManagerABC.register(KernelManager)
