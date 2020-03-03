@@ -152,14 +152,12 @@ class TestAsyncKernelManager(AsyncTestCase):
 
     async def _run_lifecycle(self, km):
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
-        is_alive = km.is_alive(kid)
-        self.assertTrue(is_alive)
+        self.assertTrue(await km.is_alive(kid))
         self.assertTrue(kid in km)
         self.assertTrue(kid in km.list_kernel_ids())
         self.assertEqual(len(km), 1)
         await km.restart_kernel(kid, now=True)
-        is_alive = km.is_alive(kid)
-        self.assertTrue(is_alive)
+        self.assertTrue(await km.is_alive(kid))
         self.assertTrue(kid in km.list_kernel_ids())
         await km.interrupt_kernel(kid)
         k = km.get_kernel(kid)

@@ -344,12 +344,13 @@ class TestAsyncKernelManager(AsyncTestCase):
 
     async def _run_lifecycle(self, km):
         await km.start_kernel(stdout=PIPE, stderr=PIPE)
-        self.assertTrue(km.is_alive())
+        self.assertTrue(await km.is_alive())
         await km.restart_kernel(now=True)
-        self.assertTrue(km.is_alive())
+        self.assertTrue(await km.is_alive())
         await km.interrupt_kernel()
         self.assertTrue(isinstance(km, AsyncKernelManager))
         await km.shutdown_kernel(now=True)
+        self.assertFalse(await km.is_alive())
 
     @gen_test
     async def test_tcp_lifecycle(self):
@@ -425,8 +426,8 @@ class TestAsyncKernelManager(AsyncTestCase):
         # Note: we cannot use addCleanup(<func>) for these since it doesn't properly handle
         # coroutines - which km.shutdown_kernel now is.
         try:
-            self.assertTrue(km.is_alive())
-            self.assertTrue(kc.is_alive())
+            self.assertTrue(await km.is_alive())
+            self.assertTrue(await kc.is_alive())
         finally:
             await km.shutdown_kernel(now=True)
             kc.stop_channels()

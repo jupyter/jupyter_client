@@ -715,12 +715,23 @@ class AsyncKernelManager(KernelManager):
         else:
             raise RuntimeError("Cannot signal kernel. No kernel is running!")
 
+    async def is_alive(self):
+        """Is the kernel process still running?"""
+        if self.has_kernel:
+            if self.kernel.poll() is None:
+                return True
+            else:
+                return False
+        else:
+            # we don't have a kernel
+            return False
+
     async def _async_wait(self, pollinterval=0.1):
         # Use busy loop at 100ms intervals, polling until the process is
         # not alive.  If we find the process is no longer alive, complete
         # its cleanup via the blocking wait().  Callers are responsible for
         # issuing calls to wait() using a timeout (see _kill_kernel()).
-        while self.is_alive():
+        while await self.is_alive():
             await asyncio.sleep(pollinterval)
 
 

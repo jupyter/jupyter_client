@@ -9,7 +9,6 @@ restarts the kernel if it dies.
 
 import warnings
 
-from tornado import gen
 from zmq.eventloop import ioloop
 
 from jupyter_client.restarter import KernelRestarter
@@ -51,7 +50,7 @@ class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
     async def poll(self):
         if self.debug:
             self.log.debug('Polling kernel...')
-        is_alive = self.kernel_manager.is_alive()
+        is_alive = await self.kernel_manager.is_alive()
         if not is_alive:
             if self._restarting:
                 self._restart_count += 1
