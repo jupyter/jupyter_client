@@ -135,7 +135,7 @@ class AsyncKernelClient(KernelClient):
                     self._handle_kernel_info_reply(msg)
                     break
 
-            if not self.is_alive():
+            if not await self.is_alive():
                 raise RuntimeError('Kernel died before replying to kernel_info')
 
             # Check if current time is ready check time plus timeout
@@ -233,6 +233,24 @@ class AsyncKernelClient(KernelClient):
             session.send(socket, msg_type, msg['content'], parent=parent_header)
         else:
             self._output_hook_default(msg)
+
+    async def is_alive(self):
+        """Is the kernel process still running?"""
+        from ..manager import KernelManager, AsyncKernelManager
+        if isinstance(self.parent, KernelManager):
+            # This KernelClient was created by a KernelManager,
+            # we can ask the parent KernelManager:
+            if isinstance(self.parent, AsyncKernelManager):
+                return await self.parent.is_alive()
+            return self.parent.is_alive()
+        if self._hb_channel is not None:
+            # We don't have access to the KernelManager,
+            # so we use the heartbeat.
+            return self._hb_channel.is_beating()
+        else:
+            # no heartbeat and not local, we can't tell if it's running,
+            # so naively return True
+            return True
 
     async def execute_interactive(self, code, silent=False, store_history=True,
                  user_expressions=None, allow_stdin=None, stop_on_error=True,

@@ -17,6 +17,8 @@ from traitlets import (
 from ipython_genutils.py3compat import unicode_type
 
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
+from .manager import AsyncKernelManager
+
 
 class DuplicateKernelError(Exception):
     pass
@@ -123,14 +125,8 @@ class MultiKernelManager(LoggingConfigurable):
     def __contains__(self, kernel_id):
         return kernel_id in self._kernels
 
-    def start_kernel(self, kernel_name=None, **kwargs):
-        """Start a new kernel.
+    def pre_start_kernel(self, kernel_name, **kwargs):
 
-        The caller can pick a kernel_id by passing one in as a keyword arg,
-        otherwise one will be generated using new_kernel_id().
-
-        The kernel ID for the newly started kernel is returned.
-        """
         kernel_id = kwargs.pop('kernel_id', self.new_kernel_id(**kwargs))
         if kernel_id in self:
             raise DuplicateKernelError('Kernel already exists: %s' % kernel_id)
@@ -148,6 +144,17 @@ class MultiKernelManager(LoggingConfigurable):
                     parent=self, log=self.log, kernel_name=kernel_name,
                     **constructor_kwargs
         )
+        return km, kernel_name, kernel_id
+
+    def start_kernel(self, kernel_name=None, **kwargs):
+        """Start a new kernel.
+
+        The caller can pick a kernel_id by passing one in as a keyword arg,
+        otherwise one will be generated using new_kernel_id().
+
+        The kernel ID for the newly started kernel is returned.
+        """
+        km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, **kwargs)
         km.start_kernel(**kwargs)
         self._kernels[kernel_id] = km
         return kernel_id
@@ -393,3 +400,113 @@ class MultiKernelManager(LoggingConfigurable):
         :return: string-ized version 4 uuid
         """
         return unicode_type(uuid.uuid4())
+
+
+class AsyncMultiKernelManager(MultiKernelManager):
+
+    kernel_manager_class = DottedObjectName(
+        "jupyter_client.ioloop.AsyncIOLoopKernelManager", config=True,
+        help="""The kernel manager class.  This is configurable to allow
+        subclassing of the AsyncKernelManager for customized behavior.
+        """
+    )
+
+    async def start_kernel(self, kernel_name=None, **kwargs):
+        """Start a new kernel.
+
+        The caller can pick a kernel_id by passing one in as a keyword arg,
+        otherwise one will be generated using new_kernel_id().
+
+        The kernel ID for the newly started kernel is returned.
+        """
+        km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, **kwargs)
+        if not isinstance(km, AsyncKernelManager):
+            self.log.warning("Kernel manager class ({km_class}) is not an instance of 'AsyncKernelManager'!".
+                             format(km_class=self.kernel_manager_class.__class__))
+        await km.start_kernel(**kwargs)
+        self._kernels[kernel_id] = km
+        return kernel_id
+
+    async def shutdown_kernel(self, kernel_id, now=False, restart=False):
+        """Shutdown a kernel by its kernel uuid.
+
+        Parameters
+        ==========
+        kernel_id : uuid
+            The id of the kernel to shutdown.
+        now : bool
+            Should the kernel be shutdown forcibly using a signal.
+        restart : bool
+            Will the kernel be restarted?
+        """
+        self.log.info("Kernel shutdown: %s" % kernel_id)
+
+        km = self.get_kernel(kernel_id)
+
+        ports = (
+            km.shell_port, km.iopub_port, km.stdin_port,
+            km.hb_port, km.control_port
+        )
+
+        await km.shutdown_kernel(now, restart)
+        self.remove_kernel(kernel_id)
+
+        if km.cache_ports and not restart:
+            for port in ports:
+                self.currently_used_ports.remove(port)
+
+    async def finish_shutdown(self, kernel_id, waittime=None, pollinterval=0.1):
+        """Wait for a kernel to finish shutting down, and kill it if it doesn't
+        """
+        km = self.get_kernel(kernel_id)
+        await km.finish_shutdown(waittime, pollinterval)
+        self.log.info("Kernel shutdown: %s" % kernel_id)
+
+    async def interrupt_kernel(self, kernel_id):
+        """Interrupt (SIGINT) the kernel by its uuid.
+
+        Parameters
+        ==========
+        kernel_id : uuid
+            The id of the kernel to interrupt.
+        """
+        km = self.get_kernel(kernel_id)
+        await km.interrupt_kernel()
+        self.log.info("Kernel interrupted: %s" % kernel_id)
+
+    async def signal_kernel(self, kernel_id, signum):
+        """Sends a signal to the kernel by its uuid.
+
+        Note that since only SIGTERM is supported on Windows, this function
+        is only useful on Unix systems.
+
+        Parameters
+        ==========
+        kernel_id : uuid
+            The id of the kernel to signal.
+        """
+        km = self.get_kernel(kernel_id)
+        await km.signal_kernel(signum)
+        self.log.info("Signaled Kernel %s with %s" % (kernel_id, signum))
+
+    async def restart_kernel(self, kernel_id, now=False):
+        """Restart a kernel by its uuid, keeping the same ports.
+
+        Parameters
+        ==========
+        kernel_id : uuid
+            The id of the kernel to interrupt.
+        """
+        km = self.get_kernel(kernel_id)
+        await km.restart_kernel(now)
+        self.log.info("Kernel restarted: %s" % kernel_id)
+
+    async def shutdown_all(self, now=False):
+        """Shutdown all kernels."""
+        kids = self.list_kernel_ids()
+        for kid in kids:
+            self.request_shutdown(kid)
+        for kid in kids:
+            await self.finish_shutdown(kid)
+            self.cleanup(kid)
+            self.remove_kernel(kid)

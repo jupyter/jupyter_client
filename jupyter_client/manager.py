@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from contextlib import contextmanager
+import asyncio
 import os
 import re
 import signal
@@ -223,8 +224,8 @@ class KernelManager(ConnectionFileMixin):
         self._control_socket.close()
         self._control_socket = None
 
-    def start_kernel(self, **kw):
-        """Starts a kernel on this host in a separate process.
+    def pre_start_kernel(self, **kw):
+        """Prepares a kernel for startup in a separate process.
 
         If random ports (port=0) are being used, this method must be called
         before the channels are created.
@@ -261,12 +262,9 @@ class KernelManager(ConnectionFileMixin):
             env.update(self._get_env_substitutions(self.kernel_spec.env, env))
         elif self.extra_env:
             env.update(self._get_env_substitutions(self.extra_env, env))
+        kw['env'] = env
 
-        # launch the kernel subprocess
-        self.log.debug("Starting kernel: %s", kernel_cmd)
-        self.kernel = self._launch_kernel(kernel_cmd, env=env, **kw)
-        self.start_restarter()
-        self._connect_control_socket()
+        return kernel_cmd, kw
 
     def _get_env_substitutions(self, templated_env, substitution_values):
         """ Walks env entries in templated_env and applies possible substitutions from current env
@@ -283,6 +281,29 @@ class KernelManager(ConnectionFileMixin):
             for k, v in templated_env.items():
                 substituted_env.update({k: Template(v).safe_substitute(substitution_values)})
         return substituted_env
+
+    def post_start_kernel(self, **kw):
+        self.start_restarter()
+        self._connect_control_socket()
+
+    def start_kernel(self, **kw):
+        """Starts a kernel on this host in a separate process.
+
+        If random ports (port=0) are being used, this method must be called
+        before the channels are created.
+
+        Parameters
+        ----------
+        `**kw` : optional
+             keyword arguments that are passed down to build the kernel_cmd
+             and launching the kernel (e.g. Popen kwargs).
+        """
+        kernel_cmd, kw = self.pre_start_kernel(**kw)
+
+        # launch the kernel subprocess
+        self.log.debug("Starting kernel: %s", kernel_cmd)
+        self.kernel = self._launch_kernel(kernel_cmd, **kw)
+        self.post_start_kernel(**kw)
 
     def request_shutdown(self, restart=False):
         """Send a shutdown request via control channel
@@ -488,6 +509,232 @@ class KernelManager(ConnectionFileMixin):
             return False
 
 
+class AsyncKernelManager(KernelManager):
+    """Manages kernels in an asynchronous manner """
+
+    client_factory = Type(klass='jupyter_client.asynchronous.AsyncKernelClient')
+
+    async def _launch_kernel(self, kernel_cmd, **kw):
+        """actually launch the kernel
+
+        override in a subclass to launch kernel subprocesses differently
+        """
+        res = launch_kernel(kernel_cmd, **kw)
+        return res
+
+    async def start_kernel(self, **kw):
+        """Starts a kernel in a separate process in an asynchronous manner.
+
+        If random ports (port=0) are being used, this method must be called
+        before the channels are created.
+
+        Parameters
+        ----------
+        `**kw` : optional
+             keyword arguments that are passed down to build the kernel_cmd
+             and launching the kernel (e.g. Popen kwargs).
+        """
+        kernel_cmd, kw = self.pre_start_kernel(**kw)
+
+        # launch the kernel subprocess
+        self.log.debug("Starting kernel (async): %s", kernel_cmd)
+        self.kernel = await self._launch_kernel(kernel_cmd, **kw)
+        self.post_start_kernel(**kw)
+
+    async def finish_shutdown(self, waittime=None, pollinterval=0.1):
+        """Wait for kernel shutdown, then kill process if it doesn't shutdown.
+
+        This does not send shutdown requests - use :meth:`request_shutdown`
+        first.
+        """
+        if waittime is None:
+            waittime = max(self.shutdown_wait_time, 0)
+        try:
+            await asyncio.wait_for(self._async_wait(pollinterval=pollinterval), timeout=waittime)
+        except asyncio.TimeoutError:
+            self.log.debug("Kernel is taking too long to finish, killing")
+            await self._kill_kernel()
+        else:
+            # Process is no longer alive, wait and clear
+            if self.kernel is not None:
+                self.kernel.wait()
+                self.kernel = None
+
+    async def shutdown_kernel(self, now=False, restart=False):
+        """Attempts to stop the kernel process cleanly.
+
+        This attempts to shutdown the kernels cleanly by:
+
+        1. Sending it a shutdown message over the shell channel.
+        2. If that fails, the kernel is shutdown forcibly by sending it
+           a signal.
+
+        Parameters
+        ----------
+        now : bool
+            Should the kernel be forcible killed *now*. This skips the
+            first, nice shutdown attempt.
+        restart: bool
+            Will this kernel be restarted after it is shutdown. When this
+            is True, connection files will not be cleaned up.
+        """
+        # Stop monitoring for restarting while we shutdown.
+        self.stop_restarter()
+
+        if now:
+            await self._kill_kernel()
+        else:
+            self.request_shutdown(restart=restart)
+            # Don't send any additional kernel kill messages immediately, to give
+            # the kernel a chance to properly execute shutdown actions. Wait for at
+            # most 1s, checking every 0.1s.
+            await self.finish_shutdown()
+
+        self.cleanup(connection_file=not restart)
+
+    async def restart_kernel(self, now=False, newports=False, **kw):
+        """Restarts a kernel with the arguments that were used to launch it.
+
+        Parameters
+        ----------
+        now : bool, optional
+            If True, the kernel is forcefully restarted *immediately*, without
+            having a chance to do any cleanup action.  Otherwise the kernel is
+            given 1s to clean up before a forceful restart is issued.
+
+            In all cases the kernel is restarted, the only difference is whether
+            it is given a chance to perform a clean shutdown or not.
+
+        newports : bool, optional
+            If the old kernel was launched with random ports, this flag decides
+            whether the same ports and connection file will be used again.
+            If False, the same ports and connection file are used. This is
+            the default. If True, new random port numbers are chosen and a
+            new connection file is written. It is still possible that the newly
+            chosen random port numbers happen to be the same as the old ones.
+
+        `**kw` : optional
+            Any options specified here will overwrite those used to launch the
+            kernel.
+        """
+        if self._launch_args is None:
+            raise RuntimeError("Cannot restart the kernel. "
+                               "No previous call to 'start_kernel'.")
+        else:
+            # Stop currently running kernel.
+            await self.shutdown_kernel(now=now, restart=True)
+
+            if newports:
+                self.cleanup_random_ports()
+
+            # Start new kernel.
+            self._launch_args.update(kw)
+            await self.start_kernel(**self._launch_args)
+        return None
+
+    async def _kill_kernel(self):
+        """Kill the running kernel.
+
+        This is a private method, callers should use shutdown_kernel(now=True).
+        """
+        if self.has_kernel:
+            # Signal the kernel to terminate (sends SIGKILL on Unix and calls
+            # TerminateProcess() on Win32).
+            try:
+                if hasattr(signal, 'SIGKILL'):
+                    await self.signal_kernel(signal.SIGKILL)
+                else:
+                    await self.kernel.kill()
+            except OSError as e:
+                # In Windows, we will get an Access Denied error if the process
+                # has already terminated. Ignore it.
+                if sys.platform == 'win32':
+                    if e.winerror != 5:
+                        raise
+                # On Unix, we may get an ESRCH error if the process has already
+                # terminated. Ignore it.
+                else:
+                    from errno import ESRCH
+                    if e.errno != ESRCH:
+                        raise
+
+            # Wait until the kernel terminates.
+            try:
+                await asyncio.wait_for(self._async_wait(), timeout=5.0)
+            except asyncio.TimeoutError:
+                # Wait timed out, just log warning but continue - not much more we can do.
+                self.log.warning("Wait for final termination of kernel timed out - continuing...")
+                pass
+            else:
+                # Process is no longer alive, wait and clear
+                if self.kernel is not None:
+                    self.kernel.wait()
+            self.kernel = None
+        else:
+            raise RuntimeError("Cannot kill kernel. No kernel is running!")
+
+    async def interrupt_kernel(self):
+        """Interrupts the kernel by sending it a signal.
+
+        Unlike ``signal_kernel``, this operation is well supported on all
+        platforms.
+        """
+        if self.has_kernel:
+            interrupt_mode = self.kernel_spec.interrupt_mode
+            if interrupt_mode == 'signal':
+                if sys.platform == 'win32':
+                    from .win_interrupt import send_interrupt
+                    send_interrupt(self.kernel.win32_interrupt_event)
+                else:
+                    await self.signal_kernel(signal.SIGINT)
+
+            elif interrupt_mode == 'message':
+                msg = self.session.msg("interrupt_request", content={})
+                self._connect_control_socket()
+                self.session.send(self._control_socket, msg)
+        else:
+            raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
+
+    async def signal_kernel(self, signum):
+        """Sends a signal to the process group of the kernel (this
+        usually includes the kernel and any subprocesses spawned by
+        the kernel).
+
+        Note that since only SIGTERM is supported on Windows, this function is
+        only useful on Unix systems.
+        """
+        if self.has_kernel:
+            if hasattr(os, "getpgid") and hasattr(os, "killpg"):
+                try:
+                    pgid = os.getpgid(self.kernel.pid)
+                    os.killpg(pgid, signum)
+                    return
+                except OSError:
+                    pass
+            self.kernel.send_signal(signum)
+        else:
+            raise RuntimeError("Cannot signal kernel. No kernel is running!")
+
+    async def is_alive(self):
+        """Is the kernel process still running?"""
+        if self.has_kernel:
+            if self.kernel.poll() is None:
+                return True
+            else:
+                return False
+        else:
+            # we don't have a kernel
+            return False
+
+    async def _async_wait(self, pollinterval=0.1):
+        # Use busy loop at 100ms intervals, polling until the process is
+        # not alive.  If we find the process is no longer alive, complete
+        # its cleanup via the blocking wait().  Callers are responsible for
+        # issuing calls to wait() using a timeout (see _kill_kernel()).
+        while await self.is_alive():
+            await asyncio.sleep(pollinterval)
+
+
 KernelManagerABC.register(KernelManager)
 
 
@@ -505,6 +752,23 @@ def start_new_kernel(startup_timeout=60, kernel_name='python', **kwargs):
         raise
 
     return km, kc
+
+
+async def start_new_async_kernel(startup_timeout=60, kernel_name='python', **kwargs):
+    """Start a new kernel, and return its Manager and Client"""
+    km = AsyncKernelManager(kernel_name=kernel_name)
+    await km.start_kernel(**kwargs)
+    kc = km.client()
+    kc.start_channels()
+    try:
+        await kc.wait_for_ready(timeout=startup_timeout)
+    except RuntimeError:
+        kc.stop_channels()
+        await km.shutdown_kernel()
+        raise
+
+    return (km, kc)
+
 
 @contextmanager
 def run_kernel(**kwargs):
