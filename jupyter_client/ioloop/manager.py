@@ -98,6 +98,7 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
                 self._restarter = None
 
     connect_shell = as_zmqstream(AsyncKernelManager.connect_shell)
+    connect_control = as_zmqstream(AsyncKernelManager.connect_control)
     connect_iopub = as_zmqstream(AsyncKernelManager.connect_iopub)
     connect_stdin = as_zmqstream(AsyncKernelManager.connect_stdin)
     connect_hb = as_zmqstream(AsyncKernelManager.connect_hb)
