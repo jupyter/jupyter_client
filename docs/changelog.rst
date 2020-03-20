@@ -4,6 +4,16 @@
 Changes in Jupyter Client
 =========================
 
+6.1.0
+=====
+
+This release includes support for asyncio patterns! Downstream tools should soon have releases to additionally support async patterns.
+
+- AsyncKernelManager and AsyncMultiKernelManager are now available for async jupyter_client interactions (:ghpull:`528`, :ghpull:`529`)
+- Removed unused sphinx dependency (:ghpull:`518`, :ghpull:`518`).
+- Added install instructions for pip to documentation (:ghpull:`521`)
+- Improved docs around version protocol and messaging (:ghpull:`522`, :ghpull:`526`)
+
 6.0.0
 =====
 
@@ -33,7 +43,6 @@ Docs:
 Breaking changes:
 
 - Dropped support for Python 2.7!
-
 
 5.3.4
 =====
