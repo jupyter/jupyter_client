@@ -54,7 +54,6 @@ class IOLoopKernelManager(KernelManager):
         if self.autorestart:
             if self._restarter is not None:
                 self._restarter.stop()
-                self._restarter = None
 
     connect_shell = as_zmqstream(KernelManager.connect_shell)
     connect_control = as_zmqstream(KernelManager.connect_control)
@@ -95,7 +94,6 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
         if self.autorestart:
             if self._restarter is not None:
                 self._restarter.stop()
-                self._restarter = None
 
     connect_shell = as_zmqstream(AsyncKernelManager.connect_shell)
     connect_control = as_zmqstream(AsyncKernelManager.connect_control)
