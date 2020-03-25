@@ -4,6 +4,12 @@
 Changes in Jupyter Client
 =========================
 
+6.1.1
+=====
+
+- Subprocess kill action fix for async execution (:ghpull:`535`)
+- Doc fix for xeus kernel list (:ghpull:`534`)
+
 6.1.0
 =====
 
