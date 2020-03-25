@@ -644,7 +644,7 @@ class AsyncKernelManager(KernelManager):
                 if hasattr(signal, 'SIGKILL'):
                     await self.signal_kernel(signal.SIGKILL)
                 else:
-                    await self.kernel.kill()
+                    self.kernel.kill()
             except OSError as e:
                 # In Windows, we will get an Access Denied error if the process
                 # has already terminated. Ignore it.
