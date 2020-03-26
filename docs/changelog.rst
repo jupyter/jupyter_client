@@ -4,6 +4,10 @@
 Changes in Jupyter Client
 =========================
 
+6.1.2
+=====
+- Fixed a bug causing clients to sometimes hang after a stop call was made (:ghpull:`536`)
+
 6.1.1
 =====
 
