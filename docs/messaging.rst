@@ -86,7 +86,7 @@ are reasonably representable in JSON.
 General Message Format
 ======================
 
-A message is composed of four dictionaries.
+A message is composed of five dictionaries.
 
 Message Header
 --------------
