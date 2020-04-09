@@ -512,6 +512,7 @@ class KernelManager(ConnectionFileMixin):
 class AsyncKernelManager(KernelManager):
     """Manages kernels in an asynchronous manner """
 
+    client_class = DottedObjectName('jupyter_client.asynchronous.AsyncKernelClient')
     client_factory = Type(klass='jupyter_client.asynchronous.AsyncKernelClient')
 
     async def _launch_kernel(self, kernel_cmd, **kw):
