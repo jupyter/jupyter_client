@@ -4,6 +4,13 @@
 Changes in Jupyter Client
 =========================
 
+6.1.3
+=====
+
+- Add AsyncKernelClient client_class to AsyncKernelManager (:ghpull:`542`)
+- Doc fix for xeus hyperlinks (:ghpull:`540`)
+- Doc typo fix (:ghpull:`539`)
+
 6.1.2
 =====
 - Fixed a bug causing clients to sometimes hang after a stop call was made (:ghpull:`536`)
