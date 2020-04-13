@@ -30,6 +30,6 @@ twine upload dist/*
 
 ```bash
 
-git commit -am "Added dev back to version".
-git push && git push --tags
+git commit -am "Added dev back to version"
+git push upstream  && git push upstream --tags
 ```
