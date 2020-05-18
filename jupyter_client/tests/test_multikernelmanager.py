@@ -2,13 +2,14 @@
 
 import asyncio
 import threading
+import uuid
 import multiprocessing as mp
 
 from subprocess import PIPE
 from unittest import TestCase
 from tornado.testing import AsyncTestCase, gen_test
-
 from traitlets.config.loader import Config
+from ipython_genutils.py3compat import unicode_type
 from jupyter_client import KernelManager, AsyncKernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager, AsyncMultiKernelManager
 from .utils import skip_win32
@@ -31,8 +32,12 @@ class TestKernelManager(TestCase):
         km = MultiKernelManager(config=c)
         return km
 
-    def _run_lifecycle(self, km):
-        kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
+    def _run_lifecycle(self, km, test_kid=None):
+        if test_kid:
+            kid = km.start_kernel(stdout=PIPE, stderr=PIPE, kernel_id=test_kid)
+            self.assertTrue(kid == test_kid)
+        else:
+            kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
         self.assertTrue(km.is_alive(kid))
         self.assertTrue(kid in km)
         self.assertTrue(kid in km.list_kernel_ids())
@@ -67,6 +72,10 @@ class TestKernelManager(TestCase):
     def test_tcp_lifecycle(self):
         km = self._get_tcp_km()
         self._run_lifecycle(km)
+
+    def test_tcp_lifecycle_with_kernel_id(self):
+        km = self._get_tcp_km()
+        self._run_lifecycle(km, test_kid=unicode_type(uuid.uuid4()))
 
     def test_shutdown_all(self):
         km = self._get_tcp_km()
