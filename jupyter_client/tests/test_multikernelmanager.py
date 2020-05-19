@@ -2,13 +2,14 @@
 
 import asyncio
 import threading
+import uuid
 import multiprocessing as mp
 
 from subprocess import PIPE
 from unittest import TestCase
 from tornado.testing import AsyncTestCase, gen_test
-
 from traitlets.config.loader import Config
+from ipython_genutils.py3compat import unicode_type
 from jupyter_client import KernelManager, AsyncKernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager, AsyncMultiKernelManager
 from .utils import skip_win32
@@ -31,8 +32,12 @@ class TestKernelManager(TestCase):
         km = MultiKernelManager(config=c)
         return km
 
-    def _run_lifecycle(self, km):
-        kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
+    def _run_lifecycle(self, km, test_kid=None):
+        if test_kid:
+            kid = km.start_kernel(stdout=PIPE, stderr=PIPE, kernel_id=test_kid)
+            self.assertTrue(kid == test_kid)
+        else:
+            kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
         self.assertTrue(km.is_alive(kid))
         self.assertTrue(kid in km)
         self.assertTrue(kid in km.list_kernel_ids())
@@ -67,6 +72,10 @@ class TestKernelManager(TestCase):
     def test_tcp_lifecycle(self):
         km = self._get_tcp_km()
         self._run_lifecycle(km)
+
+    def test_tcp_lifecycle_with_kernel_id(self):
+        km = self._get_tcp_km()
+        self._run_lifecycle(km, test_kid=unicode_type(uuid.uuid4()))
 
     def test_shutdown_all(self):
         km = self._get_tcp_km()
@@ -150,8 +159,12 @@ class TestAsyncKernelManager(AsyncTestCase):
         km = AsyncMultiKernelManager(config=c)
         return km
 
-    async def _run_lifecycle(self, km):
-        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+    async def _run_lifecycle(self, km, test_kid=None):
+        if test_kid:
+            kid = await km.start_kernel(stdout=PIPE, stderr=PIPE, kernel_id=test_kid)
+            self.assertTrue(kid == test_kid)
+        else:
+            kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
         self.assertTrue(await km.is_alive(kid))
         self.assertTrue(kid in km)
         self.assertTrue(kid in km.list_kernel_ids())
@@ -187,6 +200,10 @@ class TestAsyncKernelManager(AsyncTestCase):
     @gen_test
     async def test_tcp_lifecycle(self):
         await self.raw_tcp_lifecycle()
+
+    @gen_test
+    async def test_tcp_lifecycle_with_kernel_id(self):
+        await self.raw_tcp_lifecycle(test_kid=unicode_type(uuid.uuid4()))
 
     @gen_test
     async def test_shutdown_all(self):
@@ -234,11 +251,11 @@ class TestAsyncKernelManager(AsyncTestCase):
         asyncio.set_event_loop(asyncio.new_event_loop())
         asyncio.get_event_loop().run_until_complete(self.raw_tcp_lifecycle())
 
-    async def raw_tcp_lifecycle(self):
+    async def raw_tcp_lifecycle(self, test_kid=None):
         # Since @gen_test creates an event loop, we need a raw form of
         # test_tcp_lifecycle that assumes the loop already exists.
         km = self._get_tcp_km()
-        await self._run_lifecycle(km)
+        await self._run_lifecycle(km, test_kid=test_kid)
 
     @gen_test
     async def test_start_parallel_thread_kernels(self):

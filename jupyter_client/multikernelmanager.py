@@ -125,8 +125,8 @@ class MultiKernelManager(LoggingConfigurable):
     def __contains__(self, kernel_id):
         return kernel_id in self._kernels
 
-    def pre_start_kernel(self, kernel_name, **kwargs):
-
+    def pre_start_kernel(self, kernel_name, kwargs):
+        # kwargs should be mutable, passing it as a dict argument.
         kernel_id = kwargs.pop('kernel_id', self.new_kernel_id(**kwargs))
         if kernel_id in self:
             raise DuplicateKernelError('Kernel already exists: %s' % kernel_id)
@@ -154,7 +154,7 @@ class MultiKernelManager(LoggingConfigurable):
 
         The kernel ID for the newly started kernel is returned.
         """
-        km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, **kwargs)
+        km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         km.start_kernel(**kwargs)
         self._kernels[kernel_id] = km
         return kernel_id
@@ -419,7 +419,7 @@ class AsyncMultiKernelManager(MultiKernelManager):
 
         The kernel ID for the newly started kernel is returned.
         """
-        km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, **kwargs)
+        km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         if not isinstance(km, AsyncKernelManager):
             self.log.warning("Kernel manager class ({km_class}) is not an instance of 'AsyncKernelManager'!".
                              format(km_class=self.kernel_manager_class.__class__))
