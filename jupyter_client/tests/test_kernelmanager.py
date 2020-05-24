@@ -67,6 +67,7 @@ class TestKernelManager(TestCase):
         km.interrupt_kernel()
         self.assertTrue(isinstance(km, KernelManager))
         km.shutdown_kernel(now=True)
+        self.assertTrue(km.context.closed)
 
     def test_tcp_lifecycle(self):
         km = self._get_tcp_km()
@@ -135,6 +136,7 @@ class TestKernelManager(TestCase):
 
         self.assertTrue(km.is_alive())
         self.assertTrue(kc.is_alive())
+        self.assertFalse(km.context.closed)
 
     def _env_test_body(self, kc):
 
@@ -157,6 +159,7 @@ class TestKernelManager(TestCase):
 
         self.assertTrue(km.is_alive())
         self.assertTrue(kc.is_alive())
+        self.assertFalse(km.context.closed)
 
         self._env_test_body(kc)
 
@@ -190,6 +193,7 @@ class TestKernelManager(TestCase):
 
         self.assertTrue(km.is_alive())
         self.assertTrue(kc.is_alive())
+        self.assertFalse(km.context.closed)
 
         self._env_test_body(kc)
 
@@ -307,6 +311,7 @@ class TestParallel:
         execute('check')
 
         km.shutdown_kernel()
+        assert km.context.closed
 
 
 class TestAsyncKernelManager(AsyncTestCase):
@@ -351,6 +356,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         self.assertTrue(isinstance(km, AsyncKernelManager))
         await km.shutdown_kernel(now=True)
         self.assertFalse(await km.is_alive())
+        self.assertTrue(km.context.closed)
 
     @gen_test
     async def test_tcp_lifecycle(self):
@@ -417,6 +423,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         finally:
             await km.shutdown_kernel(now=True)
             kc.stop_channels()
+            self.assertTrue(km.context.closed)
 
     @gen_test(timeout=10.0)
     async def test_start_new_async_kernel(self):
@@ -431,3 +438,4 @@ class TestAsyncKernelManager(AsyncTestCase):
         finally:
             await km.shutdown_kernel(now=True)
             kc.stop_channels()
+            self.assertTrue(km.context.closed)

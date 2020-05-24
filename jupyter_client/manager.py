@@ -377,6 +377,9 @@ class KernelManager(ConnectionFileMixin):
             self.finish_shutdown()
 
         self.cleanup(connection_file=not restart)
+        # shutdown ZMQ context as we no longer using this kernel
+        if not restart:
+            self.context.destroy(linger=100)
 
     def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
@@ -592,6 +595,9 @@ class AsyncKernelManager(KernelManager):
             await self.finish_shutdown()
 
         self.cleanup(connection_file=not restart)
+        # shutdown ZMQ context as we no longer using this kernel
+        if not restart:
+            self.context.destroy(linger=100)
 
     async def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
