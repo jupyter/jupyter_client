@@ -337,10 +337,12 @@ class KernelManager(ConnectionFileMixin):
                 self.log.debug("Kernel is taking too long to finish, killing")
                 self._kill_kernel()
 
-    def cleanup(self, connection_file=True):
+    def cleanup(self, restart=False):
         """Clean up resources when the kernel is shut down"""
-        if connection_file:
+        if not restart:
             self.cleanup_connection_file()
+            # shutdown ZMQ context as we no longer using this kernel
+            self.context.destroy(linger=100)
 
         self.cleanup_ipc_files()
         self._close_control_socket()
@@ -376,10 +378,7 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             self.finish_shutdown()
 
-        self.cleanup(connection_file=not restart)
-        # shutdown ZMQ context as we no longer using this kernel
-        if not restart:
-            self.context.destroy(linger=100)
+        self.cleanup(restart=restart)
 
     def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
@@ -594,10 +593,7 @@ class AsyncKernelManager(KernelManager):
             # most 1s, checking every 0.1s.
             await self.finish_shutdown()
 
-        self.cleanup(connection_file=not restart)
-        # shutdown ZMQ context as we no longer using this kernel
-        if not restart:
-            self.context.destroy(linger=100)
+        self.cleanup(restart=restart)
 
     async def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
