@@ -28,6 +28,7 @@ from .connect import ConnectionFileMixin
 from .managerabc import (
     KernelManagerABC
 )
+from deprecated import deprecated
 
 
 class KernelManager(ConnectionFileMixin):
@@ -348,6 +349,18 @@ class KernelManager(ConnectionFileMixin):
         self._close_control_socket()
         self.session.parent = None
 
+    @deprecated(version='6.1.3', reason="please use cleanup with restart function")
+    def cleanup(self, connection_file=True):
+        """Clean up resources when the kernel is shut down"""
+        warnings.warn("cleanup with connection_file is deprecated, "
+                      "use cleanup with restart to perform kernels cleanup.")
+        if connection_file:
+            self.cleanup_connection_file()
+
+        self.cleanup_ipc_files()
+        self._close_control_socket()
+        self.session.parent = None
+
     def shutdown_kernel(self, now=False, restart=False):
         """Attempts to stop the kernel process cleanly.
 
@@ -378,7 +391,10 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             self.finish_shutdown()
 
-        self.cleanup(restart=restart)
+        self.cleanup(connection_file=not restart)
+        if not restart:
+            # shutdown ZMQ context as we no longer using this kernel
+            self.context.destroy(linger=100)
 
     def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
@@ -593,7 +609,11 @@ class AsyncKernelManager(KernelManager):
             # most 1s, checking every 0.1s.
             await self.finish_shutdown()
 
-        self.cleanup(restart=restart)
+        self.cleanup(connection_file=not restart)
+
+        if not restart:
+            # shutdown ZMQ context as we no longer using this kernel
+            self.context.destroy(linger=100)
 
     async def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
