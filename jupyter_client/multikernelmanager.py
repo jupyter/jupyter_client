@@ -512,5 +512,5 @@ class AsyncMultiKernelManager(MultiKernelManager):
             self.request_shutdown(kid)
         for kid in kids:
             await self.finish_shutdown(kid)
-            self.cleanup(kid)
+            self.cleanup_resources(kid)
             self.remove_kernel(kid)
