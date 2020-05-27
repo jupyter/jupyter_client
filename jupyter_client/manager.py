@@ -605,8 +605,6 @@ class AsyncKernelManager(KernelManager):
             # most 1s, checking every 0.1s.
             await self.finish_shutdown()
 
-        self.cleanup(connection_file=not restart)
-
         from . import __version__
         from distutils.version import LooseVersion
 
