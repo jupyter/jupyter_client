@@ -198,7 +198,11 @@ class MultiKernelManager(LoggingConfigurable):
         self.log.info("Kernel shutdown: %s" % kernel_id)
 
     @kernel_method
-    def cleanup(self, kernel_id, restart=False):
+    def cleanup(self, kernel_id, connection_file=True):
+        """Clean up a kernel's resources"""
+
+    @kernel_method
+    def cleanup_resources(self, kernel_id, restart=False):
         """Clean up a kernel's resources"""
 
     def remove_kernel(self, kernel_id):
