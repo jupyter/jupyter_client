@@ -75,7 +75,6 @@ setup_args = dict(
         'pyzmq>=13',
         'python-dateutil>=2.1',
         'tornado>=4.1',
-        'deprecated',
     ],
     python_requires  = '>=3.5',
     extras_require   = {

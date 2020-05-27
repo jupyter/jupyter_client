@@ -28,7 +28,6 @@ from .connect import ConnectionFileMixin
 from .managerabc import (
     KernelManagerABC
 )
-from deprecated import deprecated
 
 
 class KernelManager(ConnectionFileMixin):
@@ -338,7 +337,7 @@ class KernelManager(ConnectionFileMixin):
                 self.log.debug("Kernel is taking too long to finish, killing")
                 self._kill_kernel()
 
-    def cleanup(self, restart=False):
+    def cleanup_resources(self, restart=False):
         """Clean up resources when the kernel is shut down"""
         if not restart:
             self.cleanup_connection_file()
@@ -349,17 +348,11 @@ class KernelManager(ConnectionFileMixin):
         self._close_control_socket()
         self.session.parent = None
 
-    @deprecated(version='6.1.3', reason="please use cleanup with restart function")
     def cleanup(self, connection_file=True):
         """Clean up resources when the kernel is shut down"""
-        warnings.warn("cleanup with connection_file is deprecated, "
-                      "use cleanup with restart to perform kernels cleanup.")
-        if connection_file:
-            self.cleanup_connection_file()
-
-        self.cleanup_ipc_files()
-        self._close_control_socket()
-        self.session.parent = None
+        warnings.warn("Method cleanup(connection_file=True) is deprecated, use cleanup_resources(restart=False).",
+                      DeprecationWarning)
+        self.cleanup_resources(restart=not connection_file)
 
     def shutdown_kernel(self, now=False, restart=False):
         """Attempts to stop the kernel process cleanly.
@@ -391,10 +384,13 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             self.finish_shutdown()
 
-        self.cleanup(connection_file=not restart)
-        if not restart:
-            # shutdown ZMQ context as we no longer using this kernel
-            self.context.destroy(linger=100)
+        from . import __version__
+        from distutils.version import LooseVersion
+
+        if LooseVersion(__version__) < LooseVersion('6.2'):
+            self.cleanup(connection_file=not restart)
+        else:
+            self.cleanup_resources(restart=restart)
 
     def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
@@ -611,9 +607,13 @@ class AsyncKernelManager(KernelManager):
 
         self.cleanup(connection_file=not restart)
 
-        if not restart:
-            # shutdown ZMQ context as we no longer using this kernel
-            self.context.destroy(linger=100)
+        from . import __version__
+        from distutils.version import LooseVersion
+
+        if LooseVersion(__version__) < LooseVersion('6.2'):
+            self.cleanup(connection_file=not restart)
+        else:
+            self.cleanup_resources(restart=restart)
 
     async def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
