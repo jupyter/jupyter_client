@@ -339,15 +339,12 @@ class KernelManager(ConnectionFileMixin):
 
     def cleanup_resources(self, restart=False):
         """Clean up resources when the kernel is shut down"""
-        if not restart:
-            self.cleanup_connection_file()
-
         self.cleanup_ipc_files()
         self._close_control_socket()
         self.session.parent = None
 
-        # shutdown ZMQ context as we no longer using this kernel
         if not restart:
+            self.cleanup_connection_file()
             self.context.destroy(linger=100)
 
     def cleanup(self, connection_file=True):
