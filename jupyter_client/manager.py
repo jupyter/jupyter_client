@@ -36,9 +36,12 @@ class KernelManager(ConnectionFileMixin):
     This version starts kernels with Popen.
     """
 
+    _created_context = Bool(False)
+
     # The PyZMQ Context to use for communication with the kernel.
     context = Instance(zmq.Context)
     def _context_default(self):
+        self._created_context = True
         return zmq.Context()
 
     # the class to create with our `client` method
@@ -339,12 +342,14 @@ class KernelManager(ConnectionFileMixin):
 
     def cleanup_resources(self, restart=False):
         """Clean up resources when the kernel is shut down"""
+        if not restart:
+            self.cleanup_connection_file()
+
         self.cleanup_ipc_files()
         self._close_control_socket()
         self.session.parent = None
 
-        if not restart:
-            self.cleanup_connection_file()
+        if self._created_context and not restart:
             self.context.destroy(linger=100)
 
     def cleanup(self, connection_file=True):
