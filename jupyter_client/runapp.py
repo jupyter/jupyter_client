@@ -87,9 +87,9 @@ class RunApp(JupyterApp, JupyterConsoleApp):
         while True:
             try:
                 reply = self.kernel_client.get_shell_msg(timeout=1)
-            except queue.Empty:
+            except queue.Empty as e:
                 if (time.time() - tic) > timeout:
-                    raise RuntimeError("Kernel didn't respond to kernel_info_request")
+                    raise RuntimeError("Kernel didn't respond to kernel_info_request") from e
             else:
                 if reply['parent_header'].get('msg_id') == msg_id:
                     self.kernel_info = reply['content']
