@@ -241,12 +241,12 @@ def openssh_tunnel(lport, rport, server, remoteip='127.0.0.1', keyfile=None, pas
                 raise SSHException('The authenticity of the host can\'t be established.')
         except pexpect.TIMEOUT:
             continue
-        except pexpect.EOF:
+        except pexpect.EOF as e:
             if tunnel.exitstatus:
                 print(tunnel.exitstatus)
                 print(tunnel.before)
                 print(tunnel.after)
-                raise RuntimeError("tunnel '%s' failed to start" % (cmd))
+                raise RuntimeError("tunnel '%s' failed to start" % (cmd)) from e
             else:
                 return tunnel.pid
         else:
