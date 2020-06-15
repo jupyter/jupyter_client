@@ -379,8 +379,9 @@ class Session(Configurable):
         hash_name = new.split('-', 1)[1]
         try:
             self.digest_mod = getattr(hashlib, hash_name)
-        except AttributeError:
-            raise TraitError("hashlib has no such attribute: %s" % hash_name)
+        except AttributeError as e:
+            raise TraitError("hashlib has no such attribute: %s" %
+                             hash_name) from e
         self._new_auth()
 
     digest_mod = Any()
@@ -537,7 +538,7 @@ class Session(Configurable):
                 jsonmsg = ""
             raise ValueError(
                 msg.format(packer=self.packer, e=e, jsonmsg=jsonmsg)
-            )
+            ) from e
 
         # ensure packed message is bytes
         if not isinstance(packed, bytes):
@@ -555,7 +556,7 @@ class Session(Configurable):
                 jsonmsg = ""
             raise ValueError(
                 msg.format(packer=self.packer, unpacker=self.unpacker, e=e, jsonmsg=jsonmsg)
-            )
+            ) from e
 
         # check datetime support
         msg = dict(t=utcnow())
@@ -733,8 +734,8 @@ class Session(Configurable):
                 try:
                     # check to see if buf supports the buffer protocol.
                     view = memoryview(buf)
-                except TypeError:
-                    raise TypeError("Buffer objects must support the buffer protocol.")
+                except TypeError as e:
+                    raise TypeError("Buffer objects must support the buffer protocol.") from e
             # memoryview.contiguous is new in 3.3,
             # just skip the check on Python 2
             if hasattr(view, 'contiguous') and not view.contiguous:

@@ -134,8 +134,8 @@ class BlockingKernelClient(KernelClient):
                     reply = self.get_control_msg(timeout=timeout)
                 else:
                     reply = self.get_shell_msg(timeout=timeout)
-            except Empty:
-                raise TimeoutError("Timeout waiting for reply")
+            except Empty as e:
+                raise TimeoutError("Timeout waiting for reply") from e
             if reply['parent_header'].get('msg_id') != msg_id:
                 # not my reply, someone may have forgotten to retrieve theirs
                 continue
