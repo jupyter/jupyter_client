@@ -99,7 +99,12 @@ class MultiKernelManager(LoggingConfigurable):
             if self.log:
                 self.log.debug("Destroying zmq context for %s", self)
             self.context.destroy()
-        super().__del__()
+        try:
+            super_del = super().__del__
+        except AttributeError:
+            pass
+        else:
+            super_del()
 
     connection_dir = Unicode('')
 
