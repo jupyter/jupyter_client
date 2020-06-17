@@ -76,6 +76,11 @@ class MultiKernelManager(LoggingConfigurable):
         kernel_manager_ctor = import_item(self.kernel_manager_class)
 
         def create_kernel_manager(*args, **kwargs):
+            if self.shared_context:
+                if self.context.closed:
+                    # recreate context if closed
+                    self.context = self._context_default()
+                kwargs.setdefault("context", self.context)
             km = kernel_manager_ctor(*args, **kwargs)
 
             if km.cache_ports:
@@ -104,9 +109,27 @@ class MultiKernelManager(LoggingConfigurable):
 
                 return port
 
+    shared_context = Bool(
+        True,
+        config=True,
+        help="Share a single zmq.Context to talk to all my kernels",
+    )
+
+    _created_context = Bool(False)
+
     context = Instance('zmq.Context')
+
+    @default("context")
     def _context_default(self):
+        self._created_context = True
         return zmq.Context()
+
+    def __del__(self):
+        if self._created_context and self.context and not self.context.closed:
+            if self.log:
+                self.log.debug("Destroying zmq context for %s", self)
+            self.context.destroy()
+        super().__del__()
 
     connection_dir = Unicode('')
 
