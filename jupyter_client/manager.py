@@ -355,7 +355,7 @@ class KernelManager(ConnectionFileMixin):
     def cleanup(self, connection_file=True):
         """Clean up resources when the kernel is shut down"""
         warnings.warn("Method cleanup(connection_file=True) is deprecated, use cleanup_resources(restart=False).",
-                      DeprecationWarning)
+                      FutureWarning)
         self.cleanup_resources(restart=not connection_file)
 
     def shutdown_kernel(self, now=False, restart=False):
