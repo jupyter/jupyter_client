@@ -77,7 +77,7 @@ class KernelApp(JupyterApp):
             self.setup_signals()
             self.loop.start()
         finally:
-            self.km.cleanup()
+            self.km.cleanup_resources()
 
 
 main = KernelApp.launch_instance

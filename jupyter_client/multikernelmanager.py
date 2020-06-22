@@ -76,6 +76,11 @@ class MultiKernelManager(LoggingConfigurable):
         kernel_manager_ctor = import_item(self.kernel_manager_class)
 
         def create_kernel_manager(*args, **kwargs):
+            if self.shared_context:
+                if self.context.closed:
+                    # recreate context if closed
+                    self.context = self._context_default()
+                kwargs.setdefault("context", self.context)
             km = kernel_manager_ctor(*args, **kwargs)
 
             if km.cache_ports:
@@ -104,9 +109,32 @@ class MultiKernelManager(LoggingConfigurable):
 
                 return port
 
+    shared_context = Bool(
+        True,
+        config=True,
+        help="Share a single zmq.Context to talk to all my kernels",
+    )
+
+    _created_context = Bool(False)
+
     context = Instance('zmq.Context')
+
+    @default("context")
     def _context_default(self):
+        self._created_context = True
         return zmq.Context()
+
+    def __del__(self):
+        if self._created_context and self.context and not self.context.closed:
+            if self.log:
+                self.log.debug("Destroying zmq context for %s", self)
+            self.context.destroy()
+        try:
+            super_del = super().__del__
+        except AttributeError:
+            pass
+        else:
+            super_del()
 
     connection_dir = Unicode('')
 
@@ -199,6 +227,10 @@ class MultiKernelManager(LoggingConfigurable):
 
     @kernel_method
     def cleanup(self, kernel_id, connection_file=True):
+        """Clean up a kernel's resources"""
+
+    @kernel_method
+    def cleanup_resources(self, kernel_id, restart=False):
         """Clean up a kernel's resources"""
 
     def remove_kernel(self, kernel_id):
@@ -508,5 +540,5 @@ class AsyncMultiKernelManager(MultiKernelManager):
             self.request_shutdown(kid)
         for kid in kids:
             await self.finish_shutdown(kid)
-            self.cleanup(kid)
+            self.cleanup_resources(kid)
             self.remove_kernel(kid)
