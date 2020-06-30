@@ -4,13 +4,17 @@
 Changes in Jupyter Client
 =========================
 
-6.1.4
+6.1.5
 =====
-
 - Gracefully Close ZMQ Context upon kernel shutdown to fix memory leak (:ghpull:`548`)
 - Fix for chained exceptions to preserve stacks (:ghpull:`552`, :ghpull:`554`)
 - Fix start_kernel error when passing kernel_id (:ghpull:`547`)
 - Update to releasing docs (:ghpull:`543`)
+
+6.1.4
+=====
+
+(Deleted release with incorrect local files)
 
 6.1.3
 =====
