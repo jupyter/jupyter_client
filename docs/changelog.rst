@@ -4,6 +4,11 @@
 Changes in Jupyter Client
 =========================
 
+5.3.5
+=====
+
+- Backported memory leak fix :ghpull:`548` (:ghpull:`555`).
+
 5.3.4
 =====
 
