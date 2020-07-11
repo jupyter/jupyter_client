@@ -622,10 +622,11 @@ class AsyncKernelManager(KernelManager):
             # most 1s, checking every 0.1s.
             await self.finish_shutdown()
 
-        from . import __version__
-        from distutils.version import LooseVersion
+        # See comment in KernelManager.shutdown_kernel().
+        overrides_cleanup = type(self).cleanup is not AsyncKernelManager.cleanup
+        overrides_cleanup_resources = type(self).cleanup_resources is not AsyncKernelManager.cleanup_resources
 
-        if LooseVersion(__version__) < LooseVersion('6.2'):
+        if overrides_cleanup and not overrides_cleanup_resources:
             self.cleanup(connection_file=not restart)
         else:
             self.cleanup_resources(restart=restart)
