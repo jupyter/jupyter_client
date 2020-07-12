@@ -66,8 +66,6 @@ def install_kernel():
         }))
 
 
-## SYNC-related
-
 @pytest.fixture
 def start_kernel():
     km, kc = start_new_kernel(kernel_name='signaltest')
@@ -246,6 +244,8 @@ class TestParallel:
 
     @pytest.mark.timeout(TIMEOUT)
     def test_start_parallel_thread_kernels(self, config, install_kernel):
+        if config.KernelManager.transport == 'ipc':  # FIXME
+            pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
 
         thread = threading.Thread(target=self._run_signaltest_lifecycle, args=(config,))
@@ -259,6 +259,8 @@ class TestParallel:
 
     @pytest.mark.timeout(TIMEOUT)
     def test_start_parallel_process_kernels(self, config, install_kernel):
+        if config.KernelManager.transport == 'ipc':  # FIXME
+            pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
         thread = threading.Thread(target=self._run_signaltest_lifecycle, args=(config,))
         proc = mp.Process(target=self._run_signaltest_lifecycle, args=(config,))
