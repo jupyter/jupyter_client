@@ -258,9 +258,9 @@ class MultiKernelManager(LoggingConfigurable):
             overrides_cleanup_resources = type(km).cleanup_resources is not KernelManager.cleanup_resources
 
             if overrides_cleanup and not overrides_cleanup_resources:
-                self.cleanup(connection_file=True)
+                km.cleanup(connection_file=True)
             else:
-                self.cleanup_resources(restart=False)
+                km.cleanup_resources(restart=False)
 
             self.remove_kernel(kid)
 
