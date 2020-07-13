@@ -16,7 +16,7 @@ import threading
 import multiprocessing as mp
 import pytest
 from unittest import TestCase
-from tornado.testing import AsyncTestCase, gen_test, gen
+from tornado.testing import AsyncTestCase, gen_test
 
 from traitlets.config.loader import Config
 from jupyter_core import paths
@@ -210,7 +210,7 @@ class TestKernelManager(TestCase):
         import zmq
         ctx = zmq.Context()
         km = KernelManager(context=ctx)
-        self.assertEquals(km.context, ctx)
+        self.assertEqual(km.context, ctx)
         self.assertIsNotNone(km.context)
 
         km.cleanup_resources(restart=False)
@@ -461,3 +461,102 @@ class TestAsyncKernelManager(AsyncTestCase):
             await km.shutdown_kernel(now=True)
             kc.stop_channels()
             self.assertTrue(km.context.closed)
+
+
+class AsyncKernelManagerSubclass(AsyncKernelManager):
+    """Used to test deprecation "routes" that are determined by superclass' detection of methods.
+
+       This class represents a current subclass that overrides both cleanup() and cleanup_resources()
+       in order to be compatible with older jupyter_clients.  We should find that cleanup_resources()
+       is called on these instances vix TestAsyncKernelManagerSubclass.
+    """
+
+    def cleanup(self, connection_file=True):
+        super(AsyncKernelManagerSubclass, self).cleanup(connection_file=connection_file)
+        self.which_cleanup = 'cleanup'
+
+    def cleanup_resources(self, restart=False):
+        super(AsyncKernelManagerSubclass, self).cleanup_resources(restart=restart)
+        self.which_cleanup = 'cleanup_resources'
+
+
+class AsyncKernelManagerWithCleanup(AsyncKernelManager):
+    """Used to test deprecation "routes" that are determined by superclass' detection of methods.
+
+       This class represents the older subclass that overrides cleanup().  We should find that
+       cleanup() is called on these instances via TestAsyncKernelManagerWithCleanup.
+    """
+
+    def cleanup(self, connection_file=True):
+        super(AsyncKernelManagerWithCleanup, self).cleanup(connection_file=connection_file)
+        self.which_cleanup = 'cleanup'
+
+
+class TestAsyncKernelManagerSubclass(AsyncTestCase):
+    def setUp(self):
+        super(TestAsyncKernelManagerSubclass, self).setUp()
+        self.env_patch = test_env()
+        self.env_patch.start()
+
+    def tearDown(self):
+        super(TestAsyncKernelManagerSubclass, self).tearDown()
+        self.env_patch.stop()
+
+    def _install_test_kernel(self):
+        kernel_dir = pjoin(paths.jupyter_data_dir(), 'kernels', 'signaltest')
+        os.makedirs(kernel_dir)
+        with open(pjoin(kernel_dir, 'kernel.json'), 'w') as f:
+            f.write(json.dumps({
+                'argv': [sys.executable,
+                         '-m', 'jupyter_client.tests.signalkernel',
+                         '-f', '{connection_file}'],
+                'display_name': "Signal Test Kernel",
+            }))
+
+    def _get_tcp_km(self):
+        c = Config()
+        km = AsyncKernelManagerSubclass(config=c)
+        return km
+
+    def _get_ipc_km(self):
+        c = Config()
+        c.KernelManager.transport = 'ipc'
+        c.KernelManager.ip = 'test'
+        km = AsyncKernelManagerSubclass(config=c)
+        return km
+
+    async def _run_lifecycle(self, km):
+        await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        self.assertTrue(await km.is_alive())
+        await km.restart_kernel(now=True)
+        self.assertTrue(await km.is_alive())
+        await km.interrupt_kernel()
+        self.assertTrue(isinstance(km, AsyncKernelManager))
+        await km.shutdown_kernel(now=True)
+        self.assertFalse(await km.is_alive())
+        self.assertTrue(km.context.closed)
+
+    @gen_test
+    async def test_which_cleanup_method(self):
+        # This test confirms that the normal test operations run using cleanup_resources.
+        km = self._get_tcp_km()
+        await self._run_lifecycle(km)
+
+        if isinstance(km, AsyncKernelManagerSubclass):
+            assert km.which_cleanup == "cleanup_resources"
+        else:
+            assert km.which_cleanup == "cleanup"
+
+
+class TestAsyncKernelManagerWithCleanup(TestAsyncKernelManagerSubclass):
+    def _get_tcp_km(self):
+        c = Config()
+        km = AsyncKernelManagerWithCleanup(config=c)
+        return km
+
+    def _get_ipc_km(self):
+        c = Config()
+        c.KernelManager.transport = 'ipc'
+        c.KernelManager.ip = 'test'
+        km = AsyncKernelManagerWithCleanup(config=c)
+        return km

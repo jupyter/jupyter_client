@@ -388,10 +388,23 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             self.finish_shutdown()
 
-        from . import __version__
-        from distutils.version import LooseVersion
+        # In 6.1.5, a new method, cleanup_resources(), was introduced to address
+        # a leak issue (https://github.com/jupyter/jupyter_client/pull/548) and
+        # replaced the existing cleanup() method.  However, that method introduction
+        # breaks subclass implementations that override cleanup() since it would
+        # circumvent cleanup() functionality implemented in subclasses.
+        # By detecting if the current instance overrides cleanup(), we can determine
+        # if the deprecated path of calling cleanup() should be performed - which avoids
+        # unnecessary deprecation warnings in a majority of configurations in which
+        # subclassed KernelManager instances are not in use.
+        # Note: because subclasses may have already implemented cleanup_resources()
+        # but need to support older jupyter_clients, we should only take the deprecated
+        # path if cleanup() is overridden but cleanup_resources() is not.
 
-        if LooseVersion(__version__) < LooseVersion('6.2'):
+        overrides_cleanup = type(self).cleanup is not KernelManager.cleanup
+        overrides_cleanup_resources = type(self).cleanup_resources is not KernelManager.cleanup_resources
+
+        if overrides_cleanup and not overrides_cleanup_resources:
             self.cleanup(connection_file=not restart)
         else:
             self.cleanup_resources(restart=restart)
@@ -609,10 +622,11 @@ class AsyncKernelManager(KernelManager):
             # most 1s, checking every 0.1s.
             await self.finish_shutdown()
 
-        from . import __version__
-        from distutils.version import LooseVersion
+        # See comment in KernelManager.shutdown_kernel().
+        overrides_cleanup = type(self).cleanup is not AsyncKernelManager.cleanup
+        overrides_cleanup_resources = type(self).cleanup_resources is not AsyncKernelManager.cleanup_resources
 
-        if LooseVersion(__version__) < LooseVersion('6.2'):
+        if overrides_cleanup and not overrides_cleanup_resources:
             self.cleanup(connection_file=not restart)
         else:
             self.cleanup_resources(restart=restart)
