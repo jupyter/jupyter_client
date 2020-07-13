@@ -210,7 +210,7 @@ class TestKernelManager(TestCase):
         import zmq
         ctx = zmq.Context()
         km = KernelManager(context=ctx)
-        self.assertEquals(km.context, ctx)
+        self.assertEqual(km.context, ctx)
         self.assertIsNotNone(km.context)
 
         km.cleanup_resources(restart=False)

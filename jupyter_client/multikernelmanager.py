@@ -17,7 +17,7 @@ from traitlets import (
 from ipython_genutils.py3compat import unicode_type
 
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
-from .manager import AsyncKernelManager
+from .manager import KernelManager, AsyncKernelManager
 
 
 class DuplicateKernelError(Exception):
@@ -250,7 +250,18 @@ class MultiKernelManager(LoggingConfigurable):
             self.request_shutdown(kid)
         for kid in kids:
             self.finish_shutdown(kid)
-            self.cleanup(kid)
+
+            # Determine which cleanup method to call
+            # See comment in KernelManager.shutdown_kernel().
+            km = self.get_kernel(kid)
+            overrides_cleanup = type(km).cleanup is not KernelManager.cleanup
+            overrides_cleanup_resources = type(km).cleanup_resources is not KernelManager.cleanup_resources
+
+            if overrides_cleanup and not overrides_cleanup_resources:
+                self.cleanup(connection_file=True)
+            else:
+                self.cleanup_resources(restart=False)
+
             self.remove_kernel(kid)
 
     @kernel_method
