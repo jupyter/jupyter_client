@@ -4,6 +4,11 @@
 Changes in Jupyter Client
 =========================
 
+6.1.6
+=====
+- Removed warnings in more cases for KernelManagers that use new cleanup method (:ghpull:`560`)
+- Some improved tests with a conversion to pytest pattern (:ghpull:`561`)
+
 6.1.5
 =====
 - Gracefully Close ZMQ Context upon kernel shutdown to fix memory leak (:ghpull:`548`)
