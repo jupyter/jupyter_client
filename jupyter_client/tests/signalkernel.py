@@ -61,11 +61,14 @@ class SignalTestKernel(Kernel):
         """
         return super(SignalTestKernel, self).kernel_info_request(*args, **kwargs)
 
+
 class SignalTestApp(IPKernelApp):
     kernel_class = SignalTestKernel
+
     def init_io(self):
         # Overridden to disable stdout/stderr capture
         self.displayhook = ZMQDisplayHook(self.session, self.iopub_socket)
+
 
 if __name__ == '__main__':
     # make startup artificially slow,

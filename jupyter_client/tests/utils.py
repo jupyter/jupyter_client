@@ -10,7 +10,7 @@ except ImportError:
     from mock import patch
 
 import pytest
-
+from jupyter_client import AsyncKernelManager
 from ipython_genutils.tempdir import TemporaryDirectory
 
 
@@ -62,3 +62,31 @@ def execute(code='', kc=None, **kwargs):
         assert execute_input['content']['code'] == code
 
     return msg_id, reply['content']
+
+
+class AsyncKernelManagerSubclass(AsyncKernelManager):
+    """Used to test deprecation "routes" that are determined by superclass' detection of methods.
+
+       This class represents a current subclass that overrides both cleanup() and cleanup_resources()
+       in order to be compatible with older jupyter_clients.  We should find that cleanup_resources()
+       is called on these instances vix TestAsyncKernelManagerSubclass.
+    """
+
+    def cleanup(self, connection_file=True):
+        super(AsyncKernelManagerSubclass, self).cleanup(connection_file=connection_file)
+        self.which_cleanup = 'cleanup'
+
+    def cleanup_resources(self, restart=False):
+        super(AsyncKernelManagerSubclass, self).cleanup_resources(restart=restart)
+        self.which_cleanup = 'cleanup_resources'
+
+class AsyncKernelManagerWithCleanup(AsyncKernelManager):
+    """Used to test deprecation "routes" that are determined by superclass' detection of methods.
+
+       This class represents the older subclass that overrides cleanup().  We should find that
+       cleanup() is called on these instances via TestAsyncKernelManagerWithCleanup.
+    """
+
+    def cleanup(self, connection_file=True):
+        super().cleanup(connection_file=connection_file)
+        self.which_cleanup = 'cleanup'
