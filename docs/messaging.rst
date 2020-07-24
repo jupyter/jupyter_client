@@ -76,6 +76,11 @@ kernel has dedicated sockets for the following functions:
    socket to avoid queueing behind execution requests. The control channel is 
    used for shutdown and restart messages, as well as for debugging messages.
 
+   For a smoother user experience, we recommend running the control channel in
+   a separate thread from the shell channel, so that e.g. shutdown or debug
+   messages can be processed immediately without waiting for a long-running
+   shell message to be finished processing (such as an expensive execute request).
+
 5. **Heartbeat**: This socket allows for simple bytestring messages to be sent
    between the frontend and the kernel to ensure that they are still connected.
 
