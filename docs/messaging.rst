@@ -1143,7 +1143,7 @@ In order to support page reloading, or a client connecting at a later stage, Jup
               'hashSeed' : str,  # the seed for the hashing of code cells,
               'tmpFilePrefix' : str,  # prefix for temporary file names
               'tmpFileSuffix' : str,  # suffix for temporary file names
-              'breakpoints' : [  # current breakpoints currently registered in the debugger.
+              'breakpoints' : [  # breakpoints currently registered in the debugger.
                   {
                       'source' : str,  # source file
                       'breakpoints' : list(source_breakpoints)  # list of breakpoints for that source file
