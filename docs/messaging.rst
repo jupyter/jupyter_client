@@ -1092,11 +1092,68 @@ Message type: ``debug_reply``::
 
     content = {}
 
-The ``content`` dict can be any JSON information used by debugging frontends
-and kernels.
+The ``content`` dicts of the `debug_request` and `debug_reply` messages respectively follow the specification of the `Request` and `Response` messages from the [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/implementors/adapters/) as of version 1.39 or later.
 
-Debug requests and replies are sent over the `control` channel to prevent queuing
-behind execution requests.
+Debug requests and replies are sent over the `control` channel to prevent queuing behind execution requests.
+
+Additions to the DAP
+~~~~~~~~~~~~~~~~~~~~
+
+The Jupyter debugger protocol makes two additions to the DAP, the `dumpCell` request and response, and the `debugInfo` request and response messages.
+
+In order to support the debugging of notebook cells and of Jupyter consoles, which are not based on source files, we need a message to submit code to the debugger to which breakpoints can be added.
+
+  Content of the `dumpCell` request::
+
+     {
+         'type' : 'request',
+         'command' : 'dumpCell',
+         'arguments' : {
+             'code' : str  # the content of the cell being submitted.
+         }
+     }
+
+  Content of the `dumpCell` response::
+
+     {
+          'type' : 'response',
+          'success': bool,
+          'body': {
+              'sourcePath': str  # filename for the dumped source
+          }
+     }
+
+In order to support page reloading, or a client connecting at a later stage, Jupyter kernels must store the state of the debugger (such as breakpoints, whether the debugger is currently stopped). The `debugInfo` request is a DAP `Request` with no extra argument.
+
+  Content of the `debugInfo` request::
+
+      {
+          'type' : 'request',
+          'command' : 'debugInfo'
+      }
+
+  Content of `debugInfo` response::
+
+      {
+          'type' : 'response',
+          'success' : bool,
+          'body' : {
+              'isStarted' : bool,  # whether the debugger is started,
+              'hashMethod' : str,  # the hash method for code cell. Default is 'Murmur2',
+              'hashSeed' : str,  # the seed for the hashing of code cells,
+              'tmpFilePrefix' : str,  # prefix for temporary file names
+              'tmpFileSuffix' : str,  # suffix for temporary file names
+              'breakpoints' : [  # current breakpoints currently registered in the debugger.
+                  {
+                      'source' : str,  # source file
+                      'breakpoints' : list(source_breakpoints)  # list of breakpoints for that source file
+                  }
+              ],
+              'stoppedThreads': list(int),  # threads in which the debugger is currently in a stopped state
+          }
+      }
+
+  The `source_breakpoint` schema is specified by the Debug Adapter Protocol.
 
 .. versionadded:: 5.5
 
@@ -1382,7 +1439,7 @@ Message type: ``debug_event``::
 
     content = {}
 
-The ``content`` dict can be any JSON information used by debugging frontends.
+The ``content`` dict follows the specification of the `Event` message from the [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/implementors/adapters/).
 
 .. versionadded:: 5.5
 
