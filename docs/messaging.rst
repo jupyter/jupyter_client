@@ -1092,7 +1092,7 @@ Message type: ``debug_reply``::
 
     content = {}
 
-The ``content`` dicts of the `debug_request` and `debug_reply` messages respectively follow the specification of the `Request` and `Response` messages from the [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/implementors/adapters/) as of version 1.39 or later.
+The ``content`` dicts of the `debug_request` and `debug_reply` messages respectively follow the specification of the `Request` and `Response` messages from the `Debug Adapter Protocol (DAP) <https://microsoft.github.io/debug-adapter-protocol/>`_ as of version 1.39 or later.
 
 Debug requests and replies are sent over the `control` channel to prevent queuing behind execution requests.
 
@@ -1439,7 +1439,7 @@ Message type: ``debug_event``::
 
     content = {}
 
-The ``content`` dict follows the specification of the `Event` message from the [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/implementors/adapters/).
+The ``content`` dict follows the specification of the `Event` message from the `Debug Adapter Protocol (DAP) <https://microsoft.github.io/debug-adapter-protocol/>`_.
 
 .. versionadded:: 5.5
 
