@@ -11,6 +11,12 @@ from ipython_genutils.encoding import getdefaultencoding
 from ipython_genutils.py3compat import cast_bytes_py2
 from traitlets.log import get_logger
 
+def force_real_path(p):
+    """ Turns any paths into their real version """
+    if (os.path.exists(p)):
+        return os.path.realpath(p)
+    return p
+
 
 def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
                   independent=False, cwd=None, **kw):
@@ -86,6 +92,10 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
         if cwd:
             cwd = cast_bytes_py2(cwd, sys.getfilesystemencoding() or 'ascii')
             kwargs['cwd'] = cwd
+
+        # Windows store python will pass invalid paths for the connection file. 
+        # Turn the connection file into a real path
+        cmd = [ force_real_path(c) for c in cmd]
 
         from .win_interrupt import create_interrupt_event
         # Create a Win32 event for interrupting the kernel

@@ -167,8 +167,8 @@ class MultiKernelManager(LoggingConfigurable):
         constructor_kwargs = {}
         if self.kernel_spec_manager:
             constructor_kwargs['kernel_spec_manager'] = self.kernel_spec_manager
-        km = self.kernel_manager_factory(connection_file=os.path.realpath(os.path.join(
-                    self.connection_dir, "kernel-%s.json" % kernel_id)),
+        km = self.kernel_manager_factory(connection_file=os.path.join(
+                    self.connection_dir, "kernel-%s.json" % kernel_id),
                     parent=self, log=self.log, kernel_name=kernel_name,
                     **constructor_kwargs
         )
