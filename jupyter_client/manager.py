@@ -191,7 +191,12 @@ class KernelManager(ConnectionFileMixin):
             # but it should be.
             cmd[0] = sys.executable
 
-        ns = dict(connection_file=self.connection_file,
+        # Make sure to use the realpath for the connection_file
+        # On windows, when running with the store python, the connection_file path
+        # is not usable by non python kernels because the path is being rerouted when
+        # inside of a store app.
+        # See this bug here: https://bugs.python.org/issue41196
+        ns = dict(connection_file=os.path.realpath(self.connection_file),
                   prefix=sys.prefix,
                  )
 
