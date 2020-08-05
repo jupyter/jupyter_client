@@ -11,6 +11,7 @@ from ipython_genutils.encoding import getdefaultencoding
 from ipython_genutils.py3compat import cast_bytes_py2
 from traitlets.log import get_logger
 
+
 def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
                   independent=False, cwd=None, **kw):
     """ Launches a localhost kernel, binding to the specified ports.
