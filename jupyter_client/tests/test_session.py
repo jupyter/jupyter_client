@@ -23,8 +23,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 from jupyter_client import session as ss
 from jupyter_client import jsonutil
 
-from ipython_genutils.py3compat import string_types
-
 def _bad_packer(obj):
     raise TypeError("I don't work")
 
@@ -58,8 +56,8 @@ class TestSession(SessionTestCase):
         self.assertTrue(isinstance(msg['metadata'],dict))
         self.assertTrue(isinstance(msg['header'],dict))
         self.assertTrue(isinstance(msg['parent_header'],dict))
-        self.assertTrue(isinstance(msg['msg_id'], string_types))
-        self.assertTrue(isinstance(msg['msg_type'], string_types))
+        self.assertTrue(isinstance(msg['msg_id'], str))
+        self.assertTrue(isinstance(msg['msg_type'], str))
         self.assertEqual(msg['header']['msg_type'], 'execute')
         self.assertEqual(msg['msg_type'], 'execute')
 
@@ -294,8 +292,8 @@ class TestSession(SessionTestCase):
         self.assertEqual(msg['parent_header'], msg2['parent_header'])
         assert isinstance(msg['content']['t'], datetime)
         assert isinstance(msg['metadata']['t'], datetime)
-        assert isinstance(msg2['content']['t'], string_types)
-        assert isinstance(msg2['metadata']['t'], string_types)
+        assert isinstance(msg2['content']['t'], str)
+        assert isinstance(msg2['metadata']['t'], str)
         self.assertEqual(msg['content'], jsonutil.extract_dates(msg2['content']))
         self.assertEqual(msg['content'], jsonutil.extract_dates(msg2['content']))
 

@@ -8,7 +8,6 @@ import sys
 from subprocess import Popen, PIPE
 
 from ipython_genutils.encoding import getdefaultencoding
-from ipython_genutils.py3compat import cast_bytes_py2
 from traitlets.log import get_logger
 
 
@@ -81,10 +80,7 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
 
     # Spawn a kernel.
     if sys.platform == 'win32':
-        # Popen on Python 2 on Windows cannot handle unicode args or cwd
-        cmd = [ cast_bytes_py2(c, encoding) for c in cmd ]
         if cwd:
-            cwd = cast_bytes_py2(cwd, sys.getfilesystemencoding() or 'ascii')
             kwargs['cwd'] = cwd
 
         from .win_interrupt import create_interrupt_event

@@ -9,7 +9,6 @@ from subprocess import PIPE
 from unittest import TestCase
 from tornado.testing import AsyncTestCase, gen_test
 from traitlets.config.loader import Config
-from ipython_genutils.py3compat import unicode_type
 from jupyter_client import KernelManager, AsyncKernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager, AsyncMultiKernelManager
 from .utils import skip_win32
@@ -75,7 +74,7 @@ class TestKernelManager(TestCase):
 
     def test_tcp_lifecycle_with_kernel_id(self):
         km = self._get_tcp_km()
-        self._run_lifecycle(km, test_kid=unicode_type(uuid.uuid4()))
+        self._run_lifecycle(km, test_kid=str(uuid.uuid4()))
 
     def test_shutdown_all(self):
         km = self._get_tcp_km()
@@ -203,7 +202,7 @@ class TestAsyncKernelManager(AsyncTestCase):
 
     @gen_test
     async def test_tcp_lifecycle_with_kernel_id(self):
-        await self.raw_tcp_lifecycle(test_kid=unicode_type(uuid.uuid4()))
+        await self.raw_tcp_lifecycle(test_kid=str(uuid.uuid4()))
 
     @gen_test
     async def test_shutdown_all(self):
