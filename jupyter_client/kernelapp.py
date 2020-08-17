@@ -29,7 +29,7 @@ class KernelApp(JupyterApp):
     ).tag(config=True)
 
     def initialize(self, argv=None):
-        super(KernelApp, self).initialize(argv)
+        super().initialize(argv)
         
         cf_basename = 'kernel-%s.json' % uuid.uuid4()
         self.config.setdefault('KernelManager', {}).setdefault('connection_file', os.path.join(self.runtime_dir, cf_basename))

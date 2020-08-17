@@ -26,7 +26,7 @@ class ZMQSocketChannel(object):
         loop
             Unused here, for other implementations
         """
-        super(ZMQSocketChannel, self).__init__()
+        super().__init__()
 
         self.socket = socket
         self.session = session

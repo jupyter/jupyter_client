@@ -36,7 +36,7 @@ class ThreadedZMQSocketChannel(object):
         loop
             A pyzmq ioloop to connect the socket to using a ZMQStream
         """
-        super(ThreadedZMQSocketChannel, self).__init__()
+        super().__init__()
 
         self.socket = socket
         self.session = session
@@ -151,7 +151,7 @@ class IOLoopThread(Thread):
     ioloop = None
 
     def __init__(self):
-        super(IOLoopThread, self).__init__()
+        super().__init__()
         self.daemon = True
 
     @staticmethod
@@ -236,7 +236,7 @@ class ThreadedKernelClient(KernelClient):
         if shell:
             self.shell_channel._inspect = self._check_kernel_info_reply
 
-        super(ThreadedKernelClient, self).start_channels(shell, iopub, stdin, hb, control)
+        super().start_channels(shell, iopub, stdin, hb, control)
 
     def _check_kernel_info_reply(self, msg):
         """This is run in the ioloop thread when the kernel info reply is received
@@ -246,7 +246,7 @@ class ThreadedKernelClient(KernelClient):
             self.shell_channel._inspect = None
 
     def stop_channels(self):
-        super(ThreadedKernelClient, self).stop_channels()
+        super().stop_channels()
         if self.ioloop_thread.is_alive():
             self.ioloop_thread.stop()
 

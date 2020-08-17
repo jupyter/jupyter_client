@@ -73,11 +73,11 @@ class AsyncKernelManagerSubclass(AsyncKernelManager):
     """
 
     def cleanup(self, connection_file=True):
-        super(AsyncKernelManagerSubclass, self).cleanup(connection_file=connection_file)
+        super().cleanup(connection_file=connection_file)
         self.which_cleanup = 'cleanup'
 
     def cleanup_resources(self, restart=False):
-        super(AsyncKernelManagerSubclass, self).cleanup_resources(restart=restart)
+        super().cleanup_resources(restart=restart)
         self.which_cleanup = 'cleanup_resources'
 
 class AsyncKernelManagerWithCleanup(AsyncKernelManager):

@@ -344,4 +344,4 @@ class JupyterConsoleApp(ConnectionFileMixin):
 class IPythonConsoleApp(JupyterConsoleApp):
     def __init__(self, *args, **kwargs):
         warnings.warn("IPythonConsoleApp is deprecated. Use JupyterConsoleApp")
-        super(IPythonConsoleApp, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)

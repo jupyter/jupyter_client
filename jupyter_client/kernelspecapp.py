@@ -119,7 +119,7 @@ class InstallKernelSpec(JupyterApp):
             }
 
     def parse_command_line(self, argv):
-        super(InstallKernelSpec, self).parse_command_line(argv)
+        super().parse_command_line(argv)
         # accept positional arg as profile name
         if self.extra_args:
             self.sourcedir = self.extra_args[0]
@@ -168,7 +168,7 @@ class RemoveKernelSpec(JupyterApp):
     flags.update(JupyterApp.flags)
 
     def parse_command_line(self, argv):
-        super(RemoveKernelSpec, self).parse_command_line(argv)
+        super().parse_command_line(argv)
         # accept positional arg as profile name
         if self.extra_args:
             self.spec_names = sorted(set(self.extra_args)) # remove duplicates
