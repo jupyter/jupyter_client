@@ -149,17 +149,17 @@ class TestSession(SessionTestCase):
         s = self.session
         self.assertTrue(s.pack is ss.default_packer)
         self.assertTrue(s.unpack is ss.default_unpacker)
-        self.assertEqual(s.username, os.environ.get('USER', u'username'))
+        self.assertEqual(s.username, os.environ.get('USER', 'username'))
 
         s = ss.Session()
-        self.assertEqual(s.username, os.environ.get('USER', u'username'))
+        self.assertEqual(s.username, os.environ.get('USER', 'username'))
 
         self.assertRaises(TypeError, ss.Session, pack='hi')
         self.assertRaises(TypeError, ss.Session, unpack='hi')
         u = str(uuid.uuid4())
-        s = ss.Session(username=u'carrot', session=u)
+        s = ss.Session(username='carrot', session=u)
         self.assertEqual(s.session, u)
-        self.assertEqual(s.username, u'carrot')
+        self.assertEqual(s.username, 'carrot')
 
     def test_tracking(self):
         """test tracking messages"""

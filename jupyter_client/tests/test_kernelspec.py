@@ -155,7 +155,7 @@ class KernelSpecTests(unittest.TestCase):
 
         for bad in [
             'has space',
-            u'ünicode',
+            'ünicode',
             '%percent',
             'question?',
         ]:

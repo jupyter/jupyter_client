@@ -109,7 +109,7 @@ def new_id():
     id string (16 random bytes as hex-encoded text, chunks separated by '-')
     """
     buf = os.urandom(16)
-    return u'-'.join(b2a_hex(x).decode('ascii') for x in (
+    return '-'.join(b2a_hex(x).decode('ascii') for x in (
         buf[:4], buf[4:]
     ))
 
@@ -326,7 +326,7 @@ class Session(Configurable):
         else:
             self.unpack = import_item(str(new))
 
-    session = CUnicode(u'', config=True,
+    session = CUnicode('', config=True,
         help="""The UUID identifying this session.""")
     def _session_default(self):
         u = new_id()
