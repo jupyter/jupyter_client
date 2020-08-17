@@ -5,10 +5,8 @@
 
 import abc
 
-from ipython_genutils.py3compat import with_metaclass
 
-
-class KernelManagerABC(with_metaclass(abc.ABCMeta, object)):
+class KernelManagerABC(object, metaclass=abc.ABCMeta):
     """KernelManager ABC.
 
     The docstrings for this class can be found in the base implementation:

@@ -5,10 +5,8 @@
 
 import abc
 
-from ipython_genutils.py3compat import with_metaclass
 
-
-class ChannelABC(with_metaclass(abc.ABCMeta, object)):
+class ChannelABC(object, metaclass=abc.ABCMeta):
     """A base class for all channel ABCs."""
 
     @abc.abstractmethod
