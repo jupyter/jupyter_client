@@ -17,17 +17,11 @@ import hashlib
 import hmac
 import logging
 import os
+import pickle
 import pprint
 import random
 import warnings
 from datetime import datetime
-
-try:
-    import cPickle
-    pickle = cPickle
-except:
-    cPickle = None
-    import pickle
 
 PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
 

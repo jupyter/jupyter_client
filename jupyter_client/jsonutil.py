@@ -1,4 +1,3 @@
-# coding: utf-8
 """Utilities to manipulate JSON objects."""
 
 # Copyright (c) Jupyter Development Team.

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # jupyter_client documentation build configuration file, created by
 # sphinx-quickstart on Tue May 26 15:41:51 2015.

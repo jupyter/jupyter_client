@@ -159,8 +159,6 @@ class BlockingKernelClient(KernelClient):
         content = msg['content']
         if content.get('password', False):
             prompt = getpass
-        elif sys.version_info < (3,):
-            prompt = raw_input
         else:
             prompt = input
 

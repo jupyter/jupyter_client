@@ -5,13 +5,9 @@
 
 import hmac
 import os
-import sys
 import uuid
 from datetime import datetime
-try:
-    from unittest import mock
-except ImportError:
-    import mock
+from unittest import mock
 
 import pytest
 
@@ -141,9 +137,8 @@ class TestSession(SessionTestCase):
 
         # buffers must be contiguous
         buf = memoryview(os.urandom(16))
-        if sys.version_info >= (3,4):
-            with self.assertRaises(ValueError):
-                self.session.send(A, msg, ident=b'foo', buffers=[buf[::2]])
+        with self.assertRaises(ValueError):
+            self.session.send(A, msg, ident=b'foo', buffers=[buf[::2]])
 
         A.close()
         B.close()
