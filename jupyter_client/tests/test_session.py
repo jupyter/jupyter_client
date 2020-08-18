@@ -5,13 +5,9 @@
 
 import hmac
 import os
-import sys
 import uuid
 from datetime import datetime
-try:
-    from unittest import mock
-except ImportError:
-    import mock
+from unittest import mock
 
 import pytest
 
@@ -141,9 +137,8 @@ class TestSession(SessionTestCase):
 
         # buffers must be contiguous
         buf = memoryview(os.urandom(16))
-        if sys.version_info >= (3,4):
-            with self.assertRaises(ValueError):
-                self.session.send(A, msg, ident=b'foo', buffers=[buf[::2]])
+        with self.assertRaises(ValueError):
+            self.session.send(A, msg, ident=b'foo', buffers=[buf[::2]])
 
         A.close()
         B.close()
@@ -154,17 +149,17 @@ class TestSession(SessionTestCase):
         s = self.session
         self.assertTrue(s.pack is ss.default_packer)
         self.assertTrue(s.unpack is ss.default_unpacker)
-        self.assertEqual(s.username, os.environ.get('USER', u'username'))
+        self.assertEqual(s.username, os.environ.get('USER', 'username'))
 
         s = ss.Session()
-        self.assertEqual(s.username, os.environ.get('USER', u'username'))
+        self.assertEqual(s.username, os.environ.get('USER', 'username'))
 
         self.assertRaises(TypeError, ss.Session, pack='hi')
         self.assertRaises(TypeError, ss.Session, unpack='hi')
         u = str(uuid.uuid4())
-        s = ss.Session(username=u'carrot', session=u)
+        s = ss.Session(username='carrot', session=u)
         self.assertEqual(s.session, u)
-        self.assertEqual(s.username, u'carrot')
+        self.assertEqual(s.username, 'carrot')
 
     def test_tracking(self):
         """test tracking messages"""

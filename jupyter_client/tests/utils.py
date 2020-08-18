@@ -4,10 +4,7 @@
 import os
 pjoin = os.path.join
 import sys
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
+from unittest.mock import patch
 
 import pytest
 from jupyter_client import AsyncKernelManager

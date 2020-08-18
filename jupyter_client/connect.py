@@ -491,7 +491,7 @@ class ConnectionFileMixin(LoggingConfigurable):
         """
         if connection_file is None:
             connection_file = self.connection_file
-        self.log.debug(u"Loading connection file %s", connection_file)
+        self.log.debug("Loading connection file %s", connection_file)
         with open(connection_file) as f:
             info = json.load(f)
         self.load_connection_info(info)

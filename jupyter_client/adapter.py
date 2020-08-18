@@ -38,10 +38,10 @@ def extract_oname_v4(code, cursor_pos):
     line, _ = code_to_line(code, cursor_pos)
     
     oldline = line
-    line = _match_bracket.sub(u'', line)
+    line = _match_bracket.sub('', line)
     while oldline != line:
         oldline = line
-        line = _match_bracket.sub(u'', line)
+        line = _match_bracket.sub('', line)
 
     # remove everything after last open bracket
     line = _end_bracket.sub('', line)
