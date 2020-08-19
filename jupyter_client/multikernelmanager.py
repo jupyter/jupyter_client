@@ -56,7 +56,7 @@ class MultiKernelManager(LoggingConfigurable):
     )
 
     def __init__(self, *args, **kwargs):
-        super(MultiKernelManager, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Cache all the currently used ports
         self.currently_used_ports = set()

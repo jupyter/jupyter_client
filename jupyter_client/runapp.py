@@ -59,14 +59,14 @@ class RunApp(JupyterApp, JupyterConsoleApp):
     )
 
     def parse_command_line(self, argv=None):
-        super(RunApp, self).parse_command_line(argv)
+        super().parse_command_line(argv)
         self.build_kernel_argv(self.extra_args)
         self.filenames_to_run = self.extra_args[:]
 
     @catch_config_error
     def initialize(self, argv=None):
         self.log.debug("jupyter run: initialize...")
-        super(RunApp, self).initialize(argv)
+        super().initialize(argv)
         JupyterConsoleApp.initialize(self)
         signal.signal(signal.SIGINT, self.handle_sigint)
         self.init_kernel_info()
@@ -97,7 +97,7 @@ class RunApp(JupyterApp, JupyterConsoleApp):
 
     def start(self):
         self.log.debug("jupyter run: starting...")
-        super(RunApp, self).start()
+        super().start()
         if self.filenames_to_run:
             for filename in self.filenames_to_run:
                 self.log.debug("jupyter run: executing `%s`" % filename)

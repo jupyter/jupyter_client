@@ -58,7 +58,7 @@ class HBChannel(Thread):
         address : zmq url
             Standard (ip, port) tuple that the kernel is listening on.
         """
-        super(HBChannel, self).__init__()
+        super().__init__()
         self.daemon = True
 
         self.loop = loop

@@ -177,7 +177,7 @@ class SessionFactory(LoggingConfigurable):
         return IOLoop.current()
 
     def __init__(self, **kwargs):
-        super(SessionFactory, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         if self.session is None:
             # construct the session
@@ -479,7 +479,7 @@ class Session(Configurable):
             The file containing a key.  If this is set, `key` will be
             initialized to the contents of the file.
         """
-        super(Session, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._check_packers()
         self.none = self.pack({})
         # ensure self._session_default() if necessary, so bsession is defined:
