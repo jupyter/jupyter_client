@@ -39,8 +39,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 from traitlets.config.configurable import Configurable, LoggingConfigurable
 from ipython_genutils.importstring import import_item
 from jupyter_client.jsonutil import extract_dates, squash_dates, date_default
-from ipython_genutils.py3compat import (str_to_bytes, str_to_unicode, unicode_type,
-                                     iteritems)
+from ipython_genutils.py3compat import str_to_bytes, str_to_unicode
 from traitlets import (
     CBytes, Unicode, Bool, Any, Instance, Set, DottedObjectName, CUnicode,
     Dict, Integer, TraitError, observe
@@ -59,12 +58,12 @@ def squash_unicode(obj):
     if isinstance(obj,dict):
         for key in obj.keys():
             obj[key] = squash_unicode(obj[key])
-            if isinstance(key, unicode_type):
+            if isinstance(key, str):
                 obj[squash_unicode(key)] = obj.pop(key)
     elif isinstance(obj, list):
         for i,v in enumerate(obj):
             obj[i] = squash_unicode(v)
-    elif isinstance(obj, unicode_type):
+    elif isinstance(obj, str):
         obj = obj.encode('utf8')
     return obj
 
@@ -193,14 +192,14 @@ class Message(object):
 
     def __init__(self, msg_dict):
         dct = self.__dict__
-        for k, v in iteritems(dict(msg_dict)):
+        for k, v in dict(msg_dict).items():
             if isinstance(v, dict):
                 v = Message(v)
             dct[k] = v
 
     # Having this iterator lets dict(msg_obj) work out of the box.
     def __iter__(self):
-        return iter(iteritems(self.__dict__))
+        return self.__dict__.items()
 
     def __repr__(self):
         return repr(self.__dict__)
@@ -630,7 +629,7 @@ class Session(Configurable):
         elif isinstance(content, bytes):
             # content is already packed, as in a relayed message
             pass
-        elif isinstance(content, unicode_type):
+        elif isinstance(content, str):
             # should be bytes, but JSON often spits out unicode
             content = content.encode('utf8')
         else:

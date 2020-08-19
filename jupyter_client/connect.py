@@ -24,7 +24,7 @@ from traitlets.config import LoggingConfigurable
 from .localinterfaces import localhost
 from ipython_genutils.path import filefind
 from ipython_genutils.py3compat import (
-    bytes_to_str, cast_bytes, cast_bytes_py2,
+    bytes_to_str, cast_bytes,
 )
 from traitlets import (
     Bool, Integer, Unicode, CaselessStrEnum, Instance, Type, observe
@@ -266,7 +266,7 @@ def tunnel_to_kernel(connection_info, sshserver, sshkey=None):
     if tunnel.try_passwordless_ssh(sshserver, sshkey):
         password=False
     else:
-        password = getpass("SSH Password for %s: " % cast_bytes_py2(sshserver))
+        password = getpass("SSH Password for %s: " % sshserver)
 
     for lp,rp in zip(lports, rports):
         tunnel.ssh_tunnel(lp, rp, sshserver, remote_ip, sshkey, password)

@@ -14,7 +14,6 @@ from ipython_genutils.importstring import import_item
 from traitlets import (
     Any, Bool, Dict, DottedObjectName, Instance, Unicode, default, observe
 )
-from ipython_genutils.py3compat import unicode_type
 
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import KernelManager, AsyncKernelManager
@@ -442,7 +441,7 @@ class MultiKernelManager(LoggingConfigurable):
         :param kwargs:
         :return: string-ized version 4 uuid
         """
-        return unicode_type(uuid.uuid4())
+        return str(uuid.uuid4())
 
 
 class AsyncMultiKernelManager(MultiKernelManager):

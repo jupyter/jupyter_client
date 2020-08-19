@@ -10,7 +10,6 @@ import warnings
 from dateutil.parser import parse as _dateutil_parse
 from dateutil.tz import tzlocal
 
-from ipython_genutils import py3compat
 next_attr_name = '__next__' # Not sure what downstream library uses this, but left it to be safe
 
 #-----------------------------------------------------------------------------
