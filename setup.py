@@ -86,6 +86,7 @@ setup_args = dict(
             'pytest-asyncio',
             'pytest-timeout',
             'pytest',
+            'mypy',
         ],
         'doc': open('docs/requirements.txt').read().splitlines(),
     },
