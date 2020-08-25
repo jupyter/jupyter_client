@@ -464,7 +464,6 @@ class KernelManager(ConnectionFileMixin):
         This is a private method, callers should use shutdown_kernel(now=True).
         """
         if self.has_kernel:
-
             # Signal the kernel to terminate (sends SIGKILL on Unix and calls
             # TerminateProcess() on Win32).
             try:
@@ -488,8 +487,6 @@ class KernelManager(ConnectionFileMixin):
             # Block until the kernel terminates.
             self.kernel.wait()
             self.kernel = None
-        else:
-            raise RuntimeError("Cannot kill kernel. No kernel is running!")
 
     def interrupt_kernel(self):
         """Interrupts the kernel by sending it a signal.
@@ -714,8 +711,6 @@ class AsyncKernelManager(KernelManager):
                 if self.kernel is not None:
                     self.kernel.wait()
             self.kernel = None
-        else:
-            raise RuntimeError("Cannot kill kernel. No kernel is running!")
 
     async def interrupt_kernel(self):
         """Interrupts the kernel by sending it a signal.
