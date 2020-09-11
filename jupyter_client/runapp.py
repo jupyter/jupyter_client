@@ -75,8 +75,7 @@ class RunApp(JupyterApp, JupyterConsoleApp):
         if self.kernel_manager:
             self.kernel_manager.interrupt_kernel()
         else:
-            print("", file=sys.stderr)
-            error("Cannot interrupt kernels we didn't start.\n")
+            self.log.error("Cannot interrupt kernels we didn't start.\n")
 
     def init_kernel_info(self):
         """Wait for a kernel to be ready, and store kernel info"""
