@@ -76,27 +76,6 @@ def start_kernel():
 
 
 @pytest.fixture
-def start_kernel_w_env():
-    kernel_cmd = [sys.executable,
-                  '-m', 'jupyter_client.tests.signalkernel',
-                  '-f', '{connection_file}']
-    extra_env = {'TEST_VARS': '${TEST_VARS}:test_var_2'}
-
-    km = KernelManager(kernel_name='signaltest')
-    km.kernel_cmd = kernel_cmd
-    km.extra_env = extra_env
-    km.start_kernel()
-    kc = km.client()
-    kc.start_channels()
-
-    kc.wait_for_ready(timeout=60)
-
-    yield km, kc
-    kc.stop_channels()
-    km.shutdown_kernel()
-
-
-@pytest.fixture
 def km(config):
     km = KernelManager(config=config)
     return km
@@ -205,13 +184,6 @@ class TestKernelManager:
 
     def test_templated_kspec_env(self, install_kernel, start_kernel):
         km, kc = start_kernel
-        assert km.is_alive()
-        assert kc.is_alive()
-        assert km.context.closed is False
-        self._env_test_body(kc)
-
-    def test_templated_extra_env(self, install_kernel, start_kernel_w_env):
-        km, kc = start_kernel_w_env
         assert km.is_alive()
         assert kc.is_alive()
         assert km.context.closed is False
