@@ -268,10 +268,8 @@ class KernelManager(ConnectionFileMixin):
             # If kernel_cmd has been set manually, don't refer to a kernel spec.
             # Environment variables from kernel spec are added to os.environ.
             env.update(self._get_env_substitutions(self.kernel_spec.env, env))
-        elif self.extra_env:
-            env.update(self._get_env_substitutions(self.extra_env, env))
-        kw['env'] = env
 
+        kw['env'] = env
         return kernel_cmd, kw
 
     def _get_env_substitutions(self, templated_env, substitution_values):
