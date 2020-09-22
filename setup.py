@@ -78,6 +78,7 @@ setup_args = dict(
     python_requires  = '>=3.5',
     extras_require   = {
         'test': ['ipykernel', 'ipython', 'mock', 'pytest', 'pytest-asyncio', 'async_generator', 'pytest-timeout'],
+        'doc': open('docs/requirements.txt').read().splitlines(),
     },
     cmdclass         = {
         'bdist_egg': bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled,
