@@ -79,7 +79,7 @@ def _populate_from_list(addrs):
         elif not LOCALHOST:
             LOCALHOST = ip
     
-    if not LOCALHOST:
+    if not LOCALHOST or LOCALHOST == '127.0.0.1':
         LOCALHOST = '127.0.0.1'
         local_ips.insert(0, LOCALHOST)
         
