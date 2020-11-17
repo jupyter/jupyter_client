@@ -54,14 +54,12 @@ def parse_date(s):
     """
     if s is None:
         return s
-    if ciso8601 is not None:
-        try:
-            return _ensure_tzinfo(ciso8601.parse_datetime(s))
-        except ValueError:
-            return s
     m = ISO8601_PAT.match(s)
     if m:
-        dt = _dateutil_parse(s)
+        if ciso8601 is not None:
+            dt = ciso8601.parse_datetime(s)
+        else:
+            dt = _dateutil_parse(s)
         return _ensure_tzinfo(dt)
     return s
 
