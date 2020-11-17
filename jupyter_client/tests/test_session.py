@@ -345,20 +345,3 @@ class TestSession(SessionTestCase):
         assert digest in s.digest_history
         assert digest not in s2.digest_history
 
-
-@pytest.mark.usefixtures('no_copy_threshold', 'benchmark')
-class TestPerformance(SessionTestCase):
-    @pytest.fixture(autouse=True)
-    def _request_benchmark(self, benchmark):
-        self.benchmark = benchmark
-
-    def test_deserialize_performance(self):
-        def run(data):
-            self.session.digest_history = []
-            self.session.deserialize(self.session.feed_identities(data)[1])
-        content = dict(t=ss.utcnow())
-        metadata = dict(t=ss.utcnow())
-        p = self.session.msg('msg')
-        msg = self.session.msg('msg', content=content, metadata=metadata, parent=p['header'])
-        data = self.session.serialize(msg)
-        self.benchmark(run, data)
