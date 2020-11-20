@@ -18,7 +18,7 @@ from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
     Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName,
-    default, observe
+    default, observe, observe_compat
 )
 from jupyter_client import (
     launch_kernel,
@@ -63,6 +63,8 @@ class KernelManager(ConnectionFileMixin):
     def _kernel_spec_manager_default(self):
         return kernelspec.KernelSpecManager(data_dir=self.data_dir)
 
+    @observe('kernel_spec_manager')
+    @observe_compat
     def _kernel_spec_manager_changed(self):
         self._kernel_spec = None
 
