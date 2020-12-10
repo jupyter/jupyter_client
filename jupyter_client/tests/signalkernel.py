@@ -54,13 +54,6 @@ class SignalTestKernel(Kernel):
             reply['traceback'] = ['no such command: %s' % code]
         return reply
 
-    def kernel_info_request(self, *args, **kwargs):
-        """Add delay to kernel_info_request
-
-        triggers slow-response code in KernelClient.wait_for_ready
-        """
-        return super().kernel_info_request(*args, **kwargs)
-
 
 class SignalTestApp(IPKernelApp):
     kernel_class = SignalTestKernel

@@ -102,11 +102,10 @@ class KernelClient(ConnectionFileMixin):
         :meth:`start_kernel`. If the channels have been stopped and you
         call this, :class:`RuntimeError` will be raised.
         """
-        if shell:
-            self.shell_channel.start()
-            self.kernel_info()
         if iopub:
             self.iopub_channel.start()
+        if shell:
+            self.shell_channel.start()
         if stdin:
             self.stdin_channel.start()
             self.allow_stdin = True

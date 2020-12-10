@@ -91,14 +91,21 @@ class BlockingKernelClient(KernelClient):
 
         # Wait for kernel info reply on shell channel
         while True:
+            self.kernel_info()
             try:
                 msg = self.shell_channel.get_msg(block=True, timeout=1)
             except Empty:
                 pass
             else:
                 if msg['msg_type'] == 'kernel_info_reply':
-                    self._handle_kernel_info_reply(msg)
-                    break
+                    # Checking that IOPub is connected. If it is not connected, start over.
+                    try:
+                        self.iopub_channel.get_msg(block=True, timeout=0.2)
+                    except Empty:
+                        pass
+                    else:
+                        self._handle_kernel_info_reply(msg)
+                        break
 
             if not self.is_alive():
                 raise RuntimeError('Kernel died before replying to kernel_info')
