@@ -133,8 +133,11 @@ class TestKernelManager:
         km, kc = start_kernel
 
         def execute(cmd):
-            kc.execute(cmd)
-            reply = kc.get_shell_msg(TIMEOUT)
+            request_id = kc.execute(cmd)
+            while True:
+                reply = kc.get_shell_msg(TIMEOUT)
+                if reply['parent_header']['msg_id'] == request_id:
+                    break
             content = reply['content']
             assert content['status'] == 'ok'
             return content
@@ -172,8 +175,11 @@ class TestKernelManager:
 
     def _env_test_body(self, kc):
         def execute(cmd):
-            kc.execute(cmd)
-            reply = kc.get_shell_msg(TIMEOUT)
+            request_id = kc.execute(cmd)
+            while True:
+                reply = kc.get_shell_msg(TIMEOUT)
+                if reply['parent_header']['msg_id'] == request_id:
+                    break
             content = reply['content']
             assert content['status'] == 'ok'
             return content
@@ -274,8 +280,11 @@ class TestParallel:
         kc = self._prepare_kernel(km, stdout=PIPE, stderr=PIPE)
 
         def execute(cmd):
-            kc.execute(cmd)
-            reply = kc.get_shell_msg(TIMEOUT)
+            request_id = kc.execute(cmd)
+            while True:
+                reply = kc.get_shell_msg(TIMEOUT)
+                if reply['parent_header']['msg_id'] == request_id:
+                    break
             content = reply['content']
             assert content['status'] == 'ok'
             return content
@@ -344,8 +353,11 @@ class TestAsyncKernelManager:
         km, kc = start_async_kernel
 
         async def execute(cmd):
-            kc.execute(cmd)
-            reply = await kc.get_shell_msg(TIMEOUT)
+            request_id = kc.execute(cmd)
+            while True:
+                reply = await kc.get_shell_msg(TIMEOUT)
+                if reply['parent_header']['msg_id'] == request_id:
+                    break
             content = reply['content']
             assert content['status'] == 'ok'
             return content
@@ -360,10 +372,13 @@ class TestAsyncKernelManager:
         assert reply['user_expressions']['poll'] == [None] * N
 
         # start a job on the kernel to be interrupted
-        kc.execute('sleep')
+        request_id = kc.execute('sleep')
         await asyncio.sleep(1)  # ensure sleep message has been handled before we interrupt
         await km.interrupt_kernel()
-        reply = await kc.get_shell_msg(TIMEOUT)
+        while True:
+            reply = await kc.get_shell_msg(TIMEOUT)
+            if reply['parent_header']['msg_id'] == request_id:
+                break
         content = reply['content']
         assert content['status'] == 'ok'
         assert content['user_expressions']['interrupted'] is True
