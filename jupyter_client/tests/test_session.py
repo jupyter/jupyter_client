@@ -304,7 +304,7 @@ class TestSession(SessionTestCase):
 
         session = ss.Session(
             pack=msgpack.packb,
-            unpack=lambda buf: msgpack.unpackb(buf, encoding='utf8'),
+            unpack=lambda buf: msgpack.unpackb(buf, raw=False),
         )
         self._datetime_test(session)
 
