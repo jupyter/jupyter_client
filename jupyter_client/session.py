@@ -38,7 +38,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import Configurable, LoggingConfigurable
 from ipython_genutils.importstring import import_item
-from jupyter_client.jsonutil import extract_dates, squash_dates, date_default
+from jupyter_client.jsonutil import extract_dates, squash_dates, date_default, parse_date
 from ipython_genutils.py3compat import str_to_bytes, str_to_unicode
 from traitlets import (
     CBytes, Unicode, Bool, Any, Instance, Set, DottedObjectName, CUnicode,
@@ -928,10 +928,14 @@ class Session(Configurable):
         if not len(msg_list) >= minlen:
             raise TypeError("malformed message, must have at least %i elements"%minlen)
         header = self.unpack(msg_list[1])
-        message['header'] = extract_dates(header)
+
+        message['header'] = header
+        message['header']['date'] = parse_date(message['header']['date'])
         message['msg_id'] = header['msg_id']
         message['msg_type'] = header['msg_type']
-        message['parent_header'] = extract_dates(self.unpack(msg_list[2]))
+        message['parent_header'] = self.unpack(msg_list[2])
+        if 'date' in message['parent_header']:
+            message['parent_header']['date'] = parse_date(message['parent_header']['date'])
         message['metadata'] = self.unpack(msg_list[3])
         if content:
             message['content'] = self.unpack(msg_list[4])

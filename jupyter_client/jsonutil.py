@@ -6,6 +6,10 @@
 from datetime import datetime
 import re
 import warnings
+try:
+    import ciso8601
+except ImportError:
+    ciso8601 = None
 
 from dateutil.parser import parse as _dateutil_parse
 from dateutil.tz import tzlocal
@@ -52,7 +56,10 @@ def parse_date(s):
         return s
     m = ISO8601_PAT.match(s)
     if m:
-        dt = _dateutil_parse(s)
+        if ciso8601 is not None:
+            dt = ciso8601.parse_datetime(s)
+        else:
+            dt = _dateutil_parse(s)
         return _ensure_tzinfo(dt)
     return s
 

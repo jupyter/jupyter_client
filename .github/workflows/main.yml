@@ -37,6 +37,9 @@ jobs:
         pip install --upgrade --upgrade-strategy eager --pre -e .[test] pytest-cov codecov 'coverage<5'
         pip freeze
     - name: Run the tests
-      run: py.test --cov jupyter_client jupyter_client
+      run:  |
+        py.test --cov jupyter_client jupyter_client
+        pip install ciso8601
+        py.test --cov jupyter_client jupyter_client
     - name: Code coverage
       run: codecov

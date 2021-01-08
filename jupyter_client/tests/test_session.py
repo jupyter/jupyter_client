@@ -344,3 +344,4 @@ class TestSession(SessionTestCase):
         s._add_digest(digest)
         assert digest in s.digest_history
         assert digest not in s2.digest_history
+
