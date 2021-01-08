@@ -4,6 +4,21 @@
 Changes in Jupyter Client
 =========================
 
+6.1.8
+=====
+- Doc updates (:ghpull:`563`, :ghpull:`564`, :ghpull:`587`)
+- Fix path to the connection file (:ghpull:`568`)
+- Code cleanup (:ghpull:`574`, :ghpull:`579`)
+- Silence kill_kernel when no process is present (:ghpull:`576`)
+- Remove extra_env and corresponding test (:ghpull:`581`)
+- Add documentation dependencies to setup.py (:ghpull:`582`)
+- Fix for Windows localhost IP addresses (:ghpull:`584`)
+- Drop Travis CI, add GitHub Actions (:ghpull:`586`)
+- Adapt KernelManager._kernel_spec_manager_changed to observe (:ghpull:`588`)
+- Allow use ~/ in the kernel's command or its arguments (:ghpull:`589`)
+- Change wait_for_ready logic (:ghpull:`592`)
+- Fix test_session with msgpack v1  (:ghpull:`594`)
+
 6.1.6
 =====
 - Removed warnings in more cases for KernelManagers that use new cleanup method (:ghpull:`560`)
