@@ -4,6 +4,10 @@
 Changes in Jupyter Client
 =========================
 
+6.1.9
+=====
+- Pin jedi<=0.17.2 (:ghpull:`596`)
+
 6.1.8
 =====
 - Doc updates (:ghpull:`563`, :ghpull:`564`, :ghpull:`587`)
