@@ -4,6 +4,10 @@
 Changes in Jupyter Client
 =========================
 
+6.1.10
+======
+- Add change parameter needed for observer method of kernel_spec_manager trait (:ghpull:`598`)
+
 6.1.9
 =====
 - Pin jedi<=0.17.2 (:ghpull:`596`)
