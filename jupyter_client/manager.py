@@ -65,7 +65,7 @@ class KernelManager(ConnectionFileMixin):
 
     @observe('kernel_spec_manager')
     @observe_compat
-    def _kernel_spec_manager_changed(self):
+    def _kernel_spec_manager_changed(self, change):
         self._kernel_spec = None
 
     shutdown_wait_time = Float(
