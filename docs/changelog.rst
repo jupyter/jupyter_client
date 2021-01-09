@@ -4,6 +4,10 @@
 Changes in Jupyter Client
 =========================
 
+6.1.11
+======
+- Move jedi pinning to test requirements (:ghpull:`599`)
+
 6.1.10
 ======
 - Add change parameter needed for observer method of kernel_spec_manager trait (:ghpull:`598`)
