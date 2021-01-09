@@ -74,11 +74,10 @@ setup_args = dict(
         'pyzmq>=13',
         'python-dateutil>=2.1',
         'tornado>=4.1',
-        'jedi<=0.17.2',
     ],
     python_requires  = '>=3.5',
     extras_require   = {
-        'test': ['ipykernel', 'ipython', 'mock', 'pytest', 'pytest-asyncio', 'async_generator', 'pytest-timeout'],
+        'test': ['jedi<=0.17.2', 'ipykernel', 'ipython', 'mock', 'pytest', 'pytest-asyncio', 'async_generator', 'pytest-timeout'],
         'doc': open('docs/requirements.txt').read().splitlines(),
     },
     cmdclass         = {
