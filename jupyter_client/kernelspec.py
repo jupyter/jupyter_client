@@ -201,13 +201,8 @@ class KernelSpecManager(LoggingConfigurable):
 
     def _find_spec_directory(self, kernel_name):
         """Find the resource directory of a named kernel spec"""
-        for kernel_dir in self.kernel_dirs:
-            try:
-                files = os.listdir(kernel_dir)
-            except OSError as e:
-                if e.errno in (errno.ENOTDIR, errno.ENOENT):
-                    continue
-                raise
+        for kernel_dir in [kd for kd in self.kernel_dirs if os.path.isdir(kd)]:
+            files = os.listdir(kernel_dir)
             for f in files:
                 path = pjoin(kernel_dir, f)
                 if f.lower() == kernel_name and _is_kernel_dir(path):
