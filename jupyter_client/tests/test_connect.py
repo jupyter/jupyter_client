@@ -13,8 +13,8 @@ import shutil
 from traitlets.config import Config
 from jupyter_core.application import JupyterApp
 from jupyter_core.paths import jupyter_runtime_dir
-from ipython_genutils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
-from ipython_genutils.py3compat import str_to_bytes
+from tempfile import TemporaryDirectory
+from ipython_genutils.tempdir import TemporaryWorkingDirectory
 from jupyter_client import connect, KernelClient
 from jupyter_client.consoleapp import JupyterConsoleApp
 from jupyter_client.session import Session
@@ -48,7 +48,7 @@ def test_write_connection_file():
         assert os.path.exists(cf)
         with open(cf, 'r') as f:
             info = json.load(f)
-    info['key'] = str_to_bytes(info['key'])
+    info["key"] = info["key"].encode()
     assert info == sample_info
 
 

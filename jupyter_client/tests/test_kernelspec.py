@@ -16,7 +16,7 @@ from io import StringIO
 from os.path import join as pjoin
 from subprocess import Popen, PIPE, STDOUT
 from logging import StreamHandler
-from ipython_genutils.tempdir import TemporaryDirectory
+from tempfile import TemporaryDirectory
 from jupyter_client import kernelspec
 from jupyter_core import paths
 from .utils import test_env
