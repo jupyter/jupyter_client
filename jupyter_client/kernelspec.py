@@ -342,7 +342,7 @@ class KernelSpecManager(LoggingConfigurable):
         return destination
 
     def install_native_kernel_spec(self, user=False):
-        """DEPRECATED: Use ipykernel.kenelspec.install"""
+        """DEPRECATED: Use ipykernel.kernelspec.install"""
         warnings.warn("install_native_kernel_spec is deprecated."
             " Use ipykernel.kernelspec import install.", stacklevel=2)
         from ipykernel.kernelspec import install
