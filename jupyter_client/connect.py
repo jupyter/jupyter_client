@@ -23,9 +23,7 @@ import zmq
 from traitlets.config import LoggingConfigurable
 from .localinterfaces import localhost
 from ipython_genutils.path import filefind
-from ipython_genutils.py3compat import (
-    bytes_to_str, cast_bytes,
-)
+from ipython_genutils.py3compat import cast_bytes
 from traitlets import (
     Bool, Integer, Unicode, CaselessStrEnum, Instance, Type, observe
 )
@@ -127,7 +125,7 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
                 hb_port=hb_port,
               )
     cfg['ip'] = ip
-    cfg['key'] = bytes_to_str(key)
+    cfg['key'] = key.decode()
     cfg['transport'] = transport
     cfg['signature_scheme'] = signature_scheme
     cfg['kernel_name'] = kernel_name

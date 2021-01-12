@@ -5,10 +5,10 @@ import os
 pjoin = os.path.join
 import sys
 from unittest.mock import patch
+from tempfile import TemporaryDirectory
 
 import pytest
 from jupyter_client import AsyncKernelManager
-from ipython_genutils.tempdir import TemporaryDirectory
 
 
 skip_win32 = pytest.mark.skipif(sys.platform.startswith('win'), reason="Windows")

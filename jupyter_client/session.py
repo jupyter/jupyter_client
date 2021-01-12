@@ -39,7 +39,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 from traitlets.config.configurable import Configurable, LoggingConfigurable
 from ipython_genutils.importstring import import_item
 from jupyter_client.jsonutil import extract_dates, squash_dates, date_default
-from ipython_genutils.py3compat import str_to_bytes, str_to_unicode
 from traitlets import (
     CBytes, Unicode, Bool, Any, Instance, Set, DottedObjectName, CUnicode,
     Dict, Integer, TraitError, observe
@@ -339,7 +338,8 @@ class Session(Configurable):
     # bsession is the session as bytes
     bsession = CBytes(b'')
 
-    username = Unicode(str_to_unicode(os.environ.get('USER', 'username')),
+    username = Unicode(
+        os.environ.get("USER", "username"),
         help="""Username for the Session. Default is your system username.""",
         config=True)
 
@@ -596,7 +596,7 @@ class Session(Configurable):
         h = self.auth.copy()
         for m in msg_list:
             h.update(m)
-        return str_to_bytes(h.hexdigest())
+        return h.hexdigest().encode()
 
     def serialize(self, msg, ident=None):
         """Serialize the message components to bytes.

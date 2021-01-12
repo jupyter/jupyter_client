@@ -7,7 +7,6 @@ import os
 import sys
 from subprocess import Popen, PIPE
 
-from ipython_genutils.encoding import getdefaultencoding
 from traitlets.log import get_logger
 
 
@@ -67,7 +66,6 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
 
     env = env if (env is not None) else os.environ.copy()
 
-    encoding = getdefaultencoding(prefer_stream=False)
     kwargs = kw.copy()
     main_args = dict(
         stdin=_stdin,

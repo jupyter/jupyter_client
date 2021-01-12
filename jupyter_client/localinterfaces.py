@@ -23,8 +23,6 @@ def _uniq_stable(elems):
 
     Return from an iterable, a list of all the unique elements in the input,
     maintaining the order in which they first appear.
-    
-    From ipython_genutils.data
     """
     seen = set()
     return [x for x in elems if x not in seen and not seen.add(x)]
