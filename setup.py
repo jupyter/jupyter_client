@@ -70,6 +70,7 @@ setup_args = dict(
     ],
     install_requires = [
         'traitlets',
+        'entrypoints',
         'jupyter_core>=4.6.0',
         'pyzmq>=13',
         'python-dateutil>=2.1',
@@ -89,6 +90,9 @@ setup_args = dict(
             'jupyter-run = jupyter_client.runapp:RunApp.launch_instance',
             'jupyter-kernel = jupyter_client.kernelapp:main',
         ],
+        'jupyter_client.environment_provisioners': [
+            'ClientProvisioner = jupyter_client.provisioning:ClientProvisioner',
+        ]
     },
 )
 
