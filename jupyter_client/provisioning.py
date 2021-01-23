@@ -9,7 +9,7 @@ import sys
 
 from entrypoints import get_group_all, EntryPoint
 from typing import Optional, Dict, List, Any
-from traitlets.config import LoggingConfigurable, SingletonConfigurable
+from traitlets.config import Config, LoggingConfigurable, SingletonConfigurable
 
 from .launcher import launch_kernel
 
@@ -22,10 +22,6 @@ class EnvironmentProvisionerBase(LoggingConfigurable):  # TODO - determine name 
        Theses methods model those of the Subprocess Popen class:
        https://docs.python.org/3/library/subprocess.html#popen-objects
     """
-
-    def __init__(self, **kwargs):
-        super(EnvironmentProvisionerBase, self).__init__(**kwargs)
-        self.provisioner_config = kwargs.get('provisioner_config')
 
     def poll(self) -> [int, None]:
         """Checks if kernel process is still running.
@@ -230,7 +226,7 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
                        format(kernel_spec.get('display_name'), provisioner_name))
         provisioner_class = self.provisioners[provisioner_name].load()
         provisioner_config = provisioner_cfg.get('config')
-        return provisioner_class(parent=self.parent, **provisioner_config)
+        return provisioner_class(parent=self.parent, config=Config(provisioner_config))
 
     @staticmethod
     def _get_provisioner_config(kernel_spec: Dict[str, Any]) -> Dict[str, Any]:

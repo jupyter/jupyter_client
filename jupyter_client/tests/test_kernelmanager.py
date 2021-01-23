@@ -21,19 +21,11 @@ from jupyter_client import KernelManager, AsyncKernelManager
 from subprocess import PIPE
 
 from ..manager import start_new_kernel, start_new_async_kernel
-from .utils import test_env, skip_win32, AsyncKernelManagerSubclass, AsyncKernelManagerWithCleanup
+from .utils import skip_win32, AsyncKernelManagerSubclass, AsyncKernelManagerWithCleanup
 
 pjoin = os.path.join
 
 TIMEOUT = 30
-
-
-@pytest.fixture(autouse=True)
-def env():
-    env_patch = test_env()
-    env_patch.start()
-    yield
-    env_patch.stop()
 
 
 @pytest.fixture(params=['tcp', 'ipc'])
