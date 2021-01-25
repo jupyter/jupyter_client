@@ -182,6 +182,7 @@ class MultiKernelManager(LoggingConfigurable):
         The kernel ID for the newly started kernel is returned.
         """
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
+        kwargs['kernel_id'] = kernel_id  # Make kernel_id available to manager and provisioner
         km.start_kernel(**kwargs)
         self._kernels[kernel_id] = km
         return kernel_id

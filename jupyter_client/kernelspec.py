@@ -3,7 +3,6 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import errno
 import io
 import json
 import os
@@ -11,15 +10,15 @@ import re
 import shutil
 import warnings
 
-pjoin = os.path.join
-
 from traitlets import (
     HasTraits, List, Unicode, Dict, Set, Bool, Type, CaselessStrEnum
 )
 from traitlets.config import LoggingConfigurable
 
 from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PATH
-from .provisioning import EnvironmentProvisionerFactory
+from .provisioning import EnvironmentProvisionerFactory as EPF
+
+pjoin = os.path.join
 
 NATIVE_KERNEL_NAME = 'python3'
 
@@ -66,6 +65,7 @@ class KernelSpec(HasTraits):
 
 
 _kernel_name_pat = re.compile(r'^[a-z0-9._\-]+$', re.IGNORECASE)
+
 
 def _is_valid_kernel_name(name):
     """Check that a kernel name is valid."""
@@ -179,9 +179,8 @@ class KernelSpecManager(LoggingConfigurable):
 
         if self.whitelist:
             # filter if there's a whitelist
-            d = {name:spec for name,spec in d.items() if name in self.whitelist}
+            d = {name: spec for name, spec in d.items() if name in self.whitelist}
         return d
-        # TODO: Caching?
 
     def _get_kernel_spec_by_name(self, kernel_name, resource_dir):
         """ Returns a :class:`KernelSpec` instance for a given kernel_name
@@ -200,9 +199,7 @@ class KernelSpecManager(LoggingConfigurable):
         if not kspec:
             kspec = self.kernel_spec_class.from_resource_dir(resource_dir)
 
-        if not EnvironmentProvisionerFactory.instance(parent=self.parent).is_provisioner_available(kspec.to_dict()):
-            self.log.warning(f"Kernel '{kernel_name}' is referencing an environment "  # TODO should probably include 
-                             f"provisioner that is not available.")                    # provisioner name.
+        if not EPF.instance(parent=self.parent).is_provisioner_available(kernel_name, kspec.to_dict()):
             raise NoSuchKernel(kernel_name)
 
         return kspec

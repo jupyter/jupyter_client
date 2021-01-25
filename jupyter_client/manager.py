@@ -10,6 +10,7 @@ import re
 import signal
 import sys
 import time
+import uuid
 import warnings
 
 import zmq
@@ -25,7 +26,7 @@ from jupyter_client import kernelspec
 from .connect import ConnectionFileMixin
 from .localinterfaces import is_local_ip, local_ips
 from .managerabc import KernelManagerABC
-from .provisioning import EnvironmentProvisionerFactory, EnvironmentProvisionerBase
+from .provisioning import EnvironmentProvisionerFactory as EPF, EnvironmentProvisionerBase
 
 
 class KernelManager(ConnectionFileMixin):
@@ -91,6 +92,7 @@ class KernelManager(ConnectionFileMixin):
             self._kernel_spec = self.kernel_spec_manager.get_kernel_spec(self.kernel_name)
         return self._kernel_spec
 
+    # TODO - This has been deprecated since April 2014 (4.0 release) - time to remove?
     kernel_cmd = List(Unicode(), config=True,
         help="""DEPRECATED: Use kernel_name instead.
 
@@ -248,6 +250,9 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
+        # TODO - clean this method up.  Most should move into the provisioner base class, although
+        # attributes (e.g., transport, ip, _launch_args) need to remain here for b/c.
+
         if self.transport == 'tcp' and not is_local_ip(self.ip):
             raise RuntimeError("Can only launch a kernel on a local interface. "
                                "This one is not: %s."
@@ -256,48 +261,22 @@ class KernelManager(ConnectionFileMixin):
                                "Currently valid addresses are: %s" % (self.ip, local_ips())
                                )
 
-        self.provisioner = EnvironmentProvisionerFactory.instance(parent=self.parent)\
-            .create_provisioner_instance(self.kernel_spec.to_dict())
+        self.provisioner = EPF.instance(parent=self.parent).\
+            create_provisioner_instance(kw.get('kernel_id', str(uuid.uuid4())), self.kernel_spec.to_dict())
 
         # write connection file / get default ports
-        self.write_connection_file()
+        self.write_connection_file()  # TODO - this is created too soon
 
         # save kwargs for use in restart
         self._launch_args = kw.copy()
         # build the Popen cmd
         extra_arguments = kw.pop('extra_arguments', [])
-        kernel_cmd = self.format_kernel_cmd(extra_arguments=extra_arguments)
+
+        kernel_cmd = self.format_kernel_cmd(extra_arguments=extra_arguments)  # This needs to remain here for b/c
 
         # Give provisioner a crack at the kernel cmd
-        kernel_cmd = self.provisioner.format_kernel_cmd(kernel_cmd, extra_arguments=extra_arguments, **kw)
-
-        env = kw.pop('env', os.environ).copy()
-        # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
-        # If set, it can bork all the things.
-        env.pop('PYTHONEXECUTABLE', None)
-        if not self.kernel_cmd:
-            # If kernel_cmd has been set manually, don't refer to a kernel spec.
-            # Environment variables from kernel spec are added to os.environ.
-            env.update(self._get_env_substitutions(self.kernel_spec.env, env))
-
-        kw['env'] = env
+        kernel_cmd, kw = self.provisioner.pre_launch(kernel_cmd, extra_arguments=extra_arguments, **kw)
         return kernel_cmd, kw
-
-    def _get_env_substitutions(self, templated_env, substitution_values):
-        """ Walks env entries in templated_env and applies possible substitutions from current env
-            (represented by substitution_values).
-            Returns the substituted list of env entries.
-        """
-        substituted_env = {}
-        if templated_env:
-            from string import Template
-
-            # For each templated env entry, fill any templated references
-            # matching names of env variables with those values and build
-            # new dict with substitutions.
-            for k, v in templated_env.items():
-                substituted_env.update({k: Template(v).safe_substitute(substitution_values)})
-        return substituted_env
 
     def post_start_kernel(self, **kw):
         self.start_restarter()
@@ -750,7 +729,7 @@ async def start_new_async_kernel(startup_timeout=60, kernel_name='python', **kwa
         await km.shutdown_kernel()
         raise
 
-    return (km, kc)
+    return km, kc
 
 
 @contextmanager
