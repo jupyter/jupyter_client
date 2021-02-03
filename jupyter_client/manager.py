@@ -223,7 +223,11 @@ class KernelManager(ConnectionFileMixin):
 
         override in a subclass to launch kernel subprocesses differently
         """
-        return self.provisioner.launch_kernel(kernel_cmd, **kw)
+        kernel_proc, connection_info = self.provisioner.launch_kernel(kernel_cmd, **kw)
+        # Provisioner provides the connection information.  Load into kernel manager and write file.
+        self.load_connection_info(connection_info)
+        self.write_connection_file()
+        return kernel_proc
 
     # Control socket used for polite kernel shutdown
 
@@ -250,32 +254,11 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        # TODO - clean this method up.  Most should move into the provisioner base class, although
-        # attributes (e.g., transport, ip, _launch_args) need to remain here for b/c.
-
-        if self.transport == 'tcp' and not is_local_ip(self.ip):
-            raise RuntimeError("Can only launch a kernel on a local interface. "
-                               "This one is not: %s."
-                               "Make sure that the '*_address' attributes are "
-                               "configured properly. "
-                               "Currently valid addresses are: %s" % (self.ip, local_ips())
-                               )
-
         self.provisioner = EPF.instance(parent=self.parent).\
-            create_provisioner_instance(kw.get('kernel_id', str(uuid.uuid4())), self.kernel_spec.to_dict())
+            create_provisioner_instance(kw.get('kernel_id', str(uuid.uuid4())), self.kernel_spec)
 
-        # write connection file / get default ports
-        self.write_connection_file()  # TODO - this is created too soon
-
-        # save kwargs for use in restart
-        self._launch_args = kw.copy()
-        # build the Popen cmd
-        extra_arguments = kw.pop('extra_arguments', [])
-
-        kernel_cmd = self.format_kernel_cmd(extra_arguments=extra_arguments)  # This needs to remain here for b/c
-
-        # Give provisioner a crack at the kernel cmd
-        kernel_cmd, kw = self.provisioner.pre_launch(kernel_cmd, extra_arguments=extra_arguments, **kw)
+        kw = self.provisioner.pre_launch(kernel_manager=self, **kw)
+        kernel_cmd = kw.pop('cmd')
         return kernel_cmd, kw
 
     def post_start_kernel(self, **kw):
@@ -515,8 +498,11 @@ class AsyncKernelManager(KernelManager):
 
         override in a subclass to launch kernel subprocesses differently
         """
-        res = self.provisioner.launch_kernel(kernel_cmd, **kw)
-        return res
+        kernel_proc, connection_info = self.provisioner.launch_kernel(kernel_cmd, **kw)
+        # Provisioner provides the connection information.  Load into kernel manager and write file.
+        self.load_connection_info(connection_info)
+        self.write_connection_file()
+        return kernel_proc
 
     async def start_kernel(self, **kw):
         """Starts a kernel in a separate process in an asynchronous manner.
@@ -534,7 +520,7 @@ class AsyncKernelManager(KernelManager):
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel (async): %s", kernel_cmd)
-        self.kernel = await self._launch_kernel(kernel_cmd, **kw)
+        self.kernel = await self._launch_kernel(kernel_cmd, **kw)  # TODO merge connection info
         self.post_start_kernel(**kw)
 
     async def finish_shutdown(self, waittime=None, pollinterval=0.1):

@@ -11,7 +11,9 @@ from entrypoints import EntryPoint, get_group_all, get_single, NoSuchEntryPoint
 from typing import Optional, Dict, List, Any, Tuple
 from traitlets.config import Config, LoggingConfigurable, SingletonConfigurable
 
+from .connect import write_connection_file
 from .launcher import launch_kernel
+from .localinterfaces import is_local_ip, local_ips
 
 DEFAULT_PROVISIONER = "ClientProvisioner"
 
@@ -23,7 +25,7 @@ class EnvironmentProvisionerBase(LoggingConfigurable):  # TODO - determine name 
        https://docs.python.org/3/library/subprocess.html#popen-objects
     """
     # The kernel specification associated with this provisioner
-    kernel_spec: Dict[str, Any]
+    kernel_spec: Any
     kernel_id: str
 
     def __init__(self, **kwargs):
@@ -69,35 +71,34 @@ class EnvironmentProvisionerBase(LoggingConfigurable):  # TODO - determine name 
         """Cleanup any resources allocated on behalf of the kernel provisioner."""
         raise NotImplementedError()
 
-    def pre_launch(self, cmd: List[str], **kwargs: Any) -> Tuple[List[str], Dict[str, Any]]:
+    def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
         """Perform any steps in preparation for kernel process launch.
 
         This includes applying additional substitutions to the kernel launch command and env.
         It also includes preparation of launch parameters.
 
-        Returns the command list and potentially updated kwargs.
+        Returns potentially updated kwargs.
         """
 
         env = kwargs.pop('env', os.environ).copy()
         # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
         # If set, it can bork all the things.
         env.pop('PYTHONEXECUTABLE', None)
-        # TODO: Potential B/C issue... Setting kernel_cmd has been deprecated since (April 2014).  But, if set
-        # this will update its kernel process's env with those from the kernelspec and templated values
-        # filled with env when that didn't happen before.  (Which I view as better anyway.)
 
-        # if not self.kernel_cmd:
-        #     # If kernel_cmd has been set manually, don't refer to a kernel spec.
-        #     # Environment variables from kernel spec are added to os.environ.
-        #     env.update(self._get_env_substitutions(self.kernel_spec.env, env))
         env.update(self._get_env_substitutions(env))
+
+        self._validate_parameters(env, **kwargs)
 
         kwargs['env'] = env
 
-        return cmd, kwargs
+        return kwargs
 
-    def launch_kernel(self, cmd: List[str], **kwargs: Any) -> 'EnvironmentProvisionerBase':
-        """Launch the kernel process returning the class instance."""
+    def _validate_parameters(self, env: Dict[str, Any], **kwargs: Any) -> None:
+        """Future: Validates that launch parameters adhere to schema specified in kernel specification."""
+        pass
+
+    def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['EnvironmentProvisionerBase', Dict]:
+        """Launch the kernel process returning the class instance and connection info."""
         raise NotImplementedError()
 
     def post_launch(self) -> None:
@@ -132,7 +133,7 @@ class EnvironmentProvisionerBase(LoggingConfigurable):  # TODO - determine name 
             # For each templated env entry, fill any templated references
             # matching names of env variables with those values and build
             # new dict with substitutions.
-            templated_env = self.kernel_spec.get('env', {})
+            templated_env = self.kernel_spec.env
             for k, v in templated_env.items():
                 substituted_env.update({k: Template(v).safe_substitute(substitution_values)})
         return substituted_env
@@ -145,7 +146,7 @@ class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name fo
         self.popen = None
         self.pid = None
         self.pgid = None
-        self.ip = None  # TODO - assume local_ip?
+        self.connection_info = {}
 
     def poll(self) -> [int, None]:
         if self.popen:
@@ -202,7 +203,44 @@ class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name fo
     def cleanup(self) -> None:
         pass
 
-    def launch_kernel(self, cmd: List[str], **kwargs: Any):
+    def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
+        """Perform any steps in preparation for kernel process launch.
+
+        This includes applying additional substitutions to the kernel launch command and env.
+        It also includes preparation of launch parameters.
+
+        Returns the updated kwargs.
+        """
+
+        # If we have a kernel_manager pop it out of the args and use it to retain b/c.
+        # This should be considered temporary until a better division of labor can be defined.
+        km = kwargs.pop('kernel_manager')
+        if km:
+            if km.transport == 'tcp' and not is_local_ip(km.ip):
+                raise RuntimeError("Can only launch a kernel on a local interface. "
+                                   "This one is not: %s."
+                                   "Make sure that the '*_address' attributes are "
+                                   "configured properly. "
+                                   "Currently valid addresses are: %s" % (km.ip, local_ips())
+                                   )
+
+            # save kwargs for use in restart
+            km._launch_args = kwargs.copy()  # TODO - stash these on provisioner?
+            # build the Popen cmd
+            extra_arguments = kwargs.pop('extra_arguments', [])
+
+            # write connection file / get default ports
+            km.write_connection_file()  # TODO - this will need to change when handshake pattern is adopted
+            self.connection_info = km.get_connection_info()
+
+            kernel_cmd = km.format_kernel_cmd(extra_arguments=extra_arguments)  # This needs to remain here for b/c
+        else:
+            extra_arguments = kwargs.pop('extra_arguments', [])
+            kernel_cmd = self.kernel_spec.argv + extra_arguments
+
+        return super().pre_launch(cmd=kernel_cmd, **kwargs)
+
+    def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['ClientProvisioner', Dict]:
         scrubbed_kwargs = ClientProvisioner.scrub_kwargs(kwargs)
         self.popen = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
@@ -213,12 +251,12 @@ class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name fo
                 pass
         self.pid = self.popen.pid
         self.pgid = pgid
-        return self
+        return self, self.connection_info
 
     @staticmethod
     def scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """Remove any keyword arguments that Popen does not tolerate."""
-        keywords_to_scrub: List[str] = ['extra_arguments', 'kernel_id']
+        keywords_to_scrub: List[str] = ['extra_arguments', 'kernel_id', 'kernel_manager']
         scrubbed_kwargs = kwargs.copy()
         for kw in keywords_to_scrub:
             scrubbed_kwargs.pop(kw, None)
@@ -253,7 +291,7 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
         for ep in get_group_all(EnvironmentProvisionerFactory.GROUP_NAME):
             self.provisioners[ep.name] = ep
 
-    def is_provisioner_available(self, kernel_name: str, kernel_spec: Dict[str, Any]) -> bool:
+    def is_provisioner_available(self, kernel_name: str, kernel_spec: Any) -> bool:
         """
         Reads the associated kernel_spec to determine the provisioner and returns whether it
         exists as an entry_point (True) or not (False).  If the referenced provisioner is not
@@ -274,7 +312,7 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
                     f"that is not available.  Ensure the appropriate package has been installed and retry.")
         return is_available
 
-    def create_provisioner_instance(self, kernel_id: str, kernel_spec: Dict[str, Any]) -> EnvironmentProvisionerBase:
+    def create_provisioner_instance(self, kernel_id: str, kernel_spec: Any) -> EnvironmentProvisionerBase:
         """
         Reads the associated kernel_spec and to see if has an environment_provisioner stanza.
         If one exists, it instantiates an instance.  If an environment provisioner is not
@@ -289,7 +327,7 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
         if provisioner_name not in self.provisioners:
             raise ModuleNotFoundError(f"Environment provisioner '{provisioner_name}' has not been registered.")
 
-        self.log.debug(f"Instantiating kernel '{kernel_spec.get('display_name')}' with "
+        self.log.debug(f"Instantiating kernel '{kernel_spec.display_name}' with "
                        f"environment provisioner: {provisioner_name}")
         provisioner_class = self.provisioners[provisioner_name].load()
         provisioner_config = provisioner_cfg.get('config')
@@ -299,7 +337,7 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
                                  config=Config(provisioner_config))
 
     @staticmethod
-    def _get_provisioner_config(kernel_spec: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_provisioner_config(kernel_spec: Any) -> Dict[str, Any]:
         """
         Return the environment_provisioner stanza from the kernel_spec.
 
@@ -308,7 +346,7 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
 
         Parameters
         ----------
-        kernel_spec : Dict
+        kernel_spec : Any - this is a KernelSpec type but listed as Any to avoid circular import
             The kernel specification object from which the provisioner dictionary is derived.
 
         Returns
@@ -318,12 +356,9 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
             information.  If no `config` sub-dictionary exists, an empty `config` dictionary will be added.
 
         """
-        if kernel_spec:
-            metadata = kernel_spec.get('metadata', {})
-            if 'environment_provisioner' in metadata:
-                env_provisioner = metadata.get('environment_provisioner')
-                if 'provisioner_name' in env_provisioner:  # If no provisioner_name, return default
-                    if 'config' not in env_provisioner:  # if provisioner_name, but no config stanza, add one
-                        env_provisioner.update({"config": {}})
-                    return env_provisioner  # Return what we found (plus config stanza if necessary)
+        env_provisioner = kernel_spec.metadata.get('environment_provisioner', {})
+        if 'provisioner_name' in env_provisioner:  # If no provisioner_name, return default
+            if 'config' not in env_provisioner:  # if provisioner_name, but no config stanza, add one
+                env_provisioner.update({"config": {}})
+            return env_provisioner  # Return what we found (plus config stanza if necessary)
         return {"provisioner_name": DEFAULT_PROVISIONER, "config": {}}

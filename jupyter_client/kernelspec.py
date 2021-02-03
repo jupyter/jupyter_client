@@ -199,7 +199,7 @@ class KernelSpecManager(LoggingConfigurable):
         if not kspec:
             kspec = self.kernel_spec_class.from_resource_dir(resource_dir)
 
-        if not EPF.instance(parent=self.parent).is_provisioner_available(kernel_name, kspec.to_dict()):
+        if not EPF.instance(parent=self.parent).is_provisioner_available(kernel_name, kspec):
             raise NoSuchKernel(kernel_name)
 
         return kspec
