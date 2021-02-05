@@ -27,7 +27,6 @@ pjoin = os.path.join
 
 TIMEOUT = 30
 
-
 @pytest.fixture(autouse=True)
 def env():
     env_patch = test_env()
