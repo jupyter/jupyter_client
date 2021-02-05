@@ -231,6 +231,39 @@ class TestAsyncKernelManager(AsyncTestCase):
         await km.shutdown_all()
 
     @gen_test
+    async def test_use_after_shutdown_all(self):
+        km = self._get_tcp_km()
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        self.assertIn(kid, km)
+        await km.shutdown_all()
+        self.assertNotIn(kid, km)
+
+        # Start another kernel
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        self.assertIn(kid, km)
+        await km.shutdown_all()
+        self.assertNotIn(kid, km)
+        # shutdown again is okay, because we have no kernels
+        await km.shutdown_all()
+
+    @gen_test(timeout=20)
+    async def test_shutdown_all_while_starting(self):
+        km = self._get_tcp_km()
+        kid_future = km.start_kernel(stdout=PIPE, stderr=PIPE)
+        # This is relying on the ordering of the asyncio queue, not sure if guaranteed or not:
+        kid, _ = await asyncio.gather(kid_future, km.shutdown_all())
+        self.assertNotIn(kid, km)
+
+        # Start another kernel
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        self.assertIn(kid, km)
+        self.assertEqual(len(km), 1)
+        await km.shutdown_all()
+        self.assertNotIn(kid, km)
+        # shutdown again is okay, because we have no kernels
+        await km.shutdown_all()
+
+    @gen_test
     async def test_tcp_cinfo(self):
         km = self._get_tcp_km()
         await self._run_cinfo(km, 'tcp', localhost())
