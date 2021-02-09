@@ -105,6 +105,7 @@ class TestKernelManager(TestCase):
         self._run_lifecycle(self._get_tcp_km())
         self._run_lifecycle(self._get_tcp_km())
 
+    @skip_win32
     def test_start_sequence_ipc_kernels(self):
         """Ensure that a sequence of kernel startups doesn't break anything."""
         self._run_lifecycle(self._get_ipc_km())
@@ -238,6 +239,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         await self._run_lifecycle(self._get_tcp_km())
         await self._run_lifecycle(self._get_tcp_km())
 
+    @skip_win32
     @gen_test
     async def test_start_sequence_ipc_kernels(self):
         """Ensure that a sequence of kernel startups doesn't break anything."""
