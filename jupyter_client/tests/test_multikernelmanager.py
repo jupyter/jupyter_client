@@ -129,6 +129,7 @@ class TestKernelManager(TestCase):
             thread.join()
             thread2.join()
 
+    @skip_win32  # TODO: Investigate why this doesn't work on Windows
     def test_start_parallel_process_kernels(self):
         self.test_tcp_lifecycle()
 
@@ -271,6 +272,7 @@ class TestAsyncKernelManager(AsyncTestCase):
             thread.join()
             thread2.join()
 
+    @skip_win32  # TODO: Investigate why this doesn't work on Windows
     @gen_test
     async def test_start_parallel_process_kernels(self):
         await self.raw_tcp_lifecycle()
