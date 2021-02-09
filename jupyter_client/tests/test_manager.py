@@ -35,4 +35,4 @@ def test_connection_file_real_path():
             })
         km._launch_args = {}
         cmds = km.format_kernel_cmd()
-        assert cmds[4] is 'foobar'
+        assert cmds[4] == 'foobar'
