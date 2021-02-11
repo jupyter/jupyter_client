@@ -185,7 +185,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert kid in km.list_kernel_ids()
         assert len(km) == 1, f'{len(km)} != {1}'
         await km.restart_kernel(kid, now=True)
-        assert km.is_alive(kid)
+        assert await km.is_alive(kid)
         assert kid in km.list_kernel_ids()
         await km.interrupt_kernel(kid)
         k = km.get_kernel(kid)
@@ -230,7 +230,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         # shutdown again is okay, because we have no kernels
         await km.shutdown_all()
 
-    @gen_test
+    @gen_test(timeout=20)
     async def test_use_after_shutdown_all(self):
         km = self._get_tcp_km()
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
