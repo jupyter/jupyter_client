@@ -312,6 +312,10 @@ class TestAsyncKernelManager(AsyncTestCase):
     @classmethod
     def raw_tcp_lifecycle_sync(cls, test_kid=None):
         loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # Forked MP, make new loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         loop.run_until_complete(cls.raw_tcp_lifecycle(test_kid=test_kid))
 
     @gen_test
