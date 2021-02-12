@@ -308,6 +308,12 @@ class TestAsyncKernelManager(AsyncTestCase):
         km = cls._get_tcp_km()
         await cls._run_lifecycle(km, test_kid=test_kid)
 
+    # static so picklable for multiprocessing on Windows
+    @classmethod
+    def raw_tcp_lifecycle_sync(cls, test_kid=None):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(cls.raw_tcp_lifecycle(test_kid=test_kid))
+
     @gen_test
     async def test_start_parallel_thread_kernels(self):
         await self.raw_tcp_lifecycle()
@@ -327,7 +333,7 @@ class TestAsyncKernelManager(AsyncTestCase):
 
         thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
         # Windows tests needs this target to be picklable:
-        proc = mp.Process(target=self.raw_tcp_lifecycle)
+        proc = mp.Process(target=self.raw_tcp_lifecycle_sync)
 
         try:
             thread.start()
