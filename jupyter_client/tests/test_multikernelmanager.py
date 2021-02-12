@@ -185,7 +185,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert kid in km.list_kernel_ids()
         assert len(km) == 1, f'{len(km)} != {1}'
         await km.restart_kernel(kid, now=True)
-        assert km.is_alive(kid)
+        assert await km.is_alive(kid)
         assert kid in km.list_kernel_ids()
         await km.interrupt_kernel(kid)
         k = km.get_kernel(kid)
@@ -225,6 +225,39 @@ class TestAsyncKernelManager(AsyncTestCase):
         km = self._get_tcp_km()
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
         self.assertIn(kid, km)
+        await km.shutdown_all()
+        self.assertNotIn(kid, km)
+        # shutdown again is okay, because we have no kernels
+        await km.shutdown_all()
+
+    @gen_test(timeout=20)
+    async def test_use_after_shutdown_all(self):
+        km = self._get_tcp_km()
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        self.assertIn(kid, km)
+        await km.shutdown_all()
+        self.assertNotIn(kid, km)
+
+        # Start another kernel
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        self.assertIn(kid, km)
+        await km.shutdown_all()
+        self.assertNotIn(kid, km)
+        # shutdown again is okay, because we have no kernels
+        await km.shutdown_all()
+
+    @gen_test(timeout=20)
+    async def test_shutdown_all_while_starting(self):
+        km = self._get_tcp_km()
+        kid_future = asyncio.ensure_future(km.start_kernel(stdout=PIPE, stderr=PIPE))
+        # This is relying on the ordering of the asyncio queue, not sure if guaranteed or not:
+        kid, _ = await asyncio.gather(kid_future, km.shutdown_all())
+        self.assertNotIn(kid, km)
+
+        # Start another kernel
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        self.assertIn(kid, km)
+        self.assertEqual(len(km), 1)
         await km.shutdown_all()
         self.assertNotIn(kid, km)
         # shutdown again is okay, because we have no kernels
@@ -275,6 +308,16 @@ class TestAsyncKernelManager(AsyncTestCase):
         km = cls._get_tcp_km()
         await cls._run_lifecycle(km, test_kid=test_kid)
 
+    # static so picklable for multiprocessing on Windows
+    @classmethod
+    def raw_tcp_lifecycle_sync(cls, test_kid=None):
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # Forked MP, make new loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        loop.run_until_complete(cls.raw_tcp_lifecycle(test_kid=test_kid))
+
     @gen_test
     async def test_start_parallel_thread_kernels(self):
         await self.raw_tcp_lifecycle()
@@ -294,7 +337,7 @@ class TestAsyncKernelManager(AsyncTestCase):
 
         thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
         # Windows tests needs this target to be picklable:
-        proc = mp.Process(target=self.raw_tcp_lifecycle)
+        proc = mp.Process(target=self.raw_tcp_lifecycle_sync)
 
         try:
             thread.start()
