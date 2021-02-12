@@ -249,7 +249,7 @@ class TestAsyncKernelManager(AsyncTestCase):
     @gen_test(timeout=20)
     async def test_shutdown_all_while_starting(self):
         km = self._get_tcp_km()
-        kid_future = km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kid_future = asyncio.ensure_future(km.start_kernel(stdout=PIPE, stderr=PIPE))
         # This is relying on the ordering of the asyncio queue, not sure if guaranteed or not:
         kid, _ = await asyncio.gather(kid_future, km.shutdown_all())
         self.assertNotIn(kid, km)
