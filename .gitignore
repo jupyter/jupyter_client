@@ -27,3 +27,6 @@ target/
 # PyCharm
 .idea/
 *.iml
+
+# Failing tests sometimes leave these behind:
+kernel-*.json

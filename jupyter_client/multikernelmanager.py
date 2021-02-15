@@ -3,6 +3,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import asyncio
 import os
 import uuid
 import socket
@@ -454,6 +455,12 @@ class AsyncMultiKernelManager(MultiKernelManager):
         """
     )
 
+    _starting_kernels = Dict()
+
+    async def _add_kernel_when_ready(self, kernel_id, km, kernel_awaitable):
+        await kernel_awaitable
+        self._kernels[kernel_id] = km
+
     async def start_kernel(self, kernel_name=None, **kwargs):
         """Start a new kernel.
 
@@ -466,8 +473,16 @@ class AsyncMultiKernelManager(MultiKernelManager):
         if not isinstance(km, AsyncKernelManager):
             self.log.warning("Kernel manager class ({km_class}) is not an instance of 'AsyncKernelManager'!".
                              format(km_class=self.kernel_manager_class.__class__))
-        await km.start_kernel(**kwargs)
-        self._kernels[kernel_id] = km
+        fut = asyncio.ensure_future(
+            self._add_kernel_when_ready(
+                kernel_id,
+                km,
+                km.start_kernel(**kwargs)
+            )
+        )
+        self._starting_kernels[kernel_id] = fut
+        await fut
+        del self._starting_kernels[kernel_id]
         return kernel_id
 
     async def shutdown_kernel(self, kernel_id, now=False, restart=False):
@@ -544,12 +559,17 @@ class AsyncMultiKernelManager(MultiKernelManager):
         await km.restart_kernel(now)
         self.log.info("Kernel restarted: %s" % kernel_id)
 
+    async def _shutdown_starting_kernel(self, kid, now):
+        if kid in self._starting_kernels:
+            await self._starting_kernels[kid]
+        await self.shutdown_kernel(kid, now=now)
+
     async def shutdown_all(self, now=False):
         """Shutdown all kernels."""
         kids = self.list_kernel_ids()
-        for kid in kids:
-            self.request_shutdown(kid)
-        for kid in kids:
-            await self.finish_shutdown(kid)
-            self.cleanup_resources(kid)
-            self.remove_kernel(kid)
+        futs = [self.shutdown_kernel(kid, now=now) for kid in kids]
+        futs += [
+            self._shutdown_starting_kernel(kid, now=now)
+            for kid in self._starting_kernels.keys()
+        ]
+        await asyncio.gather(*futs)
