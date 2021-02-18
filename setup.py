@@ -77,7 +77,16 @@ setup_args = dict(
     ],
     python_requires  = '>=3.5',
     extras_require   = {
-        'test': ['jedi<=0.17.2', 'ipykernel', 'ipython', 'mock', 'pytest', 'pytest-asyncio', 'async_generator', 'pytest-timeout'],
+        'test': [
+            'async_generator',
+            'ipykernel',
+            'ipython',
+            'jedi<0.18; python_version<="3.6"',
+            'mock',
+            'pytest-asyncio',
+            'pytest-timeout',
+            'pytest',
+        ],
         'doc': open('docs/requirements.txt').read().splitlines(),
     },
     cmdclass         = {
