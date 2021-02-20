@@ -110,7 +110,13 @@ async def async_launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=Non
         # Allow to use ~/ in the command or its arguments
         cmd = list(map(os.path.expanduser, cmd))
 
-        proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
+        if sys.platform == 'win32':
+            # Windows is still not ready for async subprocs.  When the SelectorEventLoop is used (3.6, 3.7),
+            # a NotImplementedError is raised for _make_subprocess_transport().  When the ProactorEventLoop
+            # is used (3.8, 3.9), a NotImplementedError is raised for _add_reader().
+            proc = Popen(cmd, **kwargs)
+        else:
+            proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
     except Exception as exc:
         msg = (
             "Failed to run command:\n{}\n"

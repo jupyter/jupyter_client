@@ -151,20 +151,37 @@ class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name fo
     def __init__(self, kernel_id: str, kernel_spec: Any, **kwargs):
         super().__init__(kernel_id, kernel_spec, **kwargs)
         self.process = None
+        self.async_subprocess = None
         self._exit_future = None
         self.pid = None
         self.pgid = None
         self.connection_info = {}
 
     async def poll(self) -> [int, None]:
-        if self.process and self._exit_future:
-            if not self._exit_future.done():  # adhere to process returncode
-                return None
+        if self.process:
+            if self.async_subprocess:
+                if not self._exit_future.done():  # adhere to process returncode
+                    return None
+            else:
+                if self.process.poll() is None:
+                    return None
         return False
 
     async def wait(self) -> [int, None]:
         if self.process:
-            return await self.process.wait()
+            if self.async_subprocess:
+                await self.process.wait()
+            else:
+                # Use busy loop at 100ms intervals, polling until the process is
+                # not alive.  If we find the process is no longer alive, complete
+                # its cleanup via the blocking wait().  Callers are responsible for
+                # issuing calls to wait() using a timeout (see kill()).
+                while await self.poll() is None:
+                    await asyncio.sleep(0.1)
+
+                # Process is no longer alive, wait and clear
+                self.process.wait()
+                self.process = None
 
     async def send_signal(self, signum: int) -> None:
         """Sends a signal to the process group of the kernel (this
@@ -254,7 +271,9 @@ class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name fo
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['ClientProvisioner', Dict]:
         scrubbed_kwargs = ClientProvisioner.scrub_kwargs(kwargs)
         self.process = await async_launch_kernel(cmd, **scrubbed_kwargs)
-        self._exit_future = asyncio.ensure_future(self.process.wait())
+        self.async_subprocess = isinstance(self.process, asyncio.subprocess.Process)
+        if self.async_subprocess:
+            self._exit_future = asyncio.ensure_future(self.process.wait())
         pgid = None
         if hasattr(os, "getpgid"):
             try:
