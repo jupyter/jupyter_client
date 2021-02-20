@@ -7,6 +7,7 @@ import os
 import signal
 import sys
 
+from abc import ABCMeta, ABC, abstractmethod
 from entrypoints import EntryPoint, get_group_all, get_single, NoSuchEntryPoint
 from typing import Optional, Dict, List, Any, Tuple
 from traitlets.config import Config, LoggingConfigurable, SingletonConfigurable
@@ -18,7 +19,11 @@ from .localinterfaces import is_local_ip, local_ips
 DEFAULT_PROVISIONER = "ClientProvisioner"
 
 
-class EnvironmentProvisionerBase(LoggingConfigurable):
+class EnvironmentProvisionerMeta(ABCMeta, type(LoggingConfigurable)):
+    pass
+
+
+class EnvironmentProvisionerBase(ABC, LoggingConfigurable, metaclass=EnvironmentProvisionerMeta):
     """Base class defining methods for EnvironmentProvisioner classes.
 
        Theses methods model those of the Subprocess Popen class:
@@ -33,36 +38,46 @@ class EnvironmentProvisionerBase(LoggingConfigurable):
         self.kernel_spec = kernel_spec
         super().__init__(**kwargs)
 
+    @abstractmethod
     async def poll(self) -> [int, None]:
         """Checks if kernel process is still running.
 
          If running, None is returned, otherwise the process's integer-valued exit code is returned.
          """
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     async def wait(self) -> [int, None]:
         """Waits for kernel process to terminate."""
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     async def send_signal(self, signum: int) -> None:
         """Sends signal identified by signum to the kernel process."""
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     async def kill(self, restart=False) -> None:
         """Kills the kernel process.  This is typically accomplished via a SIGKILL signal, which
         cannot be caught.
 
         restart is True if this operation precedes a start launch_kernel request.
         """
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     async def terminate(self, restart=False) -> None:
         """Terminates the kernel process.  This is typically accomplished via a SIGTERM signal, which
         can be caught, allowing the kernel provisioner to perform possible cleanup of resources.
 
         restart is True if this operation precedes a start launch_kernel request.
         """
-        raise NotImplementedError()
+        pass
+
+    @abstractmethod
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['EnvironmentProvisionerBase', Dict]:
+        """Launch the kernel process returning the class instance and connection info."""
+        pass
 
     async def cleanup(self, restart=False) -> None:
         """Cleanup any resources allocated on behalf of the kernel provisioner.
@@ -92,10 +107,6 @@ class EnvironmentProvisionerBase(LoggingConfigurable):
         kwargs['env'] = env
 
         return kwargs
-
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['EnvironmentProvisionerBase', Dict]:
-        """Launch the kernel process returning the class instance and connection info."""
-        raise NotImplementedError()
 
     async def post_launch(self, **kwargs: Any) -> None:
         """Perform any steps following the kernel process launch."""
