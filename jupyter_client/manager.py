@@ -24,6 +24,7 @@ from typing import Optional
 from jupyter_client import kernelspec
 
 from .connect import ConnectionFileMixin
+from .launcher import launch_kernel
 from .localinterfaces import is_local_ip, local_ips
 from .managerabc import KernelManagerABC
 from .provisioning import EnvironmentProvisionerFactory as EPF, EnvironmentProvisionerBase
@@ -31,7 +32,6 @@ from .provisioning import EnvironmentProvisionerFactory as EPF, EnvironmentProvi
 
 class KernelManager(ConnectionFileMixin):
     """Manages a single kernel in a subprocess on this host.
-
     This version starts kernels with Popen.
     """
 
@@ -53,13 +53,9 @@ class KernelManager(ConnectionFileMixin):
     def _client_class_changed(self, change):
         self.client_factory = import_item(str(change['new']))
 
-    # The kernel provisioner with which the KernelManager is communicating.
-    # This will generally be a ClientProvisioner instance unless the specification indicates otherwise.
-    # Note that we use two attributes, kernel and provisioner, that will point at the same provisioner instance.
-    # kernel will be non-None during the kernel's lifecycle, while provisioner will span that time, being set
-    # prior to launch and unset following the kernel's termination.
-    kernel: Optional[EnvironmentProvisionerBase] = None
-    provisioner: Optional[EnvironmentProvisionerBase] = None
+    # The kernel process with which the KernelManager is communicating.
+    # generally a Popen instance
+    kernel = Any()
 
     kernel_spec_manager = Instance(kernelspec.KernelSpecManager)
 
@@ -92,10 +88,8 @@ class KernelManager(ConnectionFileMixin):
             self._kernel_spec = self.kernel_spec_manager.get_kernel_spec(self.kernel_name)
         return self._kernel_spec
 
-    # TODO - This has been deprecated since April 2014 (4.0 release) - time to remove?
     kernel_cmd = List(Unicode(), config=True,
         help="""DEPRECATED: Use kernel_name instead.
-
         The Popen Command to launch the kernel.
         Override this if you have a custom kernel.
         If kernel_cmd is specified in a configuration file,
@@ -219,15 +213,10 @@ class KernelManager(ConnectionFileMixin):
         return [ pat.sub(from_ns, arg) for arg in cmd ]
 
     def _launch_kernel(self, kernel_cmd, **kw):
-        """actually launch the kernel via the provisioner
-
+        """actually launch the kernel
         override in a subclass to launch kernel subprocesses differently
         """
-        kernel_proc, connection_info = self.provisioner.launch_kernel(kernel_cmd, **kw)
-        # Provisioner provides the connection information.  Load into kernel manager and write file.
-        self.load_connection_info(connection_info)
-        self.write_connection_file()
-        return kernel_proc
+        return launch_kernel(kernel_cmd, **kw)
 
     # Control socket used for polite kernel shutdown
 
@@ -244,33 +233,73 @@ class KernelManager(ConnectionFileMixin):
 
     def pre_start_kernel(self, **kw):
         """Prepares a kernel for startup in a separate process.
-
         If random ports (port=0) are being used, this method must be called
         before the channels are created.
-
         Parameters
         ----------
         `**kw` : optional
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        self.provisioner = EPF.instance(parent=self.parent).\
-            create_provisioner_instance(kw.get('kernel_id', str(uuid.uuid4())), self.kernel_spec)
+        if self.transport == 'tcp' and not is_local_ip(self.ip):
+            raise RuntimeError("Can only launch a kernel on a local interface. "
+                               "This one is not: %s."
+                               "Make sure that the '*_address' attributes are "
+                               "configured properly. "
+                               "Currently valid addresses are: %s" % (self.ip, local_ips())
+                               )
 
-        kw = self.provisioner.pre_launch(kernel_manager=self, **kw)
-        kernel_cmd = kw.pop('cmd')
+        # write connection file / get default ports
+        self.write_connection_file()
+
+        # save kwargs for use in restart
+        self._launch_args = kw.copy()
+        # build the Popen cmd
+        extra_arguments = kw.pop('extra_arguments', [])
+        kernel_cmd = self.format_kernel_cmd(extra_arguments=extra_arguments)
+        env = kw.pop('env', os.environ).copy()
+        # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
+        # If set, it can bork all the things.
+        env.pop('PYTHONEXECUTABLE', None)
+        if not self.kernel_cmd:
+            # If kernel_cmd has been set manually, don't refer to a kernel spec.
+            # Environment variables from kernel spec are added to os.environ.
+            env.update(self._get_env_substitutions(self.kernel_spec.env, env))
+
+        kw['env'] = env
         return kernel_cmd, kw
 
+    def _get_env_substitutions(self, templated_env, substitution_values):
+        """ Walks env entries in templated_env and applies possible substitutions from current env
+            (represented by substitution_values).
+            Returns the substituted list of env entries.
+        """
+        substituted_env = {}
+        if templated_env:
+            from string import Template
+
+            # For each templated env entry, fill any templated references
+            # matching names of env variables with those values and build
+            # new dict with substitutions.
+            for k, v in templated_env.items():
+                substituted_env.update({k: Template(v).safe_substitute(substitution_values)})
+        return substituted_env
+
     def post_start_kernel(self, **kw):
+        """Performs any post startup tasks relative to the kernel.
+
+        Parameters
+        ----------
+        `**kw` : optional
+             keyword arguments that were used in the kernel process's launch.
+        """
         self.start_restarter()
         self._connect_control_socket()
 
     def start_kernel(self, **kw):
         """Starts a kernel on this host in a separate process.
-
         If random ports (port=0) are being used, this method must be called
         before the channels are created.
-
         Parameters
         ----------
         `**kw` : optional
@@ -295,7 +324,6 @@ class KernelManager(ConnectionFileMixin):
 
     def finish_shutdown(self, waittime=None, pollinterval=0.1):
         """Wait for kernel shutdown, then kill process if it doesn't shutdown.
-
         This does not send shutdown requests - use :meth:`request_shutdown`
         first.
         """
@@ -328,10 +356,6 @@ class KernelManager(ConnectionFileMixin):
         if self._created_context and not restart:
             self.context.destroy(linger=100)
 
-        if self.provisioner:
-            self.provisioner.cleanup()
-            self.provisioner = self.kernel = None
-
     def cleanup(self, connection_file=True):
         """Clean up resources when the kernel is shut down"""
         warnings.warn("Method cleanup(connection_file=True) is deprecated, use cleanup_resources(restart=False).",
@@ -340,13 +364,10 @@ class KernelManager(ConnectionFileMixin):
 
     def shutdown_kernel(self, now=False, restart=False):
         """Attempts to stop the kernel process cleanly.
-
         This attempts to shutdown the kernels cleanly by:
-
         1. Sending it a shutdown message over the control channel.
         2. If that fails, the kernel is shutdown forcibly by sending it
            a signal.
-
         Parameters
         ----------
         now : bool
@@ -391,17 +412,14 @@ class KernelManager(ConnectionFileMixin):
 
     def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
-
         Parameters
         ----------
         now : bool, optional
             If True, the kernel is forcefully restarted *immediately*, without
             having a chance to do any cleanup action.  Otherwise the kernel is
             given 1s to clean up before a forceful restart is issued.
-
             In all cases the kernel is restarted, the only difference is whether
             it is given a chance to perform a clean shutdown or not.
-
         newports : bool, optional
             If the old kernel was launched with random ports, this flag decides
             whether the same ports and connection file will be used again.
@@ -409,7 +427,6 @@ class KernelManager(ConnectionFileMixin):
             the default. If True, new random port numbers are chosen and a
             new connection file is written. It is still possible that the newly
             chosen random port numbers happen to be the same as the old ones.
-
         `**kw` : optional
             Any options specified here will overwrite those used to launch the
             kernel.
@@ -435,11 +452,28 @@ class KernelManager(ConnectionFileMixin):
 
     def _kill_kernel(self):
         """Kill the running kernel.
-
         This is a private method, callers should use shutdown_kernel(now=True).
         """
         if self.has_kernel:
-            self.kernel.kill()
+            # Signal the kernel to terminate (sends SIGKILL on Unix and calls
+            # TerminateProcess() on Win32).
+            try:
+                if hasattr(signal, 'SIGKILL'):
+                    self.signal_kernel(signal.SIGKILL)
+                else:
+                    self.kernel.kill()
+            except OSError as e:
+                # In Windows, we will get an Access Denied error if the process
+                # has already terminated. Ignore it.
+                if sys.platform == 'win32':
+                    if e.winerror != 5:
+                        raise
+                # On Unix, we may get an ESRCH error if the process has already
+                # terminated. Ignore it.
+                else:
+                    from errno import ESRCH
+                    if e.errno != ESRCH:
+                        raise
 
             # Block until the kernel terminates.
             self.kernel.wait()
@@ -447,7 +481,6 @@ class KernelManager(ConnectionFileMixin):
 
     def interrupt_kernel(self):
         """Interrupts the kernel by sending it a signal.
-
         Unlike ``signal_kernel``, this operation is well supported on all
         platforms.
         """
@@ -468,9 +501,20 @@ class KernelManager(ConnectionFileMixin):
             raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
 
     def signal_kernel(self, signum):
-        """Sends signal (signum) to the kernel.
+        """Sends a signal to the process group of the kernel (this
+        usually includes the kernel and any subprocesses spawned by
+        the kernel).
+        Note that since only SIGTERM is supported on Windows, this function is
+        only useful on Unix systems.
         """
         if self.has_kernel:
+            if hasattr(os, "getpgid") and hasattr(os, "killpg"):
+                try:
+                    pgid = os.getpgid(self.kernel.pid)
+                    os.killpg(pgid, signum)
+                    return
+                except OSError:
+                    pass
             self.kernel.send_signal(signum)
         else:
             raise RuntimeError("Cannot signal kernel. No kernel is running!")
@@ -490,19 +534,40 @@ class KernelManager(ConnectionFileMixin):
 class AsyncKernelManager(KernelManager):
     """Manages kernels in an asynchronous manner """
 
+    kernel_id = None
+
     client_class = DottedObjectName('jupyter_client.asynchronous.AsyncKernelClient')
     client_factory = Type(klass='jupyter_client.asynchronous.AsyncKernelClient')
 
-    async def _launch_kernel(self, kernel_cmd, **kw):
-        """actually launch the kernel via the provisioner
+    # The kernel provisioner with which the KernelManager is communicating.
+    # This will generally be a ClientProvisioner instance unless the specification indicates otherwise.
+    # Note that we use two attributes, kernel and provisioner, that will point at the same provisioner instance.
+    # kernel will be non-None during the kernel's lifecycle, while provisioner will span that time, being set
+    # prior to launch and unset following the kernel's termination.
+    kernel: Optional[EnvironmentProvisionerBase] = None
+    provisioner: Optional[EnvironmentProvisionerBase] = None
 
-        override in a subclass to launch kernel subprocesses differently
+    async def pre_start_kernel(self, **kw):
+        """Prepares a kernel for startup in a separate process.
+
+        If random ports (port=0) are being used, this method must be called
+        before the channels are created.
+
+        Parameters
+        ----------
+        `**kw` : optional
+             keyword arguments that are passed down to build the kernel_cmd
+             and launching the kernel (e.g. Popen kwargs).
         """
-        kernel_proc, connection_info = self.provisioner.launch_kernel(kernel_cmd, **kw)
-        # Provisioner provides the connection information.  Load into kernel manager and write file.
-        self.load_connection_info(connection_info)
-        self.write_connection_file()
-        return kernel_proc
+        self.kernel_id = kw.pop('kernel_id', str(uuid.uuid4()))
+        self.provisioner = EPF.instance(parent=self.parent).\
+            create_provisioner_instance(self.kernel_id, self.kernel_spec)
+
+        # save kwargs for use in restart
+        self._launch_args = kw.copy()
+        kw = await self.provisioner.pre_launch(kernel_manager=self, **kw)
+        kernel_cmd = kw.pop('cmd')
+        return kernel_cmd, kw
 
     async def start_kernel(self, **kw):
         """Starts a kernel in a separate process in an asynchronous manner.
@@ -516,14 +581,41 @@ class AsyncKernelManager(KernelManager):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        kernel_cmd, kw = self.pre_start_kernel(**kw)
+        kernel_cmd, kw = await self.pre_start_kernel(**kw)
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel (async): %s", kernel_cmd)
-        self.kernel = await self._launch_kernel(kernel_cmd, **kw)  # TODO merge connection info
-        self.post_start_kernel(**kw)
+        self.kernel = await self._launch_kernel(kernel_cmd, **kw)
+        await self.post_start_kernel(**kw)
 
-    async def finish_shutdown(self, waittime=None, pollinterval=0.1):
+    async def post_start_kernel(self, **kw):
+        """Performs any post startup tasks relative to the kernel.
+
+        Parameters
+        ----------
+        `**kw` : optional
+             keyword arguments that were used in the kernel process's launch.
+        """
+        super().post_start_kernel(**kw)
+        await self.provisioner.post_launch(**kw)
+
+    async def _launch_kernel(self, kernel_cmd, **kw):
+        """actually launch the kernel via the provisioner
+
+        override in a subclass to launch kernel subprocesses differently
+        """
+        kernel_proc, connection_info = await self.provisioner.launch_kernel(kernel_cmd, **kw)
+        # Provisioner provides the connection information.  Load into kernel manager and write file.
+        self.load_connection_info(connection_info)
+        self.write_connection_file()
+        return kernel_proc
+
+    def request_shutdown(self, restart=False):
+        """Send a shutdown request via control channel
+        """
+        super().request_shutdown(restart=restart)
+
+    async def finish_shutdown(self, waittime=None, pollinterval=0.1, restart=False):
         """Wait for kernel shutdown, then kill process if it doesn't shutdown.
 
         This does not send shutdown requests - use :meth:`request_shutdown`
@@ -531,16 +623,27 @@ class AsyncKernelManager(KernelManager):
         """
         if waittime is None:
             waittime = max(self.shutdown_wait_time, 0)
+
+        if self.provisioner:  # Allow provisioner to override
+            waittime = self.provisioner.get_shutdown_wait_time(recommended=waittime)
         try:
             await asyncio.wait_for(self._async_wait(pollinterval=pollinterval), timeout=waittime)
         except asyncio.TimeoutError:
             self.log.debug("Kernel is taking too long to finish, killing")
-            await self._kill_kernel()
+            await self._kill_kernel(restart=restart)
         else:
             # Process is no longer alive, wait and clear
             if self.kernel is not None:
-                self.kernel.wait()
+                await self.kernel.wait()
                 self.kernel = None
+
+    async def cleanup_resources(self, restart=False):
+        """Clean up resources when the kernel is shut down"""
+        super().cleanup_resources(restart=restart)
+
+        if self.provisioner:
+            await self.provisioner.cleanup(restart=restart)
+            self.provisioner = self.kernel = None
 
     async def shutdown_kernel(self, now=False, restart=False):
         """Attempts to stop the kernel process cleanly.
@@ -564,22 +667,15 @@ class AsyncKernelManager(KernelManager):
         self.stop_restarter()
 
         if now:
-            await self._kill_kernel()
+            await self._kill_kernel(restart=restart)
         else:
             self.request_shutdown(restart=restart)
             # Don't send any additional kernel kill messages immediately, to give
             # the kernel a chance to properly execute shutdown actions. Wait for at
             # most 1s, checking every 0.1s.
-            await self.finish_shutdown()
+            await self.finish_shutdown(restart=restart)
 
-        # See comment in KernelManager.shutdown_kernel().
-        overrides_cleanup = type(self).cleanup is not AsyncKernelManager.cleanup
-        overrides_cleanup_resources = type(self).cleanup_resources is not AsyncKernelManager.cleanup_resources
-
-        if overrides_cleanup and not overrides_cleanup_resources:
-            self.cleanup(connection_file=not restart)
-        else:
-            self.cleanup_resources(restart=restart)
+        await self.cleanup_resources(restart=restart)
 
     async def restart_kernel(self, now=False, newports=False, **kw):
         """Restarts a kernel with the arguments that were used to launch it.
@@ -621,13 +717,13 @@ class AsyncKernelManager(KernelManager):
             await self.start_kernel(**self._launch_args)
         return None
 
-    async def _kill_kernel(self):
+    async def _kill_kernel(self, restart=False):
         """Kill the running kernel.
 
         This is a private method, callers should use shutdown_kernel(now=True).
         """
         if self.has_kernel:
-            self.kernel.kill()
+            await self.kernel.kill(restart=restart)
 
             # Wait until the kernel terminates.
             try:
@@ -639,7 +735,7 @@ class AsyncKernelManager(KernelManager):
             else:
                 # Process is no longer alive, wait and clear
                 if self.kernel is not None:
-                    self.kernel.wait()
+                    await self.kernel.wait()
             self.kernel = None
 
     async def interrupt_kernel(self):
@@ -661,18 +757,18 @@ class AsyncKernelManager(KernelManager):
 
     async def signal_kernel(self, signum):
         """Sends signal (signum) to the kernel."""
-        super(AsyncKernelManager, self).signal_kernel(signum)
+        if self.has_kernel:
+            await self.kernel.send_signal(signum)
+        else:
+            raise RuntimeError("Cannot signal kernel. No kernel is running!")
 
     async def is_alive(self):
         """Is the kernel process still running?"""
         if self.has_kernel:
-            if self.kernel.poll() is None:
+            ret = await self.kernel.poll()
+            if ret is None:
                 return True
-            else:
-                return False
-        else:
-            # we don't have a kernel
-            return False
+        return False
 
     async def _async_wait(self, pollinterval=0.1):
         # Use busy loop at 100ms intervals, polling until the process is

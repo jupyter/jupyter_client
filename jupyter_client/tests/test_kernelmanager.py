@@ -331,13 +331,6 @@ class TestAsyncKernelManager:
         assert is_alive is False
         assert async_km.context.closed
 
-        if isinstance(async_km, AsyncKernelManagerWithCleanup):
-            assert async_km.which_cleanup == "cleanup"
-        elif isinstance(async_km, AsyncKernelManagerSubclass):
-            assert async_km.which_cleanup == "cleanup_resources"
-        else:
-            assert hasattr(async_km, "which_cleanup") is False
-
     @pytest.mark.timeout(10)
     @pytest.mark.skipif(sys.platform == 'win32', reason="Windows doesn't support signals")
     async def test_signal_kernel_subprocesses(self, install_kernel, start_async_kernel):

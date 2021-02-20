@@ -183,7 +183,6 @@ class MultiKernelManager(LoggingConfigurable):
         The kernel ID for the newly started kernel is returned.
         """
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
-        kwargs['kernel_id'] = kernel_id  # Make kernel_id available to manager and provisioner
         km.start_kernel(**kwargs)
         self._kernels[kernel_id] = km
         return kernel_id
@@ -473,6 +472,7 @@ class AsyncMultiKernelManager(MultiKernelManager):
         if not isinstance(km, AsyncKernelManager):
             self.log.warning("Kernel manager class ({km_class}) is not an instance of 'AsyncKernelManager'!".
                              format(km_class=self.kernel_manager_class.__class__))
+        kwargs['kernel_id'] = kernel_id  # Make kernel_id available to manager and provisioner
         fut = asyncio.ensure_future(
             self._add_kernel_when_ready(
                 kernel_id,

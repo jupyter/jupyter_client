@@ -2,7 +2,7 @@
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-
+import asyncio
 import os
 import signal
 import sys
@@ -12,13 +12,13 @@ from typing import Optional, Dict, List, Any, Tuple
 from traitlets.config import Config, LoggingConfigurable, SingletonConfigurable
 
 from .connect import write_connection_file
-from .launcher import launch_kernel
+from .launcher import async_launch_kernel
 from .localinterfaces import is_local_ip, local_ips
 
 DEFAULT_PROVISIONER = "ClientProvisioner"
 
 
-class EnvironmentProvisionerBase(LoggingConfigurable):  # TODO - determine name for base class
+class EnvironmentProvisionerBase(LoggingConfigurable):
     """Base class defining methods for EnvironmentProvisioner classes.
 
        Theses methods model those of the Subprocess Popen class:
@@ -28,50 +28,50 @@ class EnvironmentProvisionerBase(LoggingConfigurable):  # TODO - determine name 
     kernel_spec: Any
     kernel_id: str
 
-    def __init__(self, **kwargs):
-        # Pop off expected arguments...
-        self.kernel_spec = kwargs.pop('kernel_spec', None)
-        self.kernel_id = kwargs.pop('kernel_id', None)
+    def __init__(self, kernel_id: str, kernel_spec: Any, **kwargs):
+        self.kernel_id = kernel_id
+        self.kernel_spec = kernel_spec
         super().__init__(**kwargs)
 
-    def poll(self) -> [int, None]:
+    async def poll(self) -> [int, None]:
         """Checks if kernel process is still running.
 
          If running, None is returned, otherwise the process's integer-valued exit code is returned.
          """
         raise NotImplementedError()
 
-    def wait(self, timeout: Optional[float] = None) -> [int, None]:
-        """Waits for kernel process to terminate.  As a result, this method should be called with
-        a value for timeout.
-
-        If the kernel process does not terminate following timeout seconds, a TimeoutException will
-        be raised - that can be caught and retried.  If the kernel process has terminated, its
-        integer-valued exit code will be returned.
-        """
+    async def wait(self) -> [int, None]:
+        """Waits for kernel process to terminate."""
         raise NotImplementedError()
 
-    def send_signal(self, signum: int) -> None:
+    async def send_signal(self, signum: int) -> None:
         """Sends signal identified by signum to the kernel process."""
         raise NotImplementedError()
 
-    def kill(self) -> None:
+    async def kill(self, restart=False) -> None:
         """Kills the kernel process.  This is typically accomplished via a SIGKILL signal, which
         cannot be caught.
+
+        restart is True if this operation precedes a start launch_kernel request.
         """
         raise NotImplementedError()
 
-    def terminate(self) -> None:
+    async def terminate(self, restart=False) -> None:
         """Terminates the kernel process.  This is typically accomplished via a SIGTERM signal, which
         can be caught, allowing the kernel provisioner to perform possible cleanup of resources.
+
+        restart is True if this operation precedes a start launch_kernel request.
         """
         raise NotImplementedError()
 
-    def cleanup(self) -> None:
-        """Cleanup any resources allocated on behalf of the kernel provisioner."""
-        raise NotImplementedError()
+    async def cleanup(self, restart=False) -> None:
+        """Cleanup any resources allocated on behalf of the kernel provisioner.
 
-    def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
+        restart is True if this operation precedes a start launch_kernel request.
+        """
+        pass
+
+    async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
         """Perform any steps in preparation for kernel process launch.
 
         This includes applying additional substitutions to the kernel launch command and env.
@@ -93,19 +93,19 @@ class EnvironmentProvisionerBase(LoggingConfigurable):  # TODO - determine name 
 
         return kwargs
 
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['EnvironmentProvisionerBase', Dict]:
+        """Launch the kernel process returning the class instance and connection info."""
+        raise NotImplementedError()
+
+    async def post_launch(self, **kwargs: Any) -> None:
+        """Perform any steps following the kernel process launch."""
+        pass
+
     def _validate_parameters(self, env: Dict[str, Any], **kwargs: Any) -> None:
         """Future: Validates that launch parameters adhere to schema specified in kernel specification."""
         pass
 
-    def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['EnvironmentProvisionerBase', Dict]:
-        """Launch the kernel process returning the class instance and connection info."""
-        raise NotImplementedError()
-
-    def post_launch(self) -> None:
-        """Perform any steps following the kernel process launch."""
-        pass
-
-    def get_provisioner_info(self) -> Dict:
+    async def get_provisioner_info(self) -> Dict:
         """Captures the base information necessary for kernel persistence relative to the provisioner.
 
         The superclass method must always be called first to ensure proper ordering.  Since this is the
@@ -114,13 +114,20 @@ class EnvironmentProvisionerBase(LoggingConfigurable):  # TODO - determine name 
         provisioner_info = {}
         return provisioner_info
 
-    def load_provisioner_info(self, provisioner_info: Dict) -> None:
+    async def load_provisioner_info(self, provisioner_info: Dict) -> None:
         """Loads the base information necessary for kernel persistence relative to the provisioner.
 
         The superclass method must always be called first to ensure proper ordering.  Since this is the
         most base class, no call to `super()` is necessary.
         """
         pass
+
+    def get_shutdown_wait_time(self, recommended: Optional[float] = 5.0) -> float:
+        """Returns the time allowed for a complete shutdown.  This may vary by provisioner.
+
+        The recommended value will typically be what is configured in the kernel manager.
+        """
+        return recommended
 
     def _get_env_substitutions(self, substitution_values):
         """ Walks env entries in templated_env and applies possible substitutions from current env
@@ -141,22 +148,25 @@ class EnvironmentProvisionerBase(LoggingConfigurable):  # TODO - determine name 
 
 class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name for default class
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.popen = None
+    def __init__(self, kernel_id: str, kernel_spec: Any, **kwargs):
+        super().__init__(kernel_id, kernel_spec, **kwargs)
+        self.process = None
+        self._exit_future = None
         self.pid = None
         self.pgid = None
         self.connection_info = {}
 
-    def poll(self) -> [int, None]:
-        if self.popen:
-            return self.popen.poll()
+    async def poll(self) -> [int, None]:
+        if self.process and self._exit_future:
+            if not self._exit_future.done():  # adhere to process returncode
+                return None
+        return False
 
-    def wait(self, timeout: Optional[float] = None) -> [int, None]:
-        if self.popen:
-            return self.popen.wait(timeout=timeout)
+    async def wait(self) -> [int, None]:
+        if self.process:
+            return await self.process.wait()
 
-    def send_signal(self, signum: int) -> None:
+    async def send_signal(self, signum: int) -> None:
         """Sends a signal to the process group of the kernel (this
         usually includes the kernel and any subprocesses spawned by
         the kernel).
@@ -165,24 +175,25 @@ class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name fo
         check if the desired signal is for interrupt and apply the
         applicable code on Windows in that case.
         """
-        if self.popen:
+        if self.process:
             if signum == signal.SIGINT and sys.platform == 'win32':
                 from .win_interrupt import send_interrupt
-                send_interrupt(self.popen.win32_interrupt_event)
+                send_interrupt(self.process.win32_interrupt_event)
                 return
 
+            # Prefer process-group over process
             if self.pgid and hasattr(os, "killpg"):
                 try:
                     os.killpg(self.pgid, signum)
                     return
                 except OSError:
                     pass
-            return self.popen.send_signal(signum)
+            return self.process.send_signal(signum)
 
-    def kill(self) -> None:
-        if self.popen:
+    async def kill(self, restart=False) -> None:
+        if self.process:
             try:
-                self.popen.kill()
+                self.process.kill()
             except OSError as e:
                 # In Windows, we will get an Access Denied error if the process
                 # has already terminated. Ignore it.
@@ -196,14 +207,14 @@ class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name fo
                     if e.errno != ESRCH:
                         raise
 
-    def terminate(self) -> None:
-        if self.popen:
-            return self.popen.terminate()
+    async def terminate(self, restart=False) -> None:
+        if self.process:
+            return self.process.terminate()
 
-    def cleanup(self) -> None:
+    async def cleanup(self, restart=False) -> None:
         pass
 
-    def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
+    async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
         """Perform any steps in preparation for kernel process launch.
 
         This includes applying additional substitutions to the kernel launch command and env.
@@ -238,18 +249,20 @@ class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name fo
             extra_arguments = kwargs.pop('extra_arguments', [])
             kernel_cmd = self.kernel_spec.argv + extra_arguments
 
-        return super().pre_launch(cmd=kernel_cmd, **kwargs)
+        return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
-    def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['ClientProvisioner', Dict]:
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['ClientProvisioner', Dict]:
         scrubbed_kwargs = ClientProvisioner.scrub_kwargs(kwargs)
-        self.popen = launch_kernel(cmd, **scrubbed_kwargs)
+        self.process = await async_launch_kernel(cmd, **scrubbed_kwargs)
+        self._exit_future = asyncio.ensure_future(self.process.wait())
         pgid = None
         if hasattr(os, "getpgid"):
             try:
-                pgid = os.getpgid(self.popen.pid)
+                pgid = os.getpgid(self.process.pid)
             except OSError:
                 pass
-        self.pid = self.popen.pid
+
+        self.pid = self.process.pid
         self.pgid = pgid
         return self, self.connection_info
 
@@ -331,10 +344,10 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
                        f"environment provisioner: {provisioner_name}")
         provisioner_class = self.provisioners[provisioner_name].load()
         provisioner_config = provisioner_cfg.get('config')
-        return provisioner_class(parent=self.parent,
-                                 kernel_id=kernel_id,
-                                 kernel_spec=kernel_spec,
-                                 config=Config(provisioner_config))
+        return provisioner_class(kernel_id,
+                                 kernel_spec,
+                                 config=Config(provisioner_config),
+                                 parent=self.parent)
 
     @staticmethod
     def _get_provisioner_config(kernel_spec: Any) -> Dict[str, Any]:

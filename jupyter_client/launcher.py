@@ -2,10 +2,11 @@
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-
+import asyncio
 import os
 import sys
 from subprocess import Popen, PIPE
+from typing import Any, Dict, Tuple
 
 from traitlets.log import get_logger
 
@@ -40,8 +41,96 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
     Returns
     -------
 
-    Popen instance for the kernel subprocess
+    subprocess.Popen instance for the kernel subprocess
     """
+
+    kwargs, interrupt_event = prepare_process_args(stdin=stdin, stdout=stdout, stderr=stderr, env=env,
+                  independent=independent, cwd=cwd, **kw)
+
+    try:
+        # Allow to use ~/ in the command or its arguments
+        cmd = list(map(os.path.expanduser, cmd))
+
+        proc = Popen(cmd, **kwargs)
+    except Exception as exc:
+        msg = (
+            "Failed to run command:\n{}\n"
+            "    PATH={!r}\n"
+            "    with kwargs:\n{!r}\n"
+        )
+        # exclude environment variables,
+        # which may contain access tokens and the like.
+        without_env = {key:value for key, value in kwargs.items() if key != 'env'}
+        msg = msg.format(cmd, env.get('PATH', os.defpath), without_env)
+        get_logger().error(msg)
+        raise
+
+    finish_process_launch(proc, stdin, interrupt_event)
+
+    return proc
+
+
+async def async_launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
+                              independent=False, cwd=None, **kw):
+    """ Launches a localhost kernel, binding to the specified ports using async subprocess.
+
+    Parameters
+    ----------
+    cmd : list,
+        A string of Python code that imports and executes a kernel entry point.
+
+    stdin, stdout, stderr : optional (default None)
+        Standards streams, as defined in subprocess.Popen.
+
+    env: dict, optional
+        Environment variables passed to the kernel
+
+    independent : bool, optional (default False)
+        If set, the kernel process is guaranteed to survive if this process
+        dies. If not set, an effort is made to ensure that the kernel is killed
+        when this process dies. Note that in this case it is still good practice
+        to kill kernels manually before exiting.
+
+    cwd : path, optional
+        The working dir of the kernel process (default: cwd of this process).
+
+    **kw: optional
+        Additional arguments for Popen
+
+    Returns
+    -------
+
+    asyncio.subprocess.Process instance for the kernel subprocess
+    """
+
+    kwargs, interrupt_event = prepare_process_args(stdin=stdin, stdout=stdout, stderr=stderr, env=env,
+                  independent=independent, cwd=cwd, **kw)
+
+    try:
+        # Allow to use ~/ in the command or its arguments
+        cmd = list(map(os.path.expanduser, cmd))
+
+        proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
+    except Exception as exc:
+        msg = (
+            "Failed to run command:\n{}\n"
+            "    PATH={!r}\n"
+            "    with kwargs:\n{!r}\n"
+        )
+        # exclude environment variables,
+        # which may contain access tokens and the like.
+        without_env = {key:value for key, value in kwargs.items() if key != 'env'}
+        msg = msg.format(cmd, env.get('PATH', os.defpath), without_env)
+        get_logger().error(msg)
+        raise
+
+    finish_process_launch(proc, stdin, interrupt_event)
+
+    return proc
+
+
+def prepare_process_args(stdin=None, stdout=None, stderr=None, env=None,
+                         independent=False, cwd=None, **kw) -> Tuple[Dict[str, Any], Any]:
 
     # Popen will fail (sometimes with a deadlock) if stdin, stdout, and stderr
     # are invalid. Unfortunately, there is in general no way to detect whether
@@ -116,6 +205,7 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
         # (we always capture stdin, so this is already False by default on <3.7)
         kwargs['close_fds'] = False
     else:
+        interrupt_event = None  # N/A
         # Create a new session.
         # This makes it easier to interrupt the kernel,
         # because we want to interrupt the whole process group.
@@ -125,35 +215,22 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
         if not independent:
             env['JPY_PARENT_PID'] = str(os.getpid())
 
-    try:
-        # Allow to use ~/ in the command or its arguments
-        cmd = list(map(os.path.expanduser, cmd))
+    return kwargs, interrupt_event
 
-        proc = Popen(cmd, **kwargs)
-    except Exception as exc:
-        msg = (
-            "Failed to run command:\n{}\n"
-            "    PATH={!r}\n"
-            "    with kwargs:\n{!r}\n"
-        )
-        # exclude environment variables,
-        # which may contain access tokens and the like.
-        without_env = {key:value for key, value in kwargs.items() if key != 'env'}
-        msg = msg.format(cmd, env.get('PATH', os.defpath), without_env)
-        get_logger().error(msg)
-        raise
+
+def finish_process_launch(subprocess, stdin, interrupt_event) -> None:
+    """Finishes the process launch by patching the interrupt event (windows) and closing stdin. """
 
     if sys.platform == 'win32':
         # Attach the interrupt event to the Popen objet so it can be used later.
-        proc.win32_interrupt_event = interrupt_event
+        subprocess.win32_interrupt_event = interrupt_event
 
     # Clean up pipes created to work around Popen bug.
-    if redirect_in:
-        if stdin is None:
-            proc.stdin.close()
+    if stdin is None:
+        subprocess.stdin.close()
 
-    return proc
 
 __all__ = [
     'launch_kernel',
+    'async_launch_kernel'
 ]

@@ -76,11 +76,6 @@ def ksm():
 
 
 @pytest.fixture(params=['no_provisioner', 'default_provisioner', 'missing_provisioner'])
-def km(request, no_provisioner, missing_provisioner, default_provisioner):
-    return KernelManager(kernel_name=request.param)
-
-
-@pytest.fixture(params=['no_provisioner', 'default_provisioner', 'missing_provisioner'])
 def akm(request, no_provisioner, missing_provisioner, default_provisioner):
     return AsyncKernelManager(kernel_name=request.param)
 
@@ -100,24 +95,6 @@ class TestDiscovery:
 
 
 class TestRuntime:
-    def test_lifecycle(self, km):
-        assert km.provisioner is None
-        if km.kernel_name == 'missing_provisioner':
-            with pytest.raises(NoSuchKernel):
-                km.start_kernel()
-        else:
-            km.start_kernel()
-            assert isinstance(km.provisioner, ClientProvisioner)
-            assert km.kernel is km.provisioner
-            if km.kernel_name == 'default_provisioner':
-                assert km.provisioner.config.get('config_var_1') == 42
-                assert km.provisioner.config.get('config_var_2') == 'foo'
-            else:
-                assert 'config_var_1' not in km.provisioner.config
-                assert 'config_var_2' not in km.provisioner.config
-            km.shutdown_kernel()
-            assert km.kernel is None
-            assert km.provisioner is None
 
     @pytest.mark.asyncio
     async def test_async_lifecycle(self, akm):

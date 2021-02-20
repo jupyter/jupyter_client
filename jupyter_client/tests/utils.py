@@ -73,9 +73,10 @@ class AsyncKernelManagerSubclass(AsyncKernelManager):
         super().cleanup(connection_file=connection_file)
         self.which_cleanup = 'cleanup'
 
-    def cleanup_resources(self, restart=False):
-        super().cleanup_resources(restart=restart)
+    async def cleanup_resources(self, restart=False):
+        await super().cleanup_resources(restart=restart)
         self.which_cleanup = 'cleanup_resources'
+
 
 class AsyncKernelManagerWithCleanup(AsyncKernelManager):
     """Used to test deprecation "routes" that are determined by superclass' detection of methods.
