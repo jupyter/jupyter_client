@@ -16,7 +16,7 @@ from traitlets import (
 from traitlets.config import LoggingConfigurable
 
 from jupyter_core.paths import jupyter_data_dir, jupyter_path, SYSTEM_JUPYTER_PATH
-from .provisioning import EnvironmentProvisionerFactory as EPF
+from .provisioning import KernelProvisionerFactory as KPF
 
 pjoin = os.path.join
 
@@ -199,7 +199,7 @@ class KernelSpecManager(LoggingConfigurable):
         if not kspec:
             kspec = self.kernel_spec_class.from_resource_dir(resource_dir)
 
-        if not EPF.instance(parent=self.parent).is_provisioner_available(kernel_name, kspec):
+        if not KPF.instance(parent=self.parent).is_provisioner_available(kernel_name, kspec):
             raise NoSuchKernel(kernel_name)
 
         return kspec

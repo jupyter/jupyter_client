@@ -90,8 +90,8 @@ setup_args = dict(
             'jupyter-run = jupyter_client.runapp:RunApp.launch_instance',
             'jupyter-kernel = jupyter_client.kernelapp:main',
         ],
-        'jupyter_client.environment_provisioners': [
-            'ClientProvisioner = jupyter_client.provisioning:ClientProvisioner',
+        'jupyter_client.kernel_provisioners': [
+            'LocalProvisioner = jupyter_client.provisioning:LocalProvisioner',
         ]
     },
 )

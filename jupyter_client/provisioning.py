@@ -1,4 +1,4 @@
-"""Kernel Environment Provisioner Classes"""
+"""Kernel Provisioner Classes"""
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
@@ -16,15 +16,15 @@ from .connect import write_connection_file
 from .launcher import async_launch_kernel
 from .localinterfaces import is_local_ip, local_ips
 
-DEFAULT_PROVISIONER = "ClientProvisioner"
+DEFAULT_PROVISIONER = "LocalProvisioner"
 
 
-class EnvironmentProvisionerMeta(ABCMeta, type(LoggingConfigurable)):
+class KernelProvisionerMeta(ABCMeta, type(LoggingConfigurable)):
     pass
 
 
-class EnvironmentProvisionerBase(ABC, LoggingConfigurable, metaclass=EnvironmentProvisionerMeta):
-    """Base class defining methods for EnvironmentProvisioner classes.
+class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisionerMeta):
+    """Base class defining methods for KernelProvisioner classes.
 
        Theses methods model those of the Subprocess Popen class:
        https://docs.python.org/3/library/subprocess.html#popen-objects
@@ -75,7 +75,7 @@ class EnvironmentProvisionerBase(ABC, LoggingConfigurable, metaclass=Environment
         pass
 
     @abstractmethod
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['EnvironmentProvisionerBase', Dict]:
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['KernelProvisionerBase', Dict]:
         """Launch the kernel process returning the class instance and connection info."""
         pass
 
@@ -157,7 +157,7 @@ class EnvironmentProvisionerBase(ABC, LoggingConfigurable, metaclass=Environment
         return substituted_env
 
 
-class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name for default class
+class LocalProvisioner(KernelProvisionerBase):
 
     def __init__(self, kernel_id: str, kernel_spec: Any, **kwargs):
         super().__init__(kernel_id, kernel_spec, **kwargs)
@@ -279,8 +279,8 @@ class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name fo
 
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['ClientProvisioner', Dict]:
-        scrubbed_kwargs = ClientProvisioner.scrub_kwargs(kwargs)
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['LocalProvisioner', Dict]:
+        scrubbed_kwargs = LocalProvisioner.scrub_kwargs(kwargs)
         self.process = await async_launch_kernel(cmd, **scrubbed_kwargs)
         self.async_subprocess = isinstance(self.process, asyncio.subprocess.Process)
         if self.async_subprocess:
@@ -308,30 +308,30 @@ class ClientProvisioner(EnvironmentProvisionerBase):  # TODO - determine name fo
     def get_provisioner_info(self) -> Dict:
         """Captures the base information necessary for kernel persistence relative to the provisioner.
         """
-        provisioner_info = super(ClientProvisioner, self).get_provisioner_info()
+        provisioner_info = super(LocalProvisioner, self).get_provisioner_info()
         provisioner_info.update({'pid': self.pid, 'pgid': self.pgid, 'ip': self.ip})
         return provisioner_info
 
     def load_provisioner_info(self, provisioner_info: Dict) -> None:
         """Loads the base information necessary for kernel persistence relative to the provisioner.
         """
-        super(ClientProvisioner, self).load_provisioner_info(provisioner_info)
+        super(LocalProvisioner, self).load_provisioner_info(provisioner_info)
         self.pid = provisioner_info['pid']
         self.pgid = provisioner_info['pgid']
         self.ip = provisioner_info['ip']
 
 
-class EnvironmentProvisionerFactory(SingletonConfigurable):
-    """EnvironmentProvisionerFactory is responsible for validating and initializing provisioner instances.
+class KernelProvisionerFactory(SingletonConfigurable):
+    """KernelProvisionerFactory is responsible for validating and initializing provisioner instances.
     """
 
-    GROUP_NAME = 'jupyter_client.environment_provisioners'
+    GROUP_NAME = 'jupyter_client.kernel_provisioners'
     provisioners: Dict[str, EntryPoint] = {}
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        for ep in get_group_all(EnvironmentProvisionerFactory.GROUP_NAME):
+        for ep in get_group_all(KernelProvisionerFactory.GROUP_NAME):
             self.provisioners[ep.name] = ep
 
     def is_provisioner_available(self, kernel_name: str, kernel_spec: Any) -> bool:
@@ -342,36 +342,36 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
         to the list, else catch exception and return false.
         """
         is_available: bool = True
-        provisioner_cfg = EnvironmentProvisionerFactory._get_provisioner_config(kernel_spec)
+        provisioner_cfg = KernelProvisionerFactory._get_provisioner_config(kernel_spec)
         provisioner_name = provisioner_cfg.get('provisioner_name')
         if provisioner_name not in self.provisioners:
             try:
-                ep = get_single(EnvironmentProvisionerFactory.GROUP_NAME, provisioner_name)
+                ep = get_single(KernelProvisionerFactory.GROUP_NAME, provisioner_name)
                 self.provisioners[provisioner_name] = ep  # Update cache
             except NoSuchEntryPoint:
                 is_available = False
                 self.log.warning(
-                    f"Kernel '{kernel_name}' is referencing an environment provisioner ('{provisioner_name}') "
+                    f"Kernel '{kernel_name}' is referencing a kernel provisioner ('{provisioner_name}') "
                     f"that is not available.  Ensure the appropriate package has been installed and retry.")
         return is_available
 
-    def create_provisioner_instance(self, kernel_id: str, kernel_spec: Any) -> EnvironmentProvisionerBase:
+    def create_provisioner_instance(self, kernel_id: str, kernel_spec: Any) -> KernelProvisionerBase:
         """
-        Reads the associated kernel_spec and to see if has an environment_provisioner stanza.
-        If one exists, it instantiates an instance.  If an environment provisioner is not
+        Reads the associated kernel_spec and to see if has a kernel_provisioner stanza.
+        If one exists, it instantiates an instance.  If a kernel provisioner is not
         specified in the kernelspec, a DEFAULT_PROVISIONER stanza is fabricated and instantiated.
         The instantiated instance is returned.
 
         If the provisioner is found to not exist (not registered via entry_points),
         ModuleNotFoundError is raised.
         """
-        provisioner_cfg = EnvironmentProvisionerFactory._get_provisioner_config(kernel_spec)
+        provisioner_cfg = KernelProvisionerFactory._get_provisioner_config(kernel_spec)
         provisioner_name = provisioner_cfg.get('provisioner_name')
         if provisioner_name not in self.provisioners:
-            raise ModuleNotFoundError(f"Environment provisioner '{provisioner_name}' has not been registered.")
+            raise ModuleNotFoundError(f"Kernel provisioner '{provisioner_name}' has not been registered.")
 
         self.log.debug(f"Instantiating kernel '{kernel_spec.display_name}' with "
-                       f"environment provisioner: {provisioner_name}")
+                       f"kernel provisioner: {provisioner_name}")
         provisioner_class = self.provisioners[provisioner_name].load()
         provisioner_config = provisioner_cfg.get('config')
         return provisioner_class(kernel_id,
@@ -382,9 +382,9 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
     @staticmethod
     def _get_provisioner_config(kernel_spec: Any) -> Dict[str, Any]:
         """
-        Return the environment_provisioner stanza from the kernel_spec.
+        Return the kernel_provisioner stanza from the kernel_spec.
 
-        Checks the kernel_spec's metadata dictionary for an environment_provisioner entry.
+        Checks the kernel_spec's metadata dictionary for a kernel_provisioner entry.
         If found, it is returned, else one is created relative to the DEFAULT_PROVISIONER and returned.
 
         Parameters
@@ -399,7 +399,7 @@ class EnvironmentProvisionerFactory(SingletonConfigurable):
             information.  If no `config` sub-dictionary exists, an empty `config` dictionary will be added.
 
         """
-        env_provisioner = kernel_spec.metadata.get('environment_provisioner', {})
+        env_provisioner = kernel_spec.metadata.get('kernel_provisioner', {})
         if 'provisioner_name' in env_provisioner:  # If no provisioner_name, return default
             if 'config' not in env_provisioner:  # if provisioner_name, but no config stanza, add one
                 env_provisioner.update({"config": {}})

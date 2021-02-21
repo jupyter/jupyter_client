@@ -11,7 +11,7 @@ import sys
 from jupyter_core import paths
 from ..kernelspec import KernelSpecManager, NoSuchKernel
 from ..manager import KernelManager, AsyncKernelManager
-from ..provisioning import ClientProvisioner
+from ..provisioning import LocalProvisioner
 
 pjoin = os.path.join
 
@@ -42,8 +42,8 @@ def default_provisioner():
             'display_name': "Signal Test Kernel w Provisioner",
             'env': {'TEST_VARS': '${TEST_VARS}:test_var_2'},
             'metadata': {
-                'environment_provisioner': {
-                    'provisioner_name': 'ClientProvisioner',
+                'kernel_provisioner': {
+                    'provisioner_name': 'LocalProvisioner',
                     'config': {'config_var_1': 42, 'config_var_2': 'foo'}
                 }
             }
@@ -62,7 +62,7 @@ def missing_provisioner():
             'display_name': "Signal Test Kernel Missing Provisioner",
             'env': {'TEST_VARS': '${TEST_VARS}:test_var_2'},
             'metadata': {
-                'environment_provisioner': {
+                'kernel_provisioner': {
                     'provisioner_name': 'MissingProvisioner',
                     'config': {'config_var_1': 42, 'config_var_2': 'foo'}
                 }
@@ -104,7 +104,7 @@ class TestRuntime:
                 await akm.start_kernel()
         else:
             await akm.start_kernel()
-            assert isinstance(akm.provisioner, ClientProvisioner)
+            assert isinstance(akm.provisioner, LocalProvisioner)
             assert akm.kernel is akm.provisioner
             if akm.kernel_name == 'default_provisioner':
                 assert akm.provisioner.config.get('config_var_1') == 42

@@ -27,7 +27,7 @@ from .connect import ConnectionFileMixin
 from .launcher import launch_kernel
 from .localinterfaces import is_local_ip, local_ips
 from .managerabc import KernelManagerABC
-from .provisioning import EnvironmentProvisionerFactory as EPF, EnvironmentProvisionerBase
+from .provisioning import KernelProvisionerFactory as KPF, KernelProvisionerBase
 
 
 class KernelManager(ConnectionFileMixin):
@@ -540,12 +540,12 @@ class AsyncKernelManager(KernelManager):
     client_factory = Type(klass='jupyter_client.asynchronous.AsyncKernelClient')
 
     # The kernel provisioner with which the KernelManager is communicating.
-    # This will generally be a ClientProvisioner instance unless the specification indicates otherwise.
+    # This will generally be a LocalProvisioner instance unless the specification indicates otherwise.
     # Note that we use two attributes, kernel and provisioner, that will point at the same provisioner instance.
     # kernel will be non-None during the kernel's lifecycle, while provisioner will span that time, being set
     # prior to launch and unset following the kernel's termination.
-    kernel: Optional[EnvironmentProvisionerBase] = None
-    provisioner: Optional[EnvironmentProvisionerBase] = None
+    kernel: Optional[KernelProvisionerBase] = None
+    provisioner: Optional[KernelProvisionerBase] = None
 
     async def pre_start_kernel(self, **kw):
         """Prepares a kernel for startup in a separate process.
@@ -560,7 +560,7 @@ class AsyncKernelManager(KernelManager):
              and launching the kernel (e.g. Popen kwargs).
         """
         self.kernel_id = kw.pop('kernel_id', str(uuid.uuid4()))
-        self.provisioner = EPF.instance(parent=self.parent).\
+        self.provisioner = KPF.instance(parent=self.parent).\
             create_provisioner_instance(self.kernel_id, self.kernel_spec)
 
         # save kwargs for use in restart
