@@ -131,10 +131,7 @@ async def start_async_kernel():
 
 
 class TestKernelManagerShutDownGracefully:
-    @pytest.mark.skipif(
-        sys.platform == "win32", reason="Windows doesn't support signals"
-    )
-    @pytest.mark.parametrize(
+    parameters = (
         "name, install, expected",
         [
             ("signaltest", _install_kernel, _ShutdownStatus.ShutdownRequest),
@@ -150,6 +147,11 @@ class TestKernelManagerShutDownGracefully:
             ),
         ],
     )
+
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="Windows doesn't support signals"
+    )
+    @pytest.mark.parametrize(*parameters)
     def test_signal_kernel_subprocesses(self, name, install, expected):
         install()
         km, kc = start_new_kernel(kernel_name=name)
@@ -161,22 +163,10 @@ class TestKernelManagerShutDownGracefully:
 
         assert km._shutdown_status == expected
 
-    @pytest.mark.parametrize(
-        "name, install, expected",
-        [
-            ("signaltest", _install_kernel, _ShutdownStatus.ShutdownRequest),
-            (
-                "signaltest-no-shutdown",
-                install_kernel_dont_shutdown,
-                _ShutdownStatus.SigtermRequest,
-            ),
-            (
-                "signaltest-no-terminate",
-                install_kernel_dont_terminate,
-                _ShutdownStatus.SigKillRequest,
-            ),
-        ],
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="Windows doesn't support signals"
     )
+    @pytest.mark.parametrize(*parameters)
     async def test_async_signal_kernel_subprocesses(self, name, install, expected):
         install()
         km, kc = await start_new_async_kernel(kernel_name=name)
