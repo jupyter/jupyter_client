@@ -161,6 +161,33 @@ class TestKernelManagerShutDownGracefully:
 
         assert km._shutdown_status == expected
 
+    @pytest.mark.parametrize(
+        "name, install, expected",
+        [
+            ("signaltest", _install_kernel, _ShutdownStatus.ShutdownRequest),
+            (
+                "signaltest-no-shutdown",
+                install_kernel_dont_shutdown,
+                _ShutdownStatus.SigtermRequest,
+            ),
+            (
+                "signaltest-no-terminate",
+                install_kernel_dont_terminate,
+                _ShutdownStatus.SigKillRequest,
+            ),
+        ],
+    )
+    async def test_async_signal_kernel_subprocesses(self, name, install, expected):
+        install()
+        km, kc = await start_new_async_kernel(kernel_name=name)
+        assert km._shutdown_status == _ShutdownStatus.Unset
+        assert await km.is_alive()
+        # kc.execute("1")
+        kc.stop_channels()
+        await km.shutdown_kernel()
+
+        assert km._shutdown_status == expected
+
 
 class TestKernelManager:
 
