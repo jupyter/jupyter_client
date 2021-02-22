@@ -53,9 +53,9 @@ def config(transport):
     return c
 
 
-def _install_kernel(name, extra_env=None):
+def _install_kernel(name="signaltest", extra_env=None):
     if extra_env is None:
-        extra_env == {}
+        extra_env = dict()
     kernel_dir = pjoin(paths.jupyter_data_dir(), "kernels", name)
     os.makedirs(kernel_dir)
     with open(pjoin(kernel_dir, "kernel.json"), "w") as f:
@@ -70,10 +70,7 @@ def _install_kernel(name, extra_env=None):
                         "{connection_file}",
                     ],
                     "display_name": "Signal Test Kernel",
-                    "env": {
-                        "TEST_VARS": "${TEST_VARS}:test_var_2",
-                        "NO_SHUTDOWN_REPLY": "1",
-                    },
+                    "env": {"TEST_VARS": "${TEST_VARS}:test_var_2", **extra_env},
                 }
             )
         )
@@ -81,15 +78,13 @@ def _install_kernel(name, extra_env=None):
 
 @pytest.fixture
 def install_kernel():
-    return _install_kernel("signaltest")
+    return _install_kernel()
 
 
-@pytest.fixture
 def install_kernel_dont_shutdown():
     _install_kernel("signaltest-no-shutdown", {"NO_SHUTDOWN_REPLY": "1"})
 
 
-@pytest.fixture
 def install_kernel_dont_terminate():
     return _install_kernel(
         "signaltest-no-terminate", {"NO_SHUTDOWN_REPLY": "1", "NO_SIGTERM_REPLY": "1"}
@@ -142,21 +137,23 @@ class TestKernelManagerShutDownGracefully:
     @pytest.mark.parametrize(
         "name, install, expected",
         [
-            ("signaltest", install_kernel, _ShutdownStatus.ShutdownRequest),
-            # (
-            #    "signaltest-no-shutdown",
-            #    install_kernel_dont_shutdown,
-            #    _ShutdownStatus.SigtermRequest,
-            # ),
-            # (
-            #    "signaltest-no-terminate",
-            #    install_kernel_dont_terminate,
-            #    _ShutdownStatus.SigKillRequest,
-            # ),
+            ("signaltest", _install_kernel, _ShutdownStatus.ShutdownRequest),
+            (
+                "signaltest-no-shutdown",
+                install_kernel_dont_shutdown,
+                _ShutdownStatus.SigtermRequest,
+            ),
+            (
+                "signaltest-no-terminate",
+                install_kernel_dont_terminate,
+                _ShutdownStatus.SigKillRequest,
+            ),
         ],
     )
     def test_signal_kernel_subprocesses(self, name, install, expected):
+        install()
         km, kc = start_new_kernel(kernel_name=name)
+        assert km._shutdown_status == _ShutdownStatus.Unset
         assert km.is_alive()
         # kc.execute("1")
         kc.stop_channels()

@@ -45,6 +45,7 @@ class KernelManager(ConnectionFileMixin):
     """
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
 
     _created_context = Bool(False)
