@@ -330,7 +330,9 @@ class KernelManager(ConnectionFileMixin):
         """
         if waittime is None:
             waittime = max(self.shutdown_wait_time, 0)
-        for i in range(int(waittime/pollinterval)):
+
+        # wait 50% of the shutdown timeout...
+        for i in range(int(waittime / 2 / pollinterval)):
             if self.is_alive():
                 time.sleep(pollinterval)
             else:
@@ -340,10 +342,23 @@ class KernelManager(ConnectionFileMixin):
                     self.kernel = None
                 break
         else:
-            # OK, we've waited long enough.
-            if self.has_kernel:
-                self.log.debug("Kernel is taking too long to finish, killing")
-                self._kill_kernel()
+            # if we've exited the loop normally (no break)
+            # send sigterm and wait the other 50%.
+            self._send_kernel_sigterm()
+            for i in range(int(waittime / 2 / pollinterval)):
+                if self.is_alive():
+                    time.sleep(pollinterval)
+                else:
+                    # If there's still a proc, wait and clear
+                    if self.has_kernel:
+                        self.kernel.wait()
+                        self.kernel = None
+                    break
+            else:
+                # OK, we've waited long enough.
+                if self.has_kernel:
+                    self.log.debug("Kernel is taking too long to finish, killing")
+                    self._kill_kernel()
 
     def cleanup_resources(self, restart=False):
         """Clean up resources when the kernel is shut down"""
@@ -383,6 +398,8 @@ class KernelManager(ConnectionFileMixin):
         """
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
+
+        self.interrupt_kernel()
 
         if now:
             self._kill_kernel()
@@ -457,6 +474,31 @@ class KernelManager(ConnectionFileMixin):
     def has_kernel(self):
         """Has a kernel been started that we are managing."""
         return self.kernel is not None
+
+    def _send_kernel_sigterm(self):
+        """similar to _kill_kernel, but with sigterm (not sigkill), but do not block"""
+        if self.has_kernel:
+            # Signal the kernel to terminate (sends SIGTERM on Unix and
+            # if the kernel is a subprocess and we are on windows; this is
+            # equivalent to kill
+            try:
+                if hasattr(self.kernel, "terminate"):
+                    self.kernel.terminate()
+                elif hasattr(signal, "SIGTERM"):
+                    self.signal_kernel(signal.SIGTERM)
+            except OSError as e:
+                # In Windows, we will get an Access Denied error if the process
+                # has already terminated. Ignore it.
+                if sys.platform == "win32":
+                    if e.winerror != 5:
+                        raise
+                # On Unix, we may get an ESRCH error if the process has already
+                # terminated. Ignore it.
+                else:
+                    from errno import ESRCH
+
+                    if e.errno != ESRCH:
+                        raise
 
     def _kill_kernel(self):
         """Kill the running kernel.
@@ -584,7 +626,18 @@ class AsyncKernelManager(KernelManager):
         if waittime is None:
             waittime = max(self.shutdown_wait_time, 0)
         try:
-            await asyncio.wait_for(self._async_wait(pollinterval=pollinterval), timeout=waittime)
+            try:
+                await asyncio.wait_for(
+                    self._async_wait(pollinterval=pollinterval), timeout=waittime / 2
+                )
+            except asyncio.TimeoutError:
+                self.log.debug("Kernel is taking too long to finish, terminating")
+                await self._send_kernel_sigterm()
+
+            await asyncio.wait_for(
+                self._async_wait(pollinterval=pollinterval), timeout=waittime / 2
+            )
+
         except asyncio.TimeoutError:
             self.log.debug("Kernel is taking too long to finish, killing")
             await self._kill_kernel()
@@ -614,6 +667,8 @@ class AsyncKernelManager(KernelManager):
         """
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
+
+        await self.interrupt_kernel()
 
         if now:
             await self._kill_kernel()
@@ -672,6 +727,31 @@ class AsyncKernelManager(KernelManager):
             self._launch_args.update(kw)
             await self.start_kernel(**self._launch_args)
         return None
+
+    async def _send_kernel_sigterm(self):
+        """similar to _kill_kernel, but with sigterm (not sigkill), but do not block"""
+        if self.has_kernel:
+            # Signal the kernel to terminate (sends SIGTERM on Unix and
+            # if the kernel is a subprocess and we are on windows; this is
+            # equivalent to kill
+            try:
+                if hasattr(self.kernel, "terminate"):
+                    self.kernel.terminate()
+                elif hasattr(signal, "SIGTERM"):
+                    await self.signal_kernel(signal.SIGTERM)
+            except OSError as e:
+                # In Windows, we will get an Access Denied error if the process
+                # has already terminated. Ignore it.
+                if sys.platform == "win32":
+                    if e.winerror != 5:
+                        raise
+                # On Unix, we may get an ESRCH error if the process has already
+                # terminated. Ignore it.
+                else:
+                    from errno import ESRCH
+
+                    if e.errno != ESRCH:
+                        raise
 
     async def _kill_kernel(self):
         """Kill the running kernel.
