@@ -90,6 +90,9 @@ class KernelRestarter(LoggingConfigurable):
     def poll(self):
         if self.debug:
             self.log.debug('Polling kernel...')
+        if self.kernel_manager.shutting_down:
+            self.log.debug('Kernel shutdown in progress...')
+            return
         if not self.kernel_manager.is_alive():
             if self._restarting:
                 self._restart_count += 1

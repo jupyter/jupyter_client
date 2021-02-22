@@ -127,6 +127,8 @@ class KernelManager(ConnectionFileMixin):
         help="""Should we autorestart the kernel if it dies."""
     )
 
+    shutting_down = False
+
     def __del__(self):
         self._close_control_socket()
         self.cleanup_connection_file()
@@ -246,6 +248,7 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
+        self.shutting_down = False
         if self.transport == 'tcp' and not is_local_ip(self.ip):
             raise RuntimeError("Can only launch a kernel on a local interface. "
                                "This one is not: %s."
@@ -381,6 +384,7 @@ class KernelManager(ConnectionFileMixin):
             Will this kernel be restarted after it is shutdown. When this
             is True, connection files will not be cleaned up.
         """
+        self.shutting_down = True  # Used by restarter to prevent race condition
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
 
@@ -612,6 +616,7 @@ class AsyncKernelManager(KernelManager):
             Will this kernel be restarted after it is shutdown. When this
             is True, connection files will not be cleaned up.
         """
+        self.shutting_down = True  # Used by restarter to prevent race condition
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
 
