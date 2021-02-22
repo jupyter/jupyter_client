@@ -13,7 +13,6 @@ from ipykernel.displayhook import ZMQDisplayHook
 from ipykernel.kernelbase import Kernel
 from ipykernel.kernelapp import IPKernelApp
 
-
 class SignalTestKernel(Kernel):
     """Kernel for testing subprocess signaling"""
     implementation = 'signaltest'
@@ -24,6 +23,13 @@ class SignalTestKernel(Kernel):
         kwargs.pop('user_ns', None)
         super().__init__(**kwargs)
         self.children = []
+
+    # @gen.coroutine
+    # def shutdown_request(self, stream, ident, parent):
+    #    if os.environ.get("NO_SHUTDOWN_REPLY"):
+    #        pass
+    #    else:
+    #        return super().shutdown_request(stream, ident, parent)
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None,
                    allow_stdin=False):

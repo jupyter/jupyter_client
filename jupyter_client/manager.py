@@ -12,6 +12,8 @@ import sys
 import time
 import warnings
 
+from enum import Enum
+
 import zmq
 
 from ipython_genutils.importstring import import_item
@@ -29,12 +31,21 @@ from .managerabc import (
     KernelManagerABC
 )
 
+class _ShutdownStatus(Enum):
+    Unset = None
+    ShutdownRequest = "ShutdownRequest"
+    SigtermRequest = "SigtermRequest"
+    SigKillRequest = "SigKillRequest"
+
 
 class KernelManager(ConnectionFileMixin):
     """Manages a single kernel in a subprocess on this host.
 
     This version starts kernels with Popen.
     """
+
+    def __init__(self, *args, **kwargs):
+        self._shutdown_status = _ShutdownStatus.Unset
 
     _created_context = Bool(False)
 
@@ -71,7 +82,13 @@ class KernelManager(ConnectionFileMixin):
     shutdown_wait_time = Float(
         5.0, config=True,
         help="Time to wait for a kernel to terminate before killing it, "
-             "in seconds.")
+        "in seconds. When a shutdown request is initiated, the kernel "
+        "will be immediately send and interrupt (SIGINT), followed"
+        "by a shutdown_request message, after 1/2 of `shutdown_wait_time`"
+        "it will be sent a terminate (SIGTERM) request, and finally at "
+        "the end of `shutdown_wait_time` will be killed (SIGKILL). terminate "
+        "and kill may be equivalent on windows.",
+    )
 
     kernel_name = Unicode(kernelspec.NATIVE_KERNEL_NAME)
 
@@ -330,6 +347,7 @@ class KernelManager(ConnectionFileMixin):
         """
         if waittime is None:
             waittime = max(self.shutdown_wait_time, 0)
+        self._shutdown_status = _ShutdownStatus.ShutdownRequest
 
         # wait 50% of the shutdown timeout...
         for i in range(int(waittime / 2 / pollinterval)):
@@ -344,6 +362,7 @@ class KernelManager(ConnectionFileMixin):
         else:
             # if we've exited the loop normally (no break)
             # send sigterm and wait the other 50%.
+            self._shutdown_status = _ShutdownStatus.SigtermRequest
             self._send_kernel_sigterm()
             for i in range(int(waittime / 2 / pollinterval)):
                 if self.is_alive():
@@ -358,6 +377,7 @@ class KernelManager(ConnectionFileMixin):
                 # OK, we've waited long enough.
                 if self.has_kernel:
                     self.log.debug("Kernel is taking too long to finish, killing")
+                    self._shutdown_status = _ShutdownStatus.SigKillRequest
                     self._kill_kernel()
 
     def cleanup_resources(self, restart=False):
@@ -627,11 +647,13 @@ class AsyncKernelManager(KernelManager):
             waittime = max(self.shutdown_wait_time, 0)
         try:
             try:
+                self._shutdown_status = _ShutdownStatus.ShutdownRequest
                 await asyncio.wait_for(
                     self._async_wait(pollinterval=pollinterval), timeout=waittime / 2
                 )
             except asyncio.TimeoutError:
                 self.log.debug("Kernel is taking too long to finish, terminating")
+                self._shutdown_status = _ShutdownStatus.SigtermRequest
                 await self._send_kernel_sigterm()
 
             await asyncio.wait_for(
@@ -640,6 +662,7 @@ class AsyncKernelManager(KernelManager):
 
         except asyncio.TimeoutError:
             self.log.debug("Kernel is taking too long to finish, killing")
+            self._shutdown_status = _ShutdownStatus.SigKillRequest
             await self._kill_kernel()
         else:
             # Process is no longer alive, wait and clear

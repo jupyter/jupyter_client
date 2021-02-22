@@ -4,6 +4,13 @@
 Changes in Jupyter Client
 =========================
 
+dev
+===
+
+- Shutdown request sequence has been modified to be more graceful, it now is
+  preceded by interrupt, and will also send a ``SIGTERM`` before forcibly
+  killing the kernel. :ghpull:`620`
+
 6.1.11
 ======
 - Move jedi pinning to test requirements (:ghpull:`599`)
