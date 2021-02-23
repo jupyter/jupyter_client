@@ -10,13 +10,11 @@ import sys
 from abc import ABCMeta, ABC, abstractmethod
 from entrypoints import EntryPoint, get_group_all, get_single, NoSuchEntryPoint
 from typing import Optional, Dict, List, Any, Tuple
-from traitlets.config import Config, LoggingConfigurable, SingletonConfigurable
+from traitlets.config import Config, default, LoggingConfigurable, SingletonConfigurable, Unicode
 
 from .connect import write_connection_file
 from .launcher import async_launch_kernel
 from .localinterfaces import is_local_ip, local_ips
-
-DEFAULT_PROVISIONER = "LocalProvisioner"
 
 
 class KernelProvisionerMeta(ABCMeta, type(LoggingConfigurable)):
@@ -79,6 +77,7 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         """Launch the kernel process returning the class instance and connection info."""
         pass
 
+    @abstractmethod
     async def cleanup(self, restart=False) -> None:
         """Cleanup any resources allocated on behalf of the kernel provisioner.
 
@@ -96,13 +95,12 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         """
 
         env = kwargs.pop('env', os.environ).copy()
-        # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
-        # If set, it can bork all the things.
-        env.pop('PYTHONEXECUTABLE', None)
 
-        env.update(self._get_env_substitutions(env))
+        env.update(self._apply_env_substitutions(env))
 
         self._validate_parameters(env, **kwargs)
+
+        self._finalize_env(env)
 
         kwargs['env'] = env
 
@@ -110,10 +108,6 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
 
     async def post_launch(self, **kwargs: Any) -> None:
         """Perform any steps following the kernel process launch."""
-        pass
-
-    def _validate_parameters(self, env: Dict[str, Any], **kwargs: Any) -> None:
-        """Future: Validates that launch parameters adhere to schema specified in kernel specification."""
         pass
 
     async def get_provisioner_info(self) -> Dict:
@@ -140,8 +134,8 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         """
         return recommended
 
-    def _get_env_substitutions(self, substitution_values):
-        """ Walks env entries in templated_env and applies possible substitutions from current env
+    def _apply_env_substitutions(self, substitution_values: Dict[str, str]):
+        """ Walks env entries in the kernelspec's env stanza and applies possible substitutions from current env
             (represented by substitution_values).
             Returns the substituted list of env entries.
         """
@@ -155,6 +149,18 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
             for k, v in templated_env.items():
                 substituted_env.update({k: Template(v).safe_substitute(substitution_values)})
         return substituted_env
+
+    def _finalize_env(self, env: Dict[str, str]) -> None:
+        """ Ensures env is appropriate prior to launch. """
+
+        if self.kernel_spec.language and self.kernel_spec.language.lower().startswith("python"):
+            # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
+            # If set, it can bork all the things.
+            env.pop('PYTHONEXECUTABLE', None)
+
+    def _validate_parameters(self, env: Dict[str, str], **kwargs: Any) -> None:
+        """Future: Validates that launch parameters adhere to schema specified in kernel specification."""
+        pass
 
 
 class LocalProvisioner(KernelProvisionerBase):
@@ -264,7 +270,7 @@ class LocalProvisioner(KernelProvisionerBase):
                                    )
 
             # save kwargs for use in restart
-            km._launch_args = kwargs.copy()  # TODO - stash these on provisioner?
+            km._launch_args = kwargs.copy()
             # build the Popen cmd
             extra_arguments = kwargs.pop('extra_arguments', [])
 
@@ -322,11 +328,19 @@ class LocalProvisioner(KernelProvisionerBase):
 
 
 class KernelProvisionerFactory(SingletonConfigurable):
-    """KernelProvisionerFactory is responsible for validating and initializing provisioner instances.
-    """
+    """KernelProvisionerFactory is responsible for validating and initializing provisioner instances."""
 
     GROUP_NAME = 'jupyter_client.kernel_provisioners'
     provisioners: Dict[str, EntryPoint] = {}
+
+    default_provisioner_name_env = "JUPYTER_DEFAULT_PROVISIONER_NAME"
+    default_provisioner_name = Unicode(config=True,
+                                       help="""Indicates the name of the provisioner to use when no kernel_provisioner
+                                       entry is present in the kernelspec.""")
+
+    @default('default_provisioner_name')
+    def default_provisioner_name_default(self):
+        return os.getenv(self.default_provisioner_name_env, "LocalProvisioner")
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -342,7 +356,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         to the list, else catch exception and return false.
         """
         is_available: bool = True
-        provisioner_cfg = KernelProvisionerFactory._get_provisioner_config(kernel_spec)
+        provisioner_cfg = self._get_provisioner_config(kernel_spec)
         provisioner_name = provisioner_cfg.get('provisioner_name')
         if provisioner_name not in self.provisioners:
             try:
@@ -365,7 +379,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         If the provisioner is found to not exist (not registered via entry_points),
         ModuleNotFoundError is raised.
         """
-        provisioner_cfg = KernelProvisionerFactory._get_provisioner_config(kernel_spec)
+        provisioner_cfg = self._get_provisioner_config(kernel_spec)
         provisioner_name = provisioner_cfg.get('provisioner_name')
         if provisioner_name not in self.provisioners:
             raise ModuleNotFoundError(f"Kernel provisioner '{provisioner_name}' has not been registered.")
@@ -379,8 +393,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
                                  config=Config(provisioner_config),
                                  parent=self.parent)
 
-    @staticmethod
-    def _get_provisioner_config(kernel_spec: Any) -> Dict[str, Any]:
+    def _get_provisioner_config(self, kernel_spec: Any) -> Dict[str, Any]:
         """
         Return the kernel_provisioner stanza from the kernel_spec.
 
@@ -404,4 +417,4 @@ class KernelProvisionerFactory(SingletonConfigurable):
             if 'config' not in env_provisioner:  # if provisioner_name, but no config stanza, add one
                 env_provisioner.update({"config": {}})
             return env_provisioner  # Return what we found (plus config stanza if necessary)
-        return {"provisioner_name": DEFAULT_PROVISIONER, "config": {}}
+        return {"provisioner_name": self.default_provisioner_name, "config": {}}
