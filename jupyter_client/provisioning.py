@@ -345,7 +345,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        for ep in get_group_all(KernelProvisionerFactory.GROUP_NAME):
+        for ep in KernelProvisionerFactory._get_all_provisioners():
             self.provisioners[ep.name] = ep
 
     def is_provisioner_available(self, kernel_name: str, kernel_spec: Any) -> bool:
@@ -360,7 +360,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         provisioner_name = provisioner_cfg.get('provisioner_name')
         if provisioner_name not in self.provisioners:
             try:
-                ep = get_single(KernelProvisionerFactory.GROUP_NAME, provisioner_name)
+                ep = KernelProvisionerFactory._get_provisioner(provisioner_name)
                 self.provisioners[provisioner_name] = ep  # Update cache
             except NoSuchEntryPoint:
                 is_available = False
@@ -418,3 +418,13 @@ class KernelProvisionerFactory(SingletonConfigurable):
                 env_provisioner.update({"config": {}})
             return env_provisioner  # Return what we found (plus config stanza if necessary)
         return {"provisioner_name": self.default_provisioner_name, "config": {}}
+
+    @staticmethod
+    def _get_all_provisioners() -> List[EntryPoint]:
+        """Wrapper around entrypoints.get_group_all() - primarily to facilitate testing."""
+        return get_group_all(KernelProvisionerFactory.GROUP_NAME)
+
+    @staticmethod
+    def _get_provisioner(name: str) -> EntryPoint:
+        """Wrapper around entrypoints.get_single() - primarily to facilitate testing."""
+        return get_single(KernelProvisionerFactory.GROUP_NAME, name)

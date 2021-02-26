@@ -3,115 +3,278 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import asyncio
 import json
 import os
 import pytest
+import signal
 import sys
 
+from entrypoints import EntryPoint, NoSuchEntryPoint
 from jupyter_core import paths
+from subprocess import PIPE
+from typing import Any, Dict, List, Optional, Tuple
+
 from ..kernelspec import KernelSpecManager, NoSuchKernel
-from ..manager import KernelManager, AsyncKernelManager
-from ..provisioning import LocalProvisioner
+from ..launcher import launch_kernel
+from ..manager import AsyncKernelManager
+from ..provisioning import KernelProvisionerBase, LocalProvisioner, KernelProvisionerFactory
 
 pjoin = os.path.join
 
 
-@pytest.fixture
-def no_provisioner():
-    kernel_dir = pjoin(paths.jupyter_data_dir(), 'kernels', 'no_provisioner')
-    os.makedirs(kernel_dir)
-    with open(pjoin(kernel_dir, 'kernel.json'), 'w') as f:
-        f.write(json.dumps({
-            'argv': [sys.executable,
-                     '-m', 'jupyter_client.tests.signalkernel',
-                     '-f', '{connection_file}'],
-            'display_name': "Signal Test Kernel Default",
-            'env': {'TEST_VARS': '${TEST_VARS}:test_var_2'}
-        }))
+class SubclassedTestProvisioner(LocalProvisioner):
+    pass
 
 
-@pytest.fixture
-def default_provisioner():
-    kernel_dir = pjoin(paths.jupyter_data_dir(), 'kernels', 'default_provisioner')
-    os.makedirs(kernel_dir)
-    with open(pjoin(kernel_dir, 'kernel.json'), 'w') as f:
-        f.write(json.dumps({
-            'argv': [sys.executable,
+class CustomTestProvisioner(KernelProvisionerBase):
+
+    def __init__(self, kernel_id: str, kernel_spec: Any, **kwargs):
+        super().__init__(kernel_id, kernel_spec, **kwargs)
+        self.process = None
+        self.pid = None
+        self.pgid = None
+        self.connection_info = None
+
+    async def poll(self) -> [int, None]:
+        if self.process:
+            return self.process.poll()
+        return False
+
+    async def wait(self) -> [int, None]:
+        if self.process:
+            while await self.poll() is None:
+                await asyncio.sleep(0.1)
+
+            # Process is no longer alive, wait and clear
+            self.process.wait()
+            self.process = None
+
+    async def send_signal(self, signum: int) -> None:
+        if self.process:
+            if signum == signal.SIGINT and sys.platform == 'win32':
+                from .win_interrupt import send_interrupt
+                send_interrupt(self.process.win32_interrupt_event)
+                return
+
+            # Prefer process-group over process
+            if self.pgid and hasattr(os, "killpg"):
+                try:
+                    os.killpg(self.pgid, signum)
+                    return
+                except OSError:
+                    pass
+            return self.process.send_signal(signum)
+
+    async def kill(self, restart=False) -> None:
+        if self.process:
+            self.process.kill()
+
+    async def terminate(self, restart=False) -> None:
+        if self.process:
+            self.process.terminate()
+
+    async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
+        km = kwargs.pop('kernel_manager')  # TODO - this is temporary
+        if km:
+            # save kwargs for use in restart
+            km._launch_args = kwargs.copy()
+            # build the Popen cmd
+            extra_arguments = kwargs.pop('extra_arguments', [])
+
+            # write connection file / get default ports
+            km.write_connection_file()
+            self.connection_info = km.get_connection_info()
+
+            kernel_cmd = km.format_kernel_cmd(extra_arguments=extra_arguments)  # This needs to remain here for b/c
+
+            return await super().pre_launch(cmd=kernel_cmd, **kwargs)
+
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['CustomTestProvisioner', Dict]:
+        scrubbed_kwargs = kwargs
+        self.process = launch_kernel(cmd, **scrubbed_kwargs)
+        pgid = None
+        if hasattr(os, "getpgid"):
+            try:
+                pgid = os.getpgid(self.process.pid)
+            except OSError:
+                pass
+
+        self.pid = self.process.pid
+        self.pgid = pgid
+        return self, self.connection_info
+
+    async def cleanup(self, restart=False) -> None:
+        pass
+
+
+class NewTestProvisioner(CustomTestProvisioner):
+    pass
+
+
+def build_kernelspec(name: str, provisioner: Optional[str] = None) -> None:
+    spec = {'argv': [sys.executable,
                      '-m', 'jupyter_client.tests.signalkernel',
                      '-f', '{connection_file}'],
-            'display_name': "Signal Test Kernel w Provisioner",
+            'display_name': f"Signal Test Kernel w {provisioner}",
             'env': {'TEST_VARS': '${TEST_VARS}:test_var_2'},
-            'metadata': {
-                'kernel_provisioner': {
-                    'provisioner_name': 'LocalProvisioner',
-                    'config': {'config_var_1': 42, 'config_var_2': 'foo'}
-                }
+            'metadata': {}
+        }
+
+    if provisioner:
+        kernel_provisioner = {
+            'kernel_provisioner': {
+                'provisioner_name': provisioner,
+                'config': {'config_var_1': 42, 'config_var_2': name}
             }
-        }))
+        }
+        spec['metadata'].update(kernel_provisioner)
 
-
-@pytest.fixture
-def missing_provisioner():
-    kernel_dir = pjoin(paths.jupyter_data_dir(), 'kernels', 'missing_provisioner')
+    kernel_dir = pjoin(paths.jupyter_data_dir(), 'kernels', name)
     os.makedirs(kernel_dir)
     with open(pjoin(kernel_dir, 'kernel.json'), 'w') as f:
-        f.write(json.dumps({
-            'argv': [sys.executable,
-                     '-m', 'jupyter_client.tests.signalkernel',
-                     '-f', '{connection_file}'],
-            'display_name': "Signal Test Kernel Missing Provisioner",
-            'env': {'TEST_VARS': '${TEST_VARS}:test_var_2'},
-            'metadata': {
-                'kernel_provisioner': {
-                    'provisioner_name': 'MissingProvisioner',
-                    'config': {'config_var_1': 42, 'config_var_2': 'foo'}
-                }
-            }
-        }))
+        f.write(json.dumps(spec))
 
+
+def new_provisioner():
+    build_kernelspec('new_provisioner', 'NewTestProvisioner')
+
+def custom_provisioner():
+    build_kernelspec('custom_provisioner', 'CustomTestProvisioner')
 
 @pytest.fixture
-def ksm():
-    return KernelSpecManager()
+def all_provisioners():
+    build_kernelspec('no_provisioner')
+    build_kernelspec('missing_provisioner', 'MissingProvisioner')
+    build_kernelspec('default_provisioner', 'LocalProvisioner')
+    build_kernelspec('subclassed_provisioner', 'SubclassedTestProvisioner')
+    custom_provisioner()
 
 
-@pytest.fixture(params=['no_provisioner', 'default_provisioner', 'missing_provisioner'])
-def akm(request, no_provisioner, missing_provisioner, default_provisioner):
+@pytest.fixture(params=['no_provisioner', 'default_provisioner', 'missing_provisioner',
+                        'custom_provisioner', 'subclassed_provisioner'])
+def akm(request, all_provisioners):
     return AsyncKernelManager(kernel_name=request.param)
 
 
+def mock_get_all_provisioners():
+    result = []
+    for name, epstr in [('LocalProvisioner', 'jupyter_client.provisioning'),
+                        ('SubclassedTestProvisioner', 'jupyter_client.tests.test_provisioning'),
+                        ('CustomTestProvisioner', 'jupyter_client.tests.test_provisioning')]:
+        result.append(EntryPoint(name, epstr, name))
+    return result
+
+
+def mock_get_provisioner(name):
+    if name == 'NewTestProvisioner':
+        return EntryPoint('NewTestProvisioner', 'jupyter_client.tests.test_provisioning', 'NewTestProvisioner')
+    # Since all other provisioners are added during the singleton's creation, we should
+    # always raise NoSuchEP for all others calling this method.
+    raise NoSuchEntryPoint(KernelProvisionerFactory.GROUP_NAME, name)
+
+
+@pytest.fixture
+def kpf(monkeypatch):
+    """Setup the Kernel Provisioner Factory, mocking the entypoint fetch calls."""
+    monkeypatch.setattr(KernelProvisionerFactory, '_get_all_provisioners', mock_get_all_provisioners)
+    monkeypatch.setattr(KernelProvisionerFactory, '_get_provisioner', mock_get_provisioner)
+    factory = KernelProvisionerFactory.instance()
+    return factory
+
+
 class TestDiscovery:
-    def test_find_all_specs(self, no_provisioner, missing_provisioner, default_provisioner, ksm):
+    def test_find_all_specs(self, kpf, all_provisioners):
+        ksm = KernelSpecManager()
         kernels = ksm.get_all_specs()
 
-        # Ensure specs for no_provisioner and default_provisioner exist and missing_provisioner doesn't
+        # Ensure specs for initial provisiones exist and missing_provisioner (and new_provisioner) don't
         assert 'no_provisioner' in kernels
         assert 'default_provisioner' in kernels
+        assert 'subclassed_provisioner' in kernels
+        assert 'custom_provisioner' in kernels
         assert 'missing_provisioner' not in kernels
+        assert 'new_provisioner' not in kernels
 
-    def test_get_missing(self, missing_provisioner, ksm):
+    def test_get_missing(self, all_provisioners):
+        ksm = KernelSpecManager()
         with pytest.raises(NoSuchKernel):
             ksm.get_kernel_spec('missing_provisioner')
+
+    def test_get_new(self, kpf):
+        new_provisioner()  # Introduce provisioner after initialization of KPF
+        ksm = KernelSpecManager()
+        kernel = ksm.get_kernel_spec('new_provisioner')
+        assert 'NewTestProvisioner' == kernel.metadata['kernel_provisioner']['provisioner_name']
 
 
 class TestRuntime:
 
-    @pytest.mark.asyncio
-    async def test_async_lifecycle(self, akm):
-        assert akm.provisioner is None
-        if akm.kernel_name == 'missing_provisioner':
+    async def akm_test(self, kernel_mgr):
+        """Starts a kernel, validates the associated provisioner's config, shuts down kernel """
+
+        assert kernel_mgr.provisioner is None
+        if kernel_mgr.kernel_name == 'missing_provisioner':
             with pytest.raises(NoSuchKernel):
-                await akm.start_kernel()
+                await kernel_mgr.start_kernel()
         else:
-            await akm.start_kernel()
+            await kernel_mgr.start_kernel()
+
+            TestRuntime.validate_provisioner(kernel_mgr)
+
+            await kernel_mgr.shutdown_kernel()
+            assert kernel_mgr.kernel is None
+            assert kernel_mgr.provisioner is None
+
+    @pytest.mark.asyncio
+    async def test_existing(self, kpf, akm):
+        await self.akm_test(akm)
+
+    @pytest.mark.asyncio
+    async def test_new(self, kpf):
+        new_provisioner()  # Introduce provisioner after initialization of KPF
+        new_km = AsyncKernelManager(kernel_name='new_provisioner')
+        await self.akm_test(new_km)
+
+    @pytest.mark.asyncio
+    async def test_custom_lifecycle(self, kpf):
+        custom_provisioner()
+        async_km = AsyncKernelManager(kernel_name='custom_provisioner')
+        await async_km.start_kernel(stdout=PIPE, stderr=PIPE)
+        is_alive = await async_km.is_alive()
+        assert is_alive
+        await async_km.restart_kernel(now=True)
+        is_alive = await async_km.is_alive()
+        assert is_alive
+        await async_km.interrupt_kernel()
+        assert isinstance(async_km, AsyncKernelManager)
+        await async_km.shutdown_kernel(now=True)
+        is_alive = await async_km.is_alive()
+        assert is_alive is False
+        assert async_km.context.closed
+
+    @staticmethod
+    def validate_provisioner(akm: AsyncKernelManager):
+        # Ensure kernel attribute is the provisioner
+        assert akm.kernel is akm.provisioner
+
+        # Validate provisioner config
+        if akm.kernel_name == 'no_provisioner':
+            assert 'config_var_1' not in akm.provisioner.config
+            assert 'config_var_2' not in akm.provisioner.config
+        else:
+            assert akm.provisioner.config.get('config_var_1') == 42
+            assert akm.provisioner.config.get('config_var_2') == akm.kernel_name
+
+        # Validate provisioner class
+        if akm.kernel_name in ['no_provisioner', 'default_provisioner', 'subclassed_provisioner']:
             assert isinstance(akm.provisioner, LocalProvisioner)
-            assert akm.kernel is akm.provisioner
-            if akm.kernel_name == 'default_provisioner':
-                assert akm.provisioner.config.get('config_var_1') == 42
-                assert akm.provisioner.config.get('config_var_2') == 'foo'
+            if akm.kernel_name == 'subclassed_provisioner':
+                assert isinstance(akm.provisioner, SubclassedTestProvisioner)
             else:
-                assert 'config_var_1' not in akm.provisioner.config
-                assert 'config_var_2' not in akm.provisioner.config
-            await akm.shutdown_kernel()
-            assert akm.kernel is None
-            assert akm.provisioner is None
+                assert not isinstance(akm.provisioner, SubclassedTestProvisioner)
+        else:
+            assert isinstance(akm.provisioner, CustomTestProvisioner)
+            assert not isinstance(akm.provisioner, LocalProvisioner)
+            if akm.kernel_name == 'new_provisioner':
+                assert isinstance(akm.provisioner, NewTestProvisioner)
