@@ -53,7 +53,7 @@ class CustomTestProvisioner(KernelProvisionerBase):
     async def send_signal(self, signum: int) -> None:
         if self.process:
             if signum == signal.SIGINT and sys.platform == 'win32':
-                from .win_interrupt import send_interrupt
+                from ..win_interrupt import send_interrupt
                 send_interrupt(self.process.win32_interrupt_event)
                 return
 
@@ -139,8 +139,10 @@ def build_kernelspec(name: str, provisioner: Optional[str] = None) -> None:
 def new_provisioner():
     build_kernelspec('new_provisioner', 'NewTestProvisioner')
 
+
 def custom_provisioner():
     build_kernelspec('custom_provisioner', 'CustomTestProvisioner')
+
 
 @pytest.fixture
 def all_provisioners():
@@ -157,20 +159,27 @@ def akm(request, all_provisioners):
     return AsyncKernelManager(kernel_name=request.param)
 
 
-def mock_get_all_provisioners():
+initial_provisioner_map = {
+    'LocalProvisioner': 'jupyter_client.provisioning',
+    'SubclassedTestProvisioner': 'jupyter_client.tests.test_provisioning',
+    'CustomTestProvisioner': 'jupyter_client.tests.test_provisioning'
+}
+
+
+def mock_get_all_provisioners() -> List[EntryPoint]:
     result = []
-    for name, epstr in [('LocalProvisioner', 'jupyter_client.provisioning'),
-                        ('SubclassedTestProvisioner', 'jupyter_client.tests.test_provisioning'),
-                        ('CustomTestProvisioner', 'jupyter_client.tests.test_provisioning')]:
+    for name, epstr in initial_provisioner_map.items():
         result.append(EntryPoint(name, epstr, name))
     return result
 
 
-def mock_get_provisioner(name):
+def mock_get_provisioner(name) -> EntryPoint:
     if name == 'NewTestProvisioner':
         return EntryPoint('NewTestProvisioner', 'jupyter_client.tests.test_provisioning', 'NewTestProvisioner')
-    # Since all other provisioners are added during the singleton's creation, we should
-    # always raise NoSuchEP for all others calling this method.
+
+    if name in initial_provisioner_map:
+        return EntryPoint(name, initial_provisioner_map[name], name)
+
     raise NoSuchEntryPoint(KernelProvisionerFactory.GROUP_NAME, name)
 
 
