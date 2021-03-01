@@ -143,7 +143,7 @@ class TestKernelManagerShutDownGracefully:
             (
                 "signaltest-no-terminate",
                 install_kernel_dont_terminate,
-                _ShutdownStatus.SigKillRequest,
+                _ShutdownStatus.SigkillRequest,
             ),
         ],
     )

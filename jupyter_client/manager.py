@@ -35,7 +35,7 @@ class _ShutdownStatus(Enum):
     Unset = None
     ShutdownRequest = "ShutdownRequest"
     SigtermRequest = "SigtermRequest"
-    SigKillRequest = "SigKillRequest"
+    SigkillRequest = "SigkillRequest"
 
 
 class KernelManager(ConnectionFileMixin):
@@ -378,7 +378,7 @@ class KernelManager(ConnectionFileMixin):
                 # OK, we've waited long enough.
                 if self.has_kernel:
                     self.log.debug("Kernel is taking too long to finish, killing")
-                    self._shutdown_status = _ShutdownStatus.SigKillRequest
+                    self._shutdown_status = _ShutdownStatus.SigkillRequest
                     self._kill_kernel()
 
     def cleanup_resources(self, restart=False):
@@ -663,7 +663,7 @@ class AsyncKernelManager(KernelManager):
 
         except asyncio.TimeoutError:
             self.log.debug("Kernel is taking too long to finish, killing")
-            self._shutdown_status = _ShutdownStatus.SigKillRequest
+            self._shutdown_status = _ShutdownStatus.SigkillRequest
             await self._kill_kernel()
         else:
             # Process is no longer alive, wait and clear
