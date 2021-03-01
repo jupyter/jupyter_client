@@ -363,6 +363,7 @@ class KernelManager(ConnectionFileMixin):
         else:
             # if we've exited the loop normally (no break)
             # send sigterm and wait the other 50%.
+            self.log.debug("Kernel is taking too long to finish, terminating")
             self._shutdown_status = _ShutdownStatus.SigtermRequest
             self._send_kernel_sigterm()
             for i in range(int(waittime / 2 / pollinterval)):
@@ -507,6 +508,11 @@ class KernelManager(ConnectionFileMixin):
                     self.kernel.terminate()
                 elif hasattr(signal, "SIGTERM"):
                     self.signal_kernel(signal.SIGTERM)
+                else:
+                    self.log.debug(
+                        "Cannot set term signal to kernel, no"
+                        " `.terminate()` method and no values for SIGTERM"
+                    )
             except OSError as e:
                 # In Windows, we will get an Access Denied error if the process
                 # has already terminated. Ignore it.
@@ -646,21 +652,20 @@ class AsyncKernelManager(KernelManager):
         """
         if waittime is None:
             waittime = max(self.shutdown_wait_time, 0)
+        self._shutdown_status = _ShutdownStatus.ShutdownRequest
         try:
-            try:
-                self._shutdown_status = _ShutdownStatus.ShutdownRequest
-                await asyncio.wait_for(
-                    self._async_wait(pollinterval=pollinterval), timeout=waittime / 2
-                )
-            except asyncio.TimeoutError:
-                self.log.debug("Kernel is taking too long to finish, terminating")
-                self._shutdown_status = _ShutdownStatus.SigtermRequest
-                await self._send_kernel_sigterm()
-
             await asyncio.wait_for(
                 self._async_wait(pollinterval=pollinterval), timeout=waittime / 2
             )
+        except asyncio.TimeoutError:
+            self.log.debug("Kernel is taking too long to finish, terminating")
+            self._shutdown_status = _ShutdownStatus.SigtermRequest
+            await self._send_kernel_sigterm()
 
+        try:
+            await asyncio.wait_for(
+                self._async_wait(pollinterval=pollinterval), timeout=waittime / 2
+            )
         except asyncio.TimeoutError:
             self.log.debug("Kernel is taking too long to finish, killing")
             self._shutdown_status = _ShutdownStatus.SigkillRequest
@@ -763,6 +768,11 @@ class AsyncKernelManager(KernelManager):
                     self.kernel.terminate()
                 elif hasattr(signal, "SIGTERM"):
                     await self.signal_kernel(signal.SIGTERM)
+                else:
+                    self.log.debug(
+                        "Cannot set term signal to kernel, no"
+                        " `.terminate()` method and no values for SIGTERM"
+                    )
             except OSError as e:
                 # In Windows, we will get an Access Denied error if the process
                 # has already terminated. Ignore it.
