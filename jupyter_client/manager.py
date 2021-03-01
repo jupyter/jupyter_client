@@ -32,6 +32,13 @@ from .managerabc import (
 )
 
 class _ShutdownStatus(Enum):
+    """
+
+    This is so far used only for testing in order to track the internal state of
+    the shutdown logic, and verifying which path is taken for which
+    missbehavior.
+
+    """
     Unset = None
     ShutdownRequest = "ShutdownRequest"
     SigtermRequest = "SigtermRequest"
