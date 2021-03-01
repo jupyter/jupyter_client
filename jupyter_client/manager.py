@@ -350,8 +350,15 @@ class KernelManager(ConnectionFileMixin):
             waittime = max(self.shutdown_wait_time, 0)
         self._shutdown_status = _ShutdownStatus.ShutdownRequest
 
-        # wait 50% of the shutdown timeout...
-        for i in range(int(waittime / 2 / pollinterval)):
+        def poll_or_sleep_to_kernel_gone():
+            """
+            Poll until the kernel is not responding,
+            then wait (the subprocess), until process gone.
+
+            After this function the kernel is either:
+                - still responding; or
+                - subprocess has been culled.
+            """
             if self.is_alive():
                 time.sleep(pollinterval)
             else:
@@ -359,6 +366,11 @@ class KernelManager(ConnectionFileMixin):
                 if self.has_kernel:
                     self.kernel.wait()
                     self.kernel = None
+                return True
+
+        # wait 50% of the shutdown timeout...
+        for i in range(int(waittime / 2 / pollinterval)):
+            if poll_or_sleep_to_kernel_gone():
                 break
         else:
             # if we've exited the loop normally (no break)
@@ -367,13 +379,7 @@ class KernelManager(ConnectionFileMixin):
             self._shutdown_status = _ShutdownStatus.SigtermRequest
             self._send_kernel_sigterm()
             for i in range(int(waittime / 2 / pollinterval)):
-                if self.is_alive():
-                    time.sleep(pollinterval)
-                else:
-                    # If there's still a proc, wait and clear
-                    if self.has_kernel:
-                        self.kernel.wait()
-                        self.kernel = None
+                if poll_or_sleep_to_kernel_gone():
                     break
             else:
                 # OK, we've waited long enough.
