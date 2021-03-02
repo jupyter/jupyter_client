@@ -8,3 +8,4 @@ from .manager import KernelManager, AsyncKernelManager, run_kernel
 from .blocking import BlockingKernelClient
 from .asynchronous import AsyncKernelClient
 from .multikernelmanager import MultiKernelManager, AsyncMultiKernelManager
+from .provisioning import KernelProvisionerBase, LocalProvisioner

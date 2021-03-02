@@ -13,6 +13,7 @@ import sys
 from entrypoints import EntryPoint, NoSuchEntryPoint
 from jupyter_core import paths
 from subprocess import PIPE
+from traitlets import Int, Unicode
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..kernelspec import KernelSpecManager, NoSuchKernel
@@ -24,17 +25,21 @@ pjoin = os.path.join
 
 
 class SubclassedTestProvisioner(LocalProvisioner):
+
+    config_var_1: int = Int(config=True)
+    config_var_2: str = Unicode(config=True)
+
     pass
 
 
 class CustomTestProvisioner(KernelProvisionerBase):
 
-    def __init__(self, kernel_id: str, kernel_spec: Any, **kwargs):
-        super().__init__(kernel_id, kernel_spec, **kwargs)
-        self.process = None
-        self.pid = None
-        self.pgid = None
-        self.connection_info = None
+    process = None
+    pid = None
+    pgid = None
+
+    config_var_1: int = Int(config=True)
+    config_var_2: str = Unicode(config=True)
 
     async def poll(self) -> [int, None]:
         if self.process:
@@ -124,11 +129,12 @@ def build_kernelspec(name: str, provisioner: Optional[str] = None) -> None:
     if provisioner:
         kernel_provisioner = {
             'kernel_provisioner': {
-                'provisioner_name': provisioner,
-                'config': {'config_var_1': 42, 'config_var_2': name}
+                'provisioner_name': provisioner
             }
         }
         spec['metadata'].update(kernel_provisioner)
+        if provisioner != 'LocalProvisioner':
+            spec['metadata']['kernel_provisioner']['config'] = {'config_var_1': 42, 'config_var_2': name}
 
     kernel_dir = pjoin(paths.jupyter_data_dir(), 'kernels', name)
     os.makedirs(kernel_dir)
@@ -185,7 +191,7 @@ def mock_get_provisioner(name) -> EntryPoint:
 
 @pytest.fixture
 def kpf(monkeypatch):
-    """Setup the Kernel Provisioner Factory, mocking the entypoint fetch calls."""
+    """Setup the Kernel Provisioner Factory, mocking the entrypoint fetch calls."""
     monkeypatch.setattr(KernelProvisionerFactory, '_get_all_provisioners', mock_get_all_provisioners)
     monkeypatch.setattr(KernelProvisionerFactory, '_get_provisioner', mock_get_provisioner)
     factory = KernelProvisionerFactory.instance()
@@ -262,18 +268,34 @@ class TestRuntime:
         assert is_alive is False
         assert async_km.context.closed
 
+    @pytest.mark.asyncio
+    async def test_default_provisioner_config(self, kpf, all_provisioners):
+        kpf.default_provisioner_name = 'CustomTestProvisioner'
+        async_km = AsyncKernelManager(kernel_name='no_provisioner')
+        await async_km.start_kernel(stdout=PIPE, stderr=PIPE)
+        is_alive = await async_km.is_alive()
+        assert is_alive
+
+        assert isinstance(async_km.provisioner, CustomTestProvisioner)
+        assert async_km.provisioner.config_var_1 == 0  # Not in kernelspec, so default of 0 exists
+
+        await async_km.shutdown_kernel(now=True)
+        is_alive = await async_km.is_alive()
+        assert is_alive is False
+        assert async_km.context.closed
+
     @staticmethod
     def validate_provisioner(akm: AsyncKernelManager):
         # Ensure kernel attribute is the provisioner
         assert akm.kernel is akm.provisioner
 
         # Validate provisioner config
-        if akm.kernel_name == 'no_provisioner':
-            assert 'config_var_1' not in akm.provisioner.config
-            assert 'config_var_2' not in akm.provisioner.config
+        if akm.kernel_name in ['no_provisioner', 'default_provisioner']:
+            assert not hasattr(akm.provisioner, 'config_var_1')
+            assert not hasattr(akm.provisioner, 'config_var_2')
         else:
-            assert akm.provisioner.config.get('config_var_1') == 42
-            assert akm.provisioner.config.get('config_var_2') == akm.kernel_name
+            assert akm.provisioner.config_var_1 == 42
+            assert akm.provisioner.config_var_2 == akm.kernel_name
 
         # Validate provisioner class
         if akm.kernel_name in ['no_provisioner', 'default_provisioner', 'subclassed_provisioner']:

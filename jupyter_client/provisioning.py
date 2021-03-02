@@ -10,7 +10,7 @@ import sys
 from abc import ABCMeta, ABC, abstractmethod
 from entrypoints import EntryPoint, get_group_all, get_single, NoSuchEntryPoint
 from typing import Optional, Dict, List, Any, Tuple
-from traitlets.config import Config, default, LoggingConfigurable, SingletonConfigurable, Unicode
+from traitlets.config import Config, default, Instance, LoggingConfigurable, SingletonConfigurable, Unicode
 
 from .connect import write_connection_file
 from .launcher import async_launch_kernel
@@ -28,13 +28,9 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
        https://docs.python.org/3/library/subprocess.html#popen-objects
     """
     # The kernel specification associated with this provisioner
-    kernel_spec: Any
-    kernel_id: str
-
-    def __init__(self, kernel_id: str, kernel_spec: Any, **kwargs):
-        self.kernel_id = kernel_id
-        self.kernel_spec = kernel_spec
-        super().__init__(**kwargs)
+    kernel_spec: Any = Instance('jupyter_client.kernelspec.KernelSpec', allow_none=True)
+    kernel_id: str = Unicode(None, allow_none=True)
+    connection_info: dict = {}
 
     @abstractmethod
     async def poll(self) -> [int, None]:
@@ -165,14 +161,11 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
 
 class LocalProvisioner(KernelProvisionerBase):
 
-    def __init__(self, kernel_id: str, kernel_spec: Any, **kwargs):
-        super().__init__(kernel_id, kernel_spec, **kwargs)
-        self.process = None
-        self.async_subprocess = None
-        self._exit_future = None
-        self.pid = None
-        self.pgid = None
-        self.connection_info = {}
+    process = None
+    async_subprocess = None
+    _exit_future = None
+    pid = None
+    pgid = None
 
     async def poll(self) -> [int, None]:
         if self.process:
@@ -388,10 +381,10 @@ class KernelProvisionerFactory(SingletonConfigurable):
                        f"kernel provisioner: {provisioner_name}")
         provisioner_class = self.provisioners[provisioner_name].load()
         provisioner_config = provisioner_cfg.get('config')
-        return provisioner_class(kernel_id,
-                                 kernel_spec,
-                                 config=Config(provisioner_config),
-                                 parent=self.parent)
+        return provisioner_class(kernel_id=kernel_id,
+                                 kernel_spec=kernel_spec,
+                                 parent=self.parent,
+                                 **provisioner_config)
 
     def _get_provisioner_config(self, kernel_spec: Any) -> Dict[str, Any]:
         """
