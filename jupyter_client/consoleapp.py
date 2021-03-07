@@ -16,7 +16,6 @@ import warnings
 
 
 from traitlets.config.application import boolean_flag
-from ipython_genutils.path import filefind
 from traitlets import (
     Dict, List, Unicode, CUnicode, CBool, Any, Type
 )
@@ -32,6 +31,7 @@ from .session import Session
 ConnectionFileMixin = connect.ConnectionFileMixin
 
 from .localinterfaces import localhost
+from .utils import filefind
 
 #-----------------------------------------------------------------------------
 # Aliases and Flags

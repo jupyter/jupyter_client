@@ -16,7 +16,7 @@ from enum import Enum
 
 import zmq
 
-from ipython_genutils.importstring import import_item
+from .utils import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
     Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName,

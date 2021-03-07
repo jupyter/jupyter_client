@@ -37,7 +37,6 @@ from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import Configurable, LoggingConfigurable
-from ipython_genutils.importstring import import_item
 from jupyter_client.jsonutil import extract_dates, squash_dates, date_default
 from traitlets import (
     CBytes, Unicode, Bool, Any, Instance, Set, DottedObjectName, CUnicode,
@@ -47,6 +46,7 @@ from jupyter_client import protocol_version
 from jupyter_client.adapter import adapt
 from traitlets.log import get_logger
 
+from .utils import import_item
 
 #-----------------------------------------------------------------------------
 # utility functions
