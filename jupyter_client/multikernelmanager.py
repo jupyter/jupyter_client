@@ -11,13 +11,13 @@ import socket
 import zmq
 
 from traitlets.config.configurable import LoggingConfigurable
+from traitlets.utils.importstring import import_item
 from traitlets import (
     Any, Bool, Dict, DottedObjectName, Instance, Unicode, default, observe
 )
 
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import KernelManager, AsyncKernelManager
-from .utils import import_item
 
 
 class DuplicateKernelError(Exception):

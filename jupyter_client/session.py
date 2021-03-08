@@ -21,14 +21,15 @@ import pickle
 import pprint
 import random
 import warnings
+
 from datetime import datetime
+from datetime import timezone
 
 PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
 
 # We are using compare_digest to limit the surface of timing attacks
 from hmac import compare_digest
 
-from datetime import timezone
 utc = timezone.utc
 
 import zmq
@@ -36,17 +37,18 @@ from zmq.utils import jsonapi
 from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
-from traitlets.config.configurable import Configurable, LoggingConfigurable
+
 from jupyter_client.jsonutil import extract_dates, squash_dates, date_default
+from jupyter_client import protocol_version
+from jupyter_client.adapter import adapt
+
 from traitlets import (
     CBytes, Unicode, Bool, Any, Instance, Set, DottedObjectName, CUnicode,
     Dict, Integer, TraitError, observe
 )
-from jupyter_client import protocol_version
-from jupyter_client.adapter import adapt
 from traitlets.log import get_logger
-
-from .utils import import_item
+from traitlets.utils.importstring import import_item
+from traitlets.config.configurable import Configurable, LoggingConfigurable
 
 #-----------------------------------------------------------------------------
 # utility functions
