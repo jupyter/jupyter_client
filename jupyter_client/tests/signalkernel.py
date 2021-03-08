@@ -13,6 +13,10 @@ from ipykernel.displayhook import ZMQDisplayHook
 from ipykernel.kernelbase import Kernel
 from ipykernel.kernelapp import IPKernelApp
 
+from tornado.web import gen
+
+import signal
+
 
 class SignalTestKernel(Kernel):
     """Kernel for testing subprocess signaling"""
@@ -24,6 +28,14 @@ class SignalTestKernel(Kernel):
         kwargs.pop('user_ns', None)
         super().__init__(**kwargs)
         self.children = []
+
+        if os.environ.get("NO_SIGTERM_REPLY", None) == "1":
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
+    @gen.coroutine
+    def shutdown_request(self, stream, ident, parent):
+        if os.environ.get("NO_SHUTDOWN_REPLY") != "1":
+            yield gen.maybe_future(super().shutdown_request(stream, ident, parent))
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None,
                    allow_stdin=False):

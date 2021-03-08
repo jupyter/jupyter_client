@@ -21,6 +21,7 @@ from jupyter_client import KernelManager, AsyncKernelManager
 from subprocess import PIPE
 
 from ..manager import start_new_kernel, start_new_async_kernel
+from ..manager import _ShutdownStatus
 from .utils import test_env, skip_win32, AsyncKernelManagerSubclass, AsyncKernelManagerWithCleanup
 
 pjoin = os.path.join
@@ -51,18 +52,42 @@ def config(transport):
     return c
 
 
+def _install_kernel(name="signaltest", extra_env=None):
+    if extra_env is None:
+        extra_env = dict()
+    kernel_dir = pjoin(paths.jupyter_data_dir(), "kernels", name)
+    os.makedirs(kernel_dir)
+    with open(pjoin(kernel_dir, "kernel.json"), "w") as f:
+        f.write(
+            json.dumps(
+                {
+                    "argv": [
+                        sys.executable,
+                        "-m",
+                        "jupyter_client.tests.signalkernel",
+                        "-f",
+                        "{connection_file}",
+                    ],
+                    "display_name": "Signal Test Kernel",
+                    "env": {"TEST_VARS": "${TEST_VARS}:test_var_2", **extra_env},
+                }
+            )
+        )
+
+
 @pytest.fixture
 def install_kernel():
-    kernel_dir = pjoin(paths.jupyter_data_dir(), 'kernels', 'signaltest')
-    os.makedirs(kernel_dir)
-    with open(pjoin(kernel_dir, 'kernel.json'), 'w') as f:
-        f.write(json.dumps({
-            'argv': [sys.executable,
-                     '-m', 'jupyter_client.tests.signalkernel',
-                     '-f', '{connection_file}'],
-            'display_name': "Signal Test Kernel",
-            'env': {'TEST_VARS': '${TEST_VARS}:test_var_2'},
-        }))
+    return _install_kernel()
+
+
+def install_kernel_dont_shutdown():
+    _install_kernel("signaltest-no-shutdown", {"NO_SHUTDOWN_REPLY": "1"})
+
+
+def install_kernel_dont_terminate():
+    return _install_kernel(
+        "signaltest-no-terminate", {"NO_SHUTDOWN_REPLY": "1", "NO_SIGTERM_REPLY": "1"}
+    )
 
 
 @pytest.fixture
@@ -102,6 +127,55 @@ async def start_async_kernel():
     kc.stop_channels()
     await km.shutdown_kernel()
     assert km.context.closed
+
+
+class TestKernelManagerShutDownGracefully:
+    parameters = (
+        "name, install, expected",
+        [
+            ("signaltest", _install_kernel, _ShutdownStatus.ShutdownRequest),
+            (
+                "signaltest-no-shutdown",
+                install_kernel_dont_shutdown,
+                _ShutdownStatus.SigtermRequest,
+            ),
+            (
+                "signaltest-no-terminate",
+                install_kernel_dont_terminate,
+                _ShutdownStatus.SigkillRequest,
+            ),
+        ],
+    )
+
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="Windows doesn't support signals"
+    )
+    @pytest.mark.parametrize(*parameters)
+    def test_signal_kernel_subprocesses(self, name, install, expected):
+        install()
+        km, kc = start_new_kernel(kernel_name=name)
+        assert km._shutdown_status == _ShutdownStatus.Unset
+        assert km.is_alive()
+        # kc.execute("1")
+        kc.stop_channels()
+        km.shutdown_kernel()
+
+        assert km._shutdown_status == expected
+
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="Windows doesn't support signals"
+    )
+    @pytest.mark.parametrize(*parameters)
+    async def test_async_signal_kernel_subprocesses(self, name, install, expected):
+        install()
+        km, kc = await start_new_async_kernel(kernel_name=name)
+        assert km._shutdown_status == _ShutdownStatus.Unset
+        assert await km.is_alive()
+        # kc.execute("1")
+        kc.stop_channels()
+        await km.shutdown_kernel()
+
+        assert km._shutdown_status == expected
 
 
 class TestKernelManager:
