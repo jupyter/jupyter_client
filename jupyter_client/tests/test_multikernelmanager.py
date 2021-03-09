@@ -256,7 +256,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert kid in km.list_kernel_ids()
         await km.interrupt_kernel(kid)
         k = km.get_kernel(kid)
-        assert isinstance(k, KernelManager)
+        assert isinstance(k, AsyncKernelManager)
         await km.shutdown_kernel(kid, now=True)
         assert kid not in km, f'{kid} not in {km}'
 

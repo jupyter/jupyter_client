@@ -24,7 +24,7 @@ from jupyter_core.application import base_flags, base_aliases
 
 from .blocking import BlockingKernelClient
 from .restarter import KernelRestarter
-from . import KernelManager, tunnel_to_kernel, find_connection_file, connect
+from . import BlockingKernelManager, tunnel_to_kernel, find_connection_file, connect
 from .kernelspec import NoSuchKernel
 from .session import Session
 
@@ -86,7 +86,7 @@ aliases.update(app_aliases)
 # Classes
 #-----------------------------------------------------------------------------
 
-classes = [KernelManager, KernelRestarter, Session]
+classes = [BlockingKernelManager, KernelRestarter, Session]
 
 class JupyterConsoleApp(ConnectionFileMixin):
     name = 'jupyter-console-mixin'
@@ -112,7 +112,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
     flags = Dict(flags)
     aliases = Dict(aliases)
     kernel_manager_class = Type(
-        default_value=KernelManager,
+        default_value=BlockingKernelManager,
         config=True,
         help='The kernel manager class to use.'
     )

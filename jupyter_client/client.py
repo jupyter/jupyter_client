@@ -3,11 +3,13 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import typing as t
+
 from jupyter_client.channels import major_protocol_version
 
 import zmq
 
-from traitlets import (
+from traitlets import (  # type: ignore
     Any, Instance, Type,
 )
 
@@ -19,11 +21,13 @@ from .connect import ConnectionFileMixin
 # some utilities to validate message structure, these might get moved elsewhere
 # if they prove to have more generic utility
 
-def validate_string_dict(dct):
+def validate_string_dict(
+    dct: t.Dict[str, str]
+) -> None:
     """Validate that the input is a dict with string keys and values.
 
     Raises ValueError if not."""
-    for k,v in dct.items():
+    for k, v in dct.items():
         if not isinstance(k, str):
             raise ValueError('key %r in dict must be a string' % k)
         if not isinstance(v, str):
@@ -49,7 +53,7 @@ class KernelClient(ConnectionFileMixin):
 
     # The PyZMQ Context to use for communication with the kernel.
     context = Instance(zmq.Context)
-    def _context_default(self):
+    def _context_default(self) -> zmq.Context:
         return zmq.Context()
 
     # The classes to use for the various channels
@@ -67,13 +71,13 @@ class KernelClient(ConnectionFileMixin):
     _control_channel = Any()
 
     # flag for whether execute requests should be allowed to call raw_input:
-    allow_stdin = True
+    allow_stdin: bool = True
 
     #--------------------------------------------------------------------------
     # Channel proxy methods
     #--------------------------------------------------------------------------
 
-    def get_shell_msg(self, *args, **kwargs):
+    def get_shell_msg(self, *args, **kwargs) -> None:
         """Get a message from the shell channel"""
         return self.shell_channel.get_msg(*args, **kwargs)
 
