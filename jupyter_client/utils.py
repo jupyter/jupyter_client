@@ -5,7 +5,7 @@ Utils vendored from ipython_genutils that should be retired at some point.
 import os
 
 
-def filefind(filename, path_dirs=None):
+def _filefind(filename, path_dirs=None):
     """Find a file by looking through a sequence of paths.
 
     This iterates through a sequence of paths looking for a file and returns
@@ -52,7 +52,7 @@ def filefind(filename, path_dirs=None):
     for path in path_dirs:
         if path == ".":
             path = os.getcwd()
-        testname = expand_path(os.path.join(path, filename))
+        testname = _expand_path(os.path.join(path, filename))
         if os.path.isfile(testname):
             return os.path.abspath(testname)
 
@@ -61,7 +61,7 @@ def filefind(filename, path_dirs=None):
     )
 
 
-def expand_path(s):
+def _expand_path(s):
     """Expand $VARS and ~names in a string, like a shell
 
     :Examples:

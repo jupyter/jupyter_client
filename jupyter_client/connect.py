@@ -27,7 +27,7 @@ from traitlets import (
 )
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
 
-from .utils import filefind
+from .utils import _filefind
 
 
 def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
@@ -195,7 +195,7 @@ def find_connection_file(filename='kernel-*.json', path=None, profile=None):
 
     try:
         # first, try explicit name
-        return filefind(filename, path)
+        return _filefind(filename, path)
     except IOError:
         pass
 
