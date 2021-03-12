@@ -1,14 +1,17 @@
-import concurrent.futures
 import asyncio
+import inspect
+import nest_asyncio
+nest_asyncio.apply()
 
-def asyncio_run(task):
-    loop = asyncio.new_event_loop()
-    return loop.run_until_complete(task)
+loop = asyncio.get_event_loop()
 
 def run_sync(coro):
     def wrapped(*args, **kwargs):
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(asyncio_run, coro(*args, **kwargs))
-        return future.result()
+        return loop.run_until_complete(coro(*args, **kwargs))
     wrapped.__doc__ = coro.__doc__
     return wrapped
+
+async def ensure_async(obj):
+    if inspect.isawaitable(obj):
+        return await obj
+    return obj

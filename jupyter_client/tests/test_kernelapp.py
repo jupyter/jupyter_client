@@ -42,6 +42,7 @@ def test_kernelapp_lifecycle():
         assert cf.endswith('.json')
 
         # Send SIGTERM to shut down
+        time.sleep(0.2)
         p.terminate()
         _, stderr = p.communicate(timeout=WAIT_TIME)
         assert cf in stderr.decode('utf-8', 'replace')

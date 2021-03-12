@@ -135,7 +135,7 @@ def async_km_subclass(config):
 async def start_async_kernel():
     km, kc = await start_new_async_kernel(kernel_name='signaltest')
     await yield_((km, kc))
-    kc.stop_channels()
+    await kc.stop_channels()
     await km.shutdown_kernel()
     assert km.context.closed
 
@@ -184,7 +184,7 @@ class TestKernelManagerShutDownGracefully:
         assert km._shutdown_status == _ShutdownStatus.Unset
         assert await km.is_alive()
         # kc.execute("1")
-        kc.stop_channels()
+        await kc.stop_channels()
         await km.shutdown_kernel()
 
         assert km._shutdown_status == expected
@@ -477,7 +477,7 @@ class TestAsyncKernelManager:
         km, kc = start_async_kernel
 
         async def execute(cmd):
-            request_id = kc.execute(cmd)
+            request_id = await kc.execute(cmd)
             while True:
                 reply = await kc.get_shell_msg(TIMEOUT)
                 if reply['parent_header']['msg_id'] == request_id:
@@ -496,7 +496,7 @@ class TestAsyncKernelManager:
         assert reply['user_expressions']['poll'] == [None] * N
 
         # start a job on the kernel to be interrupted
-        request_id = kc.execute('sleep')
+        request_id = await kc.execute('sleep')
         await asyncio.sleep(1)  # ensure sleep message has been handled before we interrupt
         await km.interrupt_kernel()
         while True:
