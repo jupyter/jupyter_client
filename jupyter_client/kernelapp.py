@@ -8,7 +8,7 @@ from traitlets import Unicode
 
 from . import __version__
 from .kernelspec import KernelSpecManager, NATIVE_KERNEL_NAME
-from .manager import BlockingKernelManager
+from .manager import KernelManager
 
 class KernelApp(JupyterApp):
     """Launch a kernel by name in a local subprocess.
@@ -16,7 +16,7 @@ class KernelApp(JupyterApp):
     version = __version__
     description = "Run a kernel locally in a subprocess"
 
-    classes = [BlockingKernelManager, KernelSpecManager]
+    classes = [KernelManager, KernelSpecManager]
 
     aliases = {
         'kernel': 'KernelApp.kernel_name',
@@ -33,8 +33,8 @@ class KernelApp(JupyterApp):
         
         cf_basename = 'kernel-%s.json' % uuid.uuid4()
         self.config.setdefault('KernelManager', {}).setdefault('connection_file', os.path.join(self.runtime_dir, cf_basename))
-        self.km = BlockingKernelManager(kernel_name=self.kernel_name,
-                                        config=self.config)
+        self.km = KernelManager(kernel_name=self.kernel_name,
+                                config=self.config)
         
         self.loop = IOLoop.current()
         self.loop.add_callback(self._record_started)

@@ -17,7 +17,7 @@ import pytest
 from async_generator import async_generator, yield_
 from traitlets.config.loader import Config
 from jupyter_core import paths
-from jupyter_client import BlockingKernelManager, AsyncKernelManager
+from jupyter_client import KernelManager, AsyncKernelManager
 from subprocess import PIPE
 
 from ..manager import start_new_kernel, start_new_async_kernel
@@ -101,7 +101,7 @@ def start_kernel():
 
 @pytest.fixture
 def km(config):
-    km = BlockingKernelManager(config=config)
+    km = KernelManager(config=config)
     return km
 
 @pytest.fixture
@@ -198,7 +198,7 @@ class TestKernelManager:
         km.restart_kernel(now=True)
         assert km.is_alive()
         km.interrupt_kernel()
-        assert isinstance(km, BlockingKernelManager)
+        assert isinstance(km, KernelManager)
         km.shutdown_kernel(now=True)
         assert km.context.closed
 
@@ -287,7 +287,7 @@ class TestKernelManager:
 
     def test_no_cleanup_shared_context(self, zmq_context):
         """kernel manager does not terminate shared context"""
-        km = BlockingKernelManager(context=zmq_context)
+        km = KernelManager(context=zmq_context)
         assert km.context == zmq_context
         assert km.context is not None
 
@@ -400,7 +400,7 @@ class TestParallel:
         return kc
 
     def _run_signaltest_lifecycle(self, config=None):
-        km = BlockingKernelManager(config=config, kernel_name='signaltest')
+        km = KernelManager(config=config, kernel_name='signaltest')
         kc = self._prepare_kernel(km, stdout=PIPE, stderr=PIPE)
 
         def execute(cmd):
