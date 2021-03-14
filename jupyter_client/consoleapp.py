@@ -16,7 +16,6 @@ import warnings
 
 
 from traitlets.config.application import boolean_flag
-from ipython_genutils.path import filefind
 from traitlets import (
     Dict, List, Unicode, CUnicode, CBool, Any, Type
 )
@@ -32,6 +31,7 @@ from .session import Session
 ConnectionFileMixin = connect.ConnectionFileMixin
 
 from .localinterfaces import localhost
+from .utils import _filefind
 
 #-----------------------------------------------------------------------------
 # Aliases and Flags
@@ -186,7 +186,9 @@ class JupyterConsoleApp(ConnectionFileMixin):
                     cf = self.connection_file
                 self.connection_file = cf
         try:
-            self.connection_file = filefind(self.connection_file, ['.', self.runtime_dir])
+            self.connection_file = _filefind(
+                self.connection_file, [".", self.runtime_dir]
+            )
         except IOError:
             self.log.debug("Connection File not found: %s", self.connection_file)
             return

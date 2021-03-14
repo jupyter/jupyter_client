@@ -22,12 +22,12 @@ import zmq
 
 from traitlets.config import LoggingConfigurable
 from .localinterfaces import localhost
-from ipython_genutils.path import filefind
-from ipython_genutils.py3compat import cast_bytes
 from traitlets import (
     Bool, Integer, Unicode, CaselessStrEnum, Instance, Type, observe
 )
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
+
+from .utils import _filefind
 
 
 def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
@@ -195,7 +195,7 @@ def find_connection_file(filename='kernel-*.json', path=None, profile=None):
 
     try:
         # first, try explicit name
-        return filefind(filename, path)
+        return _filefind(filename, path)
     except IOError:
         pass
 
@@ -515,8 +515,13 @@ class ConnectionFileMixin(LoggingConfigurable):
                 # not overridden by config or cl_args
                 setattr(self, name, info[name])
 
-        if 'key' in info:
-            self.session.key = cast_bytes(info['key'])
+        if "key" in info:
+            key = info["key"]
+            if isinstance(key, str):
+                key = key.encode()
+            assert isinstance(key, bytes)
+
+            self.session.key = key
         if 'signature_scheme' in info:
             self.session.signature_scheme = info['signature_scheme']
 

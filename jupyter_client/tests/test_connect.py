@@ -14,11 +14,31 @@ from traitlets.config import Config
 from jupyter_core.application import JupyterApp
 from jupyter_core.paths import jupyter_runtime_dir
 from tempfile import TemporaryDirectory
-from ipython_genutils.tempdir import TemporaryWorkingDirectory
 from jupyter_client import connect, KernelClient
 from jupyter_client.consoleapp import JupyterConsoleApp
 from jupyter_client.session import Session
 from jupyter_client.connect import secure_write
+
+
+class TemporaryWorkingDirectory(TemporaryDirectory):
+    """
+    Creates a temporary directory and sets the cwd to that directory.
+    Automatically reverts to previous cwd upon cleanup.
+    Usage example:
+
+        with TemporaryWorkingDirectory() as tmpdir:
+            ...
+    """
+
+    def __enter__(self):
+        self.old_wd = os.getcwd()
+        os.chdir(self.name)
+        return super().__enter__()
+
+    def __exit__(self, exc, value, tb):
+        os.chdir(self.old_wd)
+        return super().__exit__(exc, value, tb)
+
 
 
 class DummyConsoleApp(JupyterApp, JupyterConsoleApp):

@@ -11,7 +11,7 @@ import socket
 import zmq
 
 from traitlets.config.configurable import LoggingConfigurable
-from ipython_genutils.importstring import import_item
+from traitlets.utils.importstring import import_item
 from traitlets import (
     Any, Bool, Dict, DottedObjectName, Instance, Unicode, default, observe
 )

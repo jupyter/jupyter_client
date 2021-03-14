@@ -16,12 +16,12 @@ from enum import Enum
 
 import zmq
 
-from ipython_genutils.importstring import import_item
 from .localinterfaces import is_local_ip, local_ips
 from traitlets import (
     Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName,
     default, observe, observe_compat
 )
+from traitlets.utils.importstring import import_item
 from jupyter_client import (
     launch_kernel,
     kernelspec,
