@@ -20,7 +20,7 @@ dev
 - Address a race condition between ``shutdown_kernel`` and restarter.
   (:ghpull:`607`.)
 
-See the `full list of pull-requests<https://github.com/jupyter/jupyter_client/milestone/24?closed=1>`_
+See the `full list of pull-requests <https://github.com/jupyter/jupyter_client/milestone/27?closed=1>`_
 
 6.1.11
 ======
