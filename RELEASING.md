@@ -8,7 +8,7 @@
 
 - Load `jupyter_client/_version.py` and remove the 'dev' tag
 - Change from patch to minor or major for appropriate version updates.
-- `git commit -am "Bumped version for release"`
+- `git commit -am "Bumped version to version {version} for release"`
 - `git tag {new version here}`
 
 ## Push to PyPI
