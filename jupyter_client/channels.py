@@ -47,7 +47,7 @@ class HBChannel(Thread):
     _pause = None
     _beating = None
 
-    def __init__(self, context=None, session=None, address=None, loop=None):
+    def __init__(self, context=None, session=None, address=None):
         """Create the heartbeat monitor thread.
 
         Parameters
@@ -61,8 +61,6 @@ class HBChannel(Thread):
         """
         super().__init__()
         self.daemon = True
-
-        self.loop = loop
 
         self.context = context
         self.session = session
@@ -93,6 +91,12 @@ class HBChannel(Thread):
             # close previous socket, before opening a new one
             self.poller.unregister(self.socket)
             self.socket.close()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
         self.socket = self.context.socket(zmq.REQ)
         self.socket.linger = 1000
         self.socket.connect(self.address)
@@ -134,8 +138,6 @@ class HBChannel(Thread):
 
     def run(self):
         """The thread's main activity.  Call start() instead."""
-        if self.loop is not None:
-            asyncio.set_event_loop(self.loop)
         self._create_socket()
         self._running = True
         self._beating = True

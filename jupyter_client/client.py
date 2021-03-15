@@ -51,7 +51,7 @@ def reqrep(meth, channel='shell'):
         if not reply:
             return msg_id
 
-        return await self._async__recv_reply(msg_id, timeout=timeout, channel=channel)
+        return await self._async_recv_reply(msg_id, timeout=timeout, channel=channel)
 
     if not meth.__doc__:
         # python -OO removes docstrings,
@@ -199,7 +199,7 @@ class KernelClient(ConnectionFileMixin):
             except Empty:
                 break
 
-    async def _async__recv_reply(self, msg_id, timeout=None, channel='shell'):
+    async def _async_recv_reply(self, msg_id, timeout=None, channel='shell'):
         """Receive and return the reply for a given request"""
         if timeout is not None:
             deadline = time.monotonic() + timeout
@@ -359,22 +359,10 @@ class KernelClient(ConnectionFileMixin):
         if self._hb_channel is None:
             url = self._make_url('hb')
             self.log.debug("connecting heartbeat channel to %s", url)
-            loop = asyncio.new_event_loop()
             self._hb_channel = self.hb_channel_class(
-                self.context, self.session, url, loop
+                self.context, self.session, url
             )
         return self._hb_channel
-
-    #@property
-    #def hb_channel(self):
-    #    """Get the hb channel object for this kernel."""
-    #    if self._hb_channel is None:
-    #        url = self._make_url('hb')
-    #        self.log.debug("connecting heartbeat channel to %s", url)
-    #        self._hb_channel = self.hb_channel_class(
-    #            self.context, self.session, url
-    #        )
-    #    return self._hb_channel
 
     @property
     def control_channel(self):
@@ -481,7 +469,7 @@ class KernelClient(ConnectionFileMixin):
         if output_hook is None:
             # detect IPython kernel
             if 'IPython' in sys.modules:
-                from IPython import get_ipython
+                from IPython import get_ipython  # type: ignore
                 ip = get_ipython()
                 in_kernel = getattr(ip, 'kernel', False)
                 if in_kernel:
@@ -540,7 +528,7 @@ class KernelClient(ConnectionFileMixin):
         # output is done, get the reply
         if timeout is not None:
             timeout = max(0, deadline - time.monotonic())
-        return await self._async__recv_reply(msg_id, timeout=timeout)
+        return await self._async_recv_reply(msg_id, timeout=timeout)
 
 
     # Methods to send specific messages on channels

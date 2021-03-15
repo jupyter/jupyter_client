@@ -23,7 +23,7 @@ from traitlets import (  # type: ignore
     Any, Float, Instance, Unicode, List, Bool, Type, DottedObjectName,
     default, observe, observe_compat
 )
-from traitlets.utils.importstring import import_item
+from traitlets.utils.importstring import import_item  # type: ignore
 from jupyter_client import (
     launch_kernel,
     kernelspec,
@@ -33,7 +33,7 @@ from .connect import ConnectionFileMixin
 from .managerabc import (
     KernelManagerABC
 )
-from .util import run_sync
+from .util import run_sync, ensure_async
 
 class _ShutdownStatus(Enum):
     """
@@ -272,7 +272,7 @@ class KernelManager(ConnectionFileMixin):
 
         return [pat.sub(from_ns, arg) for arg in cmd]
 
-    async def _async__launch_kernel(
+    async def _async_launch_kernel(
         self,
         kernel_cmd: t.List[str],
         **kw
@@ -283,7 +283,7 @@ class KernelManager(ConnectionFileMixin):
         """
         return launch_kernel(kernel_cmd, **kw)
 
-    _launch_kernel = run_sync(_async__launch_kernel)
+    _launch_kernel = run_sync(_async_launch_kernel)
 
     # Control socket used for polite kernel shutdown
 
@@ -380,7 +380,7 @@ class KernelManager(ConnectionFileMixin):
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
-        self.kernel = await self._async__launch_kernel(kernel_cmd, **kw)
+        self.kernel = await ensure_async(self._launch_kernel(kernel_cmd, **kw))
         self.post_start_kernel(**kw)
 
     start_kernel = run_sync(_async_start_kernel)
@@ -417,7 +417,7 @@ class KernelManager(ConnectionFileMixin):
         except asyncio.TimeoutError:
             self.log.debug("Kernel is taking too long to finish, terminating")
             self._shutdown_status = _ShutdownStatus.SigtermRequest
-            await self._async__send_kernel_sigterm()
+            await self._async_send_kernel_sigterm()
 
         try:
             await asyncio.wait_for(
@@ -426,7 +426,7 @@ class KernelManager(ConnectionFileMixin):
         except asyncio.TimeoutError:
             self.log.debug("Kernel is taking too long to finish, killing")
             self._shutdown_status = _ShutdownStatus.SigkillRequest
-            await self._async__kill_kernel()
+            await ensure_async(self._kill_kernel())
         else:
             # Process is no longer alive, wait and clear
             if self.kernel is not None:
@@ -485,16 +485,16 @@ class KernelManager(ConnectionFileMixin):
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
 
-        await self._async_interrupt_kernel()
+        await ensure_async(self.interrupt_kernel())
 
         if now:
-            await self._async__kill_kernel()
+            await ensure_async(self._kill_kernel())
         else:
             self.request_shutdown(restart=restart)
             # Don't send any additional kernel kill messages immediately, to give
             # the kernel a chance to properly execute shutdown actions. Wait for at
             # most 1s, checking every 0.1s.
-            await self._async_finish_shutdown()
+            await ensure_async(self.finish_shutdown())
 
         # In 6.1.5, a new method, cleanup_resources(), was introduced to address
         # a leak issue (https://github.com/jupyter/jupyter_client/pull/548) and
@@ -554,14 +554,14 @@ class KernelManager(ConnectionFileMixin):
                                "No previous call to 'start_kernel'.")
         else:
             # Stop currently running kernel.
-            await self._async_shutdown_kernel(now=now, restart=True)
+            await ensure_async(self.shutdown_kernel(now=now, restart=True))
 
             if newports:
                 self.cleanup_random_ports()
 
             # Start new kernel.
             self._launch_args.update(kw)
-            await self._async_start_kernel(**self._launch_args)
+            await ensure_async(self.start_kernel(**self._launch_args))
 
     restart_kernel = run_sync(_async_restart_kernel)
 
@@ -570,7 +570,7 @@ class KernelManager(ConnectionFileMixin):
         """Has a kernel been started that we are managing."""
         return self.kernel is not None
 
-    async def _async__send_kernel_sigterm(self) -> None:
+    async def _async_send_kernel_sigterm(self) -> None:
         """similar to _kill_kernel, but with sigterm (not sigkill), but do not block"""
         if self.has_kernel:
             # Signal the kernel to terminate (sends SIGTERM on Unix and
@@ -600,9 +600,9 @@ class KernelManager(ConnectionFileMixin):
                     if e.errno != ESRCH:
                         raise
 
-    _send_kernel_sigterm = run_sync(_async__send_kernel_sigterm)
+    _send_kernel_sigterm = run_sync(_async_send_kernel_sigterm)
 
-    async def _async__kill_kernel(self) -> None:
+    async def _async_kill_kernel(self) -> None:
         """Kill the running kernel.
 
         This is a private method, callers should use shutdown_kernel(now=True).
@@ -641,7 +641,7 @@ class KernelManager(ConnectionFileMixin):
                     self.kernel.wait()
             self.kernel = None
 
-    _kill_kernel = run_sync(_async__kill_kernel)
+    _kill_kernel = run_sync(_async_kill_kernel)
 
     async def _async_interrupt_kernel(self) -> None:
         """Interrupts the kernel by sending it a signal.
@@ -723,13 +723,13 @@ class AsyncKernelManager(KernelManager):
     client_class: DottedObjectName = DottedObjectName('jupyter_client.asynchronous.AsyncKernelClient')
     client_factory: Type = Type(klass='jupyter_client.asynchronous.AsyncKernelClient')
 
-    _launch_kernel = KernelManager._async__launch_kernel
+    _launch_kernel = KernelManager._async_launch_kernel
     start_kernel = KernelManager._async_start_kernel
     finish_shutdown = KernelManager._async_finish_shutdown
     shutdown_kernel = KernelManager._async_shutdown_kernel
     restart_kernel = KernelManager._async_restart_kernel
-    _send_kernel_sigterm = KernelManager._async__send_kernel_sigterm
-    _kill_kernel = KernelManager._async__kill_kernel
+    _send_kernel_sigterm = KernelManager._async_send_kernel_sigterm
+    _kill_kernel = KernelManager._async_kill_kernel
     interrupt_kernel = KernelManager._async_interrupt_kernel
     signal_kernel = KernelManager._async_signal_kernel
     is_alive = KernelManager._async_is_alive

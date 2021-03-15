@@ -2,7 +2,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from traitlets import (Type, Instance)
+from traitlets import (Type, Instance)  # type: ignore
 from jupyter_client.channels import HBChannel, ZMQSocketChannel
 from jupyter_client.client import KernelClient, reqrep
 
@@ -23,18 +23,6 @@ class AsyncKernelClient(KernelClient):
     get_stdin_msg = KernelClient._async_get_stdin_msg
     get_control_msg = KernelClient._async_get_control_msg
 
-    #@property
-    #def hb_channel(self):
-    #    """Get the hb channel object for this kernel."""
-    #    if self._hb_channel is None:
-    #        url = self._make_url('hb')
-    #        self.log.debug("connecting heartbeat channel to %s", url)
-    #        loop = asyncio.new_event_loop()
-    #        self._hb_channel = self.hb_channel_class(
-    #            self.context, self.session, url, loop
-    #        )
-    #    return self._hb_channel
-
     wait_for_ready = KernelClient._async_wait_for_ready
 
     # The classes to use for the various channels
@@ -45,7 +33,7 @@ class AsyncKernelClient(KernelClient):
     control_channel_class = Type(ZMQSocketChannel)
 
 
-    _recv_reply = KernelClient._async__recv_reply
+    _recv_reply = KernelClient._async_recv_reply
 
 
     # replies come on the shell channel
@@ -55,14 +43,10 @@ class AsyncKernelClient(KernelClient):
     inspect = reqrep(KernelClient._async_inspect)
     kernel_info = reqrep(KernelClient._async_kernel_info)
     comm_info = reqrep(KernelClient._async_comm_info)
+    is_alive = KernelClient._async_is_alive
+    execute_interactive = KernelClient._async_execute_interactive
+    stop_channels = KernelClient._async_stop_channels
+    channels_running = property(KernelClient._async_channels_running)
 
     # replies come on the control channel
     shutdown = reqrep(KernelClient._async_shutdown, channel='control')
-
-    is_alive = KernelClient._async_is_alive
-
-    execute_interactive = KernelClient._async_execute_interactive
-
-    stop_channels = KernelClient._async_stop_channels
-
-    channels_running = property(KernelClient._async_channels_running)

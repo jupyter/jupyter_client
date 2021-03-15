@@ -5,7 +5,7 @@ Useful for test suites and blocking terminal interfaces.
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from traitlets import Type
+from traitlets import Type  # type: ignore
 from jupyter_client.channels import HBChannel, ZMQSocketChannel
 from jupyter_client.client import KernelClient, reqrep
 from ..util import run_sync
@@ -37,7 +37,7 @@ class BlockingKernelClient(KernelClient):
     control_channel_class = Type(ZMQSocketChannel)
 
 
-    _recv_reply = run_sync(KernelClient._async__recv_reply)
+    _recv_reply = run_sync(KernelClient._async_recv_reply)
 
 
     # replies come on the shell channel
@@ -47,14 +47,10 @@ class BlockingKernelClient(KernelClient):
     inspect = run_sync(reqrep(KernelClient._async_inspect))
     kernel_info = run_sync(reqrep(KernelClient._async_kernel_info))
     comm_info = run_sync(reqrep(KernelClient._async_comm_info))
+    is_alive = run_sync(KernelClient._async_is_alive)
+    execute_interactive = run_sync(KernelClient._async_execute_interactive)
+    stop_channels = run_sync(KernelClient._async_stop_channels)
+    channels_running = property(run_sync(KernelClient._async_channels_running))
 
     # replies come on the control channel
     shutdown = run_sync(reqrep(KernelClient._async_shutdown, channel='control'))
-
-    is_alive = run_sync(KernelClient._async_is_alive)
-
-    execute_interactive = run_sync(KernelClient._async_execute_interactive)
-
-    stop_channels = run_sync(KernelClient._async_stop_channels)
-
-    channels_running = property(run_sync(KernelClient._async_channels_running))

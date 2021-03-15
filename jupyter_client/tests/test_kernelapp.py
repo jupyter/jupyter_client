@@ -35,14 +35,21 @@ def test_kernelapp_lifecycle():
                                  .format(WAIT_TIME))
 
         # Connection file should be there by now
-        files = os.listdir(runtime_dir)
+        for _ in range(WAIT_TIME * POLL_FREQ):
+            files = os.listdir(runtime_dir)
+            if files:
+                break
+            time.sleep(1 / POLL_FREQ)
+        else:
+            raise AssertionError("No connection file created in {} seconds"
+                                 .format(WAIT_TIME))
         assert len(files) == 1
         cf = files[0]
         assert cf.startswith('kernel')
         assert cf.endswith('.json')
 
         # Send SIGTERM to shut down
-        time.sleep(0.2)
+        time.sleep(1)
         p.terminate()
         _, stderr = p.communicate(timeout=WAIT_TIME)
         assert cf in stderr.decode('utf-8', 'replace')
