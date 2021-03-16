@@ -11,7 +11,7 @@ from tornado.testing import AsyncTestCase, gen_test
 from traitlets.config.loader import Config
 from jupyter_client import KernelManager, AsyncKernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager, AsyncMultiKernelManager
-from .utils import skip_win32
+from .utils import skip_win32, SyncMKMSubclass, AsyncMKMSubclass, SyncKernelManagerSubclass, AsyncKernelManagerSubclass
 from ..localinterfaces import localhost
 
 TIMEOUT = 30
@@ -24,6 +24,12 @@ class TestKernelManager(TestCase):
     def _get_tcp_km():
         c = Config()
         km = MultiKernelManager(config=c)
+        return km
+
+    @staticmethod
+    def _get_tcp_km_sub():
+        c = Config()
+        km = SyncMKMSubclass(config=c)
         return km
 
     # static so picklable for multiprocessing on Windows
@@ -153,6 +159,61 @@ class TestKernelManager(TestCase):
 
         assert proc.exitcode == 0
 
+    def test_subclass_callables(self):
+        km = self._get_tcp_km_sub()
+
+        km.reset_counts()
+        kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
+        assert km.call_count('start_kernel') == 1
+        assert isinstance(km.get_kernel(kid), SyncKernelManagerSubclass)
+        assert km.get_kernel(kid).call_count('start_kernel') == 1
+        assert km.get_kernel(kid).call_count('_launch_kernel') == 1
+
+        assert km.is_alive(kid)
+        assert kid in km
+        assert kid in km.list_kernel_ids()
+        assert len(km) == 1, f'{len(km)} != {1}'
+
+        km.get_kernel(kid).reset_counts()
+        km.reset_counts()
+        km.restart_kernel(kid, now=True)
+        assert km.call_count('restart_kernel') == 1
+        assert km.call_count('get_kernel') == 1
+        assert km.get_kernel(kid).call_count('restart_kernel') == 1
+        assert km.get_kernel(kid).call_count('shutdown_kernel') == 1
+        assert km.get_kernel(kid).call_count('interrupt_kernel') == 1
+        assert km.get_kernel(kid).call_count('_kill_kernel') == 1
+        assert km.get_kernel(kid).call_count('cleanup_resources') == 1
+        assert km.get_kernel(kid).call_count('start_kernel') == 1
+        assert km.get_kernel(kid).call_count('_launch_kernel') == 1
+
+        assert km.is_alive(kid)
+        assert kid in km.list_kernel_ids()
+
+        km.get_kernel(kid).reset_counts()
+        km.reset_counts()
+        km.interrupt_kernel(kid)
+        assert km.call_count('interrupt_kernel') == 1
+        assert km.call_count('get_kernel') == 1
+        assert km.get_kernel(kid).call_count('interrupt_kernel') == 1
+
+        km.get_kernel(kid).reset_counts()
+        km.reset_counts()
+        k = km.get_kernel(kid)
+        assert isinstance(k, SyncKernelManagerSubclass)
+        assert km.call_count('get_kernel') == 1
+
+        km.get_kernel(kid).reset_counts()
+        km.reset_counts()
+        km.shutdown_all(now=True)
+        assert km.call_count('shutdown_kernel') == 0
+        assert km.call_count('remove_kernel') == 1
+        assert km.call_count('request_shutdown') == 1
+        assert km.call_count('finish_shutdown') == 1
+        assert km.call_count('cleanup_resources') == 0
+
+        assert kid not in km, f'{kid} not in {km}'
+
 
 class TestAsyncKernelManager(AsyncTestCase):
 
@@ -161,6 +222,12 @@ class TestAsyncKernelManager(AsyncTestCase):
     def _get_tcp_km():
         c = Config()
         km = AsyncMultiKernelManager(config=c)
+        return km
+
+    @staticmethod
+    def _get_tcp_km_sub():
+        c = Config()
+        km = AsyncMKMSubclass(config=c)
         return km
 
     # static so picklable for multiprocessing on Windows
@@ -347,3 +414,59 @@ class TestAsyncKernelManager(AsyncTestCase):
             thread.join()
 
         assert proc.exitcode == 0
+
+    @gen_test
+    async def test_subclass_callables(self):
+        mkm = self._get_tcp_km_sub()
+
+        mkm.reset_counts()
+        kid = await mkm.start_kernel(stdout=PIPE, stderr=PIPE)
+        assert mkm.call_count('start_kernel') == 1
+        assert isinstance(mkm.get_kernel(kid), AsyncKernelManagerSubclass)
+        assert mkm.get_kernel(kid).call_count('start_kernel') == 1
+        assert mkm.get_kernel(kid).call_count('_launch_kernel') == 1
+
+        assert await mkm.is_alive(kid)
+        assert kid in mkm
+        assert kid in mkm.list_kernel_ids()
+        assert len(mkm) == 1, f'{len(mkm)} != {1}'
+
+        mkm.get_kernel(kid).reset_counts()
+        mkm.reset_counts()
+        await mkm.restart_kernel(kid, now=True)
+        assert mkm.call_count('restart_kernel') == 1
+        assert mkm.call_count('get_kernel') == 1
+        assert mkm.get_kernel(kid).call_count('restart_kernel') == 1
+        assert mkm.get_kernel(kid).call_count('shutdown_kernel') == 1
+        assert mkm.get_kernel(kid).call_count('interrupt_kernel') == 1
+        assert mkm.get_kernel(kid).call_count('_kill_kernel') == 1
+        assert mkm.get_kernel(kid).call_count('cleanup_resources') == 1
+        assert mkm.get_kernel(kid).call_count('start_kernel') == 1
+        assert mkm.get_kernel(kid).call_count('_launch_kernel') == 1
+
+        assert await mkm.is_alive(kid)
+        assert kid in mkm.list_kernel_ids()
+
+        mkm.get_kernel(kid).reset_counts()
+        mkm.reset_counts()
+        await mkm.interrupt_kernel(kid)
+        assert mkm.call_count('interrupt_kernel') == 1
+        assert mkm.call_count('get_kernel') == 1
+        assert mkm.get_kernel(kid).call_count('interrupt_kernel') == 1
+
+        mkm.get_kernel(kid).reset_counts()
+        mkm.reset_counts()
+        k = mkm.get_kernel(kid)
+        assert isinstance(k, AsyncKernelManagerSubclass)
+        assert mkm.call_count('get_kernel') == 1
+
+        mkm.get_kernel(kid).reset_counts()
+        mkm.reset_counts()
+        await mkm.shutdown_all(now=True)
+        assert mkm.call_count('shutdown_kernel') == 1
+        assert mkm.call_count('remove_kernel') == 1
+        assert mkm.call_count('request_shutdown') == 0
+        assert mkm.call_count('finish_shutdown') == 0
+        assert mkm.call_count('cleanup_resources') == 0
+
+        assert kid not in mkm, f'{kid} not in {mkm}'

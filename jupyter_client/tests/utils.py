@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict
 
 import pytest
-from jupyter_client import AsyncKernelManager, KernelManager
+from jupyter_client import AsyncKernelManager, KernelManager, AsyncMultiKernelManager, MultiKernelManager
 
 
 skip_win32 = pytest.mark.skipif(sys.platform.startswith('win'), reason="Windows")
@@ -63,7 +63,11 @@ def execute(code='', kc=None, **kwargs):
 
 
 class RecordCallMixin:
-    method_calls: Dict[str, int] = {}
+    method_calls: Dict[str, int]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.method_calls = {}
 
     def record(self, method_name: str) -> None:
         if method_name not in self.method_calls:
@@ -71,7 +75,8 @@ class RecordCallMixin:
         self.method_calls[method_name] += 1
 
     def call_count(self, method_name: str) -> int:
-        assert method_name in self.method_calls
+        if method_name not in self.method_calls:
+            self.method_calls[method_name] = 0
         return self.method_calls[method_name]
 
     def reset_counts(self) -> None:
@@ -181,3 +186,101 @@ class AsyncKernelManagerWithCleanup(AsyncKernelManager):
     def cleanup(self, connection_file=True):
         super().cleanup(connection_file=connection_file)
         self.which_cleanup = 'cleanup'
+
+
+class SyncMKMSubclass(RecordCallMixin, MultiKernelManager):
+
+    def _kernel_manager_class_default(self):
+        return 'jupyter_client.tests.utils.SyncKernelManagerSubclass'
+
+    def get_kernel(self, kernel_id):
+        self.record('get_kernel')
+        return super().get_kernel(kernel_id)
+
+    def remove_kernel(self, kernel_id):
+        self.record('remove_kernel')
+        return super().remove_kernel(kernel_id)
+
+    def start_kernel(self, kernel_name=None, **kwargs):
+        self.record('start_kernel')
+        return super().start_kernel(kernel_name=kernel_name, **kwargs)
+
+    def shutdown_kernel(self, kernel_id, now=False, restart=False):
+        self.record('shutdown_kernel')
+        return super().shutdown_kernel(kernel_id, now=now, restart=restart)
+
+    def restart_kernel(self, kernel_id, now=False):
+        self.record('restart_kernel')
+        return super().restart_kernel(kernel_id, now=now)
+
+    def interrupt_kernel(self, kernel_id):
+        self.record('interrupt_kernel')
+        return super().interrupt_kernel(kernel_id)
+
+    def request_shutdown(self, kernel_id, restart=False):
+        self.record('request_shutdown')
+        return super().request_shutdown(kernel_id, restart=restart)
+
+    def finish_shutdown(self, kernel_id, waittime=None, pollinterval=0.1):
+        self.record('finish_shutdown')
+        return super().finish_shutdown(kernel_id, waittime=waittime, pollinterval=pollinterval)
+
+    def cleanup_resources(self, kernel_id, restart=False):
+        self.record('cleanup_resources')
+        super().cleanup_resources(kernel_id, restart=restart)
+
+    def shutdown_all(self, now=False):
+        self.record('shutdown_all')
+        return super().shutdown_all(now=now)
+
+
+class AsyncMKMSubclass(RecordCallMixin, AsyncMultiKernelManager):
+    """Used to test subclass hierarchies to ensure methods are called when expected.
+
+       This class is also used to test deprecation "routes" that are determined by superclass'
+       detection of methods.
+
+       This class represents a current subclass that overrides "interesting" methods of AsyncKernelManager.
+    """
+    def _kernel_manager_class_default(self):
+        return 'jupyter_client.tests.utils.AsyncKernelManagerSubclass'
+
+    def get_kernel(self, kernel_id):
+        self.record('get_kernel')
+        return super().get_kernel(kernel_id)
+
+    def remove_kernel(self, kernel_id):
+        self.record('remove_kernel')
+        return super().remove_kernel(kernel_id)
+
+    async def start_kernel(self, kernel_name=None, **kwargs):
+        self.record('start_kernel')
+        return await super().start_kernel(kernel_name=kernel_name, **kwargs)
+
+    async def shutdown_kernel(self, kernel_id, now=False, restart=False):
+        self.record('shutdown_kernel')
+        return await super().shutdown_kernel(kernel_id, now=now, restart=restart)
+
+    async def restart_kernel(self, kernel_id, now=False):
+        self.record('restart_kernel')
+        return await super().restart_kernel(kernel_id, now=now)
+
+    async def interrupt_kernel(self, kernel_id):
+        self.record('interrupt_kernel')
+        return await super().interrupt_kernel(kernel_id)
+
+    def request_shutdown(self, kernel_id, restart=False):
+        self.record('request_shutdown')
+        return super().request_shutdown(kernel_id, restart=restart)
+
+    async def finish_shutdown(self, kernel_id, waittime=None, pollinterval=0.1):
+        self.record('finish_shutdown')
+        return await super().finish_shutdown(kernel_id, waittime=waittime, pollinterval=pollinterval)
+
+    async def shutdown_all(self, now=False):
+        self.record('shutdown_all')
+        return await super().shutdown_all(now=now)
+
+    def cleanup_resources(self, kernel_id, restart=False):
+        self.record('cleanup_resources')
+        super().cleanup_resources(kernel_id, restart=restart)
