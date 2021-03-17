@@ -9,9 +9,9 @@ from subprocess import PIPE
 from unittest import TestCase
 from tornado.testing import AsyncTestCase, gen_test
 from traitlets.config.loader import Config
-from jupyter_client import KernelManager, AsyncKernelManager
+from jupyter_client import KernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager, AsyncMultiKernelManager
-from .utils import skip_win32, SyncMKMSubclass, AsyncMKMSubclass, SyncKernelManagerSubclass, AsyncKernelManagerSubclass
+from .utils import skip_win32, SyncMKMSubclass, AsyncMKMSubclass, SyncKMSubclass, AsyncKMSubclass
 from ..localinterfaces import localhost
 
 TIMEOUT = 30
@@ -165,7 +165,7 @@ class TestKernelManager(TestCase):
         km.reset_counts()
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
         assert km.call_count('start_kernel') == 1
-        assert isinstance(km.get_kernel(kid), SyncKernelManagerSubclass)
+        assert isinstance(km.get_kernel(kid), SyncKMSubclass)
         assert km.get_kernel(kid).call_count('start_kernel') == 1
         assert km.get_kernel(kid).call_count('_launch_kernel') == 1
 
@@ -200,7 +200,7 @@ class TestKernelManager(TestCase):
         km.get_kernel(kid).reset_counts()
         km.reset_counts()
         k = km.get_kernel(kid)
-        assert isinstance(k, SyncKernelManagerSubclass)
+        assert isinstance(k, SyncKMSubclass)
         assert km.call_count('get_kernel') == 1
 
         km.get_kernel(kid).reset_counts()
@@ -422,7 +422,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         mkm.reset_counts()
         kid = await mkm.start_kernel(stdout=PIPE, stderr=PIPE)
         assert mkm.call_count('start_kernel') == 1
-        assert isinstance(mkm.get_kernel(kid), AsyncKernelManagerSubclass)
+        assert isinstance(mkm.get_kernel(kid), AsyncKMSubclass)
         assert mkm.get_kernel(kid).call_count('start_kernel') == 1
         assert mkm.get_kernel(kid).call_count('_launch_kernel') == 1
 
@@ -457,7 +457,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         mkm.get_kernel(kid).reset_counts()
         mkm.reset_counts()
         k = mkm.get_kernel(kid)
-        assert isinstance(k, AsyncKernelManagerSubclass)
+        assert isinstance(k, AsyncKMSubclass)
         assert mkm.call_count('get_kernel') == 1
 
         mkm.get_kernel(kid).reset_counts()
