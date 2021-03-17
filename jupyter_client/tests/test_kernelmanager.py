@@ -135,7 +135,7 @@ def async_km_subclass(config):
 async def start_async_kernel():
     km, kc = await start_new_async_kernel(kernel_name='signaltest')
     await yield_((km, kc))
-    await kc.stop_channels()
+    kc.stop_channels()
     await km.shutdown_kernel()
     assert km.context.closed
 
@@ -184,7 +184,7 @@ class TestKernelManagerShutDownGracefully:
         assert km._shutdown_status == _ShutdownStatus.Unset
         assert await km.is_alive()
         # kc.execute("1")
-        await kc.stop_channels()
+        kc.stop_channels()
         await km.shutdown_kernel()
 
         assert km._shutdown_status == expected
@@ -358,7 +358,6 @@ class TestParallel:
 
     @pytest.mark.timeout(TIMEOUT)
     @pytest.mark.skipif((sys.platform == 'darwin') and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)), reason='"Bad file descriptor" error')
-    @pytest.mark.skipif((sys.platform == 'win32') and (sys.version_info >= (3, 8)) and (sys.version_info < (3, 10)), reason='"Timeout" error')
     def test_start_parallel_process_kernels(self, config, install_kernel):
         if config.KernelManager.transport == 'ipc':  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")
@@ -371,8 +370,7 @@ class TestParallel:
             future1.result()
 
     @pytest.mark.timeout(TIMEOUT)
-    @pytest.mark.skipif((sys.platform == 'darwin') and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 10)), reason='"Bad file descriptor" error')
-    @pytest.mark.skipif((sys.platform == 'win32') and (sys.version_info >= (3, 8)) and (sys.version_info < (3, 10)), reason='"Timeout" error')
+    @pytest.mark.skipif((sys.platform == 'darwin') and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)), reason='"Bad file descriptor" error')
     def test_start_sequence_process_kernels(self, config, install_kernel):
         if config.KernelManager.transport == 'ipc':  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")

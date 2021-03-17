@@ -9,8 +9,10 @@ from threading import Thread, Event
 import time
 import asyncio
 from queue import Empty
+import typing as t
 
 import zmq
+import zmq.asyncio
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
 # during garbage collection of threads at exit:
 from zmq import ZMQError
@@ -18,6 +20,7 @@ from zmq import ZMQError
 from jupyter_client import protocol_version_info
 
 from .channelsabc import HBChannelABC
+from .session import Session
 
 #-----------------------------------------------------------------------------
 # Constants and exceptions
@@ -35,24 +38,27 @@ class HBChannel(Thread):
     this channel, the kernel manager will ensure that it is paused and un-paused
     as appropriate.
     """
-    context = None
     session = None
     socket = None
     address = None
     _exiting = False
 
-    time_to_dead = 1.
-    poller = None
+    time_to_dead: float = 1.
     _running = None
     _pause = None
     _beating = None
 
-    def __init__(self, context=None, session=None, address=None):
+    def __init__(
+        self,
+        context: zmq.asyncio.Context,
+        session: t.Optional[Session] = None,
+        address: t.Union[t.Tuple[str, int], str] = ''
+    ):
         """Create the heartbeat monitor thread.
 
         Parameters
         ----------
-        context : :class:`zmq.Context`
+        context : :class:`zmq.asyncio.Context`
             The ZMQ context to use.
         session : :class:`session.Session`
             The session to use.
@@ -68,8 +74,10 @@ class HBChannel(Thread):
             if address[1] == 0:
                 message = 'The port number for a channel cannot be 0.'
                 raise InvalidPortNumber(message)
-            address = "tcp://%s:%i" % address
-        self.address = address
+            address_str = "tcp://%s:%i" % address
+        else:
+            address_str = address
+        self.address = address_str
 
         # running is False until `.start()` is called
         self._running = False
@@ -80,30 +88,27 @@ class HBChannel(Thread):
 
     @staticmethod
     @atexit.register
-    def _notice_exit():
+    def _notice_exit() -> None:
         # Class definitions can be torn down during interpreter shutdown.
         # We only need to set _exiting flag if this hasn't happened.
         if HBChannel is not None:
             HBChannel._exiting = True
 
-    def _create_socket(self):
+    def _create_socket(self) -> None:
         if self.socket is not None:
             # close previous socket, before opening a new one
             self.poller.unregister(self.socket)
             self.socket.close()
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
         self.socket = self.context.socket(zmq.REQ)
         self.socket.linger = 1000
         self.socket.connect(self.address)
 
         self.poller.register(self.socket, zmq.POLLIN)
 
-    def _poll(self, start_time):
+    def _poll(
+        self,
+        start_time: float
+    ) -> t.List[t.Any]:
         """poll for heartbeat replies until we reach self.time_to_dead.
 
         Ignores interrupts, and returns the result of poll(), which
@@ -117,7 +122,7 @@ class HBChannel(Thread):
         events = []
         while True:
             try:
-                events = self.poller.poll(1000 * until_dead)
+                events = self.poller.poll(int(1000 * until_dead))
             except ZMQError as e:
                 if e.errno == errno.EINTR:
                     # ignore interrupts during heartbeat
@@ -136,11 +141,17 @@ class HBChannel(Thread):
                 break
         return events
 
-    def run(self):
+    def run(self) -> None:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self._async_run())
+
+    async def _async_run(self) -> None:
         """The thread's main activity.  Call start() instead."""
         self._create_socket()
         self._running = True
         self._beating = True
+        assert self.socket is not None
 
         while self._running:
             if self._pause:
@@ -151,13 +162,13 @@ class HBChannel(Thread):
             since_last_heartbeat = 0.0
             # no need to catch EFSM here, because the previous event was
             # either a recv or connect, which cannot be followed by EFSM
-            self.socket.send(b'ping')
+            await self.socket.send(b'ping')
             request_time = time.time()
             ready = self._poll(request_time)
             if ready:
                 self._beating = True
                 # the poll above guarantees we have something to recv
-                self.socket.recv()
+                await self.socket.recv()
                 # sleep the remainder of the cycle
                 remainder = self.time_to_dead - (time.time() - request_time)
                 if remainder > 0:
@@ -172,29 +183,29 @@ class HBChannel(Thread):
                 self._create_socket()
                 continue
 
-    def pause(self):
+    def pause(self) -> None:
         """Pause the heartbeat."""
         self._pause = True
 
-    def unpause(self):
+    def unpause(self) -> None:
         """Unpause the heartbeat."""
         self._pause = False
 
-    def is_beating(self):
+    def is_beating(self) -> bool:
         """Is the heartbeat running and responsive (and not paused)."""
         if self.is_alive() and not self._pause and self._beating:
             return True
         else:
             return False
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the channel's event loop and join its thread."""
         self._running = False
         self._exit.set()
         self.join()
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         if self.socket is not None:
             try:
                 self.socket.close(linger=0)
@@ -202,7 +213,10 @@ class HBChannel(Thread):
                 pass
             self.socket = None
 
-    def call_handlers(self, since_last_heartbeat):
+    def call_handlers(
+        self,
+        since_last_heartbeat: float
+    ) -> None:
         """This method is called in the ioloop thread when a message arrives.
 
         Subclasses should override this method to handle incoming messages.
@@ -218,13 +232,13 @@ HBChannelABC.register(HBChannel)
 
 class ZMQSocketChannel(object):
     """A ZMQ socket in an async API"""
-    session = None
-    socket = None
-    stream = None
-    _exiting = False
-    proxy_methods = []
 
-    def __init__(self, socket, session, loop=None):
+    def __init__(
+        self,
+        socket: zmq.sugar.socket.Socket,
+        session: Session,
+        loop: t.Any = None
+    ) -> None:
         """Create a channel.
 
         Parameters
@@ -238,18 +252,23 @@ class ZMQSocketChannel(object):
         """
         super().__init__()
 
-        self.socket = socket
+        self.socket: t.Optional[zmq.sugar.socket.Socket] = socket
         self.session = session
 
-    async def _recv(self, **kwargs):
+    async def _recv(self, **kwargs) -> t.Dict[str, t.Any]:
+        assert self.socket is not None
         msg = await self.socket.recv_multipart(**kwargs)
         ident, smsg = self.session.feed_identities(msg)
         return self.session.deserialize(smsg)
 
-    async def get_msg(self, timeout=None):
+    async def get_msg(
+        self,
+        timeout: t.Optional[float] = None
+    ) -> t.Dict[str, t.Any]:
         """ Gets a message if there is one that is ready. """
         if timeout is not None:
             timeout *= 1000  # seconds to ms
+        assert self.socket is not None
         ready = await self.socket.poll(timeout)
 
         if ready:
@@ -258,7 +277,7 @@ class ZMQSocketChannel(object):
         else:
             raise Empty
 
-    async def get_msgs(self):
+    async def get_msgs(self) -> t.List[t.Dict[str, t.Any]]:
         """ Get all messages that are currently ready. """
         msgs = []
         while True:
@@ -268,26 +287,31 @@ class ZMQSocketChannel(object):
                 break
         return msgs
 
-    async def msg_ready(self):
+    async def msg_ready(self) -> bool:
         """ Is there a message that has been received? """
+        assert self.socket is not None
         return bool(await self.socket.poll(timeout=0))
 
-    def close(self):
+    def close(self) -> None:
         if self.socket is not None:
             try:
                 self.socket.close(linger=0)
             except Exception:
                 pass
             self.socket = None
-    stop =  close
+    stop = close
 
-    def is_alive(self):
+    def is_alive(self) -> bool:
         return (self.socket is not None)
 
-    def send(self, msg):
+    def send(
+        self,
+        msg: t.Dict[str, t.Any]
+    ) -> None:
         """Pass a message to the ZMQ socket to send
         """
+        assert self.socket is not None
         self.session.send(self.socket, msg)
 
-    def start(self):
+    def start(self) -> None:
         pass

@@ -43,10 +43,9 @@ class AsyncKernelClient(KernelClient):
     inspect = reqrep(KernelClient._async_inspect)
     kernel_info = reqrep(KernelClient._async_kernel_info)
     comm_info = reqrep(KernelClient._async_comm_info)
+
     is_alive = KernelClient._async_is_alive
     execute_interactive = KernelClient._async_execute_interactive
-    stop_channels = KernelClient._async_stop_channels
-    channels_running = property(KernelClient._async_channels_running)
 
     # replies come on the control channel
     shutdown = reqrep(KernelClient._async_shutdown, channel='control')

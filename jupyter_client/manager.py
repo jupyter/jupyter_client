@@ -771,7 +771,7 @@ async def start_new_async_kernel(
     try:
         await kc.wait_for_ready(timeout=startup_timeout)
     except RuntimeError:
-        await kc.stop_channels()
+        kc.stop_channels()
         await km.shutdown_kernel()
         raise
 

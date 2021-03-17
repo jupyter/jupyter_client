@@ -2,9 +2,9 @@ import os
 import signal
 import uuid
 
-from jupyter_core.application import JupyterApp, base_flags
+from jupyter_core.application import JupyterApp, base_flags  # type: ignore
 from tornado.ioloop import IOLoop
-from traitlets import Unicode
+from traitlets import Unicode  # type: ignore
 
 from . import __version__
 from .kernelspec import KernelSpecManager, NATIVE_KERNEL_NAME
@@ -39,7 +39,7 @@ class KernelApp(JupyterApp):
         self.loop = IOLoop.current()
         self.loop.add_callback(self._record_started)
 
-    def setup_signals(self):
+    def setup_signals(self) -> None:
         """Shutdown on SIGTERM or SIGINT (Ctrl-C)"""
         if os.name == 'nt':
             return
@@ -49,17 +49,20 @@ class KernelApp(JupyterApp):
         for sig in [signal.SIGTERM, signal.SIGINT]:
             signal.signal(sig, shutdown_handler)
 
-    def shutdown(self, signo):
+    def shutdown(
+        self,
+        signo: int
+    ) -> None:
         self.log.info('Shutting down on signal %d' % signo)
         self.km.shutdown_kernel()
         self.loop.stop()
 
-    def log_connection_info(self):
+    def log_connection_info(self) -> None:
         cf = self.km.connection_file
         self.log.info('Connection file: %s', cf)
         self.log.info("To connect a client: --existing %s", os.path.basename(cf))
 
-    def _record_started(self):
+    def _record_started(self) -> None:
         """For tests, create a file to indicate that we've started
 
         Do not rely on this except in our own tests!
@@ -69,7 +72,7 @@ class KernelApp(JupyterApp):
             with open(fn, 'wb'):
                 pass
 
-    def start(self):
+    def start(self) -> None:
         self.log.info('Starting kernel %r', self.kernel_name)
         try:
             self.km.start_kernel()

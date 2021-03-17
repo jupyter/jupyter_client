@@ -47,10 +47,9 @@ class BlockingKernelClient(KernelClient):
     inspect = run_sync(reqrep(KernelClient._async_inspect))
     kernel_info = run_sync(reqrep(KernelClient._async_kernel_info))
     comm_info = run_sync(reqrep(KernelClient._async_comm_info))
+
     is_alive = run_sync(KernelClient._async_is_alive)
     execute_interactive = run_sync(KernelClient._async_execute_interactive)
-    stop_channels = run_sync(KernelClient._async_stop_channels)
-    channels_running = property(run_sync(KernelClient._async_channels_running))
 
     # replies come on the control channel
     shutdown = run_sync(reqrep(KernelClient._async_shutdown, channel='control'))

@@ -221,7 +221,7 @@ class MultiKernelManager(LoggingConfigurable):
             self._add_kernel_when_ready(
                 kernel_id,
                 km,
-                km._async_start_kernel(**kwargs)
+                ensure_async(km.start_kernel(**kwargs))
             )
         )
         self._starting_kernels[kernel_id] = fut

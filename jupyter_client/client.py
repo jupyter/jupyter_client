@@ -9,6 +9,7 @@ import time
 from functools import partial
 from getpass import getpass
 from queue import Empty
+import socket
 import typing as t
 
 
@@ -24,6 +25,7 @@ from traitlets import (  # type: ignore
 from .channelsabc import (ChannelABC, HBChannelABC)
 from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
+from .session import Session
 from .util import ensure_async
 
 
@@ -43,8 +45,11 @@ def validate_string_dict(
             raise ValueError('value %r in dict must be a string' % v)
 
 
-def reqrep(meth, channel='shell'):
-    async def wrapped(self, *args, **kwargs):
+def reqrep(
+    meth: t.Callable,
+    channel: str = 'shell'
+) -> t.Callable:
+    async def wrapped(self, *args, **kwargs) -> t.Union[str, t.Dict[str, t.Any]]:
         reply = kwargs.pop('reply', False)
         timeout = kwargs.pop('timeout', None)
         msg_id = await meth(self, *args, **kwargs)
@@ -101,9 +106,7 @@ class KernelClient(ConnectionFileMixin):
 
     # The PyZMQ Context to use for communication with the kernel.
     context = Instance(zmq.asyncio.Context)
-
-    @default('context')
-    def _context_default(self):
+    def _context_default(self) -> zmq.asyncio.Context:
         return zmq.asyncio.Context()
 
     # The classes to use for the various channels
@@ -127,23 +130,26 @@ class KernelClient(ConnectionFileMixin):
     # Channel proxy methods
     #--------------------------------------------------------------------------
 
-    async def _async_get_shell_msg(self, *args, **kwargs):
+    async def _async_get_shell_msg(self, *args, **kwargs) -> t.Dict[str, t.Any]:
         """Get a message from the shell channel"""
         return await self.shell_channel.get_msg(*args, **kwargs)
 
-    async def _async_get_iopub_msg(self, *args, **kwargs):
+    async def _async_get_iopub_msg(self, *args, **kwargs) -> t.Dict[str, t.Any]:
         """Get a message from the iopub channel"""
         return await self.iopub_channel.get_msg(*args, **kwargs)
 
-    async def _async_get_stdin_msg(self, *args, **kwargs):
+    async def _async_get_stdin_msg(self, *args, **kwargs) -> t.Dict[str, t.Any]:
         """Get a message from the stdin channel"""
         return await self.stdin_channel.get_msg(*args, **kwargs)
 
-    async def _async_get_control_msg(self, *args, **kwargs):
+    async def _async_get_control_msg(self, *args, **kwargs) -> t.Dict[str, t.Any]:
         """Get a message from the control channel"""
         return await self.control_channel.get_msg(*args, **kwargs)
 
-    async def _async_wait_for_ready(self, timeout=None):
+    async def _async_wait_for_ready(
+        self,
+        timeout: t.Optional[float] = None
+    ) -> None:
         """Waits for a response when a client is blocked
 
         - Sets future time for timeout
@@ -153,9 +159,8 @@ class KernelClient(ConnectionFileMixin):
         - Flush the IOPub channel
         """
         if timeout is None:
-            abs_timeout = float('inf')
-        else:
-            abs_timeout = time.time() + timeout
+            timeout = float('inf')
+        abs_timeout = time.time() + timeout
 
         from .manager import KernelManager
         if not isinstance(self.parent, KernelManager):
@@ -199,7 +204,12 @@ class KernelClient(ConnectionFileMixin):
             except Empty:
                 break
 
-    async def _async_recv_reply(self, msg_id, timeout=None, channel='shell'):
+    async def _async_recv_reply(
+        self,
+        msg_id: str,
+        timeout: t.Optional[float] = None,
+        channel: str = 'shell'
+    ) -> t.Dict[str, t.Any]:
         """Receive and return the reply for a given request"""
         if timeout is not None:
             deadline = time.monotonic() + timeout
@@ -219,13 +229,16 @@ class KernelClient(ConnectionFileMixin):
             return reply
 
 
-    def _stdin_hook_default(self, msg):
+    def _stdin_hook_default(
+        self,
+        msg: t.Dict[str, t.Any]
+    ) -> None:
         """Handle an input request"""
         content = msg['content']
         if content.get('password', False):
             prompt = getpass
         else:
-            prompt = input
+            prompt = input  # type: ignore
 
         try:
             raw_data = prompt(content["prompt"])
@@ -241,7 +254,10 @@ class KernelClient(ConnectionFileMixin):
         if not (self.stdin_channel.msg_ready() or self.shell_channel.msg_ready()):
             self.input(raw_data)
 
-    def _output_hook_default(self, msg):
+    def _output_hook_default(
+        self,
+        msg: t.Dict[str, t.Any]
+    ) -> None:
         """Default hook for redisplaying plain-text output"""
         msg_type = msg['header']['msg_type']
         content = msg['content']
@@ -253,7 +269,13 @@ class KernelClient(ConnectionFileMixin):
         elif msg_type == 'error':
             print('\n'.join(content['traceback']), file=sys.stderr)
 
-    def _output_hook_kernel(self, session, socket, parent_header, msg):
+    def _output_hook_kernel(
+        self,
+        session: Session,
+        socket: zmq.sugar.socket.Socket,
+        parent_header,
+        msg: t.Dict[str, t.Any]
+    ) -> None:
         """Output hook when running inside an IPython kernel
 
         adds rich output support.
@@ -269,7 +291,14 @@ class KernelClient(ConnectionFileMixin):
     # Channel management methods
     #--------------------------------------------------------------------------
 
-    def start_channels(self, shell=True, iopub=True, stdin=True, hb=True, control=True):
+    def start_channels(
+        self,
+        shell: bool = True,
+        iopub: bool = True,
+        stdin: bool = True,
+        hb: bool = True,
+        control: bool = True
+    ) -> None:
         """Starts the channels for this kernel.
 
         This will create the channels if they do not exist and then start
@@ -292,7 +321,7 @@ class KernelClient(ConnectionFileMixin):
         if control:
             self.control_channel.start()
 
-    async def _async_stop_channels(self):
+    def stop_channels(self) -> None:
         """Stops all the running channels for this kernel.
 
         This stops their event loops and joins their threads.
@@ -308,8 +337,8 @@ class KernelClient(ConnectionFileMixin):
         if self.control_channel.is_alive():
             self.control_channel.stop()
 
-    #@property
-    async def _async_channels_running(self):
+    @property
+    def channels_running(self) -> bool:
         """Are any of the channels created and running?"""
         return (self.shell_channel.is_alive() or self.iopub_channel.is_alive() or
                 self.stdin_channel.is_alive() or self.hb_channel.is_alive() or
@@ -318,7 +347,7 @@ class KernelClient(ConnectionFileMixin):
     ioloop = None  # Overridden in subclasses that use pyzmq event loop
 
     @property
-    def shell_channel(self):
+    def shell_channel(self) -> t.Any:
         """Get the shell channel object for this kernel."""
         if self._shell_channel is None:
             url = self._make_url('shell')
@@ -330,7 +359,7 @@ class KernelClient(ConnectionFileMixin):
         return self._shell_channel
 
     @property
-    def iopub_channel(self):
+    def iopub_channel(self) -> t.Any:
         """Get the iopub channel object for this kernel."""
         if self._iopub_channel is None:
             url = self._make_url('iopub')
@@ -342,7 +371,7 @@ class KernelClient(ConnectionFileMixin):
         return self._iopub_channel
 
     @property
-    def stdin_channel(self):
+    def stdin_channel(self) -> t.Any:
         """Get the stdin channel object for this kernel."""
         if self._stdin_channel is None:
             url = self._make_url('stdin')
@@ -354,7 +383,7 @@ class KernelClient(ConnectionFileMixin):
         return self._stdin_channel
 
     @property
-    def hb_channel(self):
+    def hb_channel(self) -> t.Any:
         """Get the hb channel object for this kernel."""
         if self._hb_channel is None:
             url = self._make_url('hb')
@@ -365,7 +394,7 @@ class KernelClient(ConnectionFileMixin):
         return self._hb_channel
 
     @property
-    def control_channel(self):
+    def control_channel(self) -> t.Any:
         """Get the control channel object for this kernel."""
         if self._control_channel is None:
             url = self._make_url('control')
@@ -376,7 +405,7 @@ class KernelClient(ConnectionFileMixin):
             )
         return self._control_channel
 
-    async def _async_is_alive(self):
+    async def _async_is_alive(self) -> bool:
         """Is the kernel process still running?"""
         from .manager import KernelManager, AsyncKernelManager
         if isinstance(self.parent, KernelManager):
@@ -393,10 +422,18 @@ class KernelClient(ConnectionFileMixin):
             return True
 
 
-    async def _async_execute_interactive(self, code, silent=False, store_history=True,
-                 user_expressions=None, allow_stdin=None, stop_on_error=True,
-                 timeout=None, output_hook=None, stdin_hook=None,
-                ):
+    async def _async_execute_interactive(
+        self,
+        code: str,
+        silent: bool = False,
+        store_history: bool = True,
+        user_expressions: t.Optional[t.Dict[str, t.Any]] = None,
+        allow_stdin: t.Optional[bool] = None,
+        stop_on_error: bool = True,
+        timeout: t.Optional[float] = None,
+        output_hook: t.Optional[t.Callable] = None,
+        stdin_hook: t.Optional[t.Callable] =None,
+    ) -> t.Dict[str, t.Any]:
         """Execute code in the kernel interactively
 
         Output will be redisplayed, and stdin prompts will be relayed as well.
@@ -502,7 +539,7 @@ class KernelClient(ConnectionFileMixin):
         while True:
             if timeout is not None:
                 timeout = max(0, deadline - time.monotonic())
-                timeout_ms = 1e3 * timeout
+                timeout_ms = int(1000 * timeout)
             events = dict(poller.poll(timeout_ms))
             if not events:
                 raise TimeoutError("Timeout waiting for output")
@@ -532,8 +569,15 @@ class KernelClient(ConnectionFileMixin):
 
 
     # Methods to send specific messages on channels
-    async def _async_execute(self, code, silent=False, store_history=True,
-                user_expressions=None, allow_stdin=None, stop_on_error=True):
+    async def _async_execute(
+        self,
+        code: str,
+        silent: bool = False,
+        store_history: bool = True,
+        user_expressions: t.Optional[t.Dict[str, t.Any]] = None,
+        allow_stdin: t.Optional[bool] = None,
+        stop_on_error: bool = True
+    ) -> str:
         """Execute code in the kernel.
 
         Parameters
@@ -589,7 +633,11 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    async def _async_complete(self, code, cursor_pos=None):
+    async def _async_complete(
+        self,
+        code: str,
+        cursor_pos: t.Optional[int] = None
+    ) -> str:
         """Tab complete text in the kernel's namespace.
 
         Parameters
@@ -612,7 +660,12 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    async def _async_inspect(self, code, cursor_pos=None, detail_level=0):
+    async def _async_inspect(
+        self,
+        code: str,
+        cursor_pos: t.Optional[int] = None,
+        detail_level: int = 0
+    ) -> str:
         """Get metadata information about an object in the kernel's namespace.
 
         It is up to the kernel to determine the appropriate object to inspect.
@@ -641,7 +694,13 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    async def _async_history(self, raw=True, output=False, hist_access_type='range', **kwargs):
+    async def _async_history(
+        self,
+        raw: bool = True,
+        output: bool = False,
+        hist_access_type: str = 'range',
+        **kwargs
+    ) -> str:
         """Get entries from the kernel's history list.
 
         Parameters
@@ -682,7 +741,7 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    async def _async_kernel_info(self):
+    async def _async_kernel_info(self) -> str:
         """Request kernel info
 
         Returns
@@ -693,7 +752,10 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    async def _async_comm_info(self, target_name=None):
+    async def _async_comm_info(
+        self,
+        target_name: t.Optional[str] = None
+    ) -> str:
         """Request comm info
 
         Returns
@@ -708,7 +770,10 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    def _handle_kernel_info_reply(self, msg):
+    def _handle_kernel_info_reply(
+        self,
+        msg: t.Dict[str, t.Any]
+    ) -> None:
         """handle kernel info reply
 
         sets protocol adaptation version. This might
@@ -718,13 +783,19 @@ class KernelClient(ConnectionFileMixin):
         if adapt_version != major_protocol_version:
             self.session.adapt_version = adapt_version
 
-    def is_complete(self, code):
+    def is_complete(
+        self,
+        code: str
+    ) -> str:
         """Ask the kernel whether some code is complete and ready to execute."""
         msg = self.session.msg('is_complete_request', {'code': code})
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    def input(self, string):
+    def input(
+        self,
+        string: str
+    ) -> None:
         """Send a string of raw input to the kernel.
 
         This should only be called in response to the kernel sending an
@@ -734,7 +805,10 @@ class KernelClient(ConnectionFileMixin):
         msg = self.session.msg('input_reply', content)
         self.stdin_channel.send(msg)
 
-    async def _async_shutdown(self, restart=False):
+    async def _async_shutdown(
+        self,
+        restart: bool = False
+    ) -> str:
         """Request an immediate kernel shutdown on the control channel.
 
         Upon receipt of the (empty) reply, client code can safely assume that

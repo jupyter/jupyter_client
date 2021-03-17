@@ -6,6 +6,7 @@
 from datetime import datetime
 import re
 import warnings
+from typing import Optional, Union
 
 from dateutil.parser import parse as _dateutil_parse
 from dateutil.tz import tzlocal
@@ -28,7 +29,7 @@ datetime.strptime("1", "%d")
 # Classes and functions
 #-----------------------------------------------------------------------------
 
-def _ensure_tzinfo(dt):
+def _ensure_tzinfo(dt: datetime) -> datetime:
     """Ensure a datetime object has tzinfo
 
     If no tzinfo is present, add tzlocal
@@ -41,7 +42,7 @@ def _ensure_tzinfo(dt):
         dt = dt.replace(tzinfo=tzlocal())
     return dt
 
-def parse_date(s):
+def parse_date(s: Optional[str]) -> Optional[Union[str, datetime]]:
     """parse an ISO8601 date string
 
     If it is None or not a valid ISO8601 timestamp,
