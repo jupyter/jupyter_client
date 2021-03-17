@@ -173,6 +173,7 @@ class TestKernelManagerShutDownGracefully:
 
         assert km._shutdown_status == expected
 
+    @pytest.mark.asyncio
     @pytest.mark.skipif(
         sys.platform == "win32", reason="Windows doesn't support signals"
     )
