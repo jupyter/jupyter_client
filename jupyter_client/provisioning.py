@@ -81,6 +81,15 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         """
         pass
 
+    # TODO - update to async def
+    def shutdown_requested(self, restart=False) -> None:
+        """Called after KernelManager sends a `shutdown_request` message to kernel.
+
+        This method is optional and is primarily used in scenarios where the provisioner communicates
+        with a sibling (nanny) process to the kernel.
+        """
+        pass
+
     async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
         """Perform any steps in preparation for kernel process launch.
 
@@ -89,15 +98,10 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
 
         Returns potentially updated kwargs.
         """
-
         env = kwargs.pop('env', os.environ).copy()
-
-        env.update(self._apply_env_substitutions(env))
-
+        env.update(self.__apply_env_substitutions(env))
         self._validate_parameters(env, **kwargs)
-
-        self._finalize_env(env)
-
+        self._finalize_env(env)  # TODO: Should finalize be called first?
         kwargs['env'] = env
 
         return kwargs
@@ -130,10 +134,25 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         """
         return recommended
 
-    def _apply_env_substitutions(self, substitution_values: Dict[str, str]):
-        """ Walks env entries in the kernelspec's env stanza and applies possible substitutions from current env
-            (represented by substitution_values).
+    def _finalize_env(self, env: Dict[str, str]) -> None:
+        """Ensures env is appropriate prior to launch.
+
+        Subclasses should be sure to call super()._finalize_env(env)
+        """
+        if self.kernel_spec.language and self.kernel_spec.language.lower().startswith("python"):
+            # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
+            # If set, it can bork all the things.
+            env.pop('PYTHONEXECUTABLE', None)
+
+    def _validate_parameters(self, env: Dict[str, str], **kwargs: Any) -> None:
+        """Future: Validates that launch parameters adhere to schema specified in kernel specification."""
+        pass
+
+    def __apply_env_substitutions(self, substitution_values: Dict[str, str]):
+        """ Walks env entries in the kernelspec's env stanza and applies possible substitutions from current env.
+
             Returns the substituted list of env entries.
+            Note: This method is private and is not intended to be overridden by provisioners.
         """
         substituted_env = {}
         if self.kernel_spec:
@@ -146,18 +165,6 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
                 substituted_env.update({k: Template(v).safe_substitute(substitution_values)})
         return substituted_env
 
-    def _finalize_env(self, env: Dict[str, str]) -> None:
-        """ Ensures env is appropriate prior to launch. """
-
-        if self.kernel_spec.language and self.kernel_spec.language.lower().startswith("python"):
-            # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
-            # If set, it can bork all the things.
-            env.pop('PYTHONEXECUTABLE', None)
-
-    def _validate_parameters(self, env: Dict[str, str], **kwargs: Any) -> None:
-        """Future: Validates that launch parameters adhere to schema specified in kernel specification."""
-        pass
-
 
 class LocalProvisioner(KernelProvisionerBase):
 
@@ -166,6 +173,7 @@ class LocalProvisioner(KernelProvisionerBase):
     _exit_future = None
     pid = None
     pgid = None
+    ip = None
 
     async def poll(self) -> [int, None]:
         if self.process:
@@ -252,7 +260,7 @@ class LocalProvisioner(KernelProvisionerBase):
 
         # If we have a kernel_manager pop it out of the args and use it to retain b/c.
         # This should be considered temporary until a better division of labor can be defined.
-        km = kwargs.pop('kernel_manager')
+        km = kwargs.pop('kernel_manager', None)
         if km:
             if km.transport == 'tcp' and not is_local_ip(km.ip):
                 raise RuntimeError("Can only launch a kernel on a local interface. "
@@ -261,9 +269,6 @@ class LocalProvisioner(KernelProvisionerBase):
                                    "configured properly. "
                                    "Currently valid addresses are: %s" % (km.ip, local_ips())
                                    )
-
-            # save kwargs for use in restart
-            km._launch_args = kwargs.copy()
             # build the Popen cmd
             extra_arguments = kwargs.pop('extra_arguments', [])
 
@@ -279,7 +284,7 @@ class LocalProvisioner(KernelProvisionerBase):
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['LocalProvisioner', Dict]:
-        scrubbed_kwargs = LocalProvisioner.scrub_kwargs(kwargs)
+        scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
         self.process = await async_launch_kernel(cmd, **scrubbed_kwargs)
         self.async_subprocess = isinstance(self.process, asyncio.subprocess.Process)
         if self.async_subprocess:
@@ -296,7 +301,7 @@ class LocalProvisioner(KernelProvisionerBase):
         return self, self.connection_info
 
     @staticmethod
-    def scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """Remove any keyword arguments that Popen does not tolerate."""
         keywords_to_scrub: List[str] = ['extra_arguments', 'kernel_id', 'kernel_manager']
         scrubbed_kwargs = kwargs.copy()
@@ -304,17 +309,17 @@ class LocalProvisioner(KernelProvisionerBase):
             scrubbed_kwargs.pop(kw, None)
         return scrubbed_kwargs
 
-    def get_provisioner_info(self) -> Dict:
+    async def get_provisioner_info(self) -> Dict:
         """Captures the base information necessary for kernel persistence relative to the provisioner.
         """
-        provisioner_info = super(LocalProvisioner, self).get_provisioner_info()
+        provisioner_info = await super().get_provisioner_info()
         provisioner_info.update({'pid': self.pid, 'pgid': self.pgid, 'ip': self.ip})
         return provisioner_info
 
-    def load_provisioner_info(self, provisioner_info: Dict) -> None:
+    async def load_provisioner_info(self, provisioner_info: Dict) -> None:
         """Loads the base information necessary for kernel persistence relative to the provisioner.
         """
-        super(LocalProvisioner, self).load_provisioner_info(provisioner_info)
+        await super().load_provisioner_info(provisioner_info)
         self.pid = provisioner_info['pid']
         self.pgid = provisioner_info['pgid']
         self.ip = provisioner_info['ip']
@@ -333,7 +338,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
 
     @default('default_provisioner_name')
     def default_provisioner_name_default(self):
-        return os.getenv(self.default_provisioner_name_env, "LocalProvisioner")
+        return os.getenv(self.default_provisioner_name_env, "local-provisioner")
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)

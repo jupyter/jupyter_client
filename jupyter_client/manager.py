@@ -559,7 +559,7 @@ class AsyncKernelManager(KernelManager):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        self.kernel_id = kw.pop('kernel_id', str(uuid.uuid4()))
+        self.kernel_id = self.kernel_id or kw.pop('kernel_id', str(uuid.uuid4()))
         self.provisioner = KPF.instance(parent=self.parent).\
             create_provisioner_instance(self.kernel_id, self.kernel_spec)
 
@@ -606,14 +606,15 @@ class AsyncKernelManager(KernelManager):
         """
         kernel_proc, connection_info = await self.provisioner.launch_kernel(kernel_cmd, **kw)
         # Provisioner provides the connection information.  Load into kernel manager and write file.
-        self.load_connection_info(connection_info)
-        self.write_connection_file()
+        self._force_connection_info(connection_info)
         return kernel_proc
 
+    # TODO - should this be async def?  (I'd prefer that provisioner.shutdown_requested() is async def)
     def request_shutdown(self, restart=False):
         """Send a shutdown request via control channel
         """
         super().request_shutdown(restart=restart)
+        self.provisioner.shutdown_requested(restart=restart)
 
     async def finish_shutdown(self, waittime=None, pollinterval=0.1, restart=False):
         """Wait for kernel shutdown, then kill process if it doesn't shutdown.

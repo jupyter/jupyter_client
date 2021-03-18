@@ -520,6 +520,19 @@ class ConnectionFileMixin(LoggingConfigurable):
         if 'signature_scheme' in info:
             self.session.signature_scheme = info['signature_scheme']
 
+    def _force_connection_info(self, info):
+        """Unconditionally loads connection info from a dict containing connection info.
+
+        Overwrites connection info-based attributes, regardless of their current values
+        and writes this information to the connection file.
+        """
+        # Reset current ports to 0 and indicate file has not been written to enable override
+        self._connection_file_written = False
+        for name in port_names:
+            setattr(self, name, 0)
+        self.load_connection_info(info)
+        self.write_connection_file()
+
     #--------------------------------------------------------------------------
     # Creating connected sockets
     #--------------------------------------------------------------------------
