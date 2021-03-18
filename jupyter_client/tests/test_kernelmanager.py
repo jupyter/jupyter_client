@@ -22,7 +22,7 @@ from subprocess import PIPE
 
 from ..manager import start_new_kernel, start_new_async_kernel
 from ..manager import _ShutdownStatus
-from .utils import test_env, SyncKernelManagerSubclass, AsyncKernelManagerSubclass, AsyncKernelManagerWithCleanup
+from .utils import test_env, SyncKMSubclass, AsyncKMSubclass, AsyncKernelManagerWithCleanup
 
 pjoin = os.path.join
 
@@ -106,7 +106,7 @@ def km(config):
 
 @pytest.fixture
 def km_subclass(config):
-    km = SyncKernelManagerSubclass(config=config)
+    km = SyncKMSubclass(config=config)
     return km
 
 
@@ -118,7 +118,7 @@ def zmq_context():
     ctx.term()
 
 
-@pytest.fixture(params=[AsyncKernelManager, AsyncKernelManagerSubclass, AsyncKernelManagerWithCleanup])
+@pytest.fixture(params=[AsyncKernelManager, AsyncKMSubclass, AsyncKernelManagerWithCleanup])
 def async_km(request, config):
     km = request.param(config=config)
     return km
@@ -126,7 +126,7 @@ def async_km(request, config):
 
 @pytest.fixture
 def async_km_subclass(config):
-    km = AsyncKernelManagerSubclass(config=config)
+    km = AsyncKMSubclass(config=config)
     return km
 
 
@@ -173,6 +173,7 @@ class TestKernelManagerShutDownGracefully:
 
         assert km._shutdown_status == expected
 
+    @pytest.mark.asyncio
     @pytest.mark.skipif(
         sys.platform == "win32", reason="Windows doesn't support signals"
     )
@@ -452,7 +453,7 @@ class TestAsyncKernelManager:
         ])
         assert keys == expected
 
-    async def test_subclasses(self, async_km):
+    async def test_subclass_deprecations(self, async_km):
         await async_km.start_kernel(stdout=PIPE, stderr=PIPE)
         is_alive = await async_km.is_alive()
         assert is_alive
@@ -464,7 +465,7 @@ class TestAsyncKernelManager:
 
         if isinstance(async_km, AsyncKernelManagerWithCleanup):
             assert async_km.which_cleanup == "cleanup"
-        elif isinstance(async_km, AsyncKernelManagerSubclass):
+        elif isinstance(async_km, AsyncKMSubclass):
             assert async_km.which_cleanup == "cleanup_resources"
         else:
             assert hasattr(async_km, "which_cleanup") is False

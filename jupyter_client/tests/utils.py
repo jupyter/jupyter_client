@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict
 
 import pytest
-from jupyter_client import AsyncKernelManager, KernelManager
+from jupyter_client import AsyncKernelManager, KernelManager, AsyncMultiKernelManager, MultiKernelManager
 
 
 skip_win32 = pytest.mark.skipif(sys.platform.startswith('win'), reason="Windows")
@@ -42,6 +42,7 @@ class test_env(object):
     def __exit__(self, *exc_info):
         self.stop()
 
+
 def execute(code='', kc=None, **kwargs):
     """wrapper for doing common steps for validating an execution request"""
     from .test_message_spec import validate_message
@@ -63,7 +64,11 @@ def execute(code='', kc=None, **kwargs):
 
 
 class RecordCallMixin:
-    method_calls: Dict[str, int] = {}
+    method_calls: Dict[str, int]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.method_calls = {}
 
     def record(self, method_name: str) -> None:
         if method_name not in self.method_calls:
@@ -71,19 +76,20 @@ class RecordCallMixin:
         self.method_calls[method_name] += 1
 
     def call_count(self, method_name: str) -> int:
-        assert method_name in self.method_calls
+        if method_name not in self.method_calls:
+            self.method_calls[method_name] = 0
         return self.method_calls[method_name]
 
     def reset_counts(self) -> None:
-        for record in self.method_calls.keys():
+        for record in self.method_calls:
             self.method_calls[record] = 0
 
 
-def km_recorder(f):
+def subclass_recorder(f):
     def wrapped(self, *args, **kwargs):
         # record this call
         self.record(f.__name__)
-        method = getattr(self._km_class, f.__name__)
+        method = getattr(self._superclass, f.__name__)
         # call the superclass method
         r = method(self, *args, **kwargs)
         # call anything defined in the actual class method
@@ -92,50 +98,50 @@ def km_recorder(f):
     return wrapped
 
 
-class KernelManagerSubclass(RecordCallMixin):
+class KMSubclass(RecordCallMixin):
 
-    @km_recorder
+    @subclass_recorder
     def start_kernel(self, **kw):
         """ Record call and defer to superclass """
 
-    @km_recorder
+    @subclass_recorder
     def shutdown_kernel(self, now=False, restart=False):
         """ Record call and defer to superclass """
 
-    @km_recorder
+    @subclass_recorder
     def restart_kernel(self, now=False, **kw):
         """ Record call and defer to superclass """
 
-    @km_recorder
+    @subclass_recorder
     def interrupt_kernel(self):
         """ Record call and defer to superclass """
 
-    @km_recorder
+    @subclass_recorder
     def request_shutdown(self, restart=False):
         """ Record call and defer to superclass """
 
-    @km_recorder
+    @subclass_recorder
     def finish_shutdown(self, waittime=None, pollinterval=0.1):
         """ Record call and defer to superclass """
 
-    @km_recorder
+    @subclass_recorder
     def _launch_kernel(self, kernel_cmd, **kw):
         """ Record call and defer to superclass """
 
-    @km_recorder
+    @subclass_recorder
     def _kill_kernel(self):
         """ Record call and defer to superclass """
 
-    @km_recorder
+    @subclass_recorder
     def cleanup_resources(self, restart=False):
         """ Record call and defer to superclass """
 
 
-class SyncKernelManagerSubclass(KernelManagerSubclass, KernelManager):
-    _km_class = KernelManager
+class SyncKMSubclass(KMSubclass, KernelManager):
+    _superclass = KernelManager
 
 
-class AsyncKernelManagerSubclass(KernelManagerSubclass, AsyncKernelManager):
+class AsyncKMSubclass(KMSubclass, AsyncKernelManager):
     """Used to test subclass hierarchies to ensure methods are called when expected.
 
        This class is also used to test deprecation "routes" that are determined by superclass'
@@ -143,14 +149,14 @@ class AsyncKernelManagerSubclass(KernelManagerSubclass, AsyncKernelManager):
 
        This class represents a current subclass that overrides "interesting" methods of AsyncKernelManager.
     """
-    _km_class = AsyncKernelManager
+    _superclass = AsyncKernelManager
     which_cleanup = ""  # cleanup deprecation testing
 
-    @km_recorder
+    @subclass_recorder
     def cleanup(self, connection_file=True):
         self.which_cleanup = 'cleanup'
 
-    @km_recorder
+    @subclass_recorder
     def cleanup_resources(self, restart=False):
         self.which_cleanup = 'cleanup_resources'
 
@@ -165,3 +171,65 @@ class AsyncKernelManagerWithCleanup(AsyncKernelManager):
     def cleanup(self, connection_file=True):
         super().cleanup(connection_file=connection_file)
         self.which_cleanup = 'cleanup'
+
+
+class MKMSubclass(RecordCallMixin):
+
+    def _kernel_manager_class_default(self):
+        return 'jupyter_client.tests.utils.SyncKMSubclass'
+
+    @subclass_recorder
+    def get_kernel(self, kernel_id):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def remove_kernel(self, kernel_id):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def start_kernel(self, kernel_name=None, **kwargs):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def shutdown_kernel(self, kernel_id, now=False, restart=False):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def restart_kernel(self, kernel_id, now=False):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def interrupt_kernel(self, kernel_id):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def request_shutdown(self, kernel_id, restart=False):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def finish_shutdown(self, kernel_id, waittime=None, pollinterval=0.1):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def cleanup_resources(self, kernel_id, restart=False):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def shutdown_all(self, now=False):
+        """ Record call and defer to superclass """
+
+
+class SyncMKMSubclass(MKMSubclass, MultiKernelManager):
+
+    _superclass = MultiKernelManager
+
+    def _kernel_manager_class_default(self):
+        return 'jupyter_client.tests.utils.SyncKMSubclass'
+
+
+class AsyncMKMSubclass(MKMSubclass, AsyncMultiKernelManager):
+
+    _superclass = AsyncMultiKernelManager
+
+    def _kernel_manager_class_default(self):
+        return 'jupyter_client.tests.utils.AsyncKMSubclass'
