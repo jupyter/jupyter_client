@@ -33,7 +33,7 @@ from .connect import ConnectionFileMixin
 from .managerabc import (
     KernelManagerABC
 )
-from .util import run_sync, ensure_async
+from .utils import run_sync, ensure_async
 
 class _ShutdownStatus(Enum):
     """

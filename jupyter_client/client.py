@@ -12,7 +12,6 @@ from queue import Empty
 import socket
 import typing as t
 
-
 from jupyter_client.channels import major_protocol_version
 
 import zmq
@@ -26,7 +25,7 @@ from .channelsabc import (ChannelABC, HBChannelABC)
 from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
 from .session import Session
-from .util import ensure_async
+from .utils import ensure_async
 
 
 # some utilities to validate message structure, these might get moved elsewhere

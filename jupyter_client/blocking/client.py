@@ -8,7 +8,7 @@ Useful for test suites and blocking terminal interfaces.
 from traitlets import Type  # type: ignore
 from jupyter_client.channels import HBChannel, ZMQSocketChannel
 from jupyter_client.client import KernelClient, reqrep
-from ..util import run_sync
+from ..utils import run_sync
 
 
 class BlockingKernelClient(KernelClient):

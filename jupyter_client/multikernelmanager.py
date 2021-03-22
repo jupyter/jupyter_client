@@ -19,7 +19,7 @@ from traitlets import (  # type: ignore
 
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import KernelManager
-from .util import run_sync, ensure_async
+from .utils import run_sync, ensure_async
 
 
 class DuplicateKernelError(Exception):
