@@ -242,8 +242,8 @@ class TestKernelManager:
         content = reply['content']
         assert content['status'] == 'ok'
         assert content['user_expressions']['interrupted']
-        # wait up to 5s for subprocesses to handle signal
-        for i in range(50):
+        # wait up to 10s for subprocesses to handle signal
+        for i in range(100):
             reply = execute('check')
             if reply['user_expressions']['poll'] != [-signal.SIGINT] * N:
                 time.sleep(0.1)

@@ -233,7 +233,6 @@ class KernelManager(ConnectionFileMixin):
     ) -> t.List[str]:
         """replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
-        self.log.info(str(self.kernel_spec))
         if self.kernel_cmd:
             cmd = self.kernel_cmd + extra_arguments
         else:
@@ -430,7 +429,8 @@ class KernelManager(ConnectionFileMixin):
         else:
             # Process is no longer alive, wait and clear
             if self.kernel is not None:
-                self.kernel.wait()
+                while self.kernel.poll() is None:
+                    await asyncio.sleep(pollinterval)
                 self.kernel = None
 
     finish_shutdown = run_sync(_async_finish_shutdown)
@@ -638,7 +638,8 @@ class KernelManager(ConnectionFileMixin):
             else:
                 # Process is no longer alive, wait and clear
                 if self.kernel is not None:
-                    self.kernel.wait()
+                    while self.kernel.poll() is None:
+                        await asyncio.sleep(0.1)
             self.kernel = None
 
     _kill_kernel = run_sync(_async_kill_kernel)
