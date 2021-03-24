@@ -45,18 +45,11 @@ def validate_string_dict(
 
 
 def reqrep(
+    wrapped: t.Callable,
     meth: t.Callable,
     channel: str = 'shell'
 ) -> t.Callable:
-    async def wrapped(self, *args, **kwargs) -> t.Union[str, t.Dict[str, t.Any]]:
-        reply = kwargs.pop('reply', False)
-        timeout = kwargs.pop('timeout', None)
-        msg_id = await meth(self, *args, **kwargs)
-        if not reply:
-            return msg_id
-
-        return await self._async_recv_reply(msg_id, timeout=timeout, channel=channel)
-
+    wrapped = wrapped(meth, channel)
     if not meth.__doc__:
         # python -OO removes docstrings,
         # so don't bother building the wrapped docstring
@@ -173,7 +166,7 @@ class KernelClient(ConnectionFileMixin):
 
         # Wait for kernel info reply on shell channel
         while True:
-            await self._async_kernel_info()
+            self._kernel_info()
             try:
                 msg = await self.shell_channel.get_msg(timeout=1)
             except Empty:
@@ -493,12 +486,12 @@ class KernelClient(ConnectionFileMixin):
             allow_stdin = self.allow_stdin
         if allow_stdin and not self.stdin_channel.is_alive():
             raise RuntimeError("stdin channel must be running to allow input")
-        msg_id = await self._async_execute(code,
-                                           silent=silent,
-                                           store_history=store_history,
-                                           user_expressions=user_expressions,
-                                           allow_stdin=allow_stdin,
-                                           stop_on_error=stop_on_error,
+        msg_id = self._execute(code,
+                               silent=silent,
+                               store_history=store_history,
+                               user_expressions=user_expressions,
+                               allow_stdin=allow_stdin,
+                               stop_on_error=stop_on_error,
         )
         if stdin_hook is None:
             stdin_hook = self._stdin_hook_default
@@ -568,7 +561,7 @@ class KernelClient(ConnectionFileMixin):
 
 
     # Methods to send specific messages on channels
-    async def _async_execute(
+    def _execute(
         self,
         code: str,
         silent: bool = False,
@@ -632,7 +625,7 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    async def _async_complete(
+    def _complete(
         self,
         code: str,
         cursor_pos: t.Optional[int] = None
@@ -659,7 +652,7 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    async def _async_inspect(
+    def _inspect(
         self,
         code: str,
         cursor_pos: t.Optional[int] = None,
@@ -693,7 +686,7 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    async def _async_history(
+    def _history(
         self,
         raw: bool = True,
         output: bool = False,
@@ -740,7 +733,7 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    async def _async_kernel_info(self) -> str:
+    def _kernel_info(self) -> str:
         """Request kernel info
 
         Returns
@@ -751,7 +744,7 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg['header']['msg_id']
 
-    async def _async_comm_info(
+    def _comm_info(
         self,
         target_name: t.Optional[str] = None
     ) -> str:
@@ -804,7 +797,7 @@ class KernelClient(ConnectionFileMixin):
         msg = self.session.msg('input_reply', content)
         self.stdin_channel.send(msg)
 
-    async def _async_shutdown(
+    def _shutdown(
         self,
         restart: bool = False
     ) -> str:

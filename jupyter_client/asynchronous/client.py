@@ -7,6 +7,17 @@ from jupyter_client.channels import HBChannel, ZMQSocketChannel
 from jupyter_client.client import KernelClient, reqrep
 
 
+def wrapped(meth, channel):
+    def _(self, *args, **kwargs):
+        reply = kwargs.pop('reply', False)
+        timeout = kwargs.pop('timeout', None)
+        msg_id = meth(self, *args, **kwargs)
+        if not reply:
+            return msg_id
+        return self._async_recv_reply(msg_id, timeout=timeout, channel=channel)
+    return _
+
+
 class AsyncKernelClient(KernelClient):
     """A KernelClient with async APIs
 
@@ -37,15 +48,15 @@ class AsyncKernelClient(KernelClient):
 
 
     # replies come on the shell channel
-    execute = reqrep(KernelClient._async_execute)
-    history = reqrep(KernelClient._async_history)
-    complete = reqrep(KernelClient._async_complete)
-    inspect = reqrep(KernelClient._async_inspect)
-    kernel_info = reqrep(KernelClient._async_kernel_info)
-    comm_info = reqrep(KernelClient._async_comm_info)
+    execute = reqrep(wrapped, KernelClient._execute)
+    history = reqrep(wrapped, KernelClient._history)
+    complete = reqrep(wrapped, KernelClient._complete)
+    inspect = reqrep(wrapped, KernelClient._inspect)
+    kernel_info = reqrep(wrapped, KernelClient._kernel_info)
+    comm_info = reqrep(wrapped, KernelClient._comm_info)
 
     is_alive = KernelClient._async_is_alive
     execute_interactive = KernelClient._async_execute_interactive
 
     # replies come on the control channel
-    shutdown = reqrep(KernelClient._async_shutdown, channel='control')
+    shutdown = reqrep(wrapped, KernelClient._shutdown, channel='control')
