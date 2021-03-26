@@ -31,6 +31,8 @@ jobs:
         pip install --upgrade setuptools pip
         pip install --upgrade --upgrade-strategy eager -e .[test] pytest-cov codecov 'coverage<5'
         pip freeze
+    - name: Check types
+      run: mypy jupyter_client/manager.py jupyter_client/multikernelmanager.py jupyter_client/client.py jupyter_client/blocking/client.py jupyter_client/asynchronous/client.py jupyter_client/channels.py jupyter_client/session.py jupyter_client/adapter.py jupyter_client/connect.py jupyter_client/consoleapp.py jupyter_client/jsonutil.py jupyter_client/kernelapp.py jupyter_client/launcher.py
     - name: Run the tests
       run: py.test --cov jupyter_client -v jupyter_client
     - name: Code coverage

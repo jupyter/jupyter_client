@@ -9,12 +9,12 @@ import jupyter_client
 
 
 def test_kms():
-    for base in ("", "Multi"):
+    for base in ("", "Async", "Multi"):
         KM = base + "KernelManager"
         assert KM in dir(jupyter_client)
 
 def test_kcs():
-    for base in ("", "Blocking"):
+    for base in ("", "Blocking", "Async"):
         KM = base + "KernelClient"
         assert KM in dir(jupyter_client)
 

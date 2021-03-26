@@ -10,10 +10,10 @@ import os
 import signal
 import sys
 import time
-import threading
-import multiprocessing as mp
+import concurrent.futures
 import pytest
 
+import nest_asyncio
 from async_generator import async_generator, yield_
 from traitlets.config.loader import Config
 from jupyter_core import paths
@@ -242,8 +242,8 @@ class TestKernelManager:
         content = reply['content']
         assert content['status'] == 'ok'
         assert content['user_expressions']['interrupted']
-        # wait up to 5s for subprocesses to handle signal
-        for i in range(50):
+        # wait up to 10s for subprocesses to handle signal
+        for i in range(100):
             reply = execute('check')
             if reply['user_expressions']['poll'] != [-signal.SIGINT] * N:
                 time.sleep(0.1)
@@ -350,41 +350,34 @@ class TestParallel:
             pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
 
-        thread = threading.Thread(target=self._run_signaltest_lifecycle, args=(config,))
-        thread2 = threading.Thread(target=self._run_signaltest_lifecycle, args=(config,))
-        try:
-            thread.start()
-            thread2.start()
-        finally:
-            thread.join()
-            thread2.join()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as thread_executor:
+            future1 = thread_executor.submit(self._run_signaltest_lifecycle, config)
+            future2 = thread_executor.submit(self._run_signaltest_lifecycle, config)
+            future1.result()
+            future2.result()
 
     @pytest.mark.timeout(TIMEOUT)
+    @pytest.mark.skipif((sys.platform == 'darwin') and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)), reason='"Bad file descriptor" error')
     def test_start_parallel_process_kernels(self, config, install_kernel):
         if config.KernelManager.transport == 'ipc':  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
-        thread = threading.Thread(target=self._run_signaltest_lifecycle, args=(config,))
-        proc = mp.Process(target=self._run_signaltest_lifecycle, args=(config,))
-        try:
-            thread.start()
-            proc.start()
-        finally:
-            thread.join()
-            proc.join()
-
-        assert proc.exitcode == 0
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
+            future1 = thread_executor.submit(self._run_signaltest_lifecycle, config)
+            with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
+                future2 = process_executor.submit(self._run_signaltest_lifecycle, config)
+                future2.result()
+            future1.result()
 
     @pytest.mark.timeout(TIMEOUT)
+    @pytest.mark.skipif((sys.platform == 'darwin') and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)), reason='"Bad file descriptor" error')
     def test_start_sequence_process_kernels(self, config, install_kernel):
+        if config.KernelManager.transport == 'ipc':  # FIXME
+            pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
-        proc = mp.Process(target=self._run_signaltest_lifecycle, args=(config,))
-        try:
-            proc.start()
-        finally:
-            proc.join()
-
-        assert proc.exitcode == 0
+        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as pool_executor:
+            future = pool_executor.submit(self._run_signaltest_lifecycle, config)
+            future.result()
 
     def _prepare_kernel(self, km, startup_timeout=TIMEOUT, **kwargs):
         km.start_kernel(**kwargs)

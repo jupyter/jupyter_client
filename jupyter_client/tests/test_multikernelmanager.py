@@ -1,15 +1,16 @@
 """Tests for the notebook kernel and session manager."""
 
 import asyncio
-import threading
+import concurrent.futures
 import uuid
-import multiprocessing as mp
+import sys
 
+import pytest
 from subprocess import PIPE
 from unittest import TestCase
 from tornado.testing import AsyncTestCase, gen_test
 from traitlets.config.loader import Config
-from jupyter_client import KernelManager
+from jupyter_client import KernelManager, AsyncKernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager, AsyncMultiKernelManager
 from .utils import skip_win32, SyncMKMSubclass, AsyncMKMSubclass, SyncKMSubclass, AsyncKMSubclass
 from ..localinterfaces import localhost
@@ -134,30 +135,23 @@ class TestKernelManager(TestCase):
     def test_start_parallel_thread_kernels(self):
         self.test_tcp_lifecycle()
 
-        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        thread2 = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        try:
-            thread.start()
-            thread2.start()
-        finally:
-            thread.join()
-            thread2.join()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as thread_executor:
+            future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            future2 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            future1.result()
+            future2.result()
 
+    @pytest.mark.skipif((sys.platform == 'darwin') and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)), reason='"Bad file descriptor" error')
     def test_start_parallel_process_kernels(self):
         self.test_tcp_lifecycle()
 
-        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        # Windows tests needs this target to be picklable:
-        proc = mp.Process(target=self.test_tcp_lifecycle)
-
-        try:
-            thread.start()
-            proc.start()
-        finally:
-            thread.join()
-            proc.join()
-
-        assert proc.exitcode == 0
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
+            future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
+                # Windows tests needs this target to be picklable:
+                future2 = process_executor.submit(self.test_tcp_lifecycle)
+                future2.result()
+            future1.result()
 
     def test_subclass_callables(self):
         km = self._get_tcp_km_sub()
@@ -206,10 +200,10 @@ class TestKernelManager(TestCase):
         km.get_kernel(kid).reset_counts()
         km.reset_counts()
         km.shutdown_all(now=True)
-        assert km.call_count('shutdown_kernel') == 0
+        assert km.call_count('shutdown_kernel') == 1
         assert km.call_count('remove_kernel') == 1
-        assert km.call_count('request_shutdown') == 1
-        assert km.call_count('finish_shutdown') == 1
+        assert km.call_count('request_shutdown') == 0
+        assert km.call_count('finish_shutdown') == 0
         assert km.call_count('cleanup_resources') == 0
 
         assert kid not in km, f'{kid} not in {km}'
@@ -256,7 +250,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert kid in km.list_kernel_ids()
         await km.interrupt_kernel(kid)
         k = km.get_kernel(kid)
-        assert isinstance(k, KernelManager)
+        assert isinstance(k, AsyncKernelManager)
         await km.shutdown_kernel(kid, now=True)
         assert kid not in km, f'{kid} not in {km}'
 
@@ -389,31 +383,23 @@ class TestAsyncKernelManager(AsyncTestCase):
     async def test_start_parallel_thread_kernels(self):
         await self.raw_tcp_lifecycle()
 
-        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        thread2 = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        try:
-            thread.start()
-            thread2.start()
-        finally:
-            thread.join()
-            thread2.join()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as thread_executor:
+            future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            future2 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            future1.result()
+            future2.result()
 
     @gen_test
     async def test_start_parallel_process_kernels(self):
         await self.raw_tcp_lifecycle()
 
-        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        # Windows tests needs this target to be picklable:
-        proc = mp.Process(target=self.raw_tcp_lifecycle_sync)
-
-        try:
-            thread.start()
-            proc.start()
-        finally:
-            proc.join()
-            thread.join()
-
-        assert proc.exitcode == 0
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
+            future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
+                # Windows tests needs this target to be picklable:
+                future2 = process_executor.submit(self.raw_tcp_lifecycle_sync)
+                future2.result()
+            future1.result()
 
     @gen_test
     async def test_subclass_callables(self):

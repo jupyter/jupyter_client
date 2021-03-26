@@ -6,12 +6,21 @@
 import os
 import sys
 from subprocess import Popen, PIPE
+from typing import List, Dict, Optional
 
-from traitlets.log import get_logger
+from traitlets.log import get_logger  # type: ignore
 
 
-def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
-                  independent=False, cwd=None, **kw):
+def launch_kernel(
+    cmd: List[str],
+    stdin: Optional[int] = None,
+    stdout: Optional[int] = None,
+    stderr: Optional[int] = None,
+    env: Optional[Dict[str, str]] = None,
+    independent: bool = False,
+    cwd: Optional[str] = None,
+    **kw
+) -> Popen:
     """ Launches a localhost kernel, binding to the specified ports.
 
     Parameters
@@ -90,11 +99,11 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
         env["IPY_INTERRUPT_EVENT"] = env["JPY_INTERRUPT_EVENT"]
 
         try:
-            from _winapi import DuplicateHandle, GetCurrentProcess, \
-                DUPLICATE_SAME_ACCESS, CREATE_NEW_PROCESS_GROUP
+            from _winapi import (DuplicateHandle, GetCurrentProcess,
+                DUPLICATE_SAME_ACCESS, CREATE_NEW_PROCESS_GROUP)
         except:
-            from _subprocess import DuplicateHandle, GetCurrentProcess, \
-                DUPLICATE_SAME_ACCESS, CREATE_NEW_PROCESS_GROUP
+            from _subprocess import (DuplicateHandle, GetCurrentProcess,  # type: ignore
+                DUPLICATE_SAME_ACCESS, CREATE_NEW_PROCESS_GROUP)  # type: ignore
 
         # create a handle on the parent to be inherited
         if independent:
@@ -127,8 +136,7 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
 
     try:
         # Allow to use ~/ in the command or its arguments
-        cmd = list(map(os.path.expanduser, cmd))
-
+        cmd = [os.path.expanduser(s) for s in cmd]
         proc = Popen(cmd, **kwargs)
     except Exception as exc:
         msg = (
@@ -145,11 +153,12 @@ def launch_kernel(cmd, stdin=None, stdout=None, stderr=None, env=None,
 
     if sys.platform == 'win32':
         # Attach the interrupt event to the Popen objet so it can be used later.
-        proc.win32_interrupt_event = interrupt_event
+        proc.win32_interrupt_event = interrupt_event  # type: ignore
 
     # Clean up pipes created to work around Popen bug.
     if redirect_in:
         if stdin is None:
+            assert proc.stdin is not None
             proc.stdin.close()
 
     return proc

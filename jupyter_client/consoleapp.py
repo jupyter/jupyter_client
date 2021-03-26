@@ -13,14 +13,15 @@ import signal
 import sys
 import uuid
 import warnings
+from typing import cast
 
 
-from traitlets.config.application import boolean_flag
-from traitlets import (
+from traitlets.config.application import boolean_flag  # type: ignore
+from traitlets import (  # type: ignore
     Dict, List, Unicode, CUnicode, CBool, Any, Type
 )
 
-from jupyter_core.application import base_flags, base_aliases
+from jupyter_core.application import base_flags, base_aliases  # type: ignore
 
 from .blocking import BlockingKernelClient
 from .restarter import KernelRestarter
@@ -93,19 +94,19 @@ class JupyterConsoleApp(ConnectionFileMixin):
 
     description = """
         The Jupyter Console Mixin.
-        
+
         This class contains the common portions of console client (QtConsole,
         ZMQ-based terminal console, etc).  It is not a full console, in that
         launched terminal subprocesses will not be able to accept input.
-        
+
         The Console using this mixing supports various extra features beyond
         the single-process Terminal IPython shell, such as connecting to
         existing kernel, via:
-        
+
             jupyter console <appname> --existing
-        
+
         as well as tunnel via SSH
-        
+
     """
 
     classes = classes
@@ -121,13 +122,13 @@ class JupyterConsoleApp(ConnectionFileMixin):
     kernel_argv = List(Unicode())
 
     # connection info:
-    
+
     sshserver = Unicode('', config=True,
         help="""The SSH server to use to connect to the kernel.""")
     sshkey = Unicode('', config=True,
         help="""Path to the ssh key to use for logging in to the ssh server.""")
-    
-    def _connection_file_default(self):
+
+    def _connection_file_default(self) -> str:
         return 'kernel-%i.json' % os.getpid()
 
     existing = CUnicode('', config=True,
@@ -141,26 +142,26 @@ class JupyterConsoleApp(ConnectionFileMixin):
         Set to display confirmation dialog on exit. You can always use 'exit' or 'quit',
         to force a direct exit without any confirmation.""",
     )
-    
-    def build_kernel_argv(self, argv=None):
+
+    def build_kernel_argv(self, argv=None) -> None:
         """build argv to be passed to kernel subprocess
-        
+
         Override in subclasses if any args should be passed to the kernel
         """
         self.kernel_argv = self.extra_args
-    
-    def init_connection_file(self):
+
+    def init_connection_file(self) -> None:
         """find the connection file, and load the info if found.
-        
+
         The current working directory and the current profile's security
         directory will be searched for the file if it is not given by
         absolute path.
-        
+
         When attempting to connect to an existing kernel and the `--existing`
         argument does not match an existing file, it will be interpreted as a
         fileglob, and the matching file in the current profile's security dir
         with the latest access time will be used.
-        
+
         After this method is called, self.connection_file contains the *full path*
         to the connection file, never just its name.
         """
@@ -192,7 +193,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         except IOError:
             self.log.debug("Connection File not found: %s", self.connection_file)
             return
-        
+
         # should load_connection_file only be used for existing?
         # as it is now, this allows reusing ports if an existing
         # file is requested
@@ -201,25 +202,25 @@ class JupyterConsoleApp(ConnectionFileMixin):
         except Exception:
             self.log.error("Failed to load connection file: %r", self.connection_file, exc_info=True)
             self.exit(1)
-    
-    def init_ssh(self):
+
+    def init_ssh(self) -> None:
         """set up ssh tunnels, if needed."""
         if not self.existing or (not self.sshserver and not self.sshkey):
             return
         self.load_connection_file()
-        
+
         transport = self.transport
         ip = self.ip
-        
+
         if transport != 'tcp':
             self.log.error("Can only use ssh tunnels with TCP sockets, not %s", transport)
             sys.exit(-1)
-        
+
         if self.sshkey and not self.sshserver:
             # specifying just the key implies that we are connecting directly
             self.sshserver = ip
             ip = localhost()
-        
+
         # build connection dict for tunnels:
         info = dict(ip=ip,
                     shell_port=self.shell_port,
@@ -228,9 +229,9 @@ class JupyterConsoleApp(ConnectionFileMixin):
                     hb_port=self.hb_port,
                     control_port=self.control_port
         )
-        
+
         self.log.info("Forwarding connections to %s via %s"%(ip, self.sshserver))
-        
+
         # tunnels return a new set of ports, which will be on localhost:
         self.ip = localhost()
         try:
@@ -239,17 +240,17 @@ class JupyterConsoleApp(ConnectionFileMixin):
             # even catch KeyboardInterrupt
             self.log.error("Could not setup tunnels", exc_info=True)
             self.exit(1)
-        
+
         self.shell_port, self.iopub_port, self.stdin_port, self.hb_port, self.control_port = newports
-        
+
         cf = self.connection_file
         root, ext = os.path.splitext(cf)
         self.connection_file = root + '-ssh' + ext
         self.write_connection_file() # write the new connection file
         self.log.info("To connect another client via this tunnel, use:")
         self.log.info("--existing %s" % os.path.basename(self.connection_file))
-    
-    def _new_connection_file(self):
+
+    def _new_connection_file(self) -> str:
         cf = ''
         while not cf:
             # we don't need a 128b id to distinguish kernels, use more readable
@@ -262,7 +263,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
             cf = cf if not os.path.exists(cf) else ''
         return cf
 
-    def init_kernel_manager(self):
+    def init_kernel_manager(self) -> None:
         # Don't let Qt or ZMQ swallow KeyboardInterupts.
         if self.existing:
             self.kernel_manager = None
@@ -289,6 +290,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
             self.log.critical("Could not find kernel %s", self.kernel_name)
             self.exit(1)
 
+        self.kernel_manager = cast(KernelManager, self.kernel_manager)
         self.kernel_manager.client_factory = self.kernel_client_class
         kwargs = {}
         kwargs['extra_arguments'] = self.kernel_argv
@@ -310,7 +312,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
 
         atexit.register(self.kernel_manager.cleanup_connection_file)
 
-    def init_kernel_client(self):
+    def init_kernel_client(self) -> None:
         if self.kernel_manager is not None:
             self.kernel_client = self.kernel_manager.client()
         else:
@@ -331,7 +333,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
 
 
 
-    def initialize(self, argv=None):
+    def initialize(self, argv=None) -> None:
         """
         Classes which mix this class in should call:
                JupyterConsoleApp.initialize(self,argv)
