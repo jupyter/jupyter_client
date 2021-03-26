@@ -1,35 +1,35 @@
 """Base classes to manage a Client's interaction with a running kernel"""
-
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-
+import asyncio
 import atexit
 import errno
-from threading import Thread, Event
 import time
-import asyncio
-from queue import Empty
 import typing as t
+from queue import Empty
+from threading import Event
+from threading import Thread
 
-import zmq
 import zmq.asyncio
-# import ZMQError in top-level namespace, to avoid ugly attribute-error messages
-# during garbage collection of threads at exit:
 from zmq import ZMQError
-
-from jupyter_client import protocol_version_info
 
 from .channelsabc import HBChannelABC
 from .session import Session
+from jupyter_client import protocol_version_info
 
-#-----------------------------------------------------------------------------
+# import ZMQError in top-level namespace, to avoid ugly attribute-error messages
+# during garbage collection of threads at exit
+
+# -----------------------------------------------------------------------------
 # Constants and exceptions
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 major_protocol_version = protocol_version_info[0]
 
+
 class InvalidPortNumber(Exception):
     pass
+
 
 class HBChannel(Thread):
     """The heartbeat channel which monitors the kernel heartbeat.
@@ -38,12 +38,13 @@ class HBChannel(Thread):
     this channel, the kernel manager will ensure that it is paused and un-paused
     as appropriate.
     """
+
     session = None
     socket = None
     address = None
     _exiting = False
 
-    time_to_dead: float = 1.
+    time_to_dead: float = 1.0
     _running = None
     _pause = None
     _beating = None
@@ -52,7 +53,7 @@ class HBChannel(Thread):
         self,
         context: zmq.asyncio.Context,
         session: t.Optional[Session] = None,
-        address: t.Union[t.Tuple[str, int], str] = ''
+        address: t.Union[t.Tuple[str, int], str] = "",
     ):
         """Create the heartbeat monitor thread.
 
@@ -72,7 +73,7 @@ class HBChannel(Thread):
         self.session = session
         if isinstance(address, tuple):
             if address[1] == 0:
-                message = 'The port number for a channel cannot be 0.'
+                message = "The port number for a channel cannot be 0."
                 raise InvalidPortNumber(message)
             address_str = "tcp://%s:%i" % address
         else:
@@ -105,10 +106,7 @@ class HBChannel(Thread):
 
         self.poller.register(self.socket, zmq.POLLIN)
 
-    def _poll(
-        self,
-        start_time: float
-    ) -> t.List[t.Any]:
+    def _poll(self, start_time: float) -> t.List[t.Any]:
         """poll for heartbeat replies until we reach self.time_to_dead.
 
         Ignores interrupts, and returns the result of poll(), which
@@ -162,7 +160,7 @@ class HBChannel(Thread):
             since_last_heartbeat = 0.0
             # no need to catch EFSM here, because the previous event was
             # either a recv or connect, which cannot be followed by EFSM
-            await self.socket.send(b'ping')
+            await self.socket.send(b"ping")
             request_time = time.time()
             ready = self._poll(request_time)
             if ready:
@@ -213,10 +211,7 @@ class HBChannel(Thread):
                 pass
             self.socket = None
 
-    def call_handlers(
-        self,
-        since_last_heartbeat: float
-    ) -> None:
+    def call_handlers(self, since_last_heartbeat: float) -> None:
         """This method is called in the ioloop thread when a message arrives.
 
         Subclasses should override this method to handle incoming messages.
@@ -234,10 +229,7 @@ class ZMQSocketChannel(object):
     """A ZMQ socket in an async API"""
 
     def __init__(
-        self,
-        socket: zmq.sugar.socket.Socket,
-        session: Session,
-        loop: t.Any = None
+        self, socket: zmq.sugar.socket.Socket, session: Session, loop: t.Any = None
     ) -> None:
         """Create a channel.
 
@@ -261,10 +253,7 @@ class ZMQSocketChannel(object):
         ident, smsg = self.session.feed_identities(msg)
         return self.session.deserialize(smsg)
 
-    async def get_msg(
-        self,
-        timeout: t.Optional[float] = None
-    ) -> t.Dict[str, t.Any]:
+    async def get_msg(self, timeout: t.Optional[float] = None) -> t.Dict[str, t.Any]:
         """ Gets a message if there is one that is ready. """
         if timeout is not None:
             timeout *= 1000  # seconds to ms
@@ -299,17 +288,14 @@ class ZMQSocketChannel(object):
             except Exception:
                 pass
             self.socket = None
+
     stop = close
 
     def is_alive(self) -> bool:
-        return (self.socket is not None)
+        return self.socket is not None
 
-    def send(
-        self,
-        msg: t.Dict[str, t.Any]
-    ) -> None:
-        """Pass a message to the ZMQ socket to send
-        """
+    def send(self, msg: t.Dict[str, t.Any]) -> None:
+        """Pass a message to the ZMQ socket to send"""
         assert self.socket is not None
         self.session.send(self.socket, msg)
 

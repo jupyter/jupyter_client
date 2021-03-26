@@ -1,20 +1,23 @@
 """Implements an async kernel client"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+from traitlets import Type  # type: ignore
 
-from traitlets import (Type, Instance)  # type: ignore
-from jupyter_client.channels import HBChannel, ZMQSocketChannel
-from jupyter_client.client import KernelClient, reqrep
+from jupyter_client.channels import HBChannel
+from jupyter_client.channels import ZMQSocketChannel
+from jupyter_client.client import KernelClient
+from jupyter_client.client import reqrep
 
 
 def wrapped(meth, channel):
     def _(self, *args, **kwargs):
-        reply = kwargs.pop('reply', False)
-        timeout = kwargs.pop('timeout', None)
+        reply = kwargs.pop("reply", False)
+        timeout = kwargs.pop("timeout", None)
         msg_id = meth(self, *args, **kwargs)
         if not reply:
             return msg_id
         return self._async_recv_reply(msg_id, timeout=timeout, channel=channel)
+
     return _
 
 
@@ -25,9 +28,9 @@ class AsyncKernelClient(KernelClient):
     raising :exc:`queue.Empty` if no message arrives within ``timeout`` seconds.
     """
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Channel proxy methods
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     get_shell_msg = KernelClient._async_get_shell_msg
     get_iopub_msg = KernelClient._async_get_iopub_msg
@@ -43,9 +46,7 @@ class AsyncKernelClient(KernelClient):
     hb_channel_class = Type(HBChannel)
     control_channel_class = Type(ZMQSocketChannel)
 
-
     _recv_reply = KernelClient._async_recv_reply
-
 
     # replies come on the shell channel
     execute = reqrep(wrapped, KernelClient._execute)
@@ -59,4 +60,4 @@ class AsyncKernelClient(KernelClient):
     execute_interactive = KernelClient._async_execute_interactive
 
     # replies come on the control channel
-    shutdown = reqrep(wrapped, KernelClient._shutdown, channel='control')
+    shutdown = reqrep(wrapped, KernelClient._shutdown, channel="control")

@@ -1,1 +1,1 @@
-from .client import BlockingKernelClient
+from .client import BlockingKernelClient  # noqa

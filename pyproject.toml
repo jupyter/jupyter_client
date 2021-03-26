@@ -1,0 +1,8 @@
+[tool.black]
+line-length = 100
+skip-string-normalization = true
+target_version = [
+    "py36",
+    "py37",
+    "py38",
+]

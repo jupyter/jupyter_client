@@ -55,4 +55,3 @@ Utility functions
 -----------------
 
 .. autofunction:: run_kernel
-

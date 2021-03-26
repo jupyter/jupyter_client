@@ -25,7 +25,6 @@ twine upload dist/*
 
 - Load `jupyter_client/_version.py` and bump the patch version and add the 'dev' tag back to the end of the version tuple.
 
-
 ## Push to GitHub
 
 ```bash
