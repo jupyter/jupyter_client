@@ -81,7 +81,10 @@ class TestKernelClient(TestCase):
 
     def test_shutdown(self):
         kc = self.kc
-        msg_id = kc.shutdown()
-        self.assertIsInstance(msg_id, str)
         reply = kc.shutdown(reply=True, timeout=TIMEOUT)
         self._check_reply("shutdown", reply)
+
+    def test_shutdown_id(self):
+        kc = self.kc
+        msg_id = kc.shutdown()
+        self.assertIsInstance(msg_id, str)
