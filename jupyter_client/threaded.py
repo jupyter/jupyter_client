@@ -1,23 +1,30 @@
-""" Defines a KernelClient that provides thread-safe sockets with async callbacks on message replies.
+""" Defines a KernelClient that provides thread-safe sockets with async callbacks on message
+replies.
 """
 import atexit
 import errno
 import sys
-from threading import Thread, Event
 import time
+from threading import Event
+from threading import Thread
 
-# import ZMQError in top-level namespace, to avoid ugly attribute-error messages
-# during garbage collection of threads at exit:
+from traitlets import Instance
+from traitlets import Type
 from zmq import ZMQError
-from zmq.eventloop import ioloop, zmqstream
+from zmq.eventloop import ioloop
+from zmq.eventloop import zmqstream
+
+from jupyter_client import KernelClient
+from jupyter_client.channels import HBChannel
 
 # Local imports
-from traitlets import Type, Instance
-from jupyter_client.channels import HBChannel
-from jupyter_client import KernelClient
+# import ZMQError in top-level namespace, to avoid ugly attribute-error messages
+# during garbage collection of threads at exit
+
 
 class ThreadedZMQSocketChannel(object):
     """A ZMQ socket invoking a callback in the ioloop"""
+
     session = None
     socket = None
     ioloop = None
@@ -52,6 +59,7 @@ class ThreadedZMQSocketChannel(object):
         evt.wait()
 
     _is_alive = False
+
     def is_alive(self):
         return self._is_alive
 
@@ -79,8 +87,10 @@ class ThreadedZMQSocketChannel(object):
         This is threadsafe, as it uses IOLoop.add_callback to give the loop's
         thread control of the action.
         """
+
         def thread_send():
             self.session.send(self.stream, msg)
+
         self.ioloop.add_callback(thread_send)
 
     def _handle_recv(self, msg):
@@ -88,7 +98,7 @@ class ThreadedZMQSocketChannel(object):
 
         Unpacks message, and calls handlers with it.
         """
-        ident,smsg = self.session.feed_identities(msg)
+        ident, smsg = self.session.feed_identities(msg)
         msg = self.session.deserialize(smsg)
         # let client inspect messages
         if self._inspect:
@@ -110,7 +120,6 @@ class ThreadedZMQSocketChannel(object):
         processing any pending GUI events.
         """
         pass
-
 
     def flush(self, timeout=1.0):
         """Immediately processes all pending messages on this channel.
@@ -145,8 +154,8 @@ class ThreadedZMQSocketChannel(object):
 
 
 class IOLoopThread(Thread):
-    """Run a pyzmq ioloop in a thread to send and receive messages
-    """
+    """Run a pyzmq ioloop in a thread to send and receive messages"""
+
     _exiting = False
     ioloop = None
 
@@ -174,10 +183,11 @@ class IOLoopThread(Thread):
 
     def run(self):
         """Run my loop, ignoring EINTR events in the poller"""
-        if 'asyncio' in sys.modules:
+        if "asyncio" in sys.modules:
             # tornado may be using asyncio,
             # ensure an eventloop exists for this thread
             import asyncio
+
             asyncio.set_event_loop(asyncio.new_event_loop())
         self.ioloop = ioloop.IOLoop()
         # signal that self.ioloop is defined
@@ -220,8 +230,7 @@ class IOLoopThread(Thread):
 
 
 class ThreadedKernelClient(KernelClient):
-    """ A KernelClient that provides thread-safe sockets with async callbacks on message replies.
-    """
+    """A KernelClient that provides thread-safe sockets with async callbacks on message replies."""
 
     @property
     def ioloop(self):
@@ -239,9 +248,8 @@ class ThreadedKernelClient(KernelClient):
         super().start_channels(shell, iopub, stdin, hb, control)
 
     def _check_kernel_info_reply(self, msg):
-        """This is run in the ioloop thread when the kernel info reply is received
-        """
-        if msg['msg_type'] == 'kernel_info_reply':
+        """This is run in the ioloop thread when the kernel info reply is received"""
+        if msg["msg_type"] == "kernel_info_reply":
             self._handle_kernel_info_reply(msg)
             self.shell_channel._inspect = None
 

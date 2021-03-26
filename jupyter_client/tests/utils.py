@@ -2,65 +2,74 @@
 
 """
 import os
-pjoin = os.path.join
 import sys
-from unittest.mock import patch
 from tempfile import TemporaryDirectory
 from typing import Dict
+from unittest.mock import patch
 
 import pytest
-from jupyter_client import AsyncKernelManager, KernelManager, AsyncMultiKernelManager, MultiKernelManager
 
+from jupyter_client import AsyncKernelManager
+from jupyter_client import AsyncMultiKernelManager
+from jupyter_client import KernelManager
+from jupyter_client import MultiKernelManager
 
-skip_win32 = pytest.mark.skipif(sys.platform.startswith('win'), reason="Windows")
+pjoin = os.path.join
+
+skip_win32 = pytest.mark.skipif(sys.platform.startswith("win"), reason="Windows")
 
 
 class test_env(object):
     """Set Jupyter path variables to a temporary directory
-    
+
     Useful as a context manager or with explicit start/stop
     """
+
     def start(self):
         self.test_dir = td = TemporaryDirectory()
-        self.env_patch = patch.dict(os.environ, {
-            'JUPYTER_CONFIG_DIR': pjoin(td.name, 'jupyter'),
-            'JUPYTER_DATA_DIR': pjoin(td.name, 'jupyter_data'),
-            'JUPYTER_RUNTIME_DIR': pjoin(td.name, 'jupyter_runtime'),
-            'IPYTHONDIR': pjoin(td.name, 'ipython'),
-            'TEST_VARS': 'test_var_1',
-        })
+        self.env_patch = patch.dict(
+            os.environ,
+            {
+                "JUPYTER_CONFIG_DIR": pjoin(td.name, "jupyter"),
+                "JUPYTER_DATA_DIR": pjoin(td.name, "jupyter_data"),
+                "JUPYTER_RUNTIME_DIR": pjoin(td.name, "jupyter_runtime"),
+                "IPYTHONDIR": pjoin(td.name, "ipython"),
+                "TEST_VARS": "test_var_1",
+            },
+        )
         self.env_patch.start()
-    
+
     def stop(self):
         self.env_patch.stop()
         self.test_dir.cleanup()
-    
+
     def __enter__(self):
         self.start()
         return self.test_dir.name
-    
+
     def __exit__(self, *exc_info):
         self.stop()
 
 
-def execute(code='', kc=None, **kwargs):
+def execute(code="", kc=None, **kwargs):
     """wrapper for doing common steps for validating an execution request"""
     from .test_message_spec import validate_message
+
     if kc is None:
-        kc = KC
+        kc = KC  # noqa
     msg_id = kc.execute(code=code, **kwargs)
-    reply = kc.get_shell_msg(timeout=TIMEOUT)
-    validate_message(reply, 'execute_reply', msg_id)
-    busy = kc.get_iopub_msg(timeout=TIMEOUT)
-    validate_message(busy, 'status', msg_id)
-    assert busy['content']['execution_state'] == 'busy'
+    reply = kc.get_shell_msg(timeout=TIMEOUT)  # noqa
+    validate_message(reply, "execute_reply", msg_id)
+    busy = kc.get_iopub_msg(timeout=TIMEOUT)  # noqa
+    validate_message(busy, "status", msg_id)
+    assert busy["content"]["execution_state"] == "busy"
 
-    if not kwargs.get('silent'):
-        execute_input = kc.get_iopub_msg(timeout=TIMEOUT)
-        validate_message(execute_input, 'execute_input', msg_id)
-        assert execute_input['content']['code'] == code
+    if not kwargs.get("silent"):
+        execute_input = kc.get_iopub_msg(timeout=TIMEOUT)  # noqa
+        validate_message(execute_input, "execute_input", msg_id)
+        assert execute_input["content"]["code"] == code
 
-    return msg_id, reply['content']
+    return msg_id, reply["content"]
 
 
 class RecordCallMixin:
@@ -95,11 +104,11 @@ def subclass_recorder(f):
         # call anything defined in the actual class method
         f(self, *args, **kwargs)
         return r
+
     return wrapped
 
 
 class KMSubclass(RecordCallMixin):
-
     @subclass_recorder
     def start_kernel(self, **kw):
         """ Record call and defer to superclass """
@@ -144,39 +153,40 @@ class SyncKMSubclass(KMSubclass, KernelManager):
 class AsyncKMSubclass(KMSubclass, AsyncKernelManager):
     """Used to test subclass hierarchies to ensure methods are called when expected.
 
-       This class is also used to test deprecation "routes" that are determined by superclass'
-       detection of methods.
+    This class is also used to test deprecation "routes" that are determined by superclass'
+    detection of methods.
 
-       This class represents a current subclass that overrides "interesting" methods of AsyncKernelManager.
+    This class represents a current subclass that overrides "interesting" methods of
+    AsyncKernelManager.
     """
+
     _superclass = AsyncKernelManager
     which_cleanup = ""  # cleanup deprecation testing
 
     @subclass_recorder
     def cleanup(self, connection_file=True):
-        self.which_cleanup = 'cleanup'
+        self.which_cleanup = "cleanup"
 
     @subclass_recorder
     def cleanup_resources(self, restart=False):
-        self.which_cleanup = 'cleanup_resources'
+        self.which_cleanup = "cleanup_resources"
 
 
 class AsyncKernelManagerWithCleanup(AsyncKernelManager):
     """Used to test deprecation "routes" that are determined by superclass' detection of methods.
 
-       This class represents the older subclass that overrides cleanup().  We should find that
-       cleanup() is called on these instances via TestAsyncKernelManagerWithCleanup.
+    This class represents the older subclass that overrides cleanup().  We should find that
+    cleanup() is called on these instances via TestAsyncKernelManagerWithCleanup.
     """
 
     def cleanup(self, connection_file=True):
         super().cleanup(connection_file=connection_file)
-        self.which_cleanup = 'cleanup'
+        self.which_cleanup = "cleanup"
 
 
 class MKMSubclass(RecordCallMixin):
-
     def _kernel_manager_class_default(self):
-        return 'jupyter_client.tests.utils.SyncKMSubclass'
+        return "jupyter_client.tests.utils.SyncKMSubclass"
 
     @subclass_recorder
     def get_kernel(self, kernel_id):
@@ -224,7 +234,7 @@ class SyncMKMSubclass(MKMSubclass, MultiKernelManager):
     _superclass = MultiKernelManager
 
     def _kernel_manager_class_default(self):
-        return 'jupyter_client.tests.utils.SyncKMSubclass'
+        return "jupyter_client.tests.utils.SyncKMSubclass"
 
 
 class AsyncMKMSubclass(MKMSubclass, AsyncMultiKernelManager):
@@ -232,4 +242,4 @@ class AsyncMKMSubclass(MKMSubclass, AsyncMultiKernelManager):
     _superclass = AsyncMultiKernelManager
 
     def _kernel_manager_class_default(self):
-        return 'jupyter_client.tests.utils.AsyncKMSubclass'
+        return "jupyter_client.tests.utils.AsyncKMSubclass"

@@ -1,1 +1,1 @@
-from .client import AsyncKernelClient
+from .client import AsyncKernelClient  # noqa

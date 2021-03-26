@@ -1,8 +1,6 @@
 """Abstract base class for kernel managers."""
-
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-
 import abc
 
 
@@ -18,9 +16,9 @@ class KernelManagerABC(object, metaclass=abc.ABCMeta):
     def kernel(self):
         pass
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Kernel management
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     @abc.abstractmethod
     def start_kernel(self, **kw):

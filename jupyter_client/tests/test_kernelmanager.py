@@ -1,32 +1,35 @@
 """Tests for the KernelManager"""
-
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-
-
 import asyncio
+import concurrent.futures
 import json
 import os
 import signal
 import sys
 import time
-import concurrent.futures
-import pytest
-
-import nest_asyncio
-from async_generator import async_generator, yield_
-from traitlets.config.loader import Config
-from jupyter_core import paths
-from jupyter_client import KernelManager, AsyncKernelManager
 from subprocess import PIPE
 
-from ..manager import start_new_kernel, start_new_async_kernel
+import pytest
+from async_generator import async_generator
+from async_generator import yield_
+from jupyter_core import paths
+from traitlets.config.loader import Config
+
 from ..manager import _ShutdownStatus
-from .utils import test_env, SyncKMSubclass, AsyncKMSubclass, AsyncKernelManagerWithCleanup
+from ..manager import start_new_async_kernel
+from ..manager import start_new_kernel
+from .utils import AsyncKernelManagerWithCleanup
+from .utils import AsyncKMSubclass
+from .utils import SyncKMSubclass
+from .utils import test_env
+from jupyter_client import AsyncKernelManager
+from jupyter_client import KernelManager
 
 pjoin = os.path.join
 
 TIMEOUT = 30
+
 
 @pytest.fixture(autouse=True)
 def env():
@@ -36,9 +39,9 @@ def env():
     env_patch.stop()
 
 
-@pytest.fixture(params=['tcp', 'ipc'])
+@pytest.fixture(params=["tcp", "ipc"])
 def transport(request):
-    if sys.platform == 'win32' and request.param == 'ipc':  #
+    if sys.platform == "win32" and request.param == "ipc":  #
         pytest.skip("Transport 'ipc' not supported on Windows.")
     return request.param
 
@@ -47,8 +50,8 @@ def transport(request):
 def config(transport):
     c = Config()
     c.KernelManager.transport = transport
-    if transport == 'ipc':
-        c.KernelManager.ip = 'test'
+    if transport == "ipc":
+        c.KernelManager.ip = "test"
     return c
 
 
@@ -92,7 +95,7 @@ def install_kernel_dont_terminate():
 
 @pytest.fixture
 def start_kernel():
-    km, kc = start_new_kernel(kernel_name='signaltest')
+    km, kc = start_new_kernel(kernel_name="signaltest")
     yield km, kc
     kc.stop_channels()
     km.shutdown_kernel()
@@ -104,6 +107,7 @@ def km(config):
     km = KernelManager(config=config)
     return km
 
+
 @pytest.fixture
 def km_subclass(config):
     km = SyncKMSubclass(config=config)
@@ -113,6 +117,7 @@ def km_subclass(config):
 @pytest.fixture
 def zmq_context():
     import zmq
+
     ctx = zmq.Context()
     yield ctx
     ctx.term()
@@ -131,9 +136,10 @@ def async_km_subclass(config):
 
 
 @pytest.fixture
-@async_generator  # This is only necessary while Python 3.5 is support afterwhich both it and yield_() can be removed
+@async_generator  # This is only necessary while Python 3.5 is support afterwhich both it and
+# yield_() can be removed
 async def start_async_kernel():
-    km, kc = await start_new_async_kernel(kernel_name='signaltest')
+    km, kc = await start_new_async_kernel(kernel_name="signaltest")
     await yield_((km, kc))
     kc.stop_channels()
     await km.shutdown_kernel()
@@ -158,9 +164,7 @@ class TestKernelManagerShutDownGracefully:
         ],
     )
 
-    @pytest.mark.skipif(
-        sys.platform == "win32", reason="Windows doesn't support signals"
-    )
+    @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     @pytest.mark.parametrize(*parameters)
     def test_signal_kernel_subprocesses(self, name, install, expected):
         install()
@@ -174,9 +178,7 @@ class TestKernelManagerShutDownGracefully:
         assert km._shutdown_status == expected
 
     @pytest.mark.asyncio
-    @pytest.mark.skipif(
-        sys.platform == "win32", reason="Windows doesn't support signals"
-    )
+    @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     @pytest.mark.parametrize(*parameters)
     async def test_async_signal_kernel_subprocesses(self, name, install, expected):
         install()
@@ -191,7 +193,6 @@ class TestKernelManagerShutDownGracefully:
 
 
 class TestKernelManager:
-
     def test_lifecycle(self, km):
         km.start_kernel(stdout=PIPE, stderr=PIPE)
         assert km.is_alive()
@@ -205,14 +206,22 @@ class TestKernelManager:
     def test_get_connect_info(self, km):
         cinfo = km.get_connection_info()
         keys = sorted(cinfo.keys())
-        expected = sorted([
-            'ip', 'transport',
-            'hb_port', 'shell_port', 'stdin_port', 'iopub_port', 'control_port',
-            'key', 'signature_scheme',
-        ])
+        expected = sorted(
+            [
+                "ip",
+                "transport",
+                "hb_port",
+                "shell_port",
+                "stdin_port",
+                "iopub_port",
+                "control_port",
+                "key",
+                "signature_scheme",
+            ]
+        )
         assert keys == expected
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason="Windows doesn't support signals")
+    @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     def test_signal_kernel_subprocesses(self, install_kernel, start_kernel):
 
         km, kc = start_kernel
@@ -221,36 +230,36 @@ class TestKernelManager:
             request_id = kc.execute(cmd)
             while True:
                 reply = kc.get_shell_msg(TIMEOUT)
-                if reply['parent_header']['msg_id'] == request_id:
+                if reply["parent_header"]["msg_id"] == request_id:
                     break
-            content = reply['content']
-            assert content['status'] == 'ok'
+            content = reply["content"]
+            assert content["status"] == "ok"
             return content
 
         N = 5
         for i in range(N):
             execute("start")
         time.sleep(1)  # make sure subprocs stay up
-        reply = execute('check')
-        assert reply['user_expressions']['poll'] == [None] * N
-        
+        reply = execute("check")
+        assert reply["user_expressions"]["poll"] == [None] * N
+
         # start a job on the kernel to be interrupted
-        kc.execute('sleep')
+        kc.execute("sleep")
         time.sleep(1)  # ensure sleep message has been handled before we interrupt
         km.interrupt_kernel()
         reply = kc.get_shell_msg(TIMEOUT)
-        content = reply['content']
-        assert content['status'] == 'ok'
-        assert content['user_expressions']['interrupted']
+        content = reply["content"]
+        assert content["status"] == "ok"
+        assert content["user_expressions"]["interrupted"]
         # wait up to 10s for subprocesses to handle signal
         for i in range(100):
-            reply = execute('check')
-            if reply['user_expressions']['poll'] != [-signal.SIGINT] * N:
+            reply = execute("check")
+            if reply["user_expressions"]["poll"] != [-signal.SIGINT] * N:
                 time.sleep(0.1)
             else:
                 break
         # verify that subprocesses were interrupted
-        assert reply['user_expressions']['poll'] == [-signal.SIGINT] * N
+        assert reply["user_expressions"]["poll"] == [-signal.SIGINT] * N
 
     def test_start_new_kernel(self, install_kernel, start_kernel):
         km, kc = start_kernel
@@ -263,15 +272,15 @@ class TestKernelManager:
             request_id = kc.execute(cmd)
             while True:
                 reply = kc.get_shell_msg(TIMEOUT)
-                if reply['parent_header']['msg_id'] == request_id:
+                if reply["parent_header"]["msg_id"] == request_id:
                     break
-            content = reply['content']
-            assert content['status'] == 'ok'
+            content = reply["content"]
+            assert content["status"] == "ok"
             return content
 
-        reply = execute('env')
+        reply = execute("env")
         assert reply is not None
-        assert reply['user_expressions']['env'] == 'test_var_1:test_var_2'
+        assert reply["user_expressions"]["env"] == "test_var_1:test_var_2"
 
     def test_templated_kspec_env(self, install_kernel, start_kernel):
         km, kc = start_kernel
@@ -298,37 +307,37 @@ class TestKernelManager:
     def test_subclass_callables(self, km_subclass):
         km_subclass.reset_counts()
         km_subclass.start_kernel(stdout=PIPE, stderr=PIPE)
-        assert km_subclass.call_count('start_kernel') == 1
-        assert km_subclass.call_count('_launch_kernel') == 1
+        assert km_subclass.call_count("start_kernel") == 1
+        assert km_subclass.call_count("_launch_kernel") == 1
 
         is_alive = km_subclass.is_alive()
         assert is_alive
         km_subclass.reset_counts()
         km_subclass.restart_kernel(now=True)
-        assert km_subclass.call_count('restart_kernel') == 1
-        assert km_subclass.call_count('shutdown_kernel') == 1
-        assert km_subclass.call_count('interrupt_kernel') == 1
-        assert km_subclass.call_count('_kill_kernel') == 1
-        assert km_subclass.call_count('cleanup_resources') == 1
-        assert km_subclass.call_count('start_kernel') == 1
-        assert km_subclass.call_count('_launch_kernel') == 1
+        assert km_subclass.call_count("restart_kernel") == 1
+        assert km_subclass.call_count("shutdown_kernel") == 1
+        assert km_subclass.call_count("interrupt_kernel") == 1
+        assert km_subclass.call_count("_kill_kernel") == 1
+        assert km_subclass.call_count("cleanup_resources") == 1
+        assert km_subclass.call_count("start_kernel") == 1
+        assert km_subclass.call_count("_launch_kernel") == 1
 
         is_alive = km_subclass.is_alive()
         assert is_alive
 
         km_subclass.reset_counts()
         km_subclass.interrupt_kernel()
-        assert km_subclass.call_count('interrupt_kernel') == 1
+        assert km_subclass.call_count("interrupt_kernel") == 1
 
         assert isinstance(km_subclass, KernelManager)
 
         km_subclass.reset_counts()
         km_subclass.shutdown_kernel(now=False)
-        assert km_subclass.call_count('shutdown_kernel') == 1
-        assert km_subclass.call_count('interrupt_kernel') == 1
-        assert km_subclass.call_count('request_shutdown') == 1
-        assert km_subclass.call_count('finish_shutdown') == 1
-        assert km_subclass.call_count('cleanup_resources') == 1
+        assert km_subclass.call_count("shutdown_kernel") == 1
+        assert km_subclass.call_count("interrupt_kernel") == 1
+        assert km_subclass.call_count("request_shutdown") == 1
+        assert km_subclass.call_count("finish_shutdown") == 1
+        assert km_subclass.call_count("cleanup_resources") == 1
 
         is_alive = km_subclass.is_alive()
         assert is_alive is False
@@ -336,7 +345,6 @@ class TestKernelManager:
 
 
 class TestParallel:
-
     @pytest.mark.timeout(TIMEOUT)
     def test_start_sequence_kernels(self, config, install_kernel):
         """Ensure that a sequence of kernel startups doesn't break anything."""
@@ -346,7 +354,7 @@ class TestParallel:
 
     @pytest.mark.timeout(TIMEOUT)
     def test_start_parallel_thread_kernels(self, config, install_kernel):
-        if config.KernelManager.transport == 'ipc':  # FIXME
+        if config.KernelManager.transport == "ipc":  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
 
@@ -357,9 +365,12 @@ class TestParallel:
             future2.result()
 
     @pytest.mark.timeout(TIMEOUT)
-    @pytest.mark.skipif((sys.platform == 'darwin') and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)), reason='"Bad file descriptor" error')
+    @pytest.mark.skipif(
+        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
+        reason='"Bad file descriptor" error',
+    )
     def test_start_parallel_process_kernels(self, config, install_kernel):
-        if config.KernelManager.transport == 'ipc':  # FIXME
+        if config.KernelManager.transport == "ipc":  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
@@ -370,9 +381,12 @@ class TestParallel:
             future1.result()
 
     @pytest.mark.timeout(TIMEOUT)
-    @pytest.mark.skipif((sys.platform == 'darwin') and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)), reason='"Bad file descriptor" error')
+    @pytest.mark.skipif(
+        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
+        reason='"Bad file descriptor" error',
+    )
     def test_start_sequence_process_kernels(self, config, install_kernel):
-        if config.KernelManager.transport == 'ipc':  # FIXME
+        if config.KernelManager.transport == "ipc":  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
         with concurrent.futures.ProcessPoolExecutor(max_workers=1) as pool_executor:
@@ -393,27 +407,27 @@ class TestParallel:
         return kc
 
     def _run_signaltest_lifecycle(self, config=None):
-        km = KernelManager(config=config, kernel_name='signaltest')
+        km = KernelManager(config=config, kernel_name="signaltest")
         kc = self._prepare_kernel(km, stdout=PIPE, stderr=PIPE)
 
         def execute(cmd):
             request_id = kc.execute(cmd)
             while True:
                 reply = kc.get_shell_msg(TIMEOUT)
-                if reply['parent_header']['msg_id'] == request_id:
+                if reply["parent_header"]["msg_id"] == request_id:
                     break
-            content = reply['content']
-            assert content['status'] == 'ok'
+            content = reply["content"]
+            assert content["status"] == "ok"
             return content
 
         execute("start")
         assert km.is_alive()
-        execute('check')
+        execute("check")
         assert km.is_alive()
 
         km.restart_kernel(now=True)
         assert km.is_alive()
-        execute('check')
+        execute("check")
 
         km.shutdown_kernel()
         assert km.context.closed
@@ -421,7 +435,6 @@ class TestParallel:
 
 @pytest.mark.asyncio
 class TestAsyncKernelManager:
-
     async def test_lifecycle(self, async_km):
         await async_km.start_kernel(stdout=PIPE, stderr=PIPE)
         is_alive = await async_km.is_alive()
@@ -439,11 +452,19 @@ class TestAsyncKernelManager:
     async def test_get_connect_info(self, async_km):
         cinfo = async_km.get_connection_info()
         keys = sorted(cinfo.keys())
-        expected = sorted([
-            'ip', 'transport',
-            'hb_port', 'shell_port', 'stdin_port', 'iopub_port', 'control_port',
-            'key', 'signature_scheme',
-        ])
+        expected = sorted(
+            [
+                "ip",
+                "transport",
+                "hb_port",
+                "shell_port",
+                "stdin_port",
+                "iopub_port",
+                "control_port",
+                "key",
+                "signature_scheme",
+            ]
+        )
         assert keys == expected
 
     async def test_subclass_deprecations(self, async_km):
@@ -464,7 +485,7 @@ class TestAsyncKernelManager:
             assert hasattr(async_km, "which_cleanup") is False
 
     @pytest.mark.timeout(10)
-    @pytest.mark.skipif(sys.platform == 'win32', reason="Windows doesn't support signals")
+    @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     async def test_signal_kernel_subprocesses(self, install_kernel, start_async_kernel):
 
         km, kc = start_async_kernel
@@ -473,11 +494,12 @@ class TestAsyncKernelManager:
             request_id = kc.execute(cmd)
             while True:
                 reply = await kc.get_shell_msg(TIMEOUT)
-                if reply['parent_header']['msg_id'] == request_id:
+                if reply["parent_header"]["msg_id"] == request_id:
                     break
-            content = reply['content']
-            assert content['status'] == 'ok'
+            content = reply["content"]
+            assert content["status"] == "ok"
             return content
+
         # Ensure that shutdown_kernel and stop_channels are called at the end of the test.
         # Note: we cannot use addCleanup(<func>) for these since it doesn't prpperly handle
         # coroutines - which km.shutdown_kernel now is.
@@ -485,29 +507,29 @@ class TestAsyncKernelManager:
         for i in range(N):
             await execute("start")
         await asyncio.sleep(1)  # make sure subprocs stay up
-        reply = await execute('check')
-        assert reply['user_expressions']['poll'] == [None] * N
+        reply = await execute("check")
+        assert reply["user_expressions"]["poll"] == [None] * N
 
         # start a job on the kernel to be interrupted
-        request_id = kc.execute('sleep')
+        request_id = kc.execute("sleep")
         await asyncio.sleep(1)  # ensure sleep message has been handled before we interrupt
         await km.interrupt_kernel()
         while True:
             reply = await kc.get_shell_msg(TIMEOUT)
-            if reply['parent_header']['msg_id'] == request_id:
+            if reply["parent_header"]["msg_id"] == request_id:
                 break
-        content = reply['content']
-        assert content['status'] == 'ok'
-        assert content['user_expressions']['interrupted'] is True
+        content = reply["content"]
+        assert content["status"] == "ok"
+        assert content["user_expressions"]["interrupted"] is True
         # wait up to 5s for subprocesses to handle signal
         for i in range(50):
-            reply = await execute('check')
-            if reply['user_expressions']['poll'] != [-signal.SIGINT] * N:
+            reply = await execute("check")
+            if reply["user_expressions"]["poll"] != [-signal.SIGINT] * N:
                 await asyncio.sleep(0.1)
             else:
                 break
         # verify that subprocesses were interrupted
-        assert reply['user_expressions']['poll'] == [-signal.SIGINT] * N
+        assert reply["user_expressions"]["poll"] == [-signal.SIGINT] * N
 
     @pytest.mark.timeout(10)
     async def test_start_new_async_kernel(self, install_kernel, start_async_kernel):
@@ -520,37 +542,37 @@ class TestAsyncKernelManager:
     async def test_subclass_callables(self, async_km_subclass):
         async_km_subclass.reset_counts()
         await async_km_subclass.start_kernel(stdout=PIPE, stderr=PIPE)
-        assert async_km_subclass.call_count('start_kernel') == 1
-        assert async_km_subclass.call_count('_launch_kernel') == 1
+        assert async_km_subclass.call_count("start_kernel") == 1
+        assert async_km_subclass.call_count("_launch_kernel") == 1
 
         is_alive = await async_km_subclass.is_alive()
         assert is_alive
         async_km_subclass.reset_counts()
         await async_km_subclass.restart_kernel(now=True)
-        assert async_km_subclass.call_count('restart_kernel') == 1
-        assert async_km_subclass.call_count('shutdown_kernel') == 1
-        assert async_km_subclass.call_count('interrupt_kernel') == 1
-        assert async_km_subclass.call_count('_kill_kernel') == 1
-        assert async_km_subclass.call_count('cleanup_resources') == 1
-        assert async_km_subclass.call_count('start_kernel') == 1
-        assert async_km_subclass.call_count('_launch_kernel') == 1
+        assert async_km_subclass.call_count("restart_kernel") == 1
+        assert async_km_subclass.call_count("shutdown_kernel") == 1
+        assert async_km_subclass.call_count("interrupt_kernel") == 1
+        assert async_km_subclass.call_count("_kill_kernel") == 1
+        assert async_km_subclass.call_count("cleanup_resources") == 1
+        assert async_km_subclass.call_count("start_kernel") == 1
+        assert async_km_subclass.call_count("_launch_kernel") == 1
 
         is_alive = await async_km_subclass.is_alive()
         assert is_alive
 
         async_km_subclass.reset_counts()
         await async_km_subclass.interrupt_kernel()
-        assert async_km_subclass.call_count('interrupt_kernel') == 1
+        assert async_km_subclass.call_count("interrupt_kernel") == 1
 
         assert isinstance(async_km_subclass, AsyncKernelManager)
 
         async_km_subclass.reset_counts()
         await async_km_subclass.shutdown_kernel(now=False)
-        assert async_km_subclass.call_count('shutdown_kernel') == 1
-        assert async_km_subclass.call_count('interrupt_kernel') == 1
-        assert async_km_subclass.call_count('request_shutdown') == 1
-        assert async_km_subclass.call_count('finish_shutdown') == 1
-        assert async_km_subclass.call_count('cleanup_resources') == 1
+        assert async_km_subclass.call_count("shutdown_kernel") == 1
+        assert async_km_subclass.call_count("interrupt_kernel") == 1
+        assert async_km_subclass.call_count("request_shutdown") == 1
+        assert async_km_subclass.call_count("finish_shutdown") == 1
+        assert async_km_subclass.call_count("cleanup_resources") == 1
 
         is_alive = await async_km_subclass.is_alive()
         assert is_alive is False
