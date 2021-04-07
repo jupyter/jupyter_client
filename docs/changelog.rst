@@ -4,9 +4,16 @@
 Changes in Jupyter Client
 =========================
 
-dev
-===
+6.1.13
+======
+- Use pre-commit for code style (:ghpull:`631`)
+- Fix kernel client shutdown test (:ghpull:`629`)
+- Add MultiKernelManager subclass tests (:ghpull:`627`)
+- Add KernelManager subclass tests (:ghpull:`626`)
+- Add type annotations, refactor sync/async (:ghpull:`623`)
 
+6.1.12
+======
 - Shutdown request sequence has been modified to be more graceful, it now is
   preceded by interrupt, and will also send a ``SIGTERM`` before forcibly
   killing the kernel. (:ghpull:`620`)
