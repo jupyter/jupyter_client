@@ -8,10 +8,10 @@ import inspect
 import os
 import sys
 
-import nest_asyncio
+import nest_asyncio  # type: ignore
 
 if os.name == "nt" and sys.version_info >= (3, 7):
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type: ignore
 
 
 def run_sync(coro):

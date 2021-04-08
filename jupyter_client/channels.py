@@ -51,7 +51,7 @@ class HBChannel(Thread):
 
     def __init__(
         self,
-        context: zmq.asyncio.Context,
+        context: zmq.asyncio.Context = None,
         session: t.Optional[Session] = None,
         address: t.Union[t.Tuple[str, int], str] = "",
     ):
@@ -100,6 +100,7 @@ class HBChannel(Thread):
             # close previous socket, before opening a new one
             self.poller.unregister(self.socket)
             self.socket.close()
+        assert self.context is not None
         self.socket = self.context.socket(zmq.REQ)
         self.socket.linger = 1000
         self.socket.connect(self.address)
