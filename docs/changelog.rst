@@ -4,8 +4,9 @@
 Changes in Jupyter Client
 =========================
 
-6.2.0
-=====
+7.0.0a0
+=======
+- Add back ``block`` keyword argument to ``get_msg`` (:ghpull:`641`)
 - Fix threaded client and fix qtconsole issues (:ghpull:`638`)
 - Drop Python 3.5 and pin Python >= 3.6.1 (:ghpull:`636`)
 - Use pre-commit for code style (:ghpull:`631`)
@@ -13,6 +14,10 @@ Changes in Jupyter Client
 - Add MultiKernelManager subclass tests (:ghpull:`627`)
 - Add KernelManager subclass tests (:ghpull:`626`)
 - Add type annotations, refactor sync/async (:ghpull:`623`)
+
+6.2.0
+=====
+- Yanked (PyPI) and marked as broken (conda)
 
 6.1.13
 ======

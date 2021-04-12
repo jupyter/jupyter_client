@@ -1,4 +1,4 @@
-version_info = (6, 2, 0, "dev")
+version_info = (7, 0, 0, "a0")
 __version__ = ".".join(map(str, version_info))
 
 protocol_version_info = (5, 3)
