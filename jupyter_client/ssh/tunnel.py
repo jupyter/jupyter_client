@@ -23,9 +23,9 @@ try:
 
         SSHException = paramiko.ssh_exception.SSHException
 except ImportError:
-    paramiko = None
+    paramiko = None  # type: ignore
 
-    class SSHException(Exception):
+    class SSHException(Exception):  # type: ignore
         pass
 
 
@@ -33,7 +33,7 @@ else:
     from .forward import forward_tunnel
 
 try:
-    import pexpect
+    import pexpect  # type: ignore
 except ImportError:
     pexpect = None
 
