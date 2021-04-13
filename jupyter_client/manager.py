@@ -7,7 +7,6 @@ import re
 import signal
 import sys
 import typing as t
-import warnings
 from contextlib import contextmanager
 from enum import Enum
 from subprocess import Popen
@@ -19,7 +18,6 @@ from traitlets import default
 from traitlets import DottedObjectName
 from traitlets import Float
 from traitlets import Instance
-from traitlets import List
 from traitlets import observe
 from traitlets import observe_compat
 from traitlets import Type
@@ -129,27 +127,6 @@ class KernelManager(ConnectionFileMixin):
             self._kernel_spec = self.kernel_spec_manager.get_kernel_spec(self.kernel_name)
         return self._kernel_spec
 
-    kernel_cmd: List = List(
-        Unicode(),
-        config=True,
-        help="""DEPRECATED: Use kernel_name instead.
-
-        The Popen Command to launch the kernel.
-        Override this if you have a custom kernel.
-        If kernel_cmd is specified in a configuration file,
-        Jupyter does not pass any arguments to the kernel,
-        because it cannot make any assumptions about the
-        arguments that the kernel understands. In particular,
-        this means that the kernel does not receive the
-        option --debug if it given on the Jupyter command line.
-        """,
-    )
-
-    def _kernel_cmd_changed(self, name, old, new):
-        warnings.warn(
-            "Setting kernel_cmd is deprecated, use kernel_spec to " "start different kernels."
-        )
-
     cache_ports: Bool = Bool(
         help="True if the MultiKernelManager should cache ports for this KernelManager instance"
     )
@@ -226,11 +203,8 @@ class KernelManager(ConnectionFileMixin):
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
-        if self.kernel_cmd:
-            cmd = self.kernel_cmd + extra_arguments
-        else:
-            assert self.kernel_spec is not None
-            cmd = self.kernel_spec.argv + extra_arguments
+        assert self.kernel_spec is not None
+        cmd = self.kernel_spec.argv + extra_arguments
 
         if cmd and cmd[0] in {
             "python",
@@ -324,11 +298,10 @@ class KernelManager(ConnectionFileMixin):
         # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
         # If set, it can bork all the things.
         env.pop("PYTHONEXECUTABLE", None)
-        if not self.kernel_cmd:
-            # If kernel_cmd has been set manually, don't refer to a kernel spec.
-            # Environment variables from kernel spec are added to os.environ.
-            assert self.kernel_spec is not None
-            env.update(self._get_env_substitutions(self.kernel_spec.env, env))
+
+        # Environment variables from kernel spec are added to os.environ.
+        assert self.kernel_spec is not None
+        env.update(self._get_env_substitutions(self.kernel_spec.env, env))
 
         kw["env"] = env
         return kernel_cmd, kw
@@ -435,15 +408,6 @@ class KernelManager(ConnectionFileMixin):
         if self._created_context and not restart:
             self.context.destroy(linger=100)
 
-    def cleanup(self, connection_file: bool = True) -> None:
-        """Clean up resources when the kernel is shut down"""
-        warnings.warn(
-            "Method cleanup(connection_file=True) is deprecated, use cleanup_resources"
-            "(restart=False).",
-            FutureWarning,
-        )
-        self.cleanup_resources(restart=not connection_file)
-
     async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False):
         """Attempts to stop the kernel process cleanly.
 
@@ -477,28 +441,7 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             await ensure_async(self.finish_shutdown())
 
-        # In 6.1.5, a new method, cleanup_resources(), was introduced to address
-        # a leak issue (https://github.com/jupyter/jupyter_client/pull/548) and
-        # replaced the existing cleanup() method.  However, that method introduction
-        # breaks subclass implementations that override cleanup() since it would
-        # circumvent cleanup() functionality implemented in subclasses.
-        # By detecting if the current instance overrides cleanup(), we can determine
-        # if the deprecated path of calling cleanup() should be performed - which avoids
-        # unnecessary deprecation warnings in a majority of configurations in which
-        # subclassed KernelManager instances are not in use.
-        # Note: because subclasses may have already implemented cleanup_resources()
-        # but need to support older jupyter_clients, we should only take the deprecated
-        # path if cleanup() is overridden but cleanup_resources() is not.
-
-        overrides_cleanup = type(self).cleanup is not KernelManager.cleanup
-        overrides_cleanup_resources = (
-            type(self).cleanup_resources is not KernelManager.cleanup_resources
-        )
-
-        if overrides_cleanup and not overrides_cleanup_resources:
-            self.cleanup(connection_file=not restart)
-        else:
-            self.cleanup_resources(restart=restart)
+        self.cleanup_resources(restart=restart)
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
