@@ -147,41 +147,15 @@ class KMSubclass(RecordCallMixin):
 
 
 class SyncKMSubclass(KMSubclass, KernelManager):
+    """Used to test subclass hierarchies to ensure methods are called when expected."""
+
     _superclass = KernelManager
 
 
 class AsyncKMSubclass(KMSubclass, AsyncKernelManager):
-    """Used to test subclass hierarchies to ensure methods are called when expected.
-
-    This class is also used to test deprecation "routes" that are determined by superclass'
-    detection of methods.
-
-    This class represents a current subclass that overrides "interesting" methods of
-    AsyncKernelManager.
-    """
+    """Used to test subclass hierarchies to ensure methods are called when expected."""
 
     _superclass = AsyncKernelManager
-    which_cleanup = ""  # cleanup deprecation testing
-
-    @subclass_recorder
-    def cleanup(self, connection_file=True):
-        self.which_cleanup = "cleanup"
-
-    @subclass_recorder
-    def cleanup_resources(self, restart=False):
-        self.which_cleanup = "cleanup_resources"
-
-
-class AsyncKernelManagerWithCleanup(AsyncKernelManager):
-    """Used to test deprecation "routes" that are determined by superclass' detection of methods.
-
-    This class represents the older subclass that overrides cleanup().  We should find that
-    cleanup() is called on these instances via TestAsyncKernelManagerWithCleanup.
-    """
-
-    def cleanup(self, connection_file=True):
-        super().cleanup(connection_file=connection_file)
-        self.which_cleanup = "cleanup"
 
 
 class MKMSubclass(RecordCallMixin):

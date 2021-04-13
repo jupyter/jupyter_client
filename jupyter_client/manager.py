@@ -7,7 +7,6 @@ import re
 import signal
 import sys
 import typing as t
-import warnings
 from contextlib import contextmanager
 from enum import Enum
 from subprocess import Popen
@@ -19,7 +18,6 @@ from traitlets import default
 from traitlets import DottedObjectName
 from traitlets import Float
 from traitlets import Instance
-from traitlets import List
 from traitlets import observe
 from traitlets import observe_compat
 from traitlets import Type
@@ -410,15 +408,6 @@ class KernelManager(ConnectionFileMixin):
         if self._created_context and not restart:
             self.context.destroy(linger=100)
 
-    def cleanup(self, connection_file: bool = True) -> None:
-        """Clean up resources when the kernel is shut down"""
-        warnings.warn(
-            "Method cleanup(connection_file=True) is deprecated, use cleanup_resources"
-            "(restart=False).",
-            FutureWarning,
-        )
-        self.cleanup_resources(restart=not connection_file)
-
     async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False):
         """Attempts to stop the kernel process cleanly.
 
@@ -452,28 +441,7 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             await ensure_async(self.finish_shutdown())
 
-        # In 6.1.5, a new method, cleanup_resources(), was introduced to address
-        # a leak issue (https://github.com/jupyter/jupyter_client/pull/548) and
-        # replaced the existing cleanup() method.  However, that method introduction
-        # breaks subclass implementations that override cleanup() since it would
-        # circumvent cleanup() functionality implemented in subclasses.
-        # By detecting if the current instance overrides cleanup(), we can determine
-        # if the deprecated path of calling cleanup() should be performed - which avoids
-        # unnecessary deprecation warnings in a majority of configurations in which
-        # subclassed KernelManager instances are not in use.
-        # Note: because subclasses may have already implemented cleanup_resources()
-        # but need to support older jupyter_clients, we should only take the deprecated
-        # path if cleanup() is overridden but cleanup_resources() is not.
-
-        overrides_cleanup = type(self).cleanup is not KernelManager.cleanup
-        overrides_cleanup_resources = (
-            type(self).cleanup_resources is not KernelManager.cleanup_resources
-        )
-
-        if overrides_cleanup and not overrides_cleanup_resources:
-            self.cleanup(connection_file=not restart)
-        else:
-            self.cleanup_resources(restart=restart)
+        self.cleanup_resources(restart=restart)
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 

@@ -19,7 +19,6 @@ from traitlets.config.loader import Config
 from ..manager import _ShutdownStatus
 from ..manager import start_new_async_kernel
 from ..manager import start_new_kernel
-from .utils import AsyncKernelManagerWithCleanup
 from .utils import AsyncKMSubclass
 from .utils import SyncKMSubclass
 from .utils import test_env
@@ -123,7 +122,7 @@ def zmq_context():
     ctx.term()
 
 
-@pytest.fixture(params=[AsyncKernelManager, AsyncKMSubclass, AsyncKernelManagerWithCleanup])
+@pytest.fixture(params=[AsyncKernelManager, AsyncKMSubclass])
 def async_km(request, config):
     km = request.param(config=config)
     return km
@@ -466,23 +465,6 @@ class TestAsyncKernelManager:
             ]
         )
         assert keys == expected
-
-    async def test_subclass_deprecations(self, async_km):
-        await async_km.start_kernel(stdout=PIPE, stderr=PIPE)
-        is_alive = await async_km.is_alive()
-        assert is_alive
-        assert isinstance(async_km, AsyncKernelManager)
-        await async_km.shutdown_kernel(now=True)
-        is_alive = await async_km.is_alive()
-        assert is_alive is False
-        assert async_km.context.closed
-
-        if isinstance(async_km, AsyncKernelManagerWithCleanup):
-            assert async_km.which_cleanup == "cleanup"
-        elif isinstance(async_km, AsyncKMSubclass):
-            assert async_km.which_cleanup == "cleanup_resources"
-        else:
-            assert hasattr(async_km, "which_cleanup") is False
 
     @pytest.mark.timeout(10)
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
