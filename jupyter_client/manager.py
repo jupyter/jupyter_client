@@ -129,27 +129,6 @@ class KernelManager(ConnectionFileMixin):
             self._kernel_spec = self.kernel_spec_manager.get_kernel_spec(self.kernel_name)
         return self._kernel_spec
 
-    kernel_cmd: List = List(
-        Unicode(),
-        config=True,
-        help="""DEPRECATED: Use kernel_name instead.
-
-        The Popen Command to launch the kernel.
-        Override this if you have a custom kernel.
-        If kernel_cmd is specified in a configuration file,
-        Jupyter does not pass any arguments to the kernel,
-        because it cannot make any assumptions about the
-        arguments that the kernel understands. In particular,
-        this means that the kernel does not receive the
-        option --debug if it given on the Jupyter command line.
-        """,
-    )
-
-    def _kernel_cmd_changed(self, name, old, new):
-        warnings.warn(
-            "Setting kernel_cmd is deprecated, use kernel_spec to " "start different kernels."
-        )
-
     cache_ports: Bool = Bool(
         help="True if the MultiKernelManager should cache ports for this KernelManager instance"
     )
@@ -226,11 +205,8 @@ class KernelManager(ConnectionFileMixin):
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
-        if self.kernel_cmd:
-            cmd = self.kernel_cmd + extra_arguments
-        else:
-            assert self.kernel_spec is not None
-            cmd = self.kernel_spec.argv + extra_arguments
+        assert self.kernel_spec is not None
+        cmd = self.kernel_spec.argv + extra_arguments
 
         if cmd and cmd[0] in {
             "python",
@@ -324,11 +300,10 @@ class KernelManager(ConnectionFileMixin):
         # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
         # If set, it can bork all the things.
         env.pop("PYTHONEXECUTABLE", None)
-        if not self.kernel_cmd:
-            # If kernel_cmd has been set manually, don't refer to a kernel spec.
-            # Environment variables from kernel spec are added to os.environ.
-            assert self.kernel_spec is not None
-            env.update(self._get_env_substitutions(self.kernel_spec.env, env))
+
+        # Environment variables from kernel spec are added to os.environ.
+        assert self.kernel_spec is not None
+        env.update(self._get_env_substitutions(self.kernel_spec.env, env))
 
         kw["env"] = env
         return kernel_cmd, kw
