@@ -1,0 +1,51 @@
+name: Test downstream projects
+
+on:
+  push:
+    branches: "*"
+  pull_request:
+    branches: "*"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install .
+          pip install pyqt5 pytest \
+                      ipykernel[test] \
+                      qtconsole[test] \
+                      nbclient[test] \
+                      nbconvert[test] \
+                      jupyter_server[test]
+          pip freeze
+
+      - name: Test ipykernel
+        if: ${{ always() }}
+        run: pytest --pyargs ipykernel
+      - name: Test nbclient
+        if: ${{ always() }}
+        run: IPYKERNEL_CELL_NAME="<IPY-INPUT>" pytest --pyargs nbclient
+      - name: Test nbconvert
+        if: ${{ always() }}
+        run: pytest --pyargs nbconvert
+      #qtconsole tests disabled because of a core dump
+      #- name: Test qtconsole
+      #  if: ${{ always() }}
+      #  run: pytest --pyargs qtconsole
+      #jupyter_server tests disabled because pip package doesn't allow for testing
+      #see https://github.com/jupyter-server/jupyter_server/issues/563
+      #- name: Test jupyter_server
+      #  if: ${{ always() }}
+      #  run: pytest --pyargs jupyter_server
