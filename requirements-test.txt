@@ -1,0 +1,12 @@
+codecov
+coverage
+ipykernel
+ipython
+jedi<0.18; python_version<="3.6"
+mock
+mypy
+pre-commit
+pytest
+pytest-asyncio
+pytest-cov
+pytest-timeout
