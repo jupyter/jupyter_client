@@ -1,18 +1,26 @@
 """Tests for the notebook kernel and session manager."""
-
 import asyncio
-import threading
+import concurrent.futures
+import sys
 import uuid
-import multiprocessing as mp
-
 from subprocess import PIPE
 from unittest import TestCase
-from tornado.testing import AsyncTestCase, gen_test
+
+import pytest
+from tornado.testing import AsyncTestCase
+from tornado.testing import gen_test
 from traitlets.config.loader import Config
-from jupyter_client import KernelManager, AsyncKernelManager
-from jupyter_client.multikernelmanager import MultiKernelManager, AsyncMultiKernelManager
-from .utils import skip_win32
+
 from ..localinterfaces import localhost
+from .utils import AsyncKMSubclass
+from .utils import AsyncMKMSubclass
+from .utils import skip_win32
+from .utils import SyncKMSubclass
+from .utils import SyncMKMSubclass
+from jupyter_client import AsyncKernelManager
+from jupyter_client import KernelManager
+from jupyter_client.multikernelmanager import AsyncMultiKernelManager
+from jupyter_client.multikernelmanager import MultiKernelManager
 
 TIMEOUT = 30
 
@@ -26,12 +34,18 @@ class TestKernelManager(TestCase):
         km = MultiKernelManager(config=c)
         return km
 
+    @staticmethod
+    def _get_tcp_km_sub():
+        c = Config()
+        km = SyncMKMSubclass(config=c)
+        return km
+
     # static so picklable for multiprocessing on Windows
     @staticmethod
     def _get_ipc_km():
         c = Config()
-        c.KernelManager.transport = 'ipc'
-        c.KernelManager.ip = 'test'
+        c.KernelManager.transport = "ipc"
+        c.KernelManager.ip = "test"
         km = MultiKernelManager(config=c)
         return km
 
@@ -46,7 +60,7 @@ class TestKernelManager(TestCase):
         assert km.is_alive(kid)
         assert kid in km
         assert kid in km.list_kernel_ids()
-        assert len(km) == 1, f'{len(km)} != {1}'
+        assert len(km) == 1, f"{len(km)} != {1}"
         km.restart_kernel(kid, now=True)
         assert km.is_alive(kid)
         assert kid in km.list_kernel_ids()
@@ -54,22 +68,22 @@ class TestKernelManager(TestCase):
         k = km.get_kernel(kid)
         assert isinstance(k, KernelManager)
         km.shutdown_kernel(kid, now=True)
-        assert kid not in km, f'{kid} not in {km}'
+        assert kid not in km, f"{kid} not in {km}"
 
     def _run_cinfo(self, km, transport, ip):
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
-        k = km.get_kernel(kid)
+        km.get_kernel(kid)
         cinfo = km.get_connection_info(kid)
-        self.assertEqual(transport, cinfo['transport'])
-        self.assertEqual(ip, cinfo['ip'])
-        self.assertTrue('stdin_port' in cinfo)
-        self.assertTrue('iopub_port' in cinfo)
+        self.assertEqual(transport, cinfo["transport"])
+        self.assertEqual(ip, cinfo["ip"])
+        self.assertTrue("stdin_port" in cinfo)
+        self.assertTrue("iopub_port" in cinfo)
         stream = km.connect_iopub(kid)
         stream.close()
-        self.assertTrue('shell_port' in cinfo)
+        self.assertTrue("shell_port" in cinfo)
         stream = km.connect_shell(kid)
         stream.close()
-        self.assertTrue('hb_port' in cinfo)
+        self.assertTrue("hb_port" in cinfo)
         stream = km.connect_hb(kid)
         stream.close()
         km.shutdown_kernel(kid, now=True)
@@ -95,7 +109,7 @@ class TestKernelManager(TestCase):
 
     def test_tcp_cinfo(self):
         km = self._get_tcp_km()
-        self._run_cinfo(km, 'tcp', localhost())
+        self._run_cinfo(km, "tcp", localhost())
 
     @skip_win32
     def test_ipc_lifecycle(self):
@@ -105,7 +119,7 @@ class TestKernelManager(TestCase):
     @skip_win32
     def test_ipc_cinfo(self):
         km = self._get_ipc_km()
-        self._run_cinfo(km, 'ipc', 'test')
+        self._run_cinfo(km, "ipc", "test")
 
     def test_start_sequence_tcp_kernels(self):
         """Ensure that a sequence of kernel startups doesn't break anything."""
@@ -128,30 +142,81 @@ class TestKernelManager(TestCase):
     def test_start_parallel_thread_kernels(self):
         self.test_tcp_lifecycle()
 
-        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        thread2 = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        try:
-            thread.start()
-            thread2.start()
-        finally:
-            thread.join()
-            thread2.join()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as thread_executor:
+            future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            future2 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            future1.result()
+            future2.result()
 
+    @pytest.mark.skipif(
+        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
+        reason='"Bad file descriptor" error',
+    )
     def test_start_parallel_process_kernels(self):
         self.test_tcp_lifecycle()
 
-        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        # Windows tests needs this target to be picklable:
-        proc = mp.Process(target=self.test_tcp_lifecycle)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
+            future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
+                # Windows tests needs this target to be picklable:
+                future2 = process_executor.submit(self.test_tcp_lifecycle)
+                future2.result()
+            future1.result()
 
-        try:
-            thread.start()
-            proc.start()
-        finally:
-            thread.join()
-            proc.join()
+    def test_subclass_callables(self):
+        km = self._get_tcp_km_sub()
 
-        assert proc.exitcode == 0
+        km.reset_counts()
+        kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
+        assert km.call_count("start_kernel") == 1
+        assert isinstance(km.get_kernel(kid), SyncKMSubclass)
+        assert km.get_kernel(kid).call_count("start_kernel") == 1
+        assert km.get_kernel(kid).call_count("_launch_kernel") == 1
+
+        assert km.is_alive(kid)
+        assert kid in km
+        assert kid in km.list_kernel_ids()
+        assert len(km) == 1, f"{len(km)} != {1}"
+
+        km.get_kernel(kid).reset_counts()
+        km.reset_counts()
+        km.restart_kernel(kid, now=True)
+        assert km.call_count("restart_kernel") == 1
+        assert km.call_count("get_kernel") == 1
+        assert km.get_kernel(kid).call_count("restart_kernel") == 1
+        assert km.get_kernel(kid).call_count("shutdown_kernel") == 1
+        assert km.get_kernel(kid).call_count("interrupt_kernel") == 1
+        assert km.get_kernel(kid).call_count("_kill_kernel") == 1
+        assert km.get_kernel(kid).call_count("cleanup_resources") == 1
+        assert km.get_kernel(kid).call_count("start_kernel") == 1
+        assert km.get_kernel(kid).call_count("_launch_kernel") == 1
+
+        assert km.is_alive(kid)
+        assert kid in km.list_kernel_ids()
+
+        km.get_kernel(kid).reset_counts()
+        km.reset_counts()
+        km.interrupt_kernel(kid)
+        assert km.call_count("interrupt_kernel") == 1
+        assert km.call_count("get_kernel") == 1
+        assert km.get_kernel(kid).call_count("interrupt_kernel") == 1
+
+        km.get_kernel(kid).reset_counts()
+        km.reset_counts()
+        k = km.get_kernel(kid)
+        assert isinstance(k, SyncKMSubclass)
+        assert km.call_count("get_kernel") == 1
+
+        km.get_kernel(kid).reset_counts()
+        km.reset_counts()
+        km.shutdown_all(now=True)
+        assert km.call_count("shutdown_kernel") == 1
+        assert km.call_count("remove_kernel") == 1
+        assert km.call_count("request_shutdown") == 0
+        assert km.call_count("finish_shutdown") == 0
+        assert km.call_count("cleanup_resources") == 0
+
+        assert kid not in km, f"{kid} not in {km}"
 
 
 class TestAsyncKernelManager(AsyncTestCase):
@@ -163,12 +228,18 @@ class TestAsyncKernelManager(AsyncTestCase):
         km = AsyncMultiKernelManager(config=c)
         return km
 
+    @staticmethod
+    def _get_tcp_km_sub():
+        c = Config()
+        km = AsyncMKMSubclass(config=c)
+        return km
+
     # static so picklable for multiprocessing on Windows
     @staticmethod
     def _get_ipc_km():
         c = Config()
-        c.KernelManager.transport = 'ipc'
-        c.KernelManager.ip = 'test'
+        c.KernelManager.transport = "ipc"
+        c.KernelManager.ip = "test"
         km = AsyncMultiKernelManager(config=c)
         return km
 
@@ -183,30 +254,30 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert await km.is_alive(kid)
         assert kid in km
         assert kid in km.list_kernel_ids()
-        assert len(km) == 1, f'{len(km)} != {1}'
+        assert len(km) == 1, f"{len(km)} != {1}"
         await km.restart_kernel(kid, now=True)
         assert await km.is_alive(kid)
         assert kid in km.list_kernel_ids()
         await km.interrupt_kernel(kid)
         k = km.get_kernel(kid)
-        assert isinstance(k, KernelManager)
+        assert isinstance(k, AsyncKernelManager)
         await km.shutdown_kernel(kid, now=True)
-        assert kid not in km, f'{kid} not in {km}'
+        assert kid not in km, f"{kid} not in {km}"
 
     async def _run_cinfo(self, km, transport, ip):
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
-        k = km.get_kernel(kid)
+        km.get_kernel(kid)
         cinfo = km.get_connection_info(kid)
-        self.assertEqual(transport, cinfo['transport'])
-        self.assertEqual(ip, cinfo['ip'])
-        self.assertTrue('stdin_port' in cinfo)
-        self.assertTrue('iopub_port' in cinfo)
+        self.assertEqual(transport, cinfo["transport"])
+        self.assertEqual(ip, cinfo["ip"])
+        self.assertTrue("stdin_port" in cinfo)
+        self.assertTrue("iopub_port" in cinfo)
         stream = km.connect_iopub(kid)
         stream.close()
-        self.assertTrue('shell_port' in cinfo)
+        self.assertTrue("shell_port" in cinfo)
         stream = km.connect_shell(kid)
         stream.close()
-        self.assertTrue('hb_port' in cinfo)
+        self.assertTrue("hb_port" in cinfo)
         stream = km.connect_hb(kid)
         stream.close()
         await km.shutdown_kernel(kid, now=True)
@@ -266,7 +337,7 @@ class TestAsyncKernelManager(AsyncTestCase):
     @gen_test
     async def test_tcp_cinfo(self):
         km = self._get_tcp_km()
-        await self._run_cinfo(km, 'tcp', localhost())
+        await self._run_cinfo(km, "tcp", localhost())
 
     @skip_win32
     @gen_test
@@ -278,7 +349,7 @@ class TestAsyncKernelManager(AsyncTestCase):
     @gen_test
     async def test_ipc_cinfo(self):
         km = self._get_ipc_km()
-        await self._run_cinfo(km, 'ipc', 'test')
+        await self._run_cinfo(km, "ipc", "test")
 
     @gen_test
     async def test_start_sequence_tcp_kernels(self):
@@ -322,28 +393,76 @@ class TestAsyncKernelManager(AsyncTestCase):
     async def test_start_parallel_thread_kernels(self):
         await self.raw_tcp_lifecycle()
 
-        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        thread2 = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        try:
-            thread.start()
-            thread2.start()
-        finally:
-            thread.join()
-            thread2.join()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as thread_executor:
+            future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            future2 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            future1.result()
+            future2.result()
 
     @gen_test
     async def test_start_parallel_process_kernels(self):
         await self.raw_tcp_lifecycle()
 
-        thread = threading.Thread(target=self.tcp_lifecycle_with_loop)
-        # Windows tests needs this target to be picklable:
-        proc = mp.Process(target=self.raw_tcp_lifecycle_sync)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
+            future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
+                # Windows tests needs this target to be picklable:
+                future2 = process_executor.submit(self.raw_tcp_lifecycle_sync)
+                future2.result()
+            future1.result()
 
-        try:
-            thread.start()
-            proc.start()
-        finally:
-            proc.join()
-            thread.join()
+    @gen_test
+    async def test_subclass_callables(self):
+        mkm = self._get_tcp_km_sub()
 
-        assert proc.exitcode == 0
+        mkm.reset_counts()
+        kid = await mkm.start_kernel(stdout=PIPE, stderr=PIPE)
+        assert mkm.call_count("start_kernel") == 1
+        assert isinstance(mkm.get_kernel(kid), AsyncKMSubclass)
+        assert mkm.get_kernel(kid).call_count("start_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_launch_kernel") == 1
+
+        assert await mkm.is_alive(kid)
+        assert kid in mkm
+        assert kid in mkm.list_kernel_ids()
+        assert len(mkm) == 1, f"{len(mkm)} != {1}"
+
+        mkm.get_kernel(kid).reset_counts()
+        mkm.reset_counts()
+        await mkm.restart_kernel(kid, now=True)
+        assert mkm.call_count("restart_kernel") == 1
+        assert mkm.call_count("get_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("restart_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("shutdown_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("interrupt_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_kill_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("cleanup_resources") == 1
+        assert mkm.get_kernel(kid).call_count("start_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_launch_kernel") == 1
+
+        assert await mkm.is_alive(kid)
+        assert kid in mkm.list_kernel_ids()
+
+        mkm.get_kernel(kid).reset_counts()
+        mkm.reset_counts()
+        await mkm.interrupt_kernel(kid)
+        assert mkm.call_count("interrupt_kernel") == 1
+        assert mkm.call_count("get_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("interrupt_kernel") == 1
+
+        mkm.get_kernel(kid).reset_counts()
+        mkm.reset_counts()
+        k = mkm.get_kernel(kid)
+        assert isinstance(k, AsyncKMSubclass)
+        assert mkm.call_count("get_kernel") == 1
+
+        mkm.get_kernel(kid).reset_counts()
+        mkm.reset_counts()
+        await mkm.shutdown_all(now=True)
+        assert mkm.call_count("shutdown_kernel") == 1
+        assert mkm.call_count("remove_kernel") == 1
+        assert mkm.call_count("request_shutdown") == 0
+        assert mkm.call_count("finish_shutdown") == 0
+        assert mkm.call_count("cleanup_resources") == 0
+
+        assert kid not in mkm, f"{kid} not in {mkm}"

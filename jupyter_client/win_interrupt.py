@@ -3,8 +3,8 @@
 The child needs to explicitly listen for this - see
 ipykernel.parentpoller.ParentPollerWindows for a Python implementation.
 """
-
 import ctypes
+
 
 def create_interrupt_event():
     """Create an interrupt event handle.
@@ -18,9 +18,12 @@ def create_interrupt_event():
     # handle by new processes.
     # FIXME: We can clean up this mess by requiring pywin32 for IPython.
     class SECURITY_ATTRIBUTES(ctypes.Structure):
-        _fields_ = [ ("nLength", ctypes.c_int),
-                     ("lpSecurityDescriptor", ctypes.c_void_p),
-                     ("bInheritHandle", ctypes.c_int) ]
+        _fields_ = [
+            ("nLength", ctypes.c_int),
+            ("lpSecurityDescriptor", ctypes.c_void_p),
+            ("bInheritHandle", ctypes.c_int),
+        ]
+
     sa = SECURITY_ATTRIBUTES()
     sa_p = ctypes.pointer(sa)
     sa.nLength = ctypes.sizeof(SECURITY_ATTRIBUTES)
@@ -28,12 +31,10 @@ def create_interrupt_event():
     sa.bInheritHandle = 1
 
     return ctypes.windll.kernel32.CreateEventA(
-        sa_p,  # lpEventAttributes
-        False, # bManualReset
-        False, # bInitialState
-        '')    # lpName
+        sa_p, False, False, ""  # lpEventAttributes  # bManualReset  # bInitialState
+    )  # lpName
+
 
 def send_interrupt(interrupt_handle):
-    """ Sends an interrupt event using the specified handle.
-    """
+    """Sends an interrupt event using the specified handle."""
     ctypes.windll.kernel32.SetEvent(interrupt_handle)

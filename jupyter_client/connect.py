@@ -3,10 +3,8 @@
 The :class:`ConnectionFileMixin` class in this module encapsulates the logic
 related to writing and reading connections files.
 """
-
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-
 import errno
 import glob
 import json
@@ -16,24 +14,44 @@ import stat
 import tempfile
 import warnings
 from getpass import getpass
-from contextlib import contextmanager
+from typing import Any
+from typing import cast
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
-import zmq
+import zmq  # type: ignore
+from jupyter_core.paths import jupyter_data_dir  # type: ignore
+from jupyter_core.paths import jupyter_runtime_dir
+from jupyter_core.paths import secure_write
+from traitlets import Bool  # type: ignore
+from traitlets import CaselessStrEnum
+from traitlets import Instance
+from traitlets import Integer
+from traitlets import observe
+from traitlets import Type
+from traitlets import Unicode
+from traitlets.config import LoggingConfigurable  # type: ignore
 
-from traitlets.config import LoggingConfigurable
 from .localinterfaces import localhost
-from ipython_genutils.path import filefind
-from ipython_genutils.py3compat import cast_bytes
-from traitlets import (
-    Bool, Integer, Unicode, CaselessStrEnum, Instance, Type, observe
-)
-from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
+from .utils import _filefind
 
 
-def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, hb_port=0,
-                          control_port=0, ip='', key=b'', transport='tcp',
-                          signature_scheme='hmac-sha256', kernel_name=''
-                          ):
+def write_connection_file(
+    fname: Optional[str] = None,
+    shell_port: int = 0,
+    iopub_port: int = 0,
+    stdin_port: int = 0,
+    hb_port: int = 0,
+    control_port: int = 0,
+    ip: str = "",
+    key: bytes = b"",
+    transport: str = "tcp",
+    signature_scheme: str = "hmac-sha256",
+    kernel_name: str = "",
+) -> Tuple[str, Dict[str, Union[int, str]]]:
     """Generates a JSON config file, including the selection of random ports.
 
     Parameters
@@ -78,28 +96,31 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
         ip = localhost()
     # default to temporary connector file
     if not fname:
-        fd, fname = tempfile.mkstemp('.json')
+        fd, fname = tempfile.mkstemp(".json")
         os.close(fd)
 
     # Find open ports as necessary.
 
-    ports = []
-    ports_needed = int(shell_port <= 0) + \
-                   int(iopub_port <= 0) + \
-                   int(stdin_port <= 0) + \
-                   int(control_port <= 0) + \
-                   int(hb_port <= 0)
-    if transport == 'tcp':
+    ports: List[int] = []
+    sockets: List[socket.socket] = []
+    ports_needed = (
+        int(shell_port <= 0)
+        + int(iopub_port <= 0)
+        + int(stdin_port <= 0)
+        + int(control_port <= 0)
+        + int(hb_port <= 0)
+    )
+    if transport == "tcp":
         for i in range(ports_needed):
             sock = socket.socket()
             # struct.pack('ii', (0,0)) is 8 null bytes
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, b'\0' * 8)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, b"\0" * 8)
             sock.bind((ip, 0))
-            ports.append(sock)
-        for i, sock in enumerate(ports):
+            sockets.append(sock)
+        for sock in sockets:
             port = sock.getsockname()[1]
             sock.close()
-            ports[i] = port
+            ports.append(port)
     else:
         N = 1
         for i in range(ports_needed):
@@ -118,17 +139,18 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
     if hb_port <= 0:
         hb_port = ports.pop(0)
 
-    cfg = dict( shell_port=shell_port,
-                iopub_port=iopub_port,
-                stdin_port=stdin_port,
-                control_port=control_port,
-                hb_port=hb_port,
-              )
-    cfg['ip'] = ip
-    cfg['key'] = key.decode()
-    cfg['transport'] = transport
-    cfg['signature_scheme'] = signature_scheme
-    cfg['kernel_name'] = kernel_name
+    cfg: Dict[str, Union[int, str]] = dict(
+        shell_port=shell_port,
+        iopub_port=iopub_port,
+        stdin_port=stdin_port,
+        control_port=control_port,
+        hb_port=hb_port,
+    )
+    cfg["ip"] = ip
+    cfg["key"] = key.decode()
+    cfg["transport"] = transport
+    cfg["signature_scheme"] = signature_scheme
+    cfg["kernel_name"] = kernel_name
 
     # Only ever write this file as user read/writeable
     # This would otherwise introduce a vulnerability as a file has secrets
@@ -136,7 +158,7 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
     with secure_write(fname) as f:
         f.write(json.dumps(cfg, indent=2))
 
-    if hasattr(stat, 'S_ISVTX'):
+    if hasattr(stat, "S_ISVTX"):
         # set the sticky bit on the file and its parent directory
         # to avoid periodic cleanup
         paths = [fname]
@@ -158,14 +180,19 @@ def write_connection_file(fname=None, shell_port=0, iopub_port=0, stdin_port=0, 
                         # failed to set sticky bit, probably not a big deal
                         warnings.warn(
                             "Failed to set sticky bit on %r: %s"
-                            "\nProbably not a big deal, but runtime files may be cleaned up periodically." % (path, e),
+                            "\nProbably not a big deal, but runtime files may be cleaned up "
+                            "periodically." % (path, e),
                             RuntimeWarning,
                         )
 
     return fname, cfg
 
 
-def find_connection_file(filename='kernel-*.json', path=None, profile=None):
+def find_connection_file(
+    filename: str = "kernel-*.json",
+    path: Optional[Union[str, List[str]]] = None,
+    profile: Optional[str] = None,
+) -> str:
     """find a connection file, and return its absolute path.
 
     The current working directory and optional search path
@@ -189,30 +216,30 @@ def find_connection_file(filename='kernel-*.json', path=None, profile=None):
     if profile is not None:
         warnings.warn("Jupyter has no profiles. profile=%s has been ignored." % profile)
     if path is None:
-        path = ['.', jupyter_runtime_dir()]
+        path = [".", jupyter_runtime_dir()]
     if isinstance(path, str):
         path = [path]
 
     try:
         # first, try explicit name
-        return filefind(filename, path)
+        return _filefind(filename, path)
     except IOError:
         pass
 
     # not found by full name
 
-    if '*' in filename:
+    if "*" in filename:
         # given as a glob already
         pat = filename
     else:
         # accept any substring match
-        pat = '*%s*' % filename
+        pat = "*%s*" % filename
 
     matches = []
     for p in path:
         matches.extend(glob.glob(os.path.join(p, pat)))
 
-    matches = [ os.path.abspath(m) for m in matches ]
+    matches = [os.path.abspath(m) for m in matches]
     if not matches:
         raise IOError("Could not find %r in %r" % (filename, path))
     elif len(matches) == 1:
@@ -222,7 +249,11 @@ def find_connection_file(filename='kernel-*.json', path=None, profile=None):
         return sorted(matches, key=lambda f: os.stat(f).st_atime)[-1]
 
 
-def tunnel_to_kernel(connection_info, sshserver, sshkey=None):
+def tunnel_to_kernel(
+    connection_info: Union[str, Dict[str, Any]],
+    sshserver: str,
+    sshkey: Optional[str] = None,
+) -> Tuple[Any, ...]:
     """tunnel connections to a kernel via ssh
 
     This will open five SSH tunnels from localhost on this machine to the
@@ -249,115 +280,125 @@ def tunnel_to_kernel(connection_info, sshserver, sshkey=None):
         The five ports on localhost that have been forwarded to the kernel.
     """
     from .ssh import tunnel
+
     if isinstance(connection_info, str):
         # it's a path, unpack it
         with open(connection_info) as f:
             connection_info = json.loads(f.read())
 
-    cf = connection_info
+    cf = cast(Dict[str, Any], connection_info)
 
     lports = tunnel.select_random_ports(5)
-    rports = cf['shell_port'], cf['iopub_port'], cf['stdin_port'], cf['hb_port'], cf['control_port']
+    rports = (
+        cf["shell_port"],
+        cf["iopub_port"],
+        cf["stdin_port"],
+        cf["hb_port"],
+        cf["control_port"],
+    )
 
-    remote_ip = cf['ip']
+    remote_ip = cf["ip"]
 
     if tunnel.try_passwordless_ssh(sshserver, sshkey):
-        password=False
+        password: Union[bool, str] = False
     else:
         password = getpass("SSH Password for %s: " % sshserver)
 
-    for lp,rp in zip(lports, rports):
+    for lp, rp in zip(lports, rports):
         tunnel.ssh_tunnel(lp, rp, sshserver, remote_ip, sshkey, password)
 
     return tuple(lports)
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Mixin for classes that work with connection files
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 channel_socket_types = {
-    'hb' : zmq.REQ,
-    'shell' : zmq.DEALER,
-    'iopub' : zmq.SUB,
-    'stdin' : zmq.DEALER,
-    'control': zmq.DEALER,
+    "hb": zmq.REQ,
+    "shell": zmq.DEALER,
+    "iopub": zmq.SUB,
+    "stdin": zmq.DEALER,
+    "control": zmq.DEALER,
 }
 
-port_names = [ "%s_port" % channel for channel in ('shell', 'stdin', 'iopub', 'hb', 'control')]
+port_names = ["%s_port" % channel for channel in ("shell", "stdin", "iopub", "hb", "control")]
+
 
 class ConnectionFileMixin(LoggingConfigurable):
     """Mixin for configurable classes that work with connection files"""
 
     data_dir = Unicode()
+
     def _data_dir_default(self):
         return jupyter_data_dir()
 
     # The addresses for the communication channels
-    connection_file = Unicode('', config=True,
-    help="""JSON file in which to store connection info [default: kernel-<pid>.json]
+    connection_file = Unicode(
+        "",
+        config=True,
+        help="""JSON file in which to store connection info [default: kernel-<pid>.json]
 
     This file will contain the IP, ports, and authentication key needed to connect
     clients to this kernel. By default, this file will be created in the security dir
     of the current profile, but can be specified by absolute path.
-    """)
+    """,
+    )
     _connection_file_written = Bool(False)
 
-    transport = CaselessStrEnum(['tcp', 'ipc'], default_value='tcp', config=True)
+    transport = CaselessStrEnum(["tcp", "ipc"], default_value="tcp", config=True)
     kernel_name = Unicode()
 
-    ip = Unicode(config=True,
+    ip = Unicode(
+        config=True,
         help="""Set the kernel\'s IP address [default localhost].
         If the IP address is something other than localhost, then
         Consoles on other machines will be able to connect
-        to the Kernel, so be careful!"""
+        to the Kernel, so be careful!""",
     )
 
     def _ip_default(self):
-        if self.transport == 'ipc':
+        if self.transport == "ipc":
             if self.connection_file:
-                return os.path.splitext(self.connection_file)[0] + '-ipc'
+                return os.path.splitext(self.connection_file)[0] + "-ipc"
             else:
-                return 'kernel-ipc'
+                return "kernel-ipc"
         else:
             return localhost()
 
-    @observe('ip')
+    @observe("ip")
     def _ip_changed(self, change):
-        if change['new'] == '*':
-            self.ip = '0.0.0.0'
+        if change["new"] == "*":
+            self.ip = "0.0.0.0"
 
     # protected traits
 
-    hb_port = Integer(0, config=True,
-            help="set the heartbeat port [default: random]")
-    shell_port = Integer(0, config=True,
-            help="set the shell (ROUTER) port [default: random]")
-    iopub_port = Integer(0, config=True,
-            help="set the iopub (PUB) port [default: random]")
-    stdin_port = Integer(0, config=True,
-            help="set the stdin (ROUTER) port [default: random]")
-    control_port = Integer(0, config=True,
-            help="set the control (ROUTER) port [default: random]")
+    hb_port = Integer(0, config=True, help="set the heartbeat port [default: random]")
+    shell_port = Integer(0, config=True, help="set the shell (ROUTER) port [default: random]")
+    iopub_port = Integer(0, config=True, help="set the iopub (PUB) port [default: random]")
+    stdin_port = Integer(0, config=True, help="set the stdin (ROUTER) port [default: random]")
+    control_port = Integer(0, config=True, help="set the control (ROUTER) port [default: random]")
 
     # names of the ports with random assignment
-    _random_port_names = None
+    _random_port_names: Optional[List[str]] = None
 
     @property
-    def ports(self):
-        return [ getattr(self, name) for name in port_names ]
+    def ports(self) -> List[int]:
+        return [getattr(self, name) for name in port_names]
 
     # The Session to use for communication with the kernel.
-    session = Instance('jupyter_client.session.Session')
+    session = Instance("jupyter_client.session.Session")
+
     def _session_default(self):
         from jupyter_client.session import Session
+
         return Session(parent=self)
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Connection and ipc file management
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
-    def get_connection_info(self, session=False):
+    def get_connection_info(self, session: bool = False) -> Dict[str, Any]:
         """Return the connection info as a dict
 
         Parameters
@@ -384,26 +425,29 @@ class ConnectionFileMixin(LoggingConfigurable):
         if session:
             # add *clone* of my session,
             # so that state such as digest_history is not shared.
-            info['session'] = self.session.clone()
+            info["session"] = self.session.clone()
         else:
             # add session info
-            info.update(dict(
-                signature_scheme=self.session.signature_scheme,
-                key=self.session.key,
-            ))
+            info.update(
+                dict(
+                    signature_scheme=self.session.signature_scheme,
+                    key=self.session.key,
+                )
+            )
         return info
 
     # factory for blocking clients
-    blocking_class = Type(klass=object, default_value='jupyter_client.BlockingKernelClient')
+    blocking_class = Type(klass=object, default_value="jupyter_client.BlockingKernelClient")
+
     def blocking_client(self):
         """Make a blocking client connected to my kernel"""
         info = self.get_connection_info()
-        info['parent'] = self
+        info["parent"] = self
         bc = self.blocking_class(**info)
         bc.session.key = self.session.key
         return bc
 
-    def cleanup_connection_file(self):
+    def cleanup_connection_file(self) -> None:
         """Cleanup connection file *if we wrote it*
 
         Will not raise if the connection file was already removed somehow.
@@ -416,9 +460,9 @@ class ConnectionFileMixin(LoggingConfigurable):
             except (IOError, OSError, AttributeError):
                 pass
 
-    def cleanup_ipc_files(self):
+    def cleanup_ipc_files(self) -> None:
         """Cleanup ipc files if we wrote them."""
-        if self.transport != 'ipc':
+        if self.transport != "ipc":
             return
         for port in self.ports:
             ipcfile = "%s-%i" % (self.ip, port)
@@ -427,13 +471,13 @@ class ConnectionFileMixin(LoggingConfigurable):
             except (IOError, OSError):
                 pass
 
-    def _record_random_port_names(self):
+    def _record_random_port_names(self) -> None:
         """Records which of the ports are randomly assigned.
 
         Records on first invocation, if the transport is tcp.
         Does nothing on later invocations."""
 
-        if self.transport != 'tcp':
+        if self.transport != "tcp":
             return
         if self._random_port_names is not None:
             return
@@ -443,7 +487,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             if getattr(self, name) <= 0:
                 self._random_port_names.append(name)
 
-    def cleanup_random_ports(self):
+    def cleanup_random_ports(self) -> None:
         """Forgets randomly assigned port numbers and cleans up the connection file.
 
         Does nothing if no port numbers have been randomly assigned.
@@ -458,18 +502,23 @@ class ConnectionFileMixin(LoggingConfigurable):
 
         self.cleanup_connection_file()
 
-    def write_connection_file(self):
+    def write_connection_file(self) -> None:
         """Write connection info to JSON dict in self.connection_file."""
         if self._connection_file_written and os.path.exists(self.connection_file):
             return
 
-        self.connection_file, cfg = write_connection_file(self.connection_file,
-            transport=self.transport, ip=self.ip, key=self.session.key,
-            stdin_port=self.stdin_port, iopub_port=self.iopub_port,
-            shell_port=self.shell_port, hb_port=self.hb_port,
+        self.connection_file, cfg = write_connection_file(
+            self.connection_file,
+            transport=self.transport,
+            ip=self.ip,
+            key=self.session.key,
+            stdin_port=self.stdin_port,
+            iopub_port=self.iopub_port,
+            shell_port=self.shell_port,
+            hb_port=self.hb_port,
             control_port=self.control_port,
             signature_scheme=self.session.signature_scheme,
-            kernel_name=self.kernel_name
+            kernel_name=self.kernel_name,
         )
         # write_connection_file also sets default ports:
         self._record_random_port_names()
@@ -478,7 +527,7 @@ class ConnectionFileMixin(LoggingConfigurable):
 
         self._connection_file_written = True
 
-    def load_connection_file(self, connection_file=None):
+    def load_connection_file(self, connection_file: Optional[str] = None) -> None:
         """Load connection info from JSON dict in self.connection_file.
 
         Parameters
@@ -494,7 +543,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             info = json.load(f)
         self.load_connection_info(info)
 
-    def load_connection_info(self, info):
+    def load_connection_info(self, info: Dict[str, Union[int, str]]) -> None:
         """Load connection info from a dict containing connection info.
 
         Typically this data comes from a connection file
@@ -506,8 +555,8 @@ class ConnectionFileMixin(LoggingConfigurable):
             Dictionary containing connection_info.
             See the connection_file spec for details.
         """
-        self.transport = info.get('transport', self.transport)
-        self.ip = info.get('ip', self._ip_default())
+        self.transport = info.get("transport", self.transport)
+        self.ip = info.get("ip", self._ip_default())
 
         self._record_random_port_names()
         for name in port_names:
@@ -515,12 +564,17 @@ class ConnectionFileMixin(LoggingConfigurable):
                 # not overridden by config or cl_args
                 setattr(self, name, info[name])
 
-        if 'key' in info:
-            self.session.key = cast_bytes(info['key'])
-        if 'signature_scheme' in info:
-            self.session.signature_scheme = info['signature_scheme']
+        if "key" in info:
+            key = info["key"]
+            if isinstance(key, str):
+                key = key.encode()
+            assert isinstance(key, bytes)
 
-    def _force_connection_info(self, info):
+            self.session.key = key
+        if "signature_scheme" in info:
+            self.session.signature_scheme = info["signature_scheme"]
+
+    def _force_connection_info(self, info: Dict[str, Union[int, str]]) -> None:
         """Unconditionally loads connection info from a dict containing connection info.
 
         Overwrites connection info-based attributes, regardless of their current values
@@ -533,22 +587,24 @@ class ConnectionFileMixin(LoggingConfigurable):
         self.load_connection_info(info)
         self.write_connection_file()
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Creating connected sockets
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
-    def _make_url(self, channel):
+    def _make_url(self, channel: str) -> str:
         """Make a ZeroMQ URL for a given channel."""
         transport = self.transport
         ip = self.ip
-        port = getattr(self, '%s_port' % channel)
+        port = getattr(self, "%s_port" % channel)
 
-        if transport == 'tcp':
+        if transport == "tcp":
             return "tcp://%s:%i" % (ip, port)
         else:
             return "%s://%s-%s" % (transport, ip, port)
 
-    def _create_connected_socket(self, channel, identity=None):
+    def _create_connected_socket(
+        self, channel: str, identity: Optional[bytes] = None
+    ) -> zmq.sugar.socket.Socket:
         """Create a zmq Socket and connect it to the kernel."""
         url = self._make_url(channel)
         socket_type = channel_socket_types[channel]
@@ -561,31 +617,31 @@ class ConnectionFileMixin(LoggingConfigurable):
         sock.connect(url)
         return sock
 
-    def connect_iopub(self, identity=None):
+    def connect_iopub(self, identity: Optional[bytes] = None) -> zmq.sugar.socket.Socket:
         """return zmq Socket connected to the IOPub channel"""
-        sock = self._create_connected_socket('iopub', identity=identity)
-        sock.setsockopt(zmq.SUBSCRIBE, b'')
+        sock = self._create_connected_socket("iopub", identity=identity)
+        sock.setsockopt(zmq.SUBSCRIBE, b"")
         return sock
 
-    def connect_shell(self, identity=None):
+    def connect_shell(self, identity: Optional[bytes] = None) -> zmq.sugar.socket.Socket:
         """return zmq Socket connected to the Shell channel"""
-        return self._create_connected_socket('shell', identity=identity)
+        return self._create_connected_socket("shell", identity=identity)
 
-    def connect_stdin(self, identity=None):
+    def connect_stdin(self, identity: Optional[bytes] = None) -> zmq.sugar.socket.Socket:
         """return zmq Socket connected to the StdIn channel"""
-        return self._create_connected_socket('stdin', identity=identity)
+        return self._create_connected_socket("stdin", identity=identity)
 
-    def connect_hb(self, identity=None):
+    def connect_hb(self, identity: Optional[bytes] = None) -> zmq.sugar.socket.Socket:
         """return zmq Socket connected to the Heartbeat channel"""
-        return self._create_connected_socket('hb', identity=identity)
+        return self._create_connected_socket("hb", identity=identity)
 
-    def connect_control(self, identity=None):
+    def connect_control(self, identity: Optional[bytes] = None) -> zmq.sugar.socket.Socket:
         """return zmq Socket connected to the Control channel"""
-        return self._create_connected_socket('control', identity=identity)
+        return self._create_connected_socket("control", identity=identity)
 
 
 __all__ = [
-    'write_connection_file',
-    'find_connection_file',
-    'tunnel_to_kernel',
+    "write_connection_file",
+    "find_connection_file",
+    "tunnel_to_kernel",
 ]

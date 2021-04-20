@@ -81,8 +81,7 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         """
         pass
 
-    # TODO - update to async def
-    def shutdown_requested(self, restart=False) -> None:
+    async def shutdown_requested(self, restart=False) -> None:
         """Called after KernelManager sends a `shutdown_request` message to kernel.
 
         This method is optional and is primarily used in scenarios where the provisioner communicates
@@ -338,7 +337,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
 
     @default('default_provisioner_name')
     def default_provisioner_name_default(self):
-        return os.getenv(self.default_provisioner_name_env, "local-provisioner")
+        return os.getenv(self.default_provisioner_name_env, "LocalProvisioner")
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)

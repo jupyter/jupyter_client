@@ -4,6 +4,42 @@
 Changes in Jupyter Client
 =========================
 
+7.0.0a0
+=======
+- Add back ``block`` keyword argument to ``get_msg`` (:ghpull:`641`)
+- Fix threaded client and fix qtconsole issues (:ghpull:`638`)
+- Drop Python 3.5 and pin Python >= 3.6.1 (:ghpull:`636`)
+- Use pre-commit for code style (:ghpull:`631`)
+- Fix kernel client shutdown test (:ghpull:`629`)
+- Add MultiKernelManager subclass tests (:ghpull:`627`)
+- Add KernelManager subclass tests (:ghpull:`626`)
+- Add type annotations, refactor sync/async (:ghpull:`623`)
+
+6.2.0
+=====
+- Yanked (PyPI) and marked as broken (conda)
+
+6.1.13
+======
+- Yanked (PyPI) and marked as broken (conda)
+
+6.1.12
+======
+- Shutdown request sequence has been modified to be more graceful, it now is
+  preceded by interrupt, and will also send a ``SIGTERM`` before forcibly
+  killing the kernel. (:ghpull:`620`)
+
+- Removal of ``ipython_genutils`` as a dependency. It was implicit before; but
+  required by at least traitlets thus avoiding issues. We are working on
+  completely removing it from all jupyter dependencies; as it might lead to
+  issues packaging for Python 3.10, and was mostly used for compatibility with
+  python 2.  (:ghpull:`620`, :ghpull:`605`)
+
+- Address a race condition between ``shutdown_kernel`` and restarter.
+  (:ghpull:`607`.)
+
+See the `full list of pull-requests <https://github.com/jupyter/jupyter_client/milestone/27?closed=1>`_
+
 6.1.11
 ======
 - Move jedi pinning to test requirements (:ghpull:`599`)
