@@ -1,47 +1,61 @@
 """Kernel Provisioner Classes"""
-
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
 import os
 import signal
 import sys
+from abc import ABC
+from abc import ABCMeta
+from abc import abstractmethod
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
-from abc import ABCMeta, ABC, abstractmethod
-from entrypoints import EntryPoint, get_group_all, get_single, NoSuchEntryPoint
-from typing import Optional, Dict, List, Any, Tuple
-from traitlets.config import Config, default, Instance, LoggingConfigurable, SingletonConfigurable, Unicode
+from entrypoints import EntryPoint  # type: ignore
+from entrypoints import get_group_all
+from entrypoints import get_single
+from entrypoints import NoSuchEntryPoint
+from traitlets.config import default  # type: ignore
+from traitlets.config import Instance
+from traitlets.config import LoggingConfigurable
+from traitlets.config import SingletonConfigurable
+from traitlets.config import Unicode
 
-from .connect import write_connection_file
 from .launcher import async_launch_kernel
-from .localinterfaces import is_local_ip, local_ips
+from .localinterfaces import is_local_ip
+from .localinterfaces import local_ips
+from .utils import ensure_async
 
 
-class KernelProvisionerMeta(ABCMeta, type(LoggingConfigurable)):
+class KernelProvisionerMeta(ABCMeta, type(LoggingConfigurable)):  # type: ignore
     pass
 
 
 class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisionerMeta):
     """Base class defining methods for KernelProvisioner classes.
 
-       Theses methods model those of the Subprocess Popen class:
-       https://docs.python.org/3/library/subprocess.html#popen-objects
+    Theses methods model those of the Subprocess Popen class:
+    https://docs.python.org/3/library/subprocess.html#popen-objects
     """
+
     # The kernel specification associated with this provisioner
     kernel_spec: Any = Instance('jupyter_client.kernelspec.KernelSpec', allow_none=True)
     kernel_id: str = Unicode(None, allow_none=True)
     connection_info: dict = {}
 
     @abstractmethod
-    async def poll(self) -> [int, None]:
+    async def poll(self) -> Optional[int]:
         """Checks if kernel process is still running.
 
-         If running, None is returned, otherwise the process's integer-valued exit code is returned.
-         """
+        If running, None is returned, otherwise the process's integer-valued exit code is returned.
+        """
         pass
 
     @abstractmethod
-    async def wait(self) -> [int, None]:
+    async def wait(self) -> Optional[int]:
         """Waits for kernel process to terminate."""
         pass
 
@@ -51,41 +65,44 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         pass
 
     @abstractmethod
-    async def kill(self, restart=False) -> None:
-        """Kills the kernel process.  This is typically accomplished via a SIGKILL signal, which
-        cannot be caught.
+    async def kill(self, restart: bool = False) -> None:
+        """Kills the kernel process.  This is typically accomplished via a SIGKILL signal,
+        which cannot be caught.
 
         restart is True if this operation precedes a start launch_kernel request.
         """
         pass
 
     @abstractmethod
-    async def terminate(self, restart=False) -> None:
-        """Terminates the kernel process.  This is typically accomplished via a SIGTERM signal, which
-        can be caught, allowing the kernel provisioner to perform possible cleanup of resources.
+    async def terminate(self, restart: bool = False) -> None:
+        """Terminates the kernel process.  This is typically accomplished via a SIGTERM signal,
+        which can be caught, allowing the kernel provisioner to perform possible cleanup
+        of resources.
 
         restart is True if this operation precedes a start launch_kernel request.
         """
         pass
 
     @abstractmethod
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['KernelProvisionerBase', Dict]:
+    async def launch_kernel(
+        self, cmd: List[str], **kwargs: Any
+    ) -> Tuple['KernelProvisionerBase', Dict]:
         """Launch the kernel process returning the class instance and connection info."""
         pass
 
     @abstractmethod
-    async def cleanup(self, restart=False) -> None:
+    async def cleanup(self, restart: bool = False) -> None:
         """Cleanup any resources allocated on behalf of the kernel provisioner.
 
         restart is True if this operation precedes a start launch_kernel request.
         """
         pass
 
-    async def shutdown_requested(self, restart=False) -> None:
+    async def shutdown_requested(self, restart: bool = False) -> None:
         """Called after KernelManager sends a `shutdown_request` message to kernel.
 
-        This method is optional and is primarily used in scenarios where the provisioner communicates
-        with a sibling (nanny) process to the kernel.
+        This method is optional and is primarily used in scenarios where the provisioner
+        communicates with a sibling (nanny) process to the kernel.
         """
         pass
 
@@ -109,24 +126,22 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         """Perform any steps following the kernel process launch."""
         pass
 
-    async def get_provisioner_info(self) -> Dict:
-        """Captures the base information necessary for kernel persistence relative to the provisioner.
+    async def get_provisioner_info(self) -> Dict[str, Any]:
+        """Captures the base information necessary for persistence relative to this instance.
 
-        The superclass method must always be called first to ensure proper ordering.  Since this is the
-        most base class, no call to `super()` is necessary.
+        The superclass method must always be called first to ensure proper ordering.
         """
-        provisioner_info = {}
+        provisioner_info: Dict[str, Any] = {}
         return provisioner_info
 
     async def load_provisioner_info(self, provisioner_info: Dict) -> None:
-        """Loads the base information necessary for kernel persistence relative to the provisioner.
+        """Loads the base information necessary for persistence relative to this instance.
 
-        The superclass method must always be called first to ensure proper ordering.  Since this is the
-        most base class, no call to `super()` is necessary.
+        The superclass method must always be called first to ensure proper ordering.
         """
         pass
 
-    def get_shutdown_wait_time(self, recommended: Optional[float] = 5.0) -> float:
+    def get_shutdown_wait_time(self, recommended: float = 5.0) -> float:
         """Returns the time allowed for a complete shutdown.  This may vary by provisioner.
 
         The recommended value will typically be what is configured in the kernel manager.
@@ -144,18 +159,19 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
             env.pop('PYTHONEXECUTABLE', None)
 
     def _validate_parameters(self, env: Dict[str, str], **kwargs: Any) -> None:
-        """Future: Validates that launch parameters adhere to schema specified in kernel specification."""
+        """Future: Validates that launch parameters adhere to schema specified in kernel spec."""
         pass
 
     def __apply_env_substitutions(self, substitution_values: Dict[str, str]):
-        """ Walks env entries in the kernelspec's env stanza and applies possible substitutions from current env.
+        """Walks entries in the kernelspec's env stanza and applies substitutions from current env.
 
-            Returns the substituted list of env entries.
-            Note: This method is private and is not intended to be overridden by provisioners.
+        Returns the substituted list of env entries.
+        Note: This method is private and is not intended to be overridden by provisioners.
         """
         substituted_env = {}
         if self.kernel_spec:
             from string import Template
+
             # For each templated env entry, fill any templated references
             # matching names of env variables with those values and build
             # new dict with substitutions.
@@ -174,20 +190,23 @@ class LocalProvisioner(KernelProvisionerBase):
     pgid = None
     ip = None
 
-    async def poll(self) -> [int, None]:
+    async def poll(self) -> Optional[int]:
+        ret = None
         if self.process:
             if self.async_subprocess:
                 if not self._exit_future.done():  # adhere to process returncode
-                    return None
+                    ret = None
+                else:
+                    ret = self._exit_future.result()
             else:
-                if self.process.poll() is None:
-                    return None
-        return False
+                ret = self.process.poll()
+        return ret
 
-    async def wait(self) -> [int, None]:
+    async def wait(self) -> Optional[int]:
+        ret = None
         if self.process:
             if self.async_subprocess:
-                await self.process.wait()
+                ret = await self.process.wait()
             else:
                 # Use busy loop at 100ms intervals, polling until the process is
                 # not alive.  If we find the process is no longer alive, complete
@@ -197,8 +216,9 @@ class LocalProvisioner(KernelProvisionerBase):
                     await asyncio.sleep(0.1)
 
                 # Process is no longer alive, wait and clear
-                self.process.wait()
+                ret = self.process.wait()
                 self.process = None
+        return ret
 
     async def send_signal(self, signum: int) -> None:
         """Sends a signal to the process group of the kernel (this
@@ -212,6 +232,7 @@ class LocalProvisioner(KernelProvisionerBase):
         if self.process:
             if signum == signal.SIGINT and sys.platform == 'win32':
                 from .win_interrupt import send_interrupt
+
                 send_interrupt(self.process.win32_interrupt_event)
                 return
 
@@ -224,7 +245,7 @@ class LocalProvisioner(KernelProvisionerBase):
                     pass
             return self.process.send_signal(signum)
 
-    async def kill(self, restart=False) -> None:
+    async def kill(self, restart: bool = False) -> None:
         if self.process:
             try:
                 self.process.kill()
@@ -238,14 +259,15 @@ class LocalProvisioner(KernelProvisionerBase):
                 # terminated. Ignore it.
                 else:
                     from errno import ESRCH
+
                     if e.errno != ESRCH:
                         raise
 
-    async def terminate(self, restart=False) -> None:
+    async def terminate(self, restart: bool = False) -> None:
         if self.process:
             return self.process.terminate()
 
-    async def cleanup(self, restart=False) -> None:
+    async def cleanup(self, restart: bool = False) -> None:
         pass
 
     async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
@@ -262,20 +284,23 @@ class LocalProvisioner(KernelProvisionerBase):
         km = kwargs.pop('kernel_manager', None)
         if km:
             if km.transport == 'tcp' and not is_local_ip(km.ip):
-                raise RuntimeError("Can only launch a kernel on a local interface. "
-                                   "This one is not: %s."
-                                   "Make sure that the '*_address' attributes are "
-                                   "configured properly. "
-                                   "Currently valid addresses are: %s" % (km.ip, local_ips())
-                                   )
+                raise RuntimeError(
+                    "Can only launch a kernel on a local interface. "
+                    "This one is not: %s."
+                    "Make sure that the '*_address' attributes are "
+                    "configured properly. "
+                    "Currently valid addresses are: %s" % (km.ip, local_ips())
+                )
             # build the Popen cmd
             extra_arguments = kwargs.pop('extra_arguments', [])
 
             # write connection file / get default ports
-            km.write_connection_file()  # TODO - this will need to change when handshake pattern is adopted
+            km.write_connection_file()  # TODO - change when handshake pattern is adopted
             self.connection_info = km.get_connection_info()
 
-            kernel_cmd = km.format_kernel_cmd(extra_arguments=extra_arguments)  # This needs to remain here for b/c
+            kernel_cmd = km.format_kernel_cmd(
+                extra_arguments=extra_arguments
+            )  # This needs to remain here for b/c
         else:
             extra_arguments = kwargs.pop('extra_arguments', [])
             kernel_cmd = self.kernel_spec.argv + extra_arguments
@@ -287,7 +312,7 @@ class LocalProvisioner(KernelProvisionerBase):
         self.process = await async_launch_kernel(cmd, **scrubbed_kwargs)
         self.async_subprocess = isinstance(self.process, asyncio.subprocess.Process)
         if self.async_subprocess:
-            self._exit_future = asyncio.ensure_future(self.process.wait())
+            self._exit_future = asyncio.ensure_future(ensure_async(self.process.wait()))
         pgid = None
         if hasattr(os, "getpgid"):
             try:
@@ -309,15 +334,13 @@ class LocalProvisioner(KernelProvisionerBase):
         return scrubbed_kwargs
 
     async def get_provisioner_info(self) -> Dict:
-        """Captures the base information necessary for kernel persistence relative to the provisioner.
-        """
+        """Captures the base information necessary for persistence relative to this instance."""
         provisioner_info = await super().get_provisioner_info()
         provisioner_info.update({'pid': self.pid, 'pgid': self.pgid, 'ip': self.ip})
         return provisioner_info
 
     async def load_provisioner_info(self, provisioner_info: Dict) -> None:
-        """Loads the base information necessary for kernel persistence relative to the provisioner.
-        """
+        """Loads the base information necessary for persistence relative to this instance."""
         await super().load_provisioner_info(provisioner_info)
         self.pid = provisioner_info['pid']
         self.pgid = provisioner_info['pgid']
@@ -325,15 +348,17 @@ class LocalProvisioner(KernelProvisionerBase):
 
 
 class KernelProvisionerFactory(SingletonConfigurable):
-    """KernelProvisionerFactory is responsible for validating and initializing provisioner instances."""
+    """KernelProvisionerFactory is responsible for creating provisioner instances."""
 
     GROUP_NAME = 'jupyter_client.kernel_provisioners'
     provisioners: Dict[str, EntryPoint] = {}
 
     default_provisioner_name_env = "JUPYTER_DEFAULT_PROVISIONER_NAME"
-    default_provisioner_name = Unicode(config=True,
-                                       help="""Indicates the name of the provisioner to use when no kernel_provisioner
-                                       entry is present in the kernelspec.""")
+    default_provisioner_name = Unicode(
+        config=True,
+        help="""Indicates the name of the provisioner to use when no kernel_provisioner
+                                       entry is present in the kernelspec.""",
+    )
 
     @default('default_provisioner_name')
     def default_provisioner_name_default(self):
@@ -354,7 +379,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         """
         is_available: bool = True
         provisioner_cfg = self._get_provisioner_config(kernel_spec)
-        provisioner_name = provisioner_cfg.get('provisioner_name')
+        provisioner_name = str(provisioner_cfg.get('provisioner_name'))
         if provisioner_name not in self.provisioners:
             try:
                 ep = KernelProvisionerFactory._get_provisioner(provisioner_name)
@@ -362,11 +387,15 @@ class KernelProvisionerFactory(SingletonConfigurable):
             except NoSuchEntryPoint:
                 is_available = False
                 self.log.warning(
-                    f"Kernel '{kernel_name}' is referencing a kernel provisioner ('{provisioner_name}') "
-                    f"that is not available.  Ensure the appropriate package has been installed and retry.")
+                    f"Kernel '{kernel_name}' is referencing a kernel provisioner "
+                    f"('{provisioner_name}') that is not available.  Ensure the "
+                    f"appropriate package has been installed and retry."
+                )
         return is_available
 
-    def create_provisioner_instance(self, kernel_id: str, kernel_spec: Any) -> KernelProvisionerBase:
+    def create_provisioner_instance(
+        self, kernel_id: str, kernel_spec: Any
+    ) -> KernelProvisionerBase:
         """
         Reads the associated kernel_spec and to see if has a kernel_provisioner stanza.
         If one exists, it instantiates an instance.  If a kernel provisioner is not
@@ -379,23 +408,27 @@ class KernelProvisionerFactory(SingletonConfigurable):
         provisioner_cfg = self._get_provisioner_config(kernel_spec)
         provisioner_name = provisioner_cfg.get('provisioner_name')
         if provisioner_name not in self.provisioners:
-            raise ModuleNotFoundError(f"Kernel provisioner '{provisioner_name}' has not been registered.")
+            raise ModuleNotFoundError(
+                f"Kernel provisioner '{provisioner_name}' has not been registered."
+            )
 
-        self.log.debug(f"Instantiating kernel '{kernel_spec.display_name}' with "
-                       f"kernel provisioner: {provisioner_name}")
+        self.log.debug(
+            f"Instantiating kernel '{kernel_spec.display_name}' with "
+            f"kernel provisioner: {provisioner_name}"
+        )
         provisioner_class = self.provisioners[provisioner_name].load()
         provisioner_config = provisioner_cfg.get('config')
-        return provisioner_class(kernel_id=kernel_id,
-                                 kernel_spec=kernel_spec,
-                                 parent=self.parent,
-                                 **provisioner_config)
+        return provisioner_class(
+            kernel_id=kernel_id, kernel_spec=kernel_spec, parent=self.parent, **provisioner_config
+        )
 
     def _get_provisioner_config(self, kernel_spec: Any) -> Dict[str, Any]:
         """
         Return the kernel_provisioner stanza from the kernel_spec.
 
         Checks the kernel_spec's metadata dictionary for a kernel_provisioner entry.
-        If found, it is returned, else one is created relative to the DEFAULT_PROVISIONER and returned.
+        If found, it is returned, else one is created relative to the DEFAULT_PROVISIONER
+        and returned.
 
         Parameters
         ----------
@@ -405,13 +438,15 @@ class KernelProvisionerFactory(SingletonConfigurable):
         Returns
         -------
         dict
-            The provisioner portion of the kernel_spec.  If one does not exist, it will contain the default
-            information.  If no `config` sub-dictionary exists, an empty `config` dictionary will be added.
-
+            The provisioner portion of the kernel_spec.  If one does not exist, it will contain
+            the default information.  If no `config` sub-dictionary exists, an empty `config`
+            dictionary will be added.
         """
         env_provisioner = kernel_spec.metadata.get('kernel_provisioner', {})
         if 'provisioner_name' in env_provisioner:  # If no provisioner_name, return default
-            if 'config' not in env_provisioner:  # if provisioner_name, but no config stanza, add one
+            if (
+                'config' not in env_provisioner
+            ):  # if provisioner_name, but no config stanza, add one
                 env_provisioner.update({"config": {}})
             return env_provisioner  # Return what we found (plus config stanza if necessary)
         return {"provisioner_name": self.default_provisioner_name, "config": {}}

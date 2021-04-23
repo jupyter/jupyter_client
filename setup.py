@@ -104,7 +104,7 @@ setup_args = dict(
         ],
         'jupyter_client.kernel_provisioners': [
             'local-provisioner = jupyter_client.provisioning:LocalProvisioner',
-        ]
+        ],
     },
 )
 

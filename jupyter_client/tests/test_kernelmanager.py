@@ -21,7 +21,6 @@ from ..manager import start_new_async_kernel
 from ..manager import start_new_kernel
 from .utils import AsyncKMSubclass
 from .utils import SyncKMSubclass
-from .utils import test_env
 from jupyter_client import AsyncKernelManager
 from jupyter_client import KernelManager
 

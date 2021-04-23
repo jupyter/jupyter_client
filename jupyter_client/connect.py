@@ -38,6 +38,9 @@ from traitlets.config import LoggingConfigurable  # type: ignore
 from .localinterfaces import localhost
 from .utils import _filefind
 
+# Define custom type for kernel connection info
+KernelConnectionInfo = Dict[str, Union[int, str, bytes]]
+
 
 def write_connection_file(
     fname: Optional[str] = None,
@@ -51,7 +54,7 @@ def write_connection_file(
     transport: str = "tcp",
     signature_scheme: str = "hmac-sha256",
     kernel_name: str = "",
-) -> Tuple[str, Dict[str, Union[int, str]]]:
+) -> Tuple[str, KernelConnectionInfo]:
     """Generates a JSON config file, including the selection of random ports.
 
     Parameters
@@ -139,7 +142,7 @@ def write_connection_file(
     if hb_port <= 0:
         hb_port = ports.pop(0)
 
-    cfg: Dict[str, Union[int, str]] = dict(
+    cfg: KernelConnectionInfo = dict(
         shell_port=shell_port,
         iopub_port=iopub_port,
         stdin_port=stdin_port,
@@ -250,7 +253,7 @@ def find_connection_file(
 
 
 def tunnel_to_kernel(
-    connection_info: Union[str, Dict[str, Any]],
+    connection_info: Union[str, KernelConnectionInfo],
     sshserver: str,
     sshkey: Optional[str] = None,
 ) -> Tuple[Any, ...]:
@@ -398,7 +401,7 @@ class ConnectionFileMixin(LoggingConfigurable):
     # Connection and ipc file management
     # --------------------------------------------------------------------------
 
-    def get_connection_info(self, session: bool = False) -> Dict[str, Any]:
+    def get_connection_info(self, session: bool = False) -> KernelConnectionInfo:
         """Return the connection info as a dict
 
         Parameters
@@ -543,7 +546,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             info = json.load(f)
         self.load_connection_info(info)
 
-    def load_connection_info(self, info: Dict[str, Union[int, str]]) -> None:
+    def load_connection_info(self, info: KernelConnectionInfo) -> None:
         """Load connection info from a dict containing connection info.
 
         Typically this data comes from a connection file
@@ -574,7 +577,7 @@ class ConnectionFileMixin(LoggingConfigurable):
         if "signature_scheme" in info:
             self.session.signature_scheme = info["signature_scheme"]
 
-    def _force_connection_info(self, info: Dict[str, Union[int, str]]) -> None:
+    def _force_connection_info(self, info: KernelConnectionInfo) -> None:
         """Unconditionally loads connection info from a dict containing connection info.
 
         Overwrites connection info-based attributes, regardless of their current values

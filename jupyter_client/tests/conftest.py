@@ -3,8 +3,8 @@ import os
 import sys
 
 import pytest
-
 from jupyter_core import paths
+
 from .utils import test_env
 
 pjoin = os.path.join

@@ -13,4 +13,5 @@ from .manager import KernelManager  # noqa
 from .manager import run_kernel  # noqa
 from .multikernelmanager import AsyncMultiKernelManager  # noqa
 from .multikernelmanager import MultiKernelManager  # noqa
-from .provisioning import KernelProvisionerBase, LocalProvisioner  # noqa
+from .provisioning import KernelProvisionerBase  # noqa
+from .provisioning import LocalProvisioner  # noqa

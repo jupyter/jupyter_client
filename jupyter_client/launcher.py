@@ -8,7 +8,6 @@ from subprocess import PIPE
 from subprocess import Popen
 from typing import Any
 from typing import Dict
-from typing import IO
 from typing import List
 from typing import NoReturn
 from typing import Optional
@@ -23,7 +22,7 @@ def launch_kernel(
     stdin: Optional[int] = None,
     stdout: Optional[int] = None,
     stderr: Optional[int] = None,
-    env: Optional[Dict[str, str]] = None,
+    env: Optional[Dict[str, Any]] = None,
     independent: bool = False,
     cwd: Optional[str] = None,
     **kw,
@@ -60,31 +59,34 @@ def launch_kernel(
     """
     proc = None
 
-    kwargs, interrupt_event = _prepare_process_args(stdin=stdin, stdout=stdout, stderr=stderr, env=env,
-                                                    independent=independent, cwd=cwd, **kw)
+    kwargs, interrupt_event = _prepare_process_args(
+        stdin=stdin, stdout=stdout, stderr=stderr, env=env, independent=independent, cwd=cwd, **kw
+    )
 
     try:
         # Allow to use ~/ in the command or its arguments
-        cmd = list(map(os.path.expanduser, cmd))
+        cmd = [os.path.expanduser(s) for s in cmd]
 
         proc = Popen(cmd, **kwargs)
     except Exception as exc:
-        _handle_subprocess_exception(exc, cmd, env, kwargs)
+        _handle_subprocess_exception(exc, cmd, env, **kwargs)
 
     _finish_process_launch(proc, stdin, interrupt_event)
 
     return proc
 
 
-async def async_launch_kernel(cmd: List[str],
-                              stdin: Optional[IO[str]] = None,
-                              stdout: Optional[IO[str]] = None,
-                              stderr: Optional[IO[str]] = None,
-                              env: Optional[Dict[str, str]] = None,
-                              independent: Optional[bool] = False,
-                              cwd: Optional[str] = None,
-                              **kw: Optional[Dict[str, Any]]) -> Union[Popen, asyncio.subprocess.Process]:
-    """ Launches a localhost kernel, binding to the specified ports using async subprocess.
+async def async_launch_kernel(
+    cmd: List[str],
+    stdin: Optional[int] = None,
+    stdout: Optional[int] = None,
+    stderr: Optional[int] = None,
+    env: Optional[Dict[str, Any]] = None,
+    independent: Optional[bool] = False,
+    cwd: Optional[str] = None,
+    **kw,
+) -> Union[Popen, asyncio.subprocess.Process]:
+    """Launches a localhost kernel, binding to the specified ports using async subprocess.
 
     Parameters
     ----------
@@ -116,56 +118,56 @@ async def async_launch_kernel(cmd: List[str],
     """
     proc = None
 
-    kwargs, interrupt_event = _prepare_process_args(stdin=stdin, stdout=stdout, stderr=stderr, env=env,
-                                                    independent=independent, cwd=cwd, **kw)
+    kwargs, interrupt_event = _prepare_process_args(
+        stdin=stdin, stdout=stdout, stderr=stderr, env=env, independent=independent, cwd=cwd, **kw
+    )
 
     try:
         # Allow to use ~/ in the command or its arguments
-        cmd = list(map(os.path.expanduser, cmd))
+        cmd = [os.path.expanduser(s) for s in cmd]
 
         if sys.platform == 'win32':
-            # Windows is still not ready for async subprocs.  When the SelectorEventLoop is used (3.6, 3.7),
-            # a NotImplementedError is raised for _make_subprocess_transport().  When the ProactorEventLoop
-            # is used (3.8, 3.9), a NotImplementedError is raised for _add_reader().
+            # Windows is still not ready for async subprocs.  When the SelectorEventLoop is
+            # used (3.6, 3.7), a NotImplementedError is raised for _make_subprocess_transport().
+            # When the ProactorEventLoop is used (3.8, 3.9), a NotImplementedError is raised
+            # for _add_reader().
             proc = Popen(cmd, **kwargs)
         else:
             proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
     except Exception as exc:
-        _handle_subprocess_exception(exc, cmd, env, kwargs)
+        _handle_subprocess_exception(exc, cmd, env, **kwargs)
 
     _finish_process_launch(proc, stdin, interrupt_event)
 
     return proc
 
 
-def _handle_subprocess_exception(exc: Exception,
-                                 cmd: List[str],
-                                 env: Dict[str, Any],
-                                 kwargs: Dict[str, Any]) -> NoReturn:
-    """ Log error message consisting of runtime arguments (sans env) prior to raising the exception. """
+def _handle_subprocess_exception(
+    exc: Exception, cmd: List[str], env: Optional[Dict[str, Any]], **kwargs
+) -> NoReturn:
+    """ Log error message consisting of runtime arguments prior to raising the exception. """
     try:
-        msg = (
-            "Failed to run command:\n{}\n"
-            "    PATH={!r}\n"
-            "    with kwargs:\n{!r}\n"
-        )
+        msg = "Failed to run command:\n{}\n" "    PATH={!r}\n" "    with kwargs:\n{!r}\n"
         # exclude environment variables,
         # which may contain access tokens and the like.
         without_env = {key: value for key, value in kwargs.items() if key != 'env'}
+        assert env is not None
         msg = msg.format(cmd, env.get('PATH', os.defpath), without_env)
         get_logger().error(msg)
     finally:
         raise exc
 
 
-def _prepare_process_args(stdin: Optional[IO[str]] = None,
-                          stdout: Optional[IO[str]] = None,
-                          stderr: Optional[IO[str]] = None,
-                          env: Optional[Dict[str, str]] = None,
-                          independent: Optional[bool] = False,
-                          cwd: Optional[str] = None,
-                          **kw: Optional[Dict[str, Any]]) -> Tuple[Dict[str, Any], Any]:
-    """ Prepares for process launch.
+def _prepare_process_args(
+    stdin: Optional[int] = None,
+    stdout: Optional[int] = None,
+    stderr: Optional[int] = None,
+    env: Optional[Dict[str, str]] = None,
+    independent: Optional[bool] = False,
+    cwd: Optional[str] = None,
+    **kw,
+) -> Tuple[Dict[str, Any], Any]:
+    """Prepares for process launch.
 
     This consists of getting arguments into a form Popen/Process understands and creating the
     necessary Windows structures to support interrupts.
@@ -273,9 +275,9 @@ def _prepare_process_args(stdin: Optional[IO[str]] = None,
     return kwargs, interrupt_event
 
 
-def _finish_process_launch(subprocess: Union[Popen, asyncio.subprocess.Process],
-                           stdin: IO[str],
-                           interrupt_event: Any) -> None:
+def _finish_process_launch(
+    subprocess: Union[Popen, asyncio.subprocess.Process], stdin: Optional[int], interrupt_event: Any
+) -> None:
     """Finishes the process launch by patching the interrupt event (windows) and closing stdin. """
 
     assert subprocess is not None
@@ -286,11 +288,8 @@ def _finish_process_launch(subprocess: Union[Popen, asyncio.subprocess.Process],
 
     # Clean up pipes created to work around Popen bug.
     if stdin is None:
+        assert subprocess.stdin is not None
         subprocess.stdin.close()
 
 
-
-__all__ = [
-    "launch_kernel",
-    "async_launch_kernel"
-]
+__all__ = ["launch_kernel", "async_launch_kernel"]

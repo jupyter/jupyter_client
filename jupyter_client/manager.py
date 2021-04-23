@@ -25,16 +25,13 @@ from traitlets import Unicode
 from traitlets.utils.importstring import import_item  # type: ignore
 
 from .connect import ConnectionFileMixin
-from .localinterfaces import is_local_ip
-from .localinterfaces import local_ips
 from .managerabc import KernelManagerABC
-from .provisioning import KernelProvisionerFactory as KPF
 from .provisioning import KernelProvisionerBase
+from .provisioning import KernelProvisionerFactory as KPF
 from .utils import ensure_async
 from .utils import run_sync
 from jupyter_client import KernelClient
 from jupyter_client import kernelspec
-from jupyter_client import launch_kernel
 
 
 class _ShutdownStatus(Enum):
@@ -89,10 +86,12 @@ class KernelManager(ConnectionFileMixin):
     kernel_id = None
 
     # The kernel provisioner with which the KernelManager is communicating.
-    # This will generally be a LocalProvisioner instance unless the kernelspec indicates otherwise.
-    # Note that we use two attributes, kernel and provisioner, that will point at the same provisioner instance.
-    # kernel will be non-None during the kernel's lifecycle, while provisioner will span that time, being set
-    # prior to launch and unset following the kernel's termination.
+    # This will generally be a LocalProvisioner instance unless the kernelspec
+    # indicates otherwise.
+    # Note that we use two attributes, kernel and provisioner, both of which
+    # will point at the same provisioner instance.  `kernel` will be non-None
+    # during the kernel's lifecycle, while `provisioner` will span that time,
+    # being set prior to launch and unset following the kernel's termination.
 
     kernel: t.Optional[KernelProvisionerBase] = None
     provisioner: t.Optional[KernelProvisionerBase] = None
@@ -258,6 +257,7 @@ class KernelManager(ConnectionFileMixin):
 
         override in a subclass to launch kernel subprocesses differently
         """
+        assert self.provisioner is not None
         kernel_proc, connection_info = await self.provisioner.launch_kernel(kernel_cmd, **kw)
         # Provisioner provides the connection information.  Load into kernel manager and write file.
         self._force_connection_info(connection_info)
@@ -291,11 +291,13 @@ class KernelManager(ConnectionFileMixin):
              and launching the kernel (e.g. Popen kwargs).
         """
         self.kernel_id = self.kernel_id or kw.pop('kernel_id', str(uuid.uuid4()))
-        self.provisioner = KPF.instance(parent=self.parent). \
-            create_provisioner_instance(self.kernel_id, self.kernel_spec)
+        self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
+            self.kernel_id, self.kernel_spec
+        )
 
         # save kwargs for use in restart
         self._launch_args = kw.copy()
+        assert self.provisioner is not None
         kw = await self.provisioner.pre_launch(kernel_manager=self, **kw)
         kernel_cmd = kw.pop('cmd')
         return kernel_cmd, kw
@@ -310,6 +312,7 @@ class KernelManager(ConnectionFileMixin):
         """
         self.start_restarter()
         self._connect_control_socket()
+        assert self.provisioner is not None
         await self.provisioner.post_launch(**kw)
 
     async def _async_start_kernel(self, **kw):
@@ -340,6 +343,7 @@ class KernelManager(ConnectionFileMixin):
         # ensure control socket is connected
         self._connect_control_socket()
         self.session.send(self._control_socket, msg)
+        assert self.provisioner is not None
         await self.provisioner.shutdown_requested(restart=restart)
 
     async def _async_finish_shutdown(
@@ -481,6 +485,7 @@ class KernelManager(ConnectionFileMixin):
     async def _async_send_kernel_sigterm(self, restart: bool = False) -> None:
         """similar to _kill_kernel, but with sigterm (not sigkill), but do not block"""
         if self.has_kernel:
+            assert self.kernel is not None
             await self.kernel.terminate(restart=restart)
 
     _send_kernel_sigterm = run_sync(_async_send_kernel_sigterm)
@@ -491,6 +496,7 @@ class KernelManager(ConnectionFileMixin):
         This is a private method, callers should use shutdown_kernel(now=True).
         """
         if self.has_kernel:
+            assert self.kernel is not None
             await self.kernel.kill(restart=restart)
 
             # Wait until the kernel terminates.
@@ -538,6 +544,7 @@ class KernelManager(ConnectionFileMixin):
         only useful on Unix systems.
         """
         if self.has_kernel:
+            assert self.kernel is not None
             await self.kernel.send_signal(signum)
         else:
             raise RuntimeError("Cannot signal kernel. No kernel is running!")
@@ -547,6 +554,7 @@ class KernelManager(ConnectionFileMixin):
     async def _async_is_alive(self) -> bool:
         """Is the kernel process still running?"""
         if self.has_kernel:
+            assert self.kernel is not None
             ret = await self.kernel.poll()
             if ret is None:
                 return True
