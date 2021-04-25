@@ -347,7 +347,7 @@ class KernelManager(ConnectionFileMixin):
         await self.provisioner.shutdown_requested(restart=restart)
 
     async def _async_finish_shutdown(
-        self, waittime: t.Optional[float] = None, pollinterval: float = 0.1, restart: bool = False
+        self, waittime: t.Optional[float] = None, pollinterval: float = 0.1, restart: t.Optional[bool] = False
     ) -> None:
         """Wait for kernel shutdown, then kill process if it doesn't shutdown.
 
@@ -375,7 +375,7 @@ class KernelManager(ConnectionFileMixin):
         except asyncio.TimeoutError:
             self.log.debug("Kernel is taking too long to finish, killing")
             self._shutdown_status = _ShutdownStatus.SigkillRequest
-            await ensure_async(self._kill_kernel())
+            await ensure_async(self._kill_kernel(restart=restart))
         else:
             # Process is no longer alive, wait and clear
             if self.kernel is not None:
@@ -384,7 +384,7 @@ class KernelManager(ConnectionFileMixin):
 
     finish_shutdown = run_sync(_async_finish_shutdown)
 
-    async def cleanup_resources(self, restart: bool = False) -> None:
+    async def _async_cleanup_resources(self, restart: bool = False) -> None:
         """Clean up resources when the kernel is shut down"""
         if not restart:
             self.cleanup_connection_file()
@@ -399,6 +399,8 @@ class KernelManager(ConnectionFileMixin):
         if self.provisioner:
             await self.provisioner.cleanup(restart=restart)
             self.provisioner = self.kernel = None
+
+    cleanup_resources = run_sync(_async_cleanup_resources)
 
     async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False):
         """Attempts to stop the kernel process cleanly.
@@ -433,7 +435,7 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             await ensure_async(self.finish_shutdown(restart=restart))
 
-        await self.cleanup_resources(restart=restart)
+        await self._async_cleanup_resources(restart=restart)
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
@@ -524,7 +526,7 @@ class KernelManager(ConnectionFileMixin):
             assert self.kernel_spec is not None
             interrupt_mode = self.kernel_spec.interrupt_mode
             if interrupt_mode == "signal":
-                await self.signal_kernel(signal.SIGINT)
+                await self._async_signal_kernel(signal.SIGINT)
 
             elif interrupt_mode == "message":
                 msg = self.session.msg("interrupt_request", content={})
@@ -581,6 +583,7 @@ class AsyncKernelManager(KernelManager):
     _launch_kernel = KernelManager._async_launch_kernel
     start_kernel = KernelManager._async_start_kernel
     finish_shutdown = KernelManager._async_finish_shutdown
+    cleanup_resources = KernelManager._async_cleanup_resources
     shutdown_kernel = KernelManager._async_shutdown_kernel
     restart_kernel = KernelManager._async_restart_kernel
     _send_kernel_sigterm = KernelManager._async_send_kernel_sigterm
