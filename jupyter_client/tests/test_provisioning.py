@@ -146,7 +146,7 @@ def build_kernelspec(name: str, provisioner: Optional[str] = None) -> None:
     if provisioner:
         kernel_provisioner = {'kernel_provisioner': {'provisioner_name': provisioner}}
         spec['metadata'].update(kernel_provisioner)
-        if provisioner != 'LocalProvisioner':
+        if provisioner != 'Local-Provisioner':
             spec['metadata']['kernel_provisioner']['config'] = {
                 'config_var_1': 42,
                 'config_var_2': name,
@@ -159,19 +159,19 @@ def build_kernelspec(name: str, provisioner: Optional[str] = None) -> None:
 
 
 def new_provisioner():
-    build_kernelspec('new_provisioner', 'NewTestProvisioner')
+    build_kernelspec('new_provisioner', 'New-Test-Provisioner')
 
 
 def custom_provisioner():
-    build_kernelspec('custom_provisioner', 'CustomTestProvisioner')
+    build_kernelspec('custom_provisioner', 'Custom-Test-Provisioner')
 
 
 @pytest.fixture
 def all_provisioners():
     build_kernelspec('no_provisioner')
-    build_kernelspec('missing_provisioner', 'MissingProvisioner')
-    build_kernelspec('default_provisioner', 'LocalProvisioner')
-    build_kernelspec('subclassed_provisioner', 'SubclassedTestProvisioner')
+    build_kernelspec('missing_provisioner', 'Missing-Provisioner')
+    build_kernelspec('default_provisioner', 'Local-Provisioner')
+    build_kernelspec('subclassed_provisioner', 'Subclassed-Test-Provisioner')
     custom_provisioner()
 
 
@@ -189,23 +189,23 @@ def akm(request, all_provisioners):
 
 
 initial_provisioner_map = {
-    'LocalProvisioner': 'jupyter_client.provisioning',
-    'SubclassedTestProvisioner': 'jupyter_client.tests.test_provisioning',
-    'CustomTestProvisioner': 'jupyter_client.tests.test_provisioning',
+    'Local-Provisioner': ('jupyter_client.provisioning', 'LocalProvisioner'),
+    'Subclassed-Test-Provisioner': ('jupyter_client.tests.test_provisioning', 'SubclassedTestProvisioner'),
+    'Custom-Test-Provisioner': ('jupyter_client.tests.test_provisioning', 'CustomTestProvisioner'),
 }
 
 
 def mock_get_all_provisioners() -> List[EntryPoint]:
     result = []
     for name, epstr in initial_provisioner_map.items():
-        result.append(EntryPoint(name, epstr, name))
+        result.append(EntryPoint(name, epstr[0], epstr[1]))
     return result
 
 
 def mock_get_provisioner(name) -> EntryPoint:
-    if name == 'NewTestProvisioner':
+    if name == 'New-Test-Provisioner':
         return EntryPoint(
-            'NewTestProvisioner', 'jupyter_client.tests.test_provisioning', 'NewTestProvisioner'
+            'New-Test-Provisioner', 'jupyter_client.tests.test_provisioning', 'NewTestProvisioner'
         )
 
     if name in initial_provisioner_map:
@@ -248,7 +248,7 @@ class TestDiscovery:
         new_provisioner()  # Introduce provisioner after initialization of KPF
         ksm = KernelSpecManager()
         kernel = ksm.get_kernel_spec('new_provisioner')
-        assert 'NewTestProvisioner' == kernel.metadata['kernel_provisioner']['provisioner_name']
+        assert 'New-Test-Provisioner' == kernel.metadata['kernel_provisioner']['provisioner_name']
 
 
 class TestRuntime:
@@ -297,7 +297,7 @@ class TestRuntime:
 
     @pytest.mark.asyncio
     async def test_default_provisioner_config(self, kpf, all_provisioners):
-        kpf.default_provisioner_name = 'CustomTestProvisioner'
+        kpf.default_provisioner_name = 'Custom-Test-Provisioner'
         async_km = AsyncKernelManager(kernel_name='no_provisioner')
         await async_km.start_kernel(stdout=PIPE, stderr=PIPE)
         is_alive = await async_km.is_alive()
