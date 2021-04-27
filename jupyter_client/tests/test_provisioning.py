@@ -190,7 +190,10 @@ def akm(request, all_provisioners):
 
 initial_provisioner_map = {
     'Local-Provisioner': ('jupyter_client.provisioning', 'LocalProvisioner'),
-    'Subclassed-Test-Provisioner': ('jupyter_client.tests.test_provisioning', 'SubclassedTestProvisioner'),
+    'Subclassed-Test-Provisioner': (
+        'jupyter_client.tests.test_provisioning',
+        'SubclassedTestProvisioner',
+    ),
     'Custom-Test-Provisioner': ('jupyter_client.tests.test_provisioning', 'CustomTestProvisioner'),
 }
 
@@ -209,7 +212,7 @@ def mock_get_provisioner(name) -> EntryPoint:
         )
 
     if name in initial_provisioner_map:
-        return EntryPoint(name, initial_provisioner_map[name], name)
+        return EntryPoint(name, initial_provisioner_map[name][0], initial_provisioner_map[name][1])
 
     raise NoSuchEntryPoint(KernelProvisionerFactory.GROUP_NAME, name)
 

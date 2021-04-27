@@ -347,7 +347,10 @@ class KernelManager(ConnectionFileMixin):
         await self.provisioner.shutdown_requested(restart=restart)
 
     async def _async_finish_shutdown(
-        self, waittime: t.Optional[float] = None, pollinterval: float = 0.1, restart: t.Optional[bool] = False
+        self,
+        waittime: t.Optional[float] = None,
+        pollinterval: float = 0.1,
+        restart: t.Optional[bool] = False,
     ) -> None:
         """Wait for kernel shutdown, then kill process if it doesn't shutdown.
 
@@ -435,7 +438,7 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             await ensure_async(self.finish_shutdown(restart=restart))
 
-        await self._async_cleanup_resources(restart=restart)
+        await ensure_async(self.cleanup_resources(restart=restart))
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
@@ -512,7 +515,7 @@ class KernelManager(ConnectionFileMixin):
                 # Process is no longer alive, wait and clear
                 if self.kernel is not None:
                     await self.kernel.wait()
-            self.kernel = None
+                    self.kernel = None
 
     _kill_kernel = run_sync(_async_kill_kernel)
 

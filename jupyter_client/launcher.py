@@ -284,7 +284,7 @@ def _finish_process_launch(
 
     if sys.platform == "win32":
         # Attach the interrupt event to the Popen objet so it can be used later.
-        subprocess.win32_interrupt_event = interrupt_event
+        subprocess.win32_interrupt_event = interrupt_event  # type: ignore
 
     # Clean up pipes created to work around Popen bug.
     if stdin is None:

@@ -243,7 +243,11 @@ class LocalProvisioner(KernelProvisionerBase):
                     return
                 except OSError:
                     pass
-            return self.process.send_signal(signum)
+            try:
+                self.process.send_signal(signum)
+            except OSError:
+                pass
+            return
 
     async def kill(self, restart: bool = False) -> None:
         if self.process:
@@ -316,7 +320,7 @@ class LocalProvisioner(KernelProvisionerBase):
         pgid = None
         if hasattr(os, "getpgid"):
             try:
-                pgid = os.getpgid(self.process.pid)
+                pgid = os.getpgid(self.process.pid)  # type: ignore
             except OSError:
                 pass
 
