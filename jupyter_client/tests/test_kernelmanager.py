@@ -11,8 +11,6 @@ import time
 from subprocess import PIPE
 
 import pytest
-from async_generator import async_generator
-from async_generator import yield_
 from jupyter_core import paths
 from traitlets.config.loader import Config
 
@@ -135,11 +133,9 @@ def async_km_subclass(config):
 
 
 @pytest.fixture
-@async_generator  # This is only necessary while Python 3.5 is support afterwhich both it and
-# yield_() can be removed
 async def start_async_kernel():
     km, kc = await start_new_async_kernel(kernel_name="signaltest")
-    await yield_((km, kc))
+    yield km, kc
     kc.stop_channels()
     await km.shutdown_kernel()
     assert km.context.closed
@@ -166,6 +162,9 @@ class TestKernelManagerShutDownGracefully:
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     @pytest.mark.parametrize(*parameters)
     def test_signal_kernel_subprocesses(self, name, install, expected):
+        # ipykernel doesn't support 3.6 and this test uses async shutdown_request
+        if expected == _ShutdownStatus.ShutdownRequest and sys.version_info < (3, 7):
+            pytest.skip()
         install()
         km, kc = start_new_kernel(kernel_name=name)
         assert km._shutdown_status == _ShutdownStatus.Unset
@@ -180,6 +179,9 @@ class TestKernelManagerShutDownGracefully:
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     @pytest.mark.parametrize(*parameters)
     async def test_async_signal_kernel_subprocesses(self, name, install, expected):
+        # ipykernel doesn't support 3.6 and this test uses async shutdown_request
+        if expected == _ShutdownStatus.ShutdownRequest and sys.version_info < (3, 7):
+            pytest.skip()
         install()
         km, kc = await start_new_async_kernel(kernel_name=name)
         assert km._shutdown_status == _ShutdownStatus.Unset
