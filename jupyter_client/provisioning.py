@@ -366,7 +366,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
 
     @default('default_provisioner_name')
     def default_provisioner_name_default(self):
-        return os.getenv(self.default_provisioner_name_env, "Local-Provisioner")
+        return os.getenv(self.default_provisioner_name_env, "local-provisioner")
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
