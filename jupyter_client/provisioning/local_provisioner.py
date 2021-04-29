@@ -11,17 +11,15 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
-from ..launcher import async_launch_kernel
+from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip
 from ..localinterfaces import local_ips
-from ..utils import ensure_async
 from .provisioner_base import KernelProvisionerBase
 
 
 class LocalProvisioner(KernelProvisionerBase):
 
     process = None
-    async_subprocess = None
     _exit_future = None
     pid = None
     pgid = None
@@ -30,31 +28,22 @@ class LocalProvisioner(KernelProvisionerBase):
     async def poll(self) -> Optional[int]:
         ret = None
         if self.process:
-            if self.async_subprocess:
-                if not self._exit_future.done():  # adhere to process returncode
-                    ret = None
-                else:
-                    ret = self._exit_future.result()
-            else:
-                ret = self.process.poll()
+            ret = self.process.poll()
         return ret
 
     async def wait(self) -> Optional[int]:
         ret = None
         if self.process:
-            if self.async_subprocess:
-                ret = await self.process.wait()
-            else:
-                # Use busy loop at 100ms intervals, polling until the process is
-                # not alive.  If we find the process is no longer alive, complete
-                # its cleanup via the blocking wait().  Callers are responsible for
-                # issuing calls to wait() using a timeout (see kill()).
-                while await self.poll() is None:
-                    await asyncio.sleep(0.1)
+            # Use busy loop at 100ms intervals, polling until the process is
+            # not alive.  If we find the process is no longer alive, complete
+            # its cleanup via the blocking wait().  Callers are responsible for
+            # issuing calls to wait() using a timeout (see kill()).
+            while await self.poll() is None:
+                await asyncio.sleep(0.1)
 
-                # Process is no longer alive, wait and clear
-                ret = self.process.wait()
-                self.process = None
+            # Process is no longer alive, wait and clear
+            ret = self.process.wait()
+            self.process = None
         return ret
 
     async def send_signal(self, signum: int) -> None:
@@ -150,10 +139,7 @@ class LocalProvisioner(KernelProvisionerBase):
 
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['LocalProvisioner', Dict]:
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
-        self.process = await async_launch_kernel(cmd, **scrubbed_kwargs)
-        self.async_subprocess = isinstance(self.process, asyncio.subprocess.Process)
-        if self.async_subprocess:
-            self._exit_future = asyncio.ensure_future(ensure_async(self.process.wait()))
+        self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
         if hasattr(os, "getpgid"):
             try:
