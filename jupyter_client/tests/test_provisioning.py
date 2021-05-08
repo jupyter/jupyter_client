@@ -11,7 +11,6 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Tuple
 
 import pytest
 from entrypoints import EntryPoint
@@ -48,19 +47,25 @@ class CustomTestProvisioner(KernelProvisionerBase):
     config_var_1: int = Int(config=True)
     config_var_2: str = Unicode(config=True)
 
-    async def poll(self) -> [int, None]:
-        if self.process:
-            return self.process.poll()
-        return False
+    def has_process(self) -> bool:
+        return self.process is not None
 
-    async def wait(self) -> [int, None]:
+    async def poll(self) -> Optional[int]:
+        ret = 0
+        if self.process:
+            ret = self.process.poll()
+        return ret
+
+    async def wait(self) -> Optional[int]:
+        ret = 0
         if self.process:
             while await self.poll() is None:
                 await asyncio.sleep(0.1)
 
             # Process is no longer alive, wait and clear
-            self.process.wait()
+            ret = self.process.wait()
             self.process = None
+        return ret
 
     async def send_signal(self, signum: int) -> None:
         if self.process:
@@ -97,7 +102,7 @@ class CustomTestProvisioner(KernelProvisionerBase):
 
             # write connection file / get default ports
             km.write_connection_file()
-            self.connection_info = km.get_connection_info()
+            self._connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(
                 extra_arguments=extra_arguments
@@ -105,9 +110,7 @@ class CustomTestProvisioner(KernelProvisionerBase):
 
             return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
-    async def launch_kernel(
-        self, cmd: List[str], **kwargs: Any
-    ) -> Tuple['CustomTestProvisioner', Dict]:
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> None:
         scrubbed_kwargs = kwargs
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
@@ -119,7 +122,6 @@ class CustomTestProvisioner(KernelProvisionerBase):
 
         self.pid = self.process.pid
         self.pgid = pgid
-        return self, self.connection_info
 
     async def cleanup(self, restart=False) -> None:
         pass
@@ -268,7 +270,6 @@ class TestRuntime:
             TestRuntime.validate_provisioner(kernel_mgr)
 
             await kernel_mgr.shutdown_kernel()
-            assert kernel_mgr.kernel is None
             assert kernel_mgr.provisioner is None
 
     @pytest.mark.asyncio
@@ -316,8 +317,8 @@ class TestRuntime:
 
     @staticmethod
     def validate_provisioner(akm: AsyncKernelManager):
-        # Ensure kernel attribute is the provisioner
-        assert akm.kernel is akm.provisioner
+        # Ensure the provisioner is managing a process at this point
+        assert akm.provisioner is not None and akm.provisioner.has_process
 
         # Validate provisioner config
         if akm.kernel_name in ['no_provisioner', 'default_provisioner']:

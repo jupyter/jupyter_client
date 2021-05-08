@@ -252,16 +252,16 @@ class KernelManager(ConnectionFileMixin):
 
         return [pat.sub(from_ns, arg) for arg in cmd]
 
-    async def _async_launch_kernel(self, kernel_cmd: t.List[str], **kw) -> KernelProvisionerBase:
+    async def _async_launch_kernel(self, kernel_cmd: t.List[str], **kw) -> None:
         """actually launch the kernel
 
         override in a subclass to launch kernel subprocesses differently
         """
         assert self.provisioner is not None
-        kernel_proc, connection_info = await self.provisioner.launch_kernel(kernel_cmd, **kw)
+        await self.provisioner.launch_kernel(kernel_cmd, **kw)
+        assert self.provisioner.has_process
         # Provisioner provides the connection information.  Load into kernel manager and write file.
-        self._force_connection_info(connection_info)
-        return kernel_proc
+        self._force_connection_info(self.provisioner.connection_info)
 
     _launch_kernel = run_sync(_async_launch_kernel)
 
@@ -331,7 +331,7 @@ class KernelManager(ConnectionFileMixin):
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
-        self.kernel = await ensure_async(self._launch_kernel(kernel_cmd, **kw))
+        await ensure_async(self._launch_kernel(kernel_cmd, **kw))
         await self.post_start_kernel(**kw)
 
     start_kernel = run_sync(_async_start_kernel)
@@ -345,6 +345,7 @@ class KernelManager(ConnectionFileMixin):
         self.session.send(self._control_socket, msg)
         assert self.provisioner is not None
         await self.provisioner.shutdown_requested(restart=restart)
+        self._shutdown_status = _ShutdownStatus.ShutdownRequest
 
     async def _async_finish_shutdown(
         self,
@@ -361,7 +362,7 @@ class KernelManager(ConnectionFileMixin):
             waittime = max(self.shutdown_wait_time, 0)
         if self.provisioner:  # Allow provisioner to override
             waittime = self.provisioner.get_shutdown_wait_time(recommended=waittime)
-        self._shutdown_status = _ShutdownStatus.ShutdownRequest
+
         try:
             await asyncio.wait_for(
                 self._async_wait(pollinterval=pollinterval), timeout=waittime / 2
@@ -381,9 +382,9 @@ class KernelManager(ConnectionFileMixin):
             await ensure_async(self._kill_kernel(restart=restart))
         else:
             # Process is no longer alive, wait and clear
-            if self.kernel is not None:
-                await self.kernel.wait()
-                self.kernel = None
+            if self.has_kernel:
+                assert self.provisioner is not None
+                await self.provisioner.wait()
 
     finish_shutdown = run_sync(_async_finish_shutdown)
 
@@ -401,7 +402,7 @@ class KernelManager(ConnectionFileMixin):
 
         if self.provisioner:
             await self.provisioner.cleanup(restart=restart)
-            self.provisioner = self.kernel = None
+            self.provisioner = None
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
@@ -484,14 +485,14 @@ class KernelManager(ConnectionFileMixin):
 
     @property
     def has_kernel(self) -> bool:
-        """Has a kernel been started that we are managing."""
-        return self.kernel is not None
+        """Has a kernel process been started that we are managing."""
+        return self.provisioner is not None and self.provisioner.has_process
 
     async def _async_send_kernel_sigterm(self, restart: bool = False) -> None:
         """similar to _kill_kernel, but with sigterm (not sigkill), but do not block"""
         if self.has_kernel:
-            assert self.kernel is not None
-            await self.kernel.terminate(restart=restart)
+            assert self.provisioner is not None
+            await self.provisioner.terminate(restart=restart)
 
     _send_kernel_sigterm = run_sync(_async_send_kernel_sigterm)
 
@@ -501,8 +502,8 @@ class KernelManager(ConnectionFileMixin):
         This is a private method, callers should use shutdown_kernel(now=True).
         """
         if self.has_kernel:
-            assert self.kernel is not None
-            await self.kernel.kill(restart=restart)
+            assert self.provisioner is not None
+            await self.provisioner.kill(restart=restart)
 
             # Wait until the kernel terminates.
             try:
@@ -513,9 +514,8 @@ class KernelManager(ConnectionFileMixin):
                 pass
             else:
                 # Process is no longer alive, wait and clear
-                if self.kernel is not None:
-                    await self.kernel.wait()
-                    self.kernel = None
+                if self.has_kernel:
+                    await self.provisioner.wait()
 
     _kill_kernel = run_sync(_async_kill_kernel)
 
@@ -549,8 +549,8 @@ class KernelManager(ConnectionFileMixin):
         only useful on Unix systems.
         """
         if self.has_kernel:
-            assert self.kernel is not None
-            await self.kernel.send_signal(signum)
+            assert self.provisioner is not None
+            await self.provisioner.send_signal(signum)
         else:
             raise RuntimeError("Cannot signal kernel. No kernel is running!")
 
@@ -559,8 +559,8 @@ class KernelManager(ConnectionFileMixin):
     async def _async_is_alive(self) -> bool:
         """Is the kernel process still running?"""
         if self.has_kernel:
-            assert self.kernel is not None
-            ret = await self.kernel.poll()
+            assert self.provisioner is not None
+            ret = await self.provisioner.poll()
             if ret is None:
                 return True
         return False

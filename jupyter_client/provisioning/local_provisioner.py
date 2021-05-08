@@ -9,7 +9,6 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Tuple
 
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip
@@ -25,14 +24,17 @@ class LocalProvisioner(KernelProvisionerBase):
     pgid = None
     ip = None
 
+    def has_process(self) -> bool:
+        return self.process is not None
+
     async def poll(self) -> Optional[int]:
-        ret = None
+        ret = 0
         if self.process:
             ret = self.process.poll()
         return ret
 
     async def wait(self) -> Optional[int]:
-        ret = None
+        ret = 0
         if self.process:
             # Use busy loop at 100ms intervals, polling until the process is
             # not alive.  If we find the process is no longer alive, complete
@@ -43,7 +45,7 @@ class LocalProvisioner(KernelProvisionerBase):
 
             # Process is no longer alive, wait and clear
             ret = self.process.wait()
-            self.process = None
+            self.process = None  # allow has_process to now return False
         return ret
 
     async def send_signal(self, signum: int) -> None:
@@ -126,7 +128,7 @@ class LocalProvisioner(KernelProvisionerBase):
 
             # write connection file / get default ports
             km.write_connection_file()  # TODO - change when handshake pattern is adopted
-            self.connection_info = km.get_connection_info()
+            self._connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(
                 extra_arguments=extra_arguments
@@ -137,7 +139,7 @@ class LocalProvisioner(KernelProvisionerBase):
 
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> Tuple['LocalProvisioner', Dict]:
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> None:
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
@@ -149,7 +151,6 @@ class LocalProvisioner(KernelProvisionerBase):
 
         self.pid = self.process.pid
         self.pgid = pgid
-        return self, self.connection_info
 
     @staticmethod
     def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
