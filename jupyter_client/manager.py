@@ -383,6 +383,7 @@ class KernelManager(ConnectionFileMixin):
         else:
             # Process is no longer alive, wait and clear
             if self.has_kernel:
+                assert self.provisioner is not None
                 await self.provisioner.wait()
 
     finish_shutdown = run_sync(_async_finish_shutdown)
