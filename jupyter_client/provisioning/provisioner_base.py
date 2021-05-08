@@ -9,7 +9,6 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Tuple
 
 from traitlets.config import Instance  # type: ignore
 from traitlets.config import LoggingConfigurable
@@ -30,7 +29,18 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
     # The kernel specification associated with this provisioner
     kernel_spec: Any = Instance('jupyter_client.kernelspec.KernelSpec', allow_none=True)
     kernel_id: str = Unicode(None, allow_none=True)
-    connection_info: dict = {}
+    _connection_info: dict = {}
+
+    @property
+    def connection_info(self) -> Dict[str, Any]:
+        """Returns the connection information relative to this provisioner's managed instance"""
+        return self._connection_info
+
+    @property
+    @abstractmethod
+    def has_process(self) -> bool:
+        """Returns true if this provisioner is currently managing a process."""
+        pass
 
     @abstractmethod
     async def poll(self) -> Optional[int]:
@@ -70,10 +80,8 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         pass
 
     @abstractmethod
-    async def launch_kernel(
-        self, cmd: List[str], **kwargs: Any
-    ) -> Tuple['KernelProvisionerBase', Dict]:
-        """Launch the kernel process returning the class instance and connection info."""
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> None:
+        """Launch the kernel process. """
         pass
 
     @abstractmethod
@@ -102,8 +110,7 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         """
         env = kwargs.pop('env', os.environ).copy()
         env.update(self.__apply_env_substitutions(env))
-        self._validate_parameters(env, **kwargs)
-        self._finalize_env(env)  # TODO: Should finalize be called first?
+        self._finalize_env(env)
         kwargs['env'] = env
 
         return kwargs
@@ -117,7 +124,9 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
 
         The superclass method must always be called first to ensure proper ordering.
         """
-        provisioner_info: Dict[str, Any] = {}
+        provisioner_info: Dict[str, Any] = dict()
+        provisioner_info['kernel_id'] = self.kernel_id
+        provisioner_info['connection_info'] = self.connection_info
         return provisioner_info
 
     async def load_provisioner_info(self, provisioner_info: Dict) -> None:
@@ -125,7 +134,8 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
 
         The superclass method must always be called first to ensure proper ordering.
         """
-        pass
+        self.kernel_id = provisioner_info['kernel_id']
+        self._connection_info = provisioner_info['connection_info']
 
     def get_shutdown_wait_time(self, recommended: float = 5.0) -> float:
         """Returns the time allowed for a complete shutdown.  This may vary by provisioner.
@@ -143,10 +153,6 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
             # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
             # If set, it can bork all the things.
             env.pop('PYTHONEXECUTABLE', None)
-
-    def _validate_parameters(self, env: Dict[str, str], **kwargs: Any) -> None:
-        """Future: Validates that launch parameters adhere to schema specified in kernel spec."""
-        pass
 
     def __apply_env_substitutions(self, substitution_values: Dict[str, str]):
         """Walks entries in the kernelspec's env stanza and applies substitutions from current env.
