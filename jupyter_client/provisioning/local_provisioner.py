@@ -10,6 +10,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from ..connect import LocalPortCache
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip
 from ..localinterfaces import local_ips
@@ -23,7 +24,9 @@ class LocalProvisioner(KernelProvisionerBase):
     pid = None
     pgid = None
     ip = None
+    ports_cached = False
 
+    @property
     def has_process(self) -> bool:
         return self.process is not None
 
@@ -100,7 +103,18 @@ class LocalProvisioner(KernelProvisionerBase):
             return self.process.terminate()
 
     async def cleanup(self, restart: bool = False) -> None:
-        pass
+        if self.ports_cached and not restart:
+            # provisioner is about to be destroyed, return cached ports
+            lpc = LocalPortCache.instance()
+            ports = (
+                self._connection_info['shell_port'],
+                self._connection_info['iopub_port'],
+                self._connection_info['stdin_port'],
+                self._connection_info['hb_port'],
+                self._connection_info['control_port'],
+            )
+            for port in ports:
+                lpc.return_port(port)
 
     async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
         """Perform any steps in preparation for kernel process launch.
@@ -127,7 +141,17 @@ class LocalProvisioner(KernelProvisionerBase):
             extra_arguments = kwargs.pop('extra_arguments', [])
 
             # write connection file / get default ports
-            km.write_connection_file()  # TODO - change when handshake pattern is adopted
+            # TODO - change when handshake pattern is adopted
+            if km.cache_ports and not self.ports_cached:
+                lpc = LocalPortCache.instance()
+                km.shell_port = lpc.find_available_port(km.ip)
+                km.iopub_port = lpc.find_available_port(km.ip)
+                km.stdin_port = lpc.find_available_port(km.ip)
+                km.hb_port = lpc.find_available_port(km.ip)
+                km.control_port = lpc.find_available_port(km.ip)
+                self.ports_cached = True
+
+            km.write_connection_file()
             self._connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(

@@ -47,6 +47,7 @@ class CustomTestProvisioner(KernelProvisionerBase):
     config_var_1: int = Int(config=True)
     config_var_2: str = Unicode(config=True)
 
+    @property
     def has_process(self) -> bool:
         return self.process is not None
 
@@ -270,7 +271,7 @@ class TestRuntime:
             TestRuntime.validate_provisioner(kernel_mgr)
 
             await kernel_mgr.shutdown_kernel()
-            assert kernel_mgr.provisioner is None
+            assert kernel_mgr.provisioner.has_process is False
 
     @pytest.mark.asyncio
     async def test_existing(self, kpf, akm):

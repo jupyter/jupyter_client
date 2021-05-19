@@ -88,12 +88,6 @@ class KernelManager(ConnectionFileMixin):
     # The kernel provisioner with which the KernelManager is communicating.
     # This will generally be a LocalProvisioner instance unless the kernelspec
     # indicates otherwise.
-    # Note that we use two attributes, kernel and provisioner, both of which
-    # will point at the same provisioner instance.  `kernel` will be non-None
-    # during the kernel's lifecycle, while `provisioner` will span that time,
-    # being set prior to launch and unset following the kernel's termination.
-
-    kernel: t.Optional[KernelProvisionerBase] = None
     provisioner: t.Optional[KernelProvisionerBase] = None
 
     kernel_spec_manager: Instance = Instance(kernelspec.KernelSpecManager)
@@ -291,13 +285,12 @@ class KernelManager(ConnectionFileMixin):
              and launching the kernel (e.g. Popen kwargs).
         """
         self.kernel_id = self.kernel_id or kw.pop('kernel_id', str(uuid.uuid4()))
-        self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
-            self.kernel_id, self.kernel_spec
-        )
-
         # save kwargs for use in restart
         self._launch_args = kw.copy()
-        assert self.provisioner is not None
+        if self.provisioner is None:  # will not be None on restarts
+            self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
+                self.kernel_id, self.kernel_spec
+            )
         kw = await self.provisioner.pre_launch(kernel_manager=self, **kw)
         kernel_cmd = kw.pop('cmd')
         return kernel_cmd, kw
@@ -402,7 +395,6 @@ class KernelManager(ConnectionFileMixin):
 
         if self.provisioner:
             await self.provisioner.cleanup(restart=restart)
-            self.provisioner = None
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
@@ -485,7 +477,7 @@ class KernelManager(ConnectionFileMixin):
 
     @property
     def has_kernel(self) -> bool:
-        """Has a kernel process been started that we are managing."""
+        """Has a kernel process been started that we are actively managing."""
         return self.provisioner is not None and self.provisioner.has_process
 
     async def _async_send_kernel_sigterm(self, restart: bool = False) -> None:

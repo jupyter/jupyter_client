@@ -19,6 +19,7 @@ from typing import cast
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Set
 from typing import Tuple
 from typing import Union
 
@@ -29,11 +30,13 @@ from jupyter_core.paths import secure_write
 from traitlets import Bool  # type: ignore
 from traitlets import CaselessStrEnum
 from traitlets import Instance
+from traitlets import Int
 from traitlets import Integer
 from traitlets import observe
 from traitlets import Type
 from traitlets import Unicode
 from traitlets.config import LoggingConfigurable  # type: ignore
+from traitlets.config import SingletonConfigurable
 
 from .localinterfaces import localhost
 from .utils import _filefind
@@ -44,11 +47,11 @@ KernelConnectionInfo = Dict[str, Union[int, str, bytes]]
 
 def write_connection_file(
     fname: Optional[str] = None,
-    shell_port: int = 0,
-    iopub_port: int = 0,
-    stdin_port: int = 0,
-    hb_port: int = 0,
-    control_port: int = 0,
+    shell_port: Union[Integer, Int, int] = 0,
+    iopub_port: Union[Integer, Int, int] = 0,
+    stdin_port: Union[Integer, Int, int] = 0,
+    hb_port: Union[Integer, Int, int] = 0,
+    control_port: Union[Integer, Int, int] = 0,
     ip: str = "",
     key: bytes = b"",
     transport: str = "tcp",
@@ -641,6 +644,40 @@ class ConnectionFileMixin(LoggingConfigurable):
     def connect_control(self, identity: Optional[bytes] = None) -> zmq.sugar.socket.Socket:
         """return zmq Socket connected to the Control channel"""
         return self._create_connected_socket("control", identity=identity)
+
+
+class LocalPortCache(SingletonConfigurable):
+    """
+    Used to keep track of local ports in order to prevent race conditions that
+    can occur between port acquisition and usage by the kernel.  All locally-
+    provisioned kernels should use this mechanism to limit the possibility of
+    race conditions.  Note that this does not preclude other applications from
+    acquiring a cached but unused port, thereby re-introducing the issue this
+    class is attempting to resolve (minimize).
+    See: https://github.com/jupyter/jupyter_client/issues/487
+    """
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.currently_used_ports: Set[int] = set()
+
+    def find_available_port(self, ip: str) -> int:
+        while True:
+            tmp_sock = socket.socket()
+            tmp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, b"\0" * 8)
+            tmp_sock.bind((ip, 0))
+            port = tmp_sock.getsockname()[1]
+            tmp_sock.close()
+
+            # This is a workaround for https://github.com/jupyter/jupyter_client/issues/487
+            # We prevent two kernels to have the same ports.
+            if port not in self.currently_used_ports:
+                self.currently_used_ports.add(port)
+                return port
+
+    def return_port(self, port: int) -> None:
+        if port in self.currently_used_ports:  # Tolerate uncached ports
+            self.currently_used_ports.remove(port)
 
 
 __all__ = [
