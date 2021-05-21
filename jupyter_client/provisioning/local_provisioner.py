@@ -125,9 +125,8 @@ class LocalProvisioner(KernelProvisionerBase):
         Returns the updated kwargs.
         """
 
-        # If we have a kernel_manager pop it out of the args and use it to retain b/c.
         # This should be considered temporary until a better division of labor can be defined.
-        km = kwargs.pop('kernel_manager', None)
+        km = self.parent
         if km:
             if km.transport == 'tcp' and not is_local_ip(km.ip):
                 raise RuntimeError(

@@ -83,7 +83,7 @@ class KernelManager(ConnectionFileMixin):
     def _client_class_changed(self, change: t.Dict[str, DottedObjectName]) -> None:
         self.client_factory = import_item(str(change["new"]))
 
-    kernel_id = None
+    kernel_id: str = Unicode(None, allow_none=True)
 
     # The kernel provisioner with which the KernelManager is communicating.
     # This will generally be a LocalProvisioner instance unless the kernelspec
@@ -289,9 +289,11 @@ class KernelManager(ConnectionFileMixin):
         self._launch_args = kw.copy()
         if self.provisioner is None:  # will not be None on restarts
             self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
-                self.kernel_id, self.kernel_spec
+                self.kernel_id,
+                self.kernel_spec,
+                parent=self,
             )
-        kw = await self.provisioner.pre_launch(kernel_manager=self, **kw)
+        kw = await self.provisioner.pre_launch(**kw)
         kernel_cmd = kw.pop('cmd')
         return kernel_cmd, kw
 

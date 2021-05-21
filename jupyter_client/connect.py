@@ -684,4 +684,5 @@ __all__ = [
     "write_connection_file",
     "find_connection_file",
     "tunnel_to_kernel",
+    "LocalPortCache",
 ]

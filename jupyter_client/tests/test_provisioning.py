@@ -94,7 +94,7 @@ class CustomTestProvisioner(KernelProvisionerBase):
             self.process.terminate()
 
     async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
-        km = kwargs.pop('kernel_manager')  # TODO - this is temporary
+        km = self.parent
         if km:
             # save kwargs for use in restart
             km._launch_args = kwargs.copy()

@@ -64,7 +64,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         return is_available
 
     def create_provisioner_instance(
-        self, kernel_id: str, kernel_spec: Any
+        self, kernel_id: str, kernel_spec: Any, parent: Any
     ) -> KernelProvisionerBase:
         """
         Reads the associated kernel_spec and to see if has a kernel_provisioner stanza.
@@ -88,9 +88,10 @@ class KernelProvisionerFactory(SingletonConfigurable):
         )
         provisioner_class = self.provisioners[provisioner_name].load()
         provisioner_config = provisioner_cfg.get('config')
-        return provisioner_class(
-            kernel_id=kernel_id, kernel_spec=kernel_spec, parent=self.parent, **provisioner_config
+        provisioner: KernelProvisionerBase = provisioner_class(
+            kernel_id=kernel_id, kernel_spec=kernel_spec, parent=parent, **provisioner_config
         )
+        return provisioner
 
     def _get_provisioner_config(self, kernel_spec: Any) -> Dict[str, Any]:
         """
