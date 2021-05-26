@@ -1104,7 +1104,11 @@ Debug requests and replies are sent over the `control` channel to prevent queuin
 Additions to the DAP
 ~~~~~~~~~~~~~~~~~~~~
 
-The Jupyter debugger protocol makes two additions to the DAP, the `dumpCell` request and response, and the `debugInfo` request and response messages.
+The Jupyter debugger protocol makes several additions to the DAP:
+
+- the `dumpCell` request and response messages
+- the `debugInfo` request and response messages
+- the `inspectVariables` request and response messages
 
 In order to support the debugging of notebook cells and of Jupyter consoles, which are not based on source files, we need a message to submit code to the debugger to which breakpoints can be added.
 
@@ -1137,7 +1141,7 @@ In order to support page reloading, or a client connecting at a later stage, Jup
           'command' : 'debugInfo'
       }
 
-  Content of `debugInfo` response::
+  Content of the `debugInfo` response::
 
       {
           'type' : 'response',
@@ -1159,6 +1163,32 @@ In order to support page reloading, or a client connecting at a later stage, Jup
       }
 
   The `source_breakpoint` schema is specified by the Debug Adapter Protocol.
+
+The `inspectVariables` is meant to retrieve the values of all the variables that have been defined in the notebook. It is a DAP `Request` with no extra argument.
+
+  Content of the `inspectVariables` request::
+
+      {
+          'type' : 'request',
+          'command' : 'inspectVariables'
+      }
+
+  Content of the `inspectVariables` response::
+
+      {
+          'type' : 'response',
+          'success' : bool,
+          'body' : {
+              'variables' : [ # variables defined in the notebook.
+                  {
+                      'name' : str,
+                      'variablesReference' : int,
+                      'value' : str,
+                      'type' : str
+                  }
+              ]
+          }
+      }
 
 .. versionadded:: 5.5
 
