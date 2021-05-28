@@ -121,7 +121,7 @@ class HBChannel(Thread):
         events = []
         while True:
             try:
-                events = self.poller.poll(int(1000 * until_dead))
+                events = self.poller.poll(1)
             except ZMQError as e:
                 if e.errno == errno.EINTR:
                     # ignore interrupts during heartbeat
@@ -137,7 +137,10 @@ class HBChannel(Thread):
                 else:
                     raise
             else:
-                break
+                if events or self._exit.isSet():
+                    break
+                elif self.time_to_dead - (time.time() - start_time) < 0:
+                    break
         return events
 
     def run(self) -> None:
