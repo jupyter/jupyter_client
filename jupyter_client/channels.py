@@ -161,7 +161,7 @@ class HBChannel(Thread):
                 if remainder > 0:
                     self._exit.wait(remainder)
                 continue
-            else:
+            elif not self._exit.is_set():
                 # nothing was received within the time limit, signal heart failure
                 self._beating = False
                 since_last_heartbeat = time.time() - request_time
