@@ -114,33 +114,18 @@ class HBChannel(Thread):
         will be an empty list if no messages arrived before the timeout,
         or the event tuple if there is a message to receive.
         """
+        # Check if an event is waiting
+        events = self.poller.poll(0)
+        if events:
+            return events
 
+        # Wait until timeout
         until_dead = self.time_to_dead - (time.time() - start_time)
         # ensure poll at least once
         until_dead = max(until_dead, 1e-3)
-        events = []
-        while True:
-            try:
-                events = self.poller.poll(100)
-            except ZMQError as e:
-                if e.errno == errno.EINTR:
-                    # ignore interrupts during heartbeat
-                    # this may never actually happen
-                    until_dead = self.time_to_dead - (time.time() - start_time)
-                    until_dead = max(until_dead, 1e-3)
-                    pass
-                else:
-                    raise
-            except Exception:
-                if self._exiting:
-                    break
-                else:
-                    raise
-            else:
-                if events or self._exit.is_set():
-                    break
-                elif self.time_to_dead - (time.time() - start_time) < 0:
-                    break
+        self._exit.wait(until_dead)
+        if not self._exit.is_set():
+            events = self.poller.poll(0)
         return events
 
     def run(self) -> None:
