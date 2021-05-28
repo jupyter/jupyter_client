@@ -121,7 +121,7 @@ class HBChannel(Thread):
         events = []
         while True:
             try:
-                events = self.poller.poll(1)
+                events = self.poller.poll(100)
             except ZMQError as e:
                 if e.errno == errno.EINTR:
                     # ignore interrupts during heartbeat
