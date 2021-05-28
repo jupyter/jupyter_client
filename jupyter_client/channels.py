@@ -137,7 +137,7 @@ class HBChannel(Thread):
                 else:
                     raise
             else:
-                if events or self._exit.isSet():
+                if events or self._exit.is_set():
                     break
                 elif self.time_to_dead - (time.time() - start_time) < 0:
                     break
