@@ -105,7 +105,7 @@ class HBChannel(Thread):
 
         self.poller.register(self.socket, zmq.POLLIN)
 
-    def _poll(self, start_time: float) -> t.List[t.Any]:
+    def _poll(self) -> t.List[t.Any]:
         """poll for heartbeat replies until we reach self.time_to_dead.
 
         Ignores interrupts, and returns the result of poll(), which
@@ -113,9 +113,7 @@ class HBChannel(Thread):
         or the event tuple if there is a message to receive.
         """
         # Wait until timeout
-        until_dead = self.time_to_dead - (time.time() - start_time)
-        if until_dead > 0:
-            self._exit.wait(until_dead)
+        self._exit.wait(self.time_to_dead)
         if not self._exit.is_set():
             # 0 means return immediately.
             # http://api.zeromq.org/2-1:zmq-poll
@@ -145,7 +143,7 @@ class HBChannel(Thread):
             # either a recv or connect, which cannot be followed by EFSM
             await self.socket.send(b"ping")
             request_time = time.time()
-            ready = self._poll(request_time)
+            ready = self._poll()
             if ready:
                 self._beating = True
                 # the poll above guarantees we have something to recv
