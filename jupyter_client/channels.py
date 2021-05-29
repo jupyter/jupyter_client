@@ -3,7 +3,6 @@
 # Distributed under the terms of the Modified BSD License.
 import asyncio
 import atexit
-import errno
 import time
 import typing as t
 from queue import Empty
@@ -11,7 +10,6 @@ from threading import Event
 from threading import Thread
 
 import zmq.asyncio
-from zmq import ZMQError
 
 from .channelsabc import HBChannelABC
 from .session import Session
