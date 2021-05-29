@@ -114,19 +114,15 @@ class HBChannel(Thread):
         will be an empty list if no messages arrived before the timeout,
         or the event tuple if there is a message to receive.
         """
-        # Check if an event is waiting
-        events = self.poller.poll(0)
-        if events:
-            return events
-
         # Wait until timeout
         until_dead = self.time_to_dead - (time.time() - start_time)
-        # ensure poll at least once
-        until_dead = max(until_dead, 1e-3)
-        self._exit.wait(until_dead)
+        if until_dead > 0:
+            self._exit.wait(until_dead)
         if not self._exit.is_set():
-            events = self.poller.poll(0)
-        return events
+            # 0 means return immediately.
+            # http://api.zeromq.org/2-1:zmq-poll
+            return self.poller.poll(0)
+        return []
 
     def run(self) -> None:
         loop = asyncio.new_event_loop()
@@ -156,10 +152,6 @@ class HBChannel(Thread):
                 self._beating = True
                 # the poll above guarantees we have something to recv
                 await self.socket.recv()
-                # sleep the remainder of the cycle
-                remainder = self.time_to_dead - (time.time() - request_time)
-                if remainder > 0:
-                    self._exit.wait(remainder)
                 continue
             elif not self._exit.is_set():
                 # nothing was received within the time limit, signal heart failure
