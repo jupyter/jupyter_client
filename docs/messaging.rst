@@ -1164,7 +1164,7 @@ In order to support page reloading, or a client connecting at a later stage, Jup
 
   The `source_breakpoint` schema is specified by the Debug Adapter Protocol.
 
-The `inspectVariables` is meant to retrieve the values of all the variables that have been defined in the notebook. It is a DAP `Request` with no extra argument.
+The `inspectVariables` is meant to retrieve the values of all the variables that have been defined in the kernel. It is a DAP `Request` with no extra argument.
 
   Content of the `inspectVariables` request::
 
