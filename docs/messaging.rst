@@ -582,14 +582,14 @@ The main example being ``%load``.
       "replace": bool,
     }
 
-**edit**: open a file for editing.
+**edit_magic**: open a file for editing.
 
 Triggered by `%edit`. Only the QtConsole currently supports edit payloads.
 
 .. sourcecode:: python
 
     {
-      "source": "edit",
+      "source": "edit_magic",
       "filename": "/path/to/file.py", # the file to edit
       "line_number": int, # the line number to start with
     }
