@@ -19,6 +19,7 @@ from jupyter_core import paths
 from traitlets import Int
 from traitlets import Unicode
 
+from ..connect import KernelConnectionInfo
 from ..kernelspec import KernelSpecManager
 from ..kernelspec import NoSuchKernel
 from ..launcher import launch_kernel
@@ -103,7 +104,7 @@ class CustomTestProvisioner(KernelProvisionerBase):
 
             # write connection file / get default ports
             km.write_connection_file()
-            self._connection_info = km.get_connection_info()
+            self.connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(
                 extra_arguments=extra_arguments
@@ -111,7 +112,7 @@ class CustomTestProvisioner(KernelProvisionerBase):
 
             return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> None:
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
         scrubbed_kwargs = kwargs
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
@@ -123,6 +124,7 @@ class CustomTestProvisioner(KernelProvisionerBase):
 
         self.pid = self.process.pid
         self.pgid = pgid
+        return self.connection_info
 
     async def cleanup(self, restart=False) -> None:
         pass

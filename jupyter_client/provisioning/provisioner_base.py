@@ -14,99 +14,150 @@ from traitlets.config import Instance  # type: ignore
 from traitlets.config import LoggingConfigurable
 from traitlets.config import Unicode
 
+from ..connect import KernelConnectionInfo
+
 
 class KernelProvisionerMeta(ABCMeta, type(LoggingConfigurable)):  # type: ignore
     pass
 
 
 class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisionerMeta):
-    """Base class defining methods for KernelProvisioner classes.
+    """
+    Abstract base class defining methods for KernelProvisioner classes.
 
-    Theses methods model those of the Subprocess Popen class:
-    https://docs.python.org/3/library/subprocess.html#popen-objects
+    A majority of methods are abstract (requiring implementations via a subclass) while
+    some are optional and others provide implementations common to all instances.
+    Subclasses should be aware of which methods require a call to the superclass.
+
+    Many of these methods model those of :class:`subprocess.Popen` for parity with
+    previous versions where the kernel process was managed directly.
     """
 
     # The kernel specification associated with this provisioner
     kernel_spec: Any = Instance('jupyter_client.kernelspec.KernelSpec', allow_none=True)
     kernel_id: str = Unicode(None, allow_none=True)
-    _connection_info: dict = {}
-
-    @property
-    def connection_info(self) -> Dict[str, Any]:
-        """Returns the connection information relative to this provisioner's managed instance"""
-        return self._connection_info
+    connection_info: KernelConnectionInfo = {}
 
     @property
     @abstractmethod
     def has_process(self) -> bool:
-        """Returns true if this provisioner is currently managing a process."""
+        """
+        Returns true if this provisioner is currently managing a process.
+
+        This property is asserted to be True immediately following a call to
+        the provisioner's :meth:`launch_kernel` method.
+        """
         pass
 
     @abstractmethod
     async def poll(self) -> Optional[int]:
-        """Checks if kernel process is still running.
+        """
+        Checks if kernel process is still running.
 
         If running, None is returned, otherwise the process's integer-valued exit code is returned.
+        This method is called from :meth:`KernelManager.is_alive`.
         """
         pass
 
     @abstractmethod
     async def wait(self) -> Optional[int]:
-        """Waits for kernel process to terminate."""
+        """
+        Waits for kernel process to terminate.
+
+        This method is called from `KernelManager.finish_shutdown()` and
+        `KernelManager.kill_kernel()` when terminating a kernel gracefully or
+        immediately, respectively.
+        """
         pass
 
     @abstractmethod
     async def send_signal(self, signum: int) -> None:
-        """Sends signal identified by signum to the kernel process."""
+        """
+        Sends signal identified by signum to the kernel process.
+
+        This method is called from `KernelManager.signal_kernel()` to send the
+        kernel process a signal.
+        """
         pass
 
     @abstractmethod
     async def kill(self, restart: bool = False) -> None:
-        """Kills the kernel process.  This is typically accomplished via a SIGKILL signal,
-        which cannot be caught.
+        """
+        Kill the kernel process.
 
-        restart is True if this operation precedes a start launch_kernel request.
+        This is typically accomplished via a SIGKILL signal, which cannot be caught.
+        This method is called from `KernelManager.kill_kernel()` when terminating
+        a kernel immediately.
+
+        restart is True if this operation will precede a subsequent launch_kernel request.
         """
         pass
 
     @abstractmethod
     async def terminate(self, restart: bool = False) -> None:
-        """Terminates the kernel process.  This is typically accomplished via a SIGTERM signal,
-        which can be caught, allowing the kernel provisioner to perform possible cleanup
-        of resources.
+        """
+        Terminates the kernel process.
+
+        This is typically accomplished via a SIGTERM signal, which can be caught, allowing
+        the kernel provisioner to perform possible cleanup of resources.  This method is
+        called indirectly from `KernelManager.finish_shutdown()` during a kernel's
+        graceful termination.
 
         restart is True if this operation precedes a start launch_kernel request.
         """
         pass
 
     @abstractmethod
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> None:
-        """Launch the kernel process. """
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
+        """
+        Launch the kernel process and return its connection information.
+
+        This method is called from `KernelManager.launch_kernel()` during the
+        kernel manager's start kernel sequence.
+        """
         pass
 
     @abstractmethod
     async def cleanup(self, restart: bool = False) -> None:
-        """Cleanup any resources allocated on behalf of the kernel provisioner.
+        """
+        Cleanup any resources allocated on behalf of the kernel provisioner.
+
+        This method is called from `KernelManager.cleanup_resources()` as part of
+        its shutdown kernel sequence.
 
         restart is True if this operation precedes a start launch_kernel request.
         """
         pass
 
     async def shutdown_requested(self, restart: bool = False) -> None:
-        """Called after KernelManager sends a `shutdown_request` message to kernel.
+        """
+        Allows the provisioner to determine if the kernel's shutdown has been requested.
+
+        This method is called from `KernelManager.request_shutdown()` as part of
+        its shutdown sequence.
 
         This method is optional and is primarily used in scenarios where the provisioner
-        communicates with a sibling (nanny) process to the kernel.
+        may need to perform other operations in preparation for a kernel's shutdown.
         """
         pass
 
     async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
-        """Perform any steps in preparation for kernel process launch.
+        """
+        Perform any steps in preparation for kernel process launch.
 
-        This includes applying additional substitutions to the kernel launch command and env.
-        It also includes preparation of launch parameters.
+        This includes applying additional substitutions to the kernel launch command
+        and environment. It also includes preparation of launch parameters.
 
-        Returns potentially updated kwargs.
+        NOTE: Subclass implementations are advised to call this method as it applies
+        environment variable substitutions from the local environment and calls the
+        provisioner's :meth:`_finalize_env()` method to allow each provisioner the
+        ability to cleanup the environment variables that will be used by the kernel.
+
+        This method is called from `KernelManager.pre_start_kernel()` as part of its
+        start kernel sequence.
+
+        Returns the (potentially updated) keyword arguments that are passed to
+        :meth:`launch_kernel()`.
         """
         env = kwargs.pop('env', os.environ).copy()
         env.update(self.__apply_env_substitutions(env))
@@ -116,13 +167,23 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         return kwargs
 
     async def post_launch(self, **kwargs: Any) -> None:
-        """Perform any steps following the kernel process launch."""
+        """
+        Perform any steps following the kernel process launch.
+
+        This method is called from `KernelManager.post_start_kernel()` as part of its
+        start kernel sequence.
+        """
         pass
 
     async def get_provisioner_info(self) -> Dict[str, Any]:
-        """Captures the base information necessary for persistence relative to this instance.
+        """
+        Captures the base information necessary for persistence relative to this instance.
 
-        The superclass method must always be called first to ensure proper ordering.
+        This enables applications that subclass `KernelManager` to persist a kernel provisioner's
+        relevant information to accomplish functionality like disaster recovery or high availability
+        by calling this method via the kernel manager's `provisioner` attribute.
+
+        NOTE: The superclass method must always be called first to ensure proper serialization.
         """
         provisioner_info: Dict[str, Any] = dict()
         provisioner_info['kernel_id'] = self.kernel_id
@@ -130,24 +191,38 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         return provisioner_info
 
     async def load_provisioner_info(self, provisioner_info: Dict) -> None:
-        """Loads the base information necessary for persistence relative to this instance.
+        """
+        Loads the base information necessary for persistence relative to this instance.
 
-        The superclass method must always be called first to ensure proper ordering.
+        The inverse of `get_provisioner_info()`, this enables applications that subclass
+        `KernelManager` to re-establish communication with a provisioner that is managing
+        a (presumably) remote kernel from an entirely different process that the original
+        provisioner.
+
+        NOTE: The superclass method must always be called first to ensure proper deserialization.
         """
         self.kernel_id = provisioner_info['kernel_id']
-        self._connection_info = provisioner_info['connection_info']
+        self.connection_info = provisioner_info['connection_info']
 
     def get_shutdown_wait_time(self, recommended: float = 5.0) -> float:
-        """Returns the time allowed for a complete shutdown.  This may vary by provisioner.
+        """
+        Returns the time allowed for a complete shutdown.  This may vary by provisioner.
+
+        This method is called from `KernelManager.finish_shutdown()` during the graceful
+        phase of its kernel shutdown sequence.
 
         The recommended value will typically be what is configured in the kernel manager.
         """
         return recommended
 
     def _finalize_env(self, env: Dict[str, str]) -> None:
-        """Ensures env is appropriate prior to launch.
+        """
+        Ensures env is appropriate prior to launch.
 
-        Subclasses should be sure to call super()._finalize_env(env)
+        This method is called from `KernelProvisionerBase.pre_launch()` during the kernel's
+        start sequence.
+
+        NOTE: Subclasses should be sure to call super()._finalize_env(env)
         """
         if self.kernel_spec.language and self.kernel_spec.language.lower().startswith("python"):
             # Don't allow PYTHONEXECUTABLE to be passed to kernel process.
@@ -155,10 +230,15 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
             env.pop('PYTHONEXECUTABLE', None)
 
     def __apply_env_substitutions(self, substitution_values: Dict[str, str]):
-        """Walks entries in the kernelspec's env stanza and applies substitutions from current env.
+        """
+        Walks entries in the kernelspec's env stanza and applies substitutions from current env.
+
+        This method is called from `KernelProvisionerBase.pre_launch()` during the kernel's
+        start sequence.
 
         Returns the substituted list of env entries.
-        Note: This method is private and is not intended to be overridden by provisioners.
+
+        NOTE: This method is private and is not intended to be overridden by provisioners.
         """
         substituted_env = {}
         if self.kernel_spec:

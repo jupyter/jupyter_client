@@ -10,3 +10,4 @@ jupyter_client API
    kernelspec
    manager
    client
+   provisioners

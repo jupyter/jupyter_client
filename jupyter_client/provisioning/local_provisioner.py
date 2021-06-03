@@ -10,6 +10,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from ..connect import KernelConnectionInfo
 from ..connect import LocalPortCache
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip
@@ -18,6 +19,16 @@ from .provisioner_base import KernelProvisionerBase
 
 
 class LocalProvisioner(KernelProvisionerBase):
+    """
+    :class:`LocalProvisioner` is a concrete class of ABC :py:class:`KernelProvisionerBase`
+    and is the out-of-box default implementation used when no kernel provisioner is
+    specified in the kernel specification (``kernel.json``).  It provides functional
+    parity to existing applications by launching the kernel locally and using
+    :class:`subprocess.Popen` to manage its lifecycle.
+
+    This class is intended to be subclassed for customizing local kernel environments
+    and serve as a reference implementation for other custom provisioners.
+    """
 
     process = None
     _exit_future = None
@@ -31,6 +42,7 @@ class LocalProvisioner(KernelProvisionerBase):
         return self.process is not None
 
     async def poll(self) -> Optional[int]:
+
         ret = 0
         if self.process:
             ret = self.process.poll()
@@ -162,7 +174,7 @@ class LocalProvisioner(KernelProvisionerBase):
 
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> None:
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
@@ -174,6 +186,7 @@ class LocalProvisioner(KernelProvisionerBase):
 
         self.pid = self.process.pid
         self.pgid = pgid
+        return self._connection_info
 
     @staticmethod
     def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:

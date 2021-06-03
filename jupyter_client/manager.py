@@ -85,7 +85,7 @@ class KernelManager(ConnectionFileMixin):
 
     kernel_id: str = Unicode(None, allow_none=True)
 
-    # The kernel provisioner with which the KernelManager is communicating.
+    # The kernel provisioner with which this KernelManager is communicating.
     # This will generally be a LocalProvisioner instance unless the kernelspec
     # indicates otherwise.
     provisioner: t.Optional[KernelProvisionerBase] = None
@@ -250,12 +250,14 @@ class KernelManager(ConnectionFileMixin):
         """actually launch the kernel
 
         override in a subclass to launch kernel subprocesses differently
+        Note that provisioners can now be used to customize kernel environments
+        and
         """
         assert self.provisioner is not None
-        await self.provisioner.launch_kernel(kernel_cmd, **kw)
+        connection_info = await self.provisioner.launch_kernel(kernel_cmd, **kw)
         assert self.provisioner.has_process
         # Provisioner provides the connection information.  Load into kernel manager and write file.
-        self._force_connection_info(self.provisioner.connection_info)
+        self._force_connection_info(connection_info)
 
     _launch_kernel = run_sync(_async_launch_kernel)
 

@@ -18,7 +18,19 @@ from .provisioner_base import KernelProvisionerBase
 
 
 class KernelProvisionerFactory(SingletonConfigurable):
-    """KernelProvisionerFactory is responsible for creating provisioner instances."""
+    """
+    :class:`KernelProvisionerFactory` is responsible for creating provisioner instances.
+
+    A singleton instance, `KernelProvisionerFactory` is also used by the :class:`KernelSpecManager`
+    to validate `kernel_provisioner` references found in kernel specifications to confirm their
+    availability (in cases where the kernel specification references a kernel provisioner that has
+    not been installed into the current Python environment).
+
+    It's `default_provisioner_name` attribute can be used to specify the default provisioner
+    to use when a kernel_spec is found to not reference a provisioner.  It's value defaults to
+    `"local-provisioner"` which identifies the local provisioner implemented by
+    :class:`LocalProvisioner`.
+    """
 
     GROUP_NAME = 'jupyter_client.kernel_provisioners'
     provisioners: Dict[str, EntryPoint] = {}
@@ -40,44 +52,41 @@ class KernelProvisionerFactory(SingletonConfigurable):
         for ep in KernelProvisionerFactory._get_all_provisioners():
             self.provisioners[ep.name] = ep
 
-    def is_provisioner_available(self, kernel_name: str, kernel_spec: Any) -> bool:
+    def is_provisioner_available(self, kernel_spec: Any) -> bool:
         """
-        Reads the associated kernel_spec to determine the provisioner and returns whether it
+        Reads the associated ``kernel_spec`` to determine the provisioner and returns whether it
         exists as an entry_point (True) or not (False).  If the referenced provisioner is not
-        in the current set of provisioners, attempt to retrieve its entrypoint.  If found, add
-        to the list, else catch exception and return false.
+        in the current cache or cannot be loaded via entry_points, a warning message is issued
+        indicating it is not available.
         """
         is_available: bool = True
         provisioner_cfg = self._get_provisioner_config(kernel_spec)
         provisioner_name = str(provisioner_cfg.get('provisioner_name'))
-        if provisioner_name not in self.provisioners:
-            try:
-                ep = KernelProvisionerFactory._get_provisioner(provisioner_name)
-                self.provisioners[provisioner_name] = ep  # Update cache
-            except NoSuchEntryPoint:
-                is_available = False
-                self.log.warning(
-                    f"Kernel '{kernel_name}' is referencing a kernel provisioner "
-                    f"('{provisioner_name}') that is not available.  Ensure the "
-                    f"appropriate package has been installed and retry."
-                )
+        if not self._check_availability(provisioner_name):
+            is_available = False
+            self.log.warning(
+                f"Kernel '{kernel_spec.display_name}' is referencing a kernel "
+                f"provisioner ('{provisioner_name}') that is not available.  "
+                f"Ensure the appropriate package has been installed and retry."
+            )
         return is_available
 
     def create_provisioner_instance(
         self, kernel_id: str, kernel_spec: Any, parent: Any
     ) -> KernelProvisionerBase:
         """
-        Reads the associated kernel_spec and to see if has a kernel_provisioner stanza.
+        Reads the associated ``kernel_spec`` to see if it has a `kernel_provisioner` stanza.
         If one exists, it instantiates an instance.  If a kernel provisioner is not
-        specified in the kernelspec, a DEFAULT_PROVISIONER stanza is fabricated and instantiated.
+        specified in the kernel specification, a default provisioner stanza is fabricated
+        and instantiated corresponding to the current value of `default_provisioner_name` trait.
         The instantiated instance is returned.
 
         If the provisioner is found to not exist (not registered via entry_points),
-        ModuleNotFoundError is raised.
+        `ModuleNotFoundError` is raised.
         """
         provisioner_cfg = self._get_provisioner_config(kernel_spec)
-        provisioner_name = provisioner_cfg.get('provisioner_name')
-        if provisioner_name not in self.provisioners:
+        provisioner_name = str(provisioner_cfg.get('provisioner_name'))
+        if not self._check_availability(provisioner_name):
             raise ModuleNotFoundError(
                 f"Kernel provisioner '{provisioner_name}' has not been registered."
             )
@@ -92,6 +101,25 @@ class KernelProvisionerFactory(SingletonConfigurable):
             kernel_id=kernel_id, kernel_spec=kernel_spec, parent=parent, **provisioner_config
         )
         return provisioner
+
+    def _check_availability(self, provisioner_name: str) -> bool:
+        """
+        Checks that the given provisioner is available.
+
+        If the given provisioner is not in the current set of loaded provisioners an attempt
+        is made to fetch the named entry point and, if successful, loads it into the cache.
+
+        :param provisioner_name:
+        :return:
+        """
+        is_available = True
+        if provisioner_name not in self.provisioners:
+            try:
+                ep = KernelProvisionerFactory._get_provisioner(provisioner_name)
+                self.provisioners[provisioner_name] = ep  # Update cache
+            except NoSuchEntryPoint:
+                is_available = False
+        return is_available
 
     def _get_provisioner_config(self, kernel_spec: Any) -> Dict[str, Any]:
         """
