@@ -1190,6 +1190,33 @@ The `inspectVariables` is meant to retrieve the values of all the variables that
           }
       }
 
+The `richInspectVariables` request allows to get the rich representation of a variable that has been defined in the kernel.
+
+  Content of the `richInspectVariables` request::
+
+      {
+          'type' : 'request',
+          'command' : 'richInspectVariables,
+          'arguments' : {
+              # The variable name is used when the debugger is not stopped on a breakpoint.
+              'variableName' : str,
+              # The variable reference is used when the debugger hit a breakpoint.
+              'variableReference' : int
+          }
+      }
+
+  Content of the `richInspectVariables` response::
+
+      {
+          'type' : 'response',
+          'success' : bool,
+          'body' : {
+              # Dictionary of rich reprensentations of the variable
+              'data' : dict,
+              'metadata' : dict
+          }
+      }
+
 .. versionadded:: 5.5
 
 Messages on the IOPub (PUB/SUB) channel
