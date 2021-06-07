@@ -1198,10 +1198,9 @@ The ``richInspectVariables`` request allows to get the rich representation of a 
           'type' : 'request',
           'command' : 'richInspectVariables',
           'arguments' : {
-              # The variable name is used when the debugger is not stopped on a breakpoint.
               'variableName' : str,
-              # The variable reference is used when the debugger hit a breakpoint.
-              'variableReference' : int
+              # The frameId is used when the debugger hit a breakpoint only.
+              'frameId' : int
           }
       }
 
