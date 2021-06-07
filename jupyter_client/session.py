@@ -577,7 +577,7 @@ class Session(Configurable):
     def msg_id(self) -> str:
         message_number = self.message_count
         self.message_count += 1
-        return "{}_{}".format(self.session, message_number)
+        return f"{self.session}_{os.getpid()}_{message_number}"
 
     def _check_packers(self) -> None:
         """check packers for datetime support."""
