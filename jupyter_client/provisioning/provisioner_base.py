@@ -16,6 +16,16 @@ from traitlets.config import Unicode
 
 from ..connect import KernelConnectionInfo
 
+# Name of the env variable that contains the name of the current session associated
+# with the kernel we are launching.
+# Frontends can decide to set this session name to the name of the file when
+# when the kernel is started.
+# This is useful in notebook context to find which notebook we are working with
+# though we might not be working with a notebook, we could be working with a
+# markdown file, or python file.
+# as with other Jupyter Related Env variable with use the JPY prefix.
+JPY_SESSION_NAME = 'JPY_SESSION_NAME'
+
 
 class KernelProvisionerMeta(ABCMeta, type(LoggingConfigurable)):  # type: ignore
     pass
@@ -160,6 +170,8 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         :meth:`launch_kernel()`.
         """
         env = kwargs.pop('env', os.environ).copy()
+        if 'session_name' in kwargs:
+            env.update({JPY_SESSION_NAME: kwargs['session_name']})
         env.update(self.__apply_env_substitutions(env))
         self._finalize_env(env)
         kwargs['env'] = env

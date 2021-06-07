@@ -34,6 +34,17 @@ from jupyter_client import KernelClient
 from jupyter_client import kernelspec
 
 
+# Name of the env variable that contains the name of the current session associated
+# with the kernel we are launching.
+# Frontends can decide to set this session name to the name of the file when
+# when the kernel is started.
+# This is useful in notebook context to find which notebook we are working with
+# though we might not be working with a notebook, we could be working with a
+# markdown file, or python file.
+# as with other Jupyter Related Env variable with use the JPY prefix.
+JPY_KERNEL_SESSION_NAME = 'JPY_SESSION_NAME'
+
+
 class _ShutdownStatus(Enum):
     """
 
@@ -332,6 +343,7 @@ class KernelManager(ConnectionFileMixin):
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
+        kw.pop('session_name', None)
         await ensure_async(self._launch_kernel(kernel_cmd, **kw))
         await ensure_async(self.post_start_kernel(**kw))
 

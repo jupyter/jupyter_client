@@ -139,6 +139,7 @@ class LocalProvisioner(KernelProvisionerBase):
 
         # This should be considered temporary until a better division of labor can be defined.
         km = self.parent
+        extra_arguments = kwargs.pop('extra_arguments', [])
         if km:
             if km.transport == 'tcp' and not is_local_ip(km.ip):
                 raise RuntimeError(
@@ -149,7 +150,6 @@ class LocalProvisioner(KernelProvisionerBase):
                     "Currently valid addresses are: %s" % (km.ip, local_ips())
                 )
             # build the Popen cmd
-            extra_arguments = kwargs.pop('extra_arguments', [])
 
             # write connection file / get default ports
             # TODO - change when handshake pattern is adopted
@@ -169,7 +169,6 @@ class LocalProvisioner(KernelProvisionerBase):
                 extra_arguments=extra_arguments
             )  # This needs to remain here for b/c
         else:
-            extra_arguments = kwargs.pop('extra_arguments', [])
             kernel_cmd = self.kernel_spec.argv + extra_arguments
 
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
