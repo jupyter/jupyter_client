@@ -7,8 +7,8 @@ from datetime import datetime
 from typing import Optional
 from typing import Union
 
-from dateutil.parser import parse as _dateutil_parse
-from dateutil.tz import tzlocal
+from dateutil.parser import parse as _dateutil_parse  # type: ignore
+from dateutil.tz import tzlocal  # type: ignore
 
 next_attr_name = "__next__"  # Not sure what downstream library uses this, but left it to be safe
 
