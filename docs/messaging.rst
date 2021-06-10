@@ -1160,7 +1160,7 @@ In order to support page reloading, or a client connecting at a later stage, Jup
               ],
               'stoppedThreads' : list(int),  # threads in which the debugger is currently in a stopped state
               'richRendering' : bool,  # whether the debugger supports rich rendering of variables
-              'exceptionPaths' : list(str),  # Exception names used to match leaves or nodes in a tree of exception 
+              'exceptionPaths' : list(str),  # exception names used to match leaves or nodes in a tree of exception 
           }
       }
 
