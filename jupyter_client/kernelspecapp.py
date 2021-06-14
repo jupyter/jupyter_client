@@ -200,7 +200,7 @@ class RemoveKernelSpec(JupyterApp):
         if missing:
             self.exit("Couldn't find kernel spec(s): %s" % ", ".join(missing))
 
-        if not self.force:
+        if not (self.force or self.answer_yes):
             print("Kernel specs to remove:")
             for name in self.spec_names:
                 print("  %s\t%s" % (name.ljust(20), spec_paths[name]))
