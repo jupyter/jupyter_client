@@ -3,7 +3,6 @@
 # Distributed under the terms of the Modified BSD License.
 import asyncio
 import atexit
-import errno
 import time
 import typing as t
 from queue import Empty
@@ -11,7 +10,6 @@ from threading import Event
 from threading import Thread
 
 import zmq.asyncio
-from zmq import ZMQError
 
 from .channelsabc import HBChannelABC
 from .session import Session
@@ -107,39 +105,6 @@ class HBChannel(Thread):
 
         self.poller.register(self.socket, zmq.POLLIN)
 
-    def _poll(self, start_time: float) -> t.List[t.Any]:
-        """poll for heartbeat replies until we reach self.time_to_dead.
-
-        Ignores interrupts, and returns the result of poll(), which
-        will be an empty list if no messages arrived before the timeout,
-        or the event tuple if there is a message to receive.
-        """
-
-        until_dead = self.time_to_dead - (time.time() - start_time)
-        # ensure poll at least once
-        until_dead = max(until_dead, 1e-3)
-        events = []
-        while True:
-            try:
-                events = self.poller.poll(int(1000 * until_dead))
-            except ZMQError as e:
-                if e.errno == errno.EINTR:
-                    # ignore interrupts during heartbeat
-                    # this may never actually happen
-                    until_dead = self.time_to_dead - (time.time() - start_time)
-                    until_dead = max(until_dead, 1e-3)
-                    pass
-                else:
-                    raise
-            except Exception:
-                if self._exiting:
-                    break
-                else:
-                    raise
-            else:
-                break
-        return events
-
     def run(self) -> None:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -163,19 +128,16 @@ class HBChannel(Thread):
             # either a recv or connect, which cannot be followed by EFSM
             await self.socket.send(b"ping")
             request_time = time.time()
-            ready = self._poll(request_time)
-            if ready:
-                self._beating = True
+            # Wait until timeout
+            self._exit.wait(self.time_to_dead)
+            # poll(0) means return immediately (see http://api.zeromq.org/2-1:zmq-poll)
+            self._beating = bool(self.poller.poll(0))
+            if self._beating:
                 # the poll above guarantees we have something to recv
                 await self.socket.recv()
-                # sleep the remainder of the cycle
-                remainder = self.time_to_dead - (time.time() - request_time)
-                if remainder > 0:
-                    self._exit.wait(remainder)
                 continue
-            else:
+            elif self._running:
                 # nothing was received within the time limit, signal heart failure
-                self._beating = False
                 since_last_heartbeat = time.time() - request_time
                 self.call_handlers(since_last_heartbeat)
                 # and close/reopen the socket, because the REQ/REP cycle has been broken

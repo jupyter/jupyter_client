@@ -119,11 +119,11 @@ class LocalProvisioner(KernelProvisionerBase):
             # provisioner is about to be destroyed, return cached ports
             lpc = LocalPortCache.instance()
             ports = (
-                self._connection_info['shell_port'],
-                self._connection_info['iopub_port'],
-                self._connection_info['stdin_port'],
-                self._connection_info['hb_port'],
-                self._connection_info['control_port'],
+                self.connection_info['shell_port'],
+                self.connection_info['iopub_port'],
+                self.connection_info['stdin_port'],
+                self.connection_info['hb_port'],
+                self.connection_info['control_port'],
             )
             for port in ports:
                 lpc.return_port(port)
@@ -163,7 +163,7 @@ class LocalProvisioner(KernelProvisionerBase):
                 self.ports_cached = True
 
             km.write_connection_file()
-            self._connection_info = km.get_connection_info()
+            self.connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(
                 extra_arguments=extra_arguments
@@ -186,12 +186,12 @@ class LocalProvisioner(KernelProvisionerBase):
 
         self.pid = self.process.pid
         self.pgid = pgid
-        return self._connection_info
+        return self.connection_info
 
     @staticmethod
     def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """Remove any keyword arguments that Popen does not tolerate."""
-        keywords_to_scrub: List[str] = ['extra_arguments', 'kernel_id', 'kernel_manager']
+        keywords_to_scrub: List[str] = ['extra_arguments', 'kernel_id']
         scrubbed_kwargs = kwargs.copy()
         for kw in keywords_to_scrub:
             scrubbed_kwargs.pop(kw, None)
