@@ -298,10 +298,9 @@ where:
 
 -  ``rbac-provisioner`` is the *name* of your provisioner and what will
    be referenced within the ``kernel.json`` file
--  ``acme.rbac.provisioner`` identifies the location of the provisioner
-   class, and
--  ``provisioner:RBACProvisioner`` is the name of the custom provisioner
-   implementation that (directly or indirectly) derives from
+-  ``acme.rbac.provisioner`` identifies the provisioner module name, and
+-  ``RBACProvisioner`` is custom provisioner object name
+   (implementation) that (directly or indirectly) derives from
    ``KernelProvisionerBase``
 
 Deploying your custom provisioner
@@ -338,3 +337,19 @@ the following ``kernel.json`` file in directory
         }
       }
     }
+
+Listing available kernel provisioners
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To confirm that your custom provisioner is available for use,
+the ``jupyter kernelspec`` command has been extended to include
+a `provisioners` sub-command.  As a result, running ``jupyter kernelspec provisioners``
+will list the available provisioners by name followed by their module and object
+names (colon-separated):
+
+.. code:: bash
+
+    $ jupyter kernelspec provisioners
+
+    Available kernel provisioners:
+      local-provisioner    jupyter_client.provisioning:LocalProvisioner
+      rbac-provisioner     acme.rbac.provisioner:RBACProvisioner

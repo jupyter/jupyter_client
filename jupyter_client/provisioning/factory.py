@@ -150,6 +150,18 @@ class KernelProvisionerFactory(SingletonConfigurable):
             return env_provisioner  # Return what we found (plus config stanza if necessary)
         return {"provisioner_name": self.default_provisioner_name, "config": {}}
 
+    def get_provisioner_entries(self) -> Dict[str, str]:
+        """
+        Returns a dictionary of provisioner entries.
+
+        The key is the provisioner name for its entry point.  The value is the colon-separated
+        string of the entry point's module name and object name.
+        """
+        entries = {}
+        for name, ep in self.provisioners.items():
+            entries[name] = f"{ep.module_name}:{ep.object_name}"
+        return entries
+
     @staticmethod
     def _get_all_provisioners() -> List[EntryPoint]:
         """Wrapper around entrypoints.get_group_all() - primarily to facilitate testing."""
