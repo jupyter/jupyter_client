@@ -114,6 +114,7 @@ jobs:
           pip freeze
 
       - name: Check types
+        if: matrix.python-version != 'pypy-3.7'
         run: mypy jupyter_client --exclude '\/tests|kernelspecapp|ioloop|runapp' --install-types --non-interactive
 
       - name: Run the tests
