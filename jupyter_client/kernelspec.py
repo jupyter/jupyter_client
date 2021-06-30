@@ -248,13 +248,12 @@ class KernelSpecManager(LoggingConfigurable):
         """
         if not _is_valid_kernel_name(kernel_name):
             self.log.warning(
-                "Kernelspec name %r is invalid: %s",
-                kernel_name,
-                _kernel_name_description,
+                f"Kernelspec name {kernel_name} is invalid: {_kernel_name_description}"
             )
 
         resource_dir = self._find_spec_directory(kernel_name.lower())
         if resource_dir is None:
+            self.log.warning(f"Kernelspec name {kernel_name} cannot be found!")
             raise NoSuchKernel(kernel_name)
 
         return self._get_kernel_spec_by_name(kernel_name, resource_dir)
@@ -285,6 +284,8 @@ class KernelSpecManager(LoggingConfigurable):
                     spec = self.get_kernel_spec(kname)
 
                 res[kname] = {"resource_dir": resource_dir, "spec": spec.to_dict()}
+            except NoSuchKernel:
+                pass  # The appropriate warning has already been logged
             except Exception:
                 self.log.warning("Error loading kernelspec %r", kname, exc_info=True)
         return res
