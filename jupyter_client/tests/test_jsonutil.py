@@ -65,14 +65,14 @@ def test_parse_ms_precision():
             assert isinstance(parsed, str)
 
 
-def test_date_default():
+def test_json_default():
     naive = datetime.datetime.now()
     local = tzoffset("Local", -8 * 3600)
     other = tzoffset("Other", 2 * 3600)
     data = dict(naive=naive, utc=utcnow(), withtz=naive.replace(tzinfo=other))
     with mock.patch.object(jsonutil, "tzlocal", lambda: local):
         with pytest.deprecated_call(match="Please add timezone info"):
-            jsondata = json.dumps(data, default=jsonutil.date_default)
+            jsondata = json.dumps(data, default=jsonutil.json_default)
     assert "Z" in jsondata
     assert jsondata.count("Z") == 1
     extracted = jsonutil.extract_dates(json.loads(jsondata))
