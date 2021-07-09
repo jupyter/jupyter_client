@@ -3,6 +3,7 @@
 # Distributed under the terms of the Modified BSD License.
 import re
 import warnings
+from binascii import b2a_base64
 from datetime import datetime
 from typing import Optional
 from typing import Union
@@ -91,9 +92,21 @@ def squash_dates(obj):
 
 
 def date_default(obj):
-    """default function for packing datetime objects in JSON."""
+    """DEPRECATED: Use jupyter_client.jsonutil.json_default"""
+    warnings.warn(
+        "date_default is deprecated since jupyter_client 7.0.0."
+        " Use jupyter_client.jsonutil.json_default.",
+        stacklevel=2,
+    )
+    return json_default(obj)
+
+
+def json_default(obj):
+    """default function for packing objects in JSON."""
     if isinstance(obj, datetime):
         obj = _ensure_tzinfo(obj)
-        return obj.isoformat().replace("+00:00", "Z")
+        return obj.isoformat().replace('+00:00', 'Z')
+    elif isinstance(obj, bytes):
+        return b2a_base64(obj).decode('ascii')
     else:
         raise TypeError("%r is not JSON serializable" % obj)
