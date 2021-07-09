@@ -34,7 +34,7 @@ result, we consider the ``KernelManager`` class to be an
 be implemented.
 
 Kernel provisioners, on the other hand, are contained within the
-``Kernel Manager`` (i.e., a *has-a* relationship) and applications are
+``KernelManager`` (i.e., a *has-a* relationship) and applications are
 agnostic as to what *kind* of provisioner is in use other than what is
 conveyed via the kernel's specification (kernelspec). All kernel
 interactions still occur via the ``KernelManager`` and ``KernelClient``
