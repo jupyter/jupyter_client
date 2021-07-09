@@ -194,7 +194,7 @@ of :class:`KernelProvisionerBase` for use in an Hadoop YARN cluster to
 help illustrate a provisioner's implementation.  Note that the built-in
 implementation of :class:`LocalProvisioner` can also be used as a reference.
 
-Notice the internal method `_get_application_id()`.  This method is
+Notice the internal method ``_get_application_id()``.  This method is
 what the provisioner uses to determine the YARN application (i.e.,
 the kernel) is still running within te cluster.  Although the provisioner
 doesn't dictate the application id, the application id is
