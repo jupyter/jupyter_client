@@ -12,33 +12,45 @@ for installing kernelspecs for use with Jupyter frontends.
 
 [jupyter protocol]: https://jupyter-client.readthedocs.io/en/latest/messaging.html
 
-# Development Setup
+## Development Setup
 
-The [Jupyter Contributor Guides](http://jupyter.readthedocs.io/en/latest/contributor/content-contributor.html) provide extensive information on contributing code or documentation to Jupyter projects. The limited instructions below for setting up a development environment are for your convenience.
+The [Jupyter Contributor Guides](https://jupyter.readthedocs.io/en/latest/contributing/content-contributor.html) provide extensive information on contributing code or documentation to Jupyter projects. The limited instructions below for setting up a development environment are for your convenience.
 
 ## Coding
 
-You'll need Python and `pip` on the search path. Clone the Jupyter Client git repository to your computer, for example in `/my/project/jupyter_client`.
+You'll need Python and `pip` on the search path. Clone the Jupyter Client git repository to your computer, for example in `/my/project/jupyter_client`
+
+```bash
+cd /my/projects/
+git clone git@github.com:jupyter/jupyter_client.git
+```
+
 Now create an [editable install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
 and download the dependencies of code and test suite by executing:
 
-    cd /my/projects/jupyter_client/
-    pip install -e .[test]
-    py.test
+```bash
+cd /my/projects/jupyter_client/
+pip install -e .[test]
+pytest
+```
 
-The last command runs the test suite to verify the setup. During development, you can pass filenames to `py.test`, and it will execute only those tests.
+The last command runs the test suite to verify the setup. During development, you can pass filenames to `pytest`, and it will execute only those tests.
 
 ## Documentation
 
 The documentation of Jupyter Client is generated from the files in `docs/` using Sphinx. Instructions for setting up Sphinx with a selection of optional modules are in the [Documentation Guide](https://jupyter.readthedocs.io/en/latest/contributing/docs-contributions/index.html). You'll also need the `make` command.
 For a minimal Sphinx installation to process the Jupyter Client docs, execute:
 
-    pip install ipykernel sphinx sphinx_rtd_theme
+```bash
+pip install .[doc]
+```
 
 The following commands build the documentation in HTML format and check for broken links:
 
-    cd /my/projects/jupyter_client/docs/
-    make html linkcheck
+```bash
+cd /my/projects/jupyter_client/docs/
+make html linkcheck
+```
 
 Point your browser to the following URL to access the generated documentation:
 
