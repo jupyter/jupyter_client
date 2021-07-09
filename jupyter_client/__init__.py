@@ -9,7 +9,9 @@ from .client import KernelClient  # noqa
 from .connect import *  # noqa
 from .launcher import *  # noqa
 from .manager import AsyncKernelManager  # noqa
+from .manager import BlockingKernelManager  # noqa
 from .manager import KernelManager  # noqa
 from .manager import run_kernel  # noqa
 from .multikernelmanager import AsyncMultiKernelManager  # noqa
+from .multikernelmanager import BlockingMultiKernelManager  # noqa
 from .multikernelmanager import MultiKernelManager  # noqa

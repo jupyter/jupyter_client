@@ -14,9 +14,9 @@ from traitlets.config.loader import Config
 from ..localinterfaces import localhost
 from .utils import AsyncKMSubclass
 from .utils import AsyncMKMSubclass
+from .utils import BlockingKMSubclass
+from .utils import BlockingMKMSubclass
 from .utils import skip_win32
-from .utils import SyncKMSubclass
-from .utils import SyncMKMSubclass
 from jupyter_client import AsyncKernelManager
 from jupyter_client import KernelManager
 from jupyter_client.multikernelmanager import AsyncMultiKernelManager
@@ -37,7 +37,7 @@ class TestKernelManager(TestCase):
     @staticmethod
     def _get_tcp_km_sub():
         c = Config()
-        km = SyncMKMSubclass(config=c)
+        km = BlockingMKMSubclass(config=c)
         return km
 
     # static so picklable for multiprocessing on Windows
@@ -169,7 +169,7 @@ class TestKernelManager(TestCase):
         km.reset_counts()
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
         assert km.call_count("start_kernel") == 1
-        assert isinstance(km.get_kernel(kid), SyncKMSubclass)
+        assert isinstance(km.get_kernel(kid), BlockingKMSubclass)
         assert km.get_kernel(kid).call_count("start_kernel") == 1
         assert km.get_kernel(kid).call_count("_launch_kernel") == 1
 
@@ -204,7 +204,7 @@ class TestKernelManager(TestCase):
         km.get_kernel(kid).reset_counts()
         km.reset_counts()
         k = km.get_kernel(kid)
-        assert isinstance(k, SyncKMSubclass)
+        assert isinstance(k, BlockingKMSubclass)
         assert km.call_count("get_kernel") == 1
 
         km.get_kernel(kid).reset_counts()

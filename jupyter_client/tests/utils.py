@@ -11,8 +11,8 @@ import pytest
 
 from jupyter_client import AsyncKernelManager
 from jupyter_client import AsyncMultiKernelManager
-from jupyter_client import KernelManager
-from jupyter_client import MultiKernelManager
+from jupyter_client import BlockingKernelManager
+from jupyter_client import BlockingMultiKernelManager
 
 pjoin = os.path.join
 
@@ -146,10 +146,10 @@ class KMSubclass(RecordCallMixin):
         """ Record call and defer to superclass """
 
 
-class SyncKMSubclass(KMSubclass, KernelManager):
+class BlockingKMSubclass(KMSubclass, BlockingKernelManager):
     """Used to test subclass hierarchies to ensure methods are called when expected."""
 
-    _superclass = KernelManager
+    _superclass = BlockingKernelManager
 
 
 class AsyncKMSubclass(KMSubclass, AsyncKernelManager):
@@ -160,7 +160,7 @@ class AsyncKMSubclass(KMSubclass, AsyncKernelManager):
 
 class MKMSubclass(RecordCallMixin):
     def _kernel_manager_class_default(self):
-        return "jupyter_client.tests.utils.SyncKMSubclass"
+        return "jupyter_client.tests.utils.BlockingKMSubclass"
 
     @subclass_recorder
     def get_kernel(self, kernel_id):
@@ -203,12 +203,12 @@ class MKMSubclass(RecordCallMixin):
         """ Record call and defer to superclass """
 
 
-class SyncMKMSubclass(MKMSubclass, MultiKernelManager):
+class BlockingMKMSubclass(MKMSubclass, BlockingMultiKernelManager):
 
-    _superclass = MultiKernelManager
+    _superclass = BlockingMultiKernelManager
 
     def _kernel_manager_class_default(self):
-        return "jupyter_client.tests.utils.SyncKMSubclass"
+        return "jupyter_client.tests.utils.BlockingKMSubclass"
 
 
 class AsyncMKMSubclass(MKMSubclass, AsyncMultiKernelManager):

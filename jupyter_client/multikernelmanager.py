@@ -48,7 +48,7 @@ def kernel_method(f: t.Callable) -> t.Callable:
     return wrapped
 
 
-class MultiKernelManager(LoggingConfigurable):
+class _MultiKernelManager(LoggingConfigurable):
     """A class for managing multiple kernels."""
 
     default_kernel_name = Unicode(
@@ -58,7 +58,6 @@ class MultiKernelManager(LoggingConfigurable):
     kernel_spec_manager = Instance(KernelSpecManager, allow_none=True)
 
     kernel_manager_class = DottedObjectName(
-        "jupyter_client.ioloop.IOLoopKernelManager",
         config=True,
         help="""The kernel manager class.  This is configurable to allow
         subclassing of the KernelManager for customized behavior.
@@ -218,8 +217,6 @@ class MultiKernelManager(LoggingConfigurable):
         del self._starting_kernels[kernel_id]
         return kernel_id
 
-    start_kernel = run_sync(_async_start_kernel)
-
     async def _async_shutdown_kernel(
         self,
         kernel_id: str,
@@ -255,8 +252,6 @@ class MultiKernelManager(LoggingConfigurable):
         if km.cache_ports and not restart:
             for port in ports:
                 self.currently_used_ports.remove(port)
-
-    shutdown_kernel = run_sync(_async_shutdown_kernel)
 
     @kernel_method
     def request_shutdown(self, kernel_id: str, restart: t.Optional[bool] = False) -> None:
@@ -299,8 +294,6 @@ class MultiKernelManager(LoggingConfigurable):
             self._shutdown_starting_kernel(kid, now=now) for kid in self._starting_kernels.keys()
         ]
         await asyncio.gather(*futs)
-
-    shutdown_all = run_sync(_async_shutdown_all)
 
     @kernel_method
     def interrupt_kernel(self, kernel_id: str) -> None:
@@ -487,16 +480,25 @@ class MultiKernelManager(LoggingConfigurable):
         return str(uuid.uuid4())
 
 
-class AsyncMultiKernelManager(MultiKernelManager):
+class AsyncMultiKernelManager(_MultiKernelManager):
+    @default('kernel_manager_class')
+    def _default_kernel_manager_class(self):
+        return 'jupyter_client.ioloop.AsyncIOLoopKernelManager'
 
-    kernel_manager_class = DottedObjectName(
-        "jupyter_client.ioloop.AsyncIOLoopKernelManager",
-        config=True,
-        help="""The kernel manager class.  This is configurable to allow
-        subclassing of the AsyncKernelManager for customized behavior.
-        """,
-    )
+    start_kernel = _MultiKernelManager._async_start_kernel
+    shutdown_kernel = _MultiKernelManager._async_shutdown_kernel
+    shutdown_all = _MultiKernelManager._async_shutdown_all
 
-    start_kernel = MultiKernelManager._async_start_kernel
-    shutdown_kernel = MultiKernelManager._async_shutdown_kernel
-    shutdown_all = MultiKernelManager._async_shutdown_all
+
+class BlockingMultiKernelManager(_MultiKernelManager):
+    @default('kernel_manager_class')
+    def _default_kernel_manager_class(self):
+        return 'jupyter_client.ioloop.IOLoopKernelManager'
+
+    start_kernel = run_sync(_MultiKernelManager._async_start_kernel)
+    shutdown_kernel = run_sync(_MultiKernelManager._async_shutdown_kernel)
+    shutdown_all = run_sync(_MultiKernelManager._async_shutdown_all)
+
+
+# Backward compatibility
+MultiKernelManager = BlockingMultiKernelManager

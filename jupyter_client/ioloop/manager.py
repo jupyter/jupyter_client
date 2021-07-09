@@ -9,7 +9,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 from .restarter import AsyncIOLoopKernelRestarter
 from .restarter import IOLoopKernelRestarter
 from jupyter_client.manager import AsyncKernelManager
-from jupyter_client.manager import KernelManager
+from jupyter_client.manager import BlockingKernelManager
 
 
 def as_zmqstream(f):
@@ -20,7 +20,7 @@ def as_zmqstream(f):
     return wrapped
 
 
-class IOLoopKernelManager(KernelManager):
+class IOLoopKernelManager(BlockingKernelManager):
 
     loop = Instance("tornado.ioloop.IOLoop")
 
@@ -52,11 +52,11 @@ class IOLoopKernelManager(KernelManager):
             if self._restarter is not None:
                 self._restarter.stop()
 
-    connect_shell = as_zmqstream(KernelManager.connect_shell)
-    connect_control = as_zmqstream(KernelManager.connect_control)
-    connect_iopub = as_zmqstream(KernelManager.connect_iopub)
-    connect_stdin = as_zmqstream(KernelManager.connect_stdin)
-    connect_hb = as_zmqstream(KernelManager.connect_hb)
+    connect_shell = as_zmqstream(BlockingKernelManager.connect_shell)
+    connect_control = as_zmqstream(BlockingKernelManager.connect_control)
+    connect_iopub = as_zmqstream(BlockingKernelManager.connect_iopub)
+    connect_stdin = as_zmqstream(BlockingKernelManager.connect_stdin)
+    connect_hb = as_zmqstream(BlockingKernelManager.connect_hb)
 
 
 class AsyncIOLoopKernelManager(AsyncKernelManager):

@@ -18,10 +18,10 @@ from ..manager import _ShutdownStatus
 from ..manager import start_new_async_kernel
 from ..manager import start_new_kernel
 from .utils import AsyncKMSubclass
-from .utils import SyncKMSubclass
+from .utils import BlockingKMSubclass
 from .utils import test_env
 from jupyter_client import AsyncKernelManager
-from jupyter_client import KernelManager
+from jupyter_client import BlockingKernelManager
 
 pjoin = os.path.join
 
@@ -101,13 +101,13 @@ def start_kernel():
 
 @pytest.fixture
 def km(config):
-    km = KernelManager(config=config)
+    km = BlockingKernelManager(config=config)
     return km
 
 
 @pytest.fixture
 def km_subclass(config):
-    km = SyncKMSubclass(config=config)
+    km = BlockingKMSubclass(config=config)
     return km
 
 
@@ -200,7 +200,7 @@ class TestKernelManager:
         km.restart_kernel(now=True)
         assert km.is_alive()
         km.interrupt_kernel()
-        assert isinstance(km, KernelManager)
+        assert isinstance(km, BlockingKernelManager)
         km.shutdown_kernel(now=True)
         assert km.context.closed
 
@@ -297,7 +297,7 @@ class TestKernelManager:
 
     def test_no_cleanup_shared_context(self, zmq_context):
         """kernel manager does not terminate shared context"""
-        km = KernelManager(context=zmq_context)
+        km = BlockingKernelManager(context=zmq_context)
         assert km.context == zmq_context
         assert km.context is not None
 
@@ -330,7 +330,7 @@ class TestKernelManager:
         km_subclass.interrupt_kernel()
         assert km_subclass.call_count("interrupt_kernel") == 1
 
-        assert isinstance(km_subclass, KernelManager)
+        assert isinstance(km_subclass, BlockingKernelManager)
 
         km_subclass.reset_counts()
         km_subclass.shutdown_kernel(now=False)
@@ -408,7 +408,7 @@ class TestParallel:
         return kc
 
     def _run_signaltest_lifecycle(self, config=None):
-        km = KernelManager(config=config, kernel_name="signaltest")
+        km = BlockingKernelManager(config=config, kernel_name="signaltest")
         kc = self._prepare_kernel(km, stdout=PIPE, stderr=PIPE)
 
         def execute(cmd):
