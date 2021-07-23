@@ -112,7 +112,7 @@ jobs:
           pip freeze
 
       - name: Check types
-        run: mypy jupyter_client --exclude '\/tests|kernelspecapp|ioloop|runapp'
+        run: mypy jupyter_client --exclude '\/tests|kernelspecapp|ioloop|runapp' --install-types --non-interactive
 
       - name: Run the tests
         run: pytest --cov jupyter_client -v jupyter_client
