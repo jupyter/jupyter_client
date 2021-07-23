@@ -276,7 +276,7 @@ class ListProvisioners(JupyterApp):
     description = """List available provisioners for use in kernel specifications."""
 
     def start(self):
-        kfp = KernelProvisionerFactory(parent=self).instance()
+        kfp = KernelProvisionerFactory.instance(parent=self)
         print("Available kernel provisioners:")
         provisioners = kfp.get_provisioner_entries()
 
