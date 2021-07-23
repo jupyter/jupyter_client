@@ -1,14 +1,9 @@
-include COPYING.md
-include CONTRIBUTING.md
-include README.md
+include README.md LICENSE.md CONTRIBUTING.md requirements.txt requirements-test.txt requirements-doc.txt
 
 # Documentation
 graft docs
 exclude docs/\#*
 exclude docs/_*
-
-# Examples
-graft examples
 
 # docs subdirs we want to skip
 prune docs/build
@@ -17,7 +12,10 @@ prune docs/dist
 
 # Patterns to exclude from any directory
 global-exclude *~
+global-exclude __pycache__
 global-exclude *.pyc
 global-exclude *.pyo
+global-exclude *.orig
 global-exclude .git
+global-exclude .github
 global-exclude .ipynb_checkpoints

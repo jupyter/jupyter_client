@@ -49,8 +49,8 @@ from zmq.utils import jsonapi
 
 from jupyter_client import protocol_version
 from jupyter_client.adapter import adapt
-from jupyter_client.jsonutil import date_default
 from jupyter_client.jsonutil import extract_dates
+from jupyter_client.jsonutil import json_default
 from jupyter_client.jsonutil import squash_dates
 
 
@@ -94,7 +94,7 @@ MAX_BYTES = 1024
 def json_packer(obj):
     return jsonapi.dumps(
         obj,
-        default=date_default,
+        default=json_default,
         ensure_ascii=False,
         allow_nan=False,
     )

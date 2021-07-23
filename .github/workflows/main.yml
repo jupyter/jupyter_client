@@ -2,24 +2,50 @@ name: CI
 
 on:
   push:
-    branches: "*"
   pull_request:
-    branches: "*"
 
 jobs:
+  check_duplicate_runs:
+    name: Check for duplicate runs
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          concurrent_skipping: always
+          cancel_others: true
+          skip_after_successful_duplicate: true
+          paths_ignore: '["**/README.md", "**/CHANGELOG.md", "**/COPYING.md"]'
+          do_not_skip: '["pull_request"]'
+
   # Run "pre-commit run --all-files"
   pre-commit:
-    runs-on: ubuntu-20.04
+    name: Run pre-commit hook
+
+    needs: check_duplicate_runs
+    if: ${{ needs.check_duplicate_runs.outputs.should_skip != 'true' }}
+
+    runs-on: ubuntu-latest
     timeout-minutes: 2
 
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
+    env:
+      PYTHON_VERSION: 3.8
 
-      # ref: https://github.com/pre-commit/action
-      - uses: pre-commit/action@v2.0.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v2.0.0
+
       - name: Help message if pre-commit fail
         if: ${{ failure() }}
         run: |
@@ -33,31 +59,63 @@ jobs:
 
   build-n-test-n-coverage:
     name: Build, test and code coverage
+
+    needs: check_duplicate_runs
+    if: ${{ needs.check_duplicate_runs.outputs.should_skip != 'true' }}
+
     runs-on: ${{ matrix.os }}
+
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [3.6, 3.7, 3.8, 3.9]
+
     env:
       OS: ${{ matrix.os }}
-      PYTHON: "3.9"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Update pip
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade wheel setuptools
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: |
+          echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ steps.pip-cache.outputs.dir }}
+            .mypy_cache
+          key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements*.txt') }}-git-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements*.txt') }}
+            ${{ runner.os }}-python-${{ matrix.python-version }}-pip-
+            ${{ runner.os }}-python
+            ${{ runner.os }}-
+
       - name: Install dependencies
         run: |
-          pip install --upgrade setuptools pip
-          pip install --upgrade --upgrade-strategy eager --pre -e .[test] pytest-cov codecov 'coverage<5'
+          pip install --upgrade --upgrade-strategy eager --pre -e .[test]
           pip freeze
+
       - name: Check types
-        run: mypy jupyter_client/manager.py jupyter_client/multikernelmanager.py jupyter_client/client.py jupyter_client/blocking/client.py jupyter_client/asynchronous/client.py jupyter_client/channels.py jupyter_client/session.py jupyter_client/adapter.py jupyter_client/connect.py jupyter_client/consoleapp.py jupyter_client/jsonutil.py jupyter_client/kernelapp.py jupyter_client/launcher.py jupyter_client/threaded.py jupyter_client/provisioning/factory.py jupyter_client/provisioning/local_provisioner.py jupyter_client/provisioning/provisioner_base.py
+        run: mypy jupyter_client --exclude '\/tests|kernelspecapp|ioloop|runapp'
+
       - name: Run the tests
-        run: py.test --cov jupyter_client -v jupyter_client
+        run: pytest --cov jupyter_client -v jupyter_client
+
       - name: Code coverage
         run: codecov
