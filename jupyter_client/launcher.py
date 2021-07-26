@@ -155,14 +155,18 @@ def launch_kernel(
         # Allow to use ~/ in the command or its arguments
         cmd = [os.path.expanduser(s) for s in cmd]
         proc = Popen(cmd, **kwargs)
-    except Exception:
-        msg = "Failed to run command:\n{}\n" "    PATH={!r}\n" "    with kwargs:\n{!r}\n"
-        # exclude environment variables,
-        # which may contain access tokens and the like.
-        without_env = {key: value for key, value in kwargs.items() if key != "env"}
-        msg = msg.format(cmd, env.get("PATH", os.defpath), without_env)
-        get_logger().error(msg)
-        raise
+    except Exception as ex:
+        try:
+            msg = "Failed to run command:\n{}\n" "    PATH={!r}\n" "    with kwargs:\n{!r}\n"
+            # exclude environment variables,
+            # which may contain access tokens and the like.
+            without_env = {key: value for key, value in kwargs.items() if key != "env"}
+            msg = msg.format(cmd, env.get("PATH", os.defpath), without_env)
+            get_logger().error(msg)
+        except Exception as ex2:  # Don't let a formatting/logger issue lead to the wrong exception
+            print(f"Failed to run command: '{cmd}' due to exception: {ex}")
+            print(f"The following exception occurred handling the previous failure: {ex2}")
+        raise ex
 
     if sys.platform == "win32":
         # Attach the interrupt event to the Popen objet so it can be used later.

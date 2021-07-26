@@ -130,7 +130,7 @@ class KMSubclass(RecordCallMixin):
         """ Record call and defer to superclass """
 
     @subclass_recorder
-    def finish_shutdown(self, waittime=None, pollinterval=0.1):
+    def finish_shutdown(self, waittime=None, pollinterval=0.1, restart=False):
         """ Record call and defer to superclass """
 
     @subclass_recorder
@@ -191,7 +191,7 @@ class MKMSubclass(RecordCallMixin):
         """ Record call and defer to superclass """
 
     @subclass_recorder
-    def finish_shutdown(self, kernel_id, waittime=None, pollinterval=0.1):
+    def finish_shutdown(self, kernel_id, waittime=None, pollinterval=0.1, restart=False):
         """ Record call and defer to superclass """
 
     @subclass_recorder

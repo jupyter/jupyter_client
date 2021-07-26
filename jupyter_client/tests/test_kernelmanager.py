@@ -19,21 +19,12 @@ from ..manager import start_new_async_kernel
 from ..manager import start_new_kernel
 from .utils import AsyncKMSubclass
 from .utils import SyncKMSubclass
-from .utils import test_env
 from jupyter_client import AsyncKernelManager
 from jupyter_client import KernelManager
 
 pjoin = os.path.join
 
 TIMEOUT = 30
-
-
-@pytest.fixture(autouse=True)
-def env():
-    env_patch = test_env()
-    env_patch.start()
-    yield
-    env_patch.stop()
 
 
 @pytest.fixture(params=["tcp", "ipc"])
@@ -353,7 +344,7 @@ class TestParallel:
         self._run_signaltest_lifecycle(config)
         self._run_signaltest_lifecycle(config)
 
-    @pytest.mark.timeout(TIMEOUT)
+    @pytest.mark.timeout(TIMEOUT + 10)
     def test_start_parallel_thread_kernels(self, config, install_kernel):
         if config.KernelManager.transport == "ipc":  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")

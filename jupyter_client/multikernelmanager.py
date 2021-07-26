@@ -65,12 +65,6 @@ class MultiKernelManager(LoggingConfigurable):
         """,
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Cache all the currently used ports
-        self.currently_used_ports = set()
-
     @observe("kernel_manager_class")
     def _kernel_manager_class_changed(self, change):
         self.kernel_manager_factory = self._create_kernel_manager_factory()
@@ -91,32 +85,9 @@ class MultiKernelManager(LoggingConfigurable):
                     self.context = self._context_default()
                 kwargs.setdefault("context", self.context)
             km = kernel_manager_ctor(*args, **kwargs)
-
-            if km.cache_ports:
-                km.shell_port = self._find_available_port(km.ip)
-                km.iopub_port = self._find_available_port(km.ip)
-                km.stdin_port = self._find_available_port(km.ip)
-                km.hb_port = self._find_available_port(km.ip)
-                km.control_port = self._find_available_port(km.ip)
-
             return km
 
         return create_kernel_manager
-
-    def _find_available_port(self, ip: str) -> int:
-        while True:
-            tmp_sock = socket.socket()
-            tmp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, b"\0" * 8)
-            tmp_sock.bind((ip, 0))
-            port = tmp_sock.getsockname()[1]
-            tmp_sock.close()
-
-            # This is a workaround for https://github.com/jupyter/jupyter_client/issues/487
-            # We prevent two kernels to have the same ports.
-            if port not in self.currently_used_ports:
-                self.currently_used_ports.add(port)
-
-                return port
 
     shared_context = Bool(
         True,
@@ -210,6 +181,7 @@ class MultiKernelManager(LoggingConfigurable):
                     km_class=self.kernel_manager_class.__class__
                 )
             )
+        kwargs['kernel_id'] = kernel_id  # Make kernel_id available to manager and provisioner
         fut = asyncio.ensure_future(
             self._add_kernel_when_ready(kernel_id, km, ensure_async(km.start_kernel(**kwargs)))
         )
@@ -241,20 +213,8 @@ class MultiKernelManager(LoggingConfigurable):
 
         km = self.get_kernel(kernel_id)
 
-        ports = (
-            km.shell_port,
-            km.iopub_port,
-            km.stdin_port,
-            km.hb_port,
-            km.control_port,
-        )
-
         await ensure_async(km.shutdown_kernel(now, restart))
         self.remove_kernel(kernel_id)
-
-        if km.cache_ports and not restart:
-            for port in ports:
-                self.currently_used_ports.remove(port)
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
@@ -324,6 +284,8 @@ class MultiKernelManager(LoggingConfigurable):
         ==========
         kernel_id : uuid
             The id of the kernel to signal.
+        signum : int
+            Signal number to send kernel.
         """
         self.log.info("Signaled Kernel %s with %s" % (kernel_id, signum))
 
@@ -335,6 +297,13 @@ class MultiKernelManager(LoggingConfigurable):
         ==========
         kernel_id : uuid
             The id of the kernel to interrupt.
+        now : bool, optional
+            If True, the kernel is forcefully restarted *immediately*, without
+            having a chance to do any cleanup action.  Otherwise the kernel is
+            given 1s to clean up before a forceful restart is issued.
+
+            In all cases the kernel is restarted, the only difference is whether
+            it is given a chance to perform a clean shutdown or not.
         """
         self.log.info("Kernel restarted: %s" % kernel_id)
 

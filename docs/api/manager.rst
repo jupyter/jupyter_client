@@ -9,12 +9,11 @@ manager - starting, stopping, signalling
 
       The name of the kernel to launch (see :ref:`kernelspecs`).
 
+   .. autoattribute:: provisioner
+
+      The kernel provisioner with which this :class:`KernelManager` is communicating.  This will generally be a :class:`LocalProvisioner` instance unless the kernelspec indicates otherwise.
+
    .. automethod:: start_kernel
-
-   .. attribute:: kernel
-
-      Once the kernel has been started, this is the :class:`subprocess.Popen`
-      class for the kernel process.
 
    .. automethod:: is_alive
 

@@ -70,5 +70,8 @@ setup(
             'jupyter-run = jupyter_client.runapp:RunApp.launch_instance',
             'jupyter-kernel = jupyter_client.kernelapp:main',
         ],
+        'jupyter_client.kernel_provisioners': [
+            'local-provisioner = jupyter_client.provisioning:LocalProvisioner',
+        ],
     },
 )

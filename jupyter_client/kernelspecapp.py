@@ -17,6 +17,7 @@ from traitlets.config.application import Application
 
 from . import __version__
 from .kernelspec import KernelSpecManager
+from .provisioning.factory import KernelProvisionerFactory
 
 
 class ListKernelSpecs(JupyterApp):
@@ -270,6 +271,22 @@ class InstallNativeKernelSpec(JupyterApp):
             self.exit(e)
 
 
+class ListProvisioners(JupyterApp):
+    version = __version__
+    description = """List available provisioners for use in kernel specifications."""
+
+    def start(self):
+        kfp = KernelProvisionerFactory.instance(parent=self)
+        print("Available kernel provisioners:")
+        provisioners = kfp.get_provisioner_entries()
+
+        # pad to width of longest kernel name
+        name_len = len(sorted(provisioners, key=lambda name: len(name))[-1])
+
+        for name in sorted(provisioners):
+            print(f"  {name.ljust(name_len)}    {provisioners[name]}")
+
+
 class KernelSpecApp(Application):
     version = __version__
     name = "jupyter kernelspec"
@@ -288,6 +305,7 @@ class KernelSpecApp(Application):
                 InstallNativeKernelSpec,
                 InstallNativeKernelSpec.description.splitlines()[0],
             ),
+            "provisioners": (ListProvisioners, ListProvisioners.description.splitlines()[0]),
         }
     )
 

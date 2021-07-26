@@ -21,6 +21,8 @@ from traitlets import Type
 from traitlets import Unicode
 from traitlets.config import LoggingConfigurable  # type: ignore
 
+from .provisioning import KernelProvisionerFactory as KPF
+
 pjoin = os.path.join
 
 NATIVE_KERNEL_NAME = "python3"
@@ -204,6 +206,7 @@ class KernelSpecManager(LoggingConfigurable):
         """Returns a :class:`KernelSpec` instance for a given kernel_name
         and resource_dir.
         """
+        kspec = None
         if kernel_name == NATIVE_KERNEL_NAME:
             try:
                 from ipykernel.kernelspec import RESOURCES, get_kernel_dict
@@ -212,9 +215,14 @@ class KernelSpecManager(LoggingConfigurable):
                 pass
             else:
                 if resource_dir == RESOURCES:
-                    return self.kernel_spec_class(resource_dir=resource_dir, **get_kernel_dict())
+                    kspec = self.kernel_spec_class(resource_dir=resource_dir, **get_kernel_dict())
+        if not kspec:
+            kspec = self.kernel_spec_class.from_resource_dir(resource_dir)
 
-        return self.kernel_spec_class.from_resource_dir(resource_dir)
+        if not KPF.instance(parent=self.parent).is_provisioner_available(kspec):
+            raise NoSuchKernel(kernel_name)
+
+        return kspec
 
     def _find_spec_directory(self, kernel_name):
         """Find the resource directory of a named kernel spec"""
@@ -240,13 +248,12 @@ class KernelSpecManager(LoggingConfigurable):
         """
         if not _is_valid_kernel_name(kernel_name):
             self.log.warning(
-                "Kernelspec name %r is invalid: %s",
-                kernel_name,
-                _kernel_name_description,
+                f"Kernelspec name {kernel_name} is invalid: {_kernel_name_description}"
             )
 
         resource_dir = self._find_spec_directory(kernel_name.lower())
         if resource_dir is None:
+            self.log.warning(f"Kernelspec name {kernel_name} cannot be found!")
             raise NoSuchKernel(kernel_name)
 
         return self._get_kernel_spec_by_name(kernel_name, resource_dir)
@@ -277,6 +284,8 @@ class KernelSpecManager(LoggingConfigurable):
                     spec = self.get_kernel_spec(kname)
 
                 res[kname] = {"resource_dir": resource_dir, "spec": spec.to_dict()}
+            except NoSuchKernel:
+                pass  # The appropriate warning has already been logged
             except Exception:
                 self.log.warning("Error loading kernelspec %r", kname, exc_info=True)
         return res
