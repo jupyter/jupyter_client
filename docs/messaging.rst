@@ -782,6 +782,9 @@ Message type: ``history_request``::
 Message type: ``history_reply``::
 
     content = {
+      # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+      'status' : 'ok',
+
       # A list of 3 tuples, either:
       # (session, line_number, input) or
       # (session, line_number, (input, output)),
@@ -899,6 +902,9 @@ Message type: ``comm_info_request``::
 Message type: ``comm_info_reply``::
 
     content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status' : 'ok',
+
         # A dictionary of the comms, indexed by uuids.
         'comms': {
             comm_id: {
@@ -1048,6 +1054,9 @@ Message type: ``shutdown_request``::
 Message type: ``shutdown_reply``::
 
     content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status' : 'ok',
+
         'restart' : bool # False if final shutdown, or True if shutdown precedes a restart
     }
 
@@ -1078,7 +1087,10 @@ Message type: ``interrupt_request``::
 
 Message type: ``interrupt_reply``::
 
-    content = {}
+    content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status' : 'ok'
+    }
 
 .. versionadded:: 5.3
 
