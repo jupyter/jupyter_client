@@ -274,7 +274,7 @@ class KernelManager(ConnectionFileMixin):
         self._control_socket.close()
         self._control_socket = None
 
-    async def pre_start_kernel(self, **kw) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
+    async def _async_pre_start_kernel(self, **kw) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
         """Prepares a kernel for startup in a separate process.
 
         If random ports (port=0) are being used, this method must be called
@@ -299,7 +299,9 @@ class KernelManager(ConnectionFileMixin):
         kernel_cmd = kw.pop('cmd')
         return kernel_cmd, kw
 
-    async def post_start_kernel(self, **kw) -> None:
+    pre_start_kernel = run_sync(_async_pre_start_kernel)
+
+    async def _async_post_start_kernel(self, **kw) -> None:
         """Performs any post startup tasks relative to the kernel.
 
         Parameters
@@ -311,6 +313,8 @@ class KernelManager(ConnectionFileMixin):
         self._connect_control_socket()
         assert self.provisioner is not None
         await self.provisioner.post_launch(**kw)
+
+    post_start_kernel = run_sync(_async_post_start_kernel)
 
     async def _async_start_kernel(self, **kw):
         """Starts a kernel on this host in a separate process.
@@ -324,16 +328,16 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        kernel_cmd, kw = await self.pre_start_kernel(**kw)
+        kernel_cmd, kw = await ensure_async(self.pre_start_kernel(**kw))
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
         await ensure_async(self._launch_kernel(kernel_cmd, **kw))
-        await self.post_start_kernel(**kw)
+        await ensure_async(self.post_start_kernel(**kw))
 
     start_kernel = run_sync(_async_start_kernel)
 
-    async def request_shutdown(self, restart: bool = False) -> None:
+    async def _async_request_shutdown(self, restart: bool = False) -> None:
         """Send a shutdown request via control channel"""
         content = dict(restart=restart)
         msg = self.session.msg("shutdown_request", content=content)
@@ -343,6 +347,8 @@ class KernelManager(ConnectionFileMixin):
         assert self.provisioner is not None
         await self.provisioner.shutdown_requested(restart=restart)
         self._shutdown_status = _ShutdownStatus.ShutdownRequest
+
+    request_shutdown = run_sync(_async_request_shutdown)
 
     async def _async_finish_shutdown(
         self,
@@ -581,6 +587,9 @@ class AsyncKernelManager(KernelManager):
 
     _launch_kernel = KernelManager._async_launch_kernel
     start_kernel = KernelManager._async_start_kernel
+    pre_start_kernel = KernelManager._async_pre_start_kernel
+    post_start_kernel = KernelManager._async_post_start_kernel
+    request_shutdown = KernelManager._async_request_shutdown
     finish_shutdown = KernelManager._async_finish_shutdown
     cleanup_resources = KernelManager._async_cleanup_resources
     shutdown_kernel = KernelManager._async_shutdown_kernel
