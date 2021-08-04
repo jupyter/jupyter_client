@@ -154,7 +154,7 @@ class KernelSpecManager(LoggingConfigurable):
     )
     allowed_kernel_names = Set(
         config=True,
-        help="""Whitelist of allowed kernel names.
+        help="""List of allowed kernel names.
 
         By default, all installed kernels are allowed.
         """,
