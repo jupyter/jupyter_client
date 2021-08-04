@@ -16,6 +16,7 @@ from traitlets import CaselessStrEnum
 from traitlets import Dict
 from traitlets import HasTraits
 from traitlets import List
+from traitlets import observe
 from traitlets import Set
 from traitlets import Type
 from traitlets import Unicode
@@ -148,6 +149,11 @@ class KernelSpecManager(LoggingConfigurable):
 
     whitelist = Set(
         config=True,
+        help="""Deprecated, use `KernelSpecManager.allowed_kernel_names`
+        """,
+    )
+    allowed_kernel_names = Set(
+        config=True,
         help="""Whitelist of allowed kernel names.
 
         By default, all installed kernels are allowed.
@@ -156,6 +162,32 @@ class KernelSpecManager(LoggingConfigurable):
     kernel_dirs = List(
         help="List of kernel directories to search. Later ones take priority over earlier."
     )
+
+    _deprecated_aliases = {
+        "whitelist": ("allowed_kernel_names", "7.0"),
+    }
+
+    # Method copied from
+    # https://github.com/jupyterhub/jupyterhub/blob/d1a85e53dccfc7b1dd81b0c1985d158cc6b61820/jupyterhub/auth.py#L143-L161
+    @observe(*list(_deprecated_aliases))
+    def _deprecated_trait(self, change):
+        """observer for deprecated traits"""
+        old_attr = change.name
+        new_attr, version = self._deprecated_aliases.get(old_attr)
+        new_value = getattr(self, new_attr)
+        if new_value != change.new:
+            # only warn if different
+            # protects backward-compatible config from warnings
+            # if they set the same value under both names
+            self.log.warning(
+                "{cls}.{old} is deprecated in JupyterLab {version}, use {cls}.{new} instead".format(
+                    cls=self.__class__.__name__,
+                    old=old_attr,
+                    new=new_attr,
+                    version=version,
+                )
+            )
+            setattr(self, new_attr, change.new)
 
     def _kernel_dirs_default(self):
         dirs = jupyter_path("kernels")
@@ -196,9 +228,9 @@ class KernelSpecManager(LoggingConfigurable):
             except ImportError:
                 self.log.warning("Native kernel (%s) is not available", NATIVE_KERNEL_NAME)
 
-        if self.whitelist:
+        if self.allowed_kernel_names:
             # filter if there's a whitelist
-            d = {name: spec for name, spec in d.items() if name in self.whitelist}
+            d = {name: spec for name, spec in d.items() if name in self.allowed_kernel_names}
         return d
         # TODO: Caching?
 
