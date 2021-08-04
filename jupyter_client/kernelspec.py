@@ -229,7 +229,7 @@ class KernelSpecManager(LoggingConfigurable):
                 self.log.warning("Native kernel (%s) is not available", NATIVE_KERNEL_NAME)
 
         if self.allowed_kernel_names:
-            # filter if there's a whitelist
+            # filter if there's an allow list
             d = {name: spec for name, spec in d.items() if name in self.allowed_kernel_names}
         return d
         # TODO: Caching?
