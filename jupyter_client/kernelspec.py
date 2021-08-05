@@ -228,7 +228,7 @@ class KernelSpecManager(LoggingConfigurable):
             except ImportError:
                 self.log.warning("Native kernel (%s) is not available", NATIVE_KERNEL_NAME)
 
-        if self.allowed_kernel_names:
+        if self.allowed_kernelspecs:
             # filter if there's an allow list
             d = {name: spec for name, spec in d.items() if name in self.allowed_kernelspecs}
         return d
