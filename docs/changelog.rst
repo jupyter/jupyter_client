@@ -4,16 +4,44 @@
 Changes in Jupyter Client
 =========================
 
-7.0.0a0
-=======
-- Add back ``block`` keyword argument to ``get_msg`` (:ghpull:`641`)
-- Fix threaded client and fix qtconsole issues (:ghpull:`638`)
-- Drop Python 3.5 and pin Python >= 3.6.1 (:ghpull:`636`)
-- Use pre-commit for code style (:ghpull:`631`)
-- Fix kernel client shutdown test (:ghpull:`629`)
-- Add MultiKernelManager subclass tests (:ghpull:`627`)
-- Add KernelManager subclass tests (:ghpull:`626`)
-- Add type annotations, refactor sync/async (:ghpull:`623`)
+7.0.0rc0
+========
+
+Enhancements made
+~~~~~~~~~~~~~~~~~
+
+-  Kernel Provisioning - initial implementation (:ghpull:`612`)
+-  Added debugger key in ``kernel_info_reply`` (:ghpull:`486`)
+
+Bugs fixed
+~~~~~~~~~~
+
+-  Fix up some async method aliases in ``KernelManager`` (:ghpull:`670`)
+-  Support ``nswer_yes`` when removing kernel specs (:ghpull:`659`)
+-  Include process ID in message ID (:ghpull:`655`)
+
+Maintenance and upkeep improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-  Rename trait to ``allowed_kernelspecs`` (:ghpull:`672`)
+-  Remove block parameter from ``get_msg()`` (:ghpull:`671`)
+-  Only import ``nest_asyncio`` locally (:ghpull:`665`)
+-  Use a default serializer that is not only for date types (:ghpull:`664`)
+-  Updated ``debug_info_response`` (:ghpull:`657`)
+-  Don’t block on exit (:ghpull:`651`)
+-  Update test kernel with native coroutine, remove ``async_generator`` dependency (:ghpull:`646`)
+-  ``setup.py`` and CI improvements (:ghpull:`645`)
+-  Test downstream projects (:ghpull:`644`)
+-  Remove deprecations in kernel manager (:ghpull:`643`)
+-  Add ``block=True`` back to ``get_msg()`` (:ghpull:`641`)
+
+Documentation improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-  Added documentation for ``richInspectVariables`` request (:ghpull:`654`)
+-  Change to ``edit_magic`` payload (:ghpull:`652`)
+-  Added missing documentation for the ``inspectVariables`` request and response (:ghpull:`649`)
+-  Add status field to other replies in documentation (:ghpull:`648`)
 
 6.2.0
 =====
