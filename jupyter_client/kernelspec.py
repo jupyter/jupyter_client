@@ -230,7 +230,7 @@ class KernelSpecManager(LoggingConfigurable):
 
         if self.allowed_kernel_names:
             # filter if there's an allow list
-            d = {name: spec for name, spec in d.items() if name in self.allowed_kernel_names}
+            d = {name: spec for name, spec in d.items() if name in self.allowed_kernelspecs}
         return d
         # TODO: Caching?
 
