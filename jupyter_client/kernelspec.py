@@ -164,7 +164,7 @@ class KernelSpecManager(LoggingConfigurable):
     )
 
     _deprecated_aliases = {
-        "whitelist": ("allowed_kernel_names", "7.0"),
+        "whitelist": ("allowed_kernelspecs", "7.0"),
     }
 
     # Method copied from
