@@ -152,7 +152,7 @@ class KernelSpecManager(LoggingConfigurable):
         help="""Deprecated, use `KernelSpecManager.allowed_kernelspecs`
         """,
     )
-    allowed_kernel_names = Set(
+    allowed_kernelspecs = Set(
         config=True,
         help="""List of allowed kernel names.
 
