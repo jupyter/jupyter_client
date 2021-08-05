@@ -59,6 +59,18 @@ class KernelSpecTests(unittest.TestCase):
         kernels = self.ksm.find_kernel_specs()
         self.assertEqual(kernels["sample"], self.sample_kernel_dir)
 
+    def test_allowed_kernel_names(self):
+        ksm = kernelspec.KernelSpecManager()
+        ksm.allowed_kernelspecs = ["foo"]
+        kernels = ksm.find_kernel_specs()
+        assert not len(kernels)
+
+    def test_deprecated_whitelist(self):
+        ksm = kernelspec.KernelSpecManager()
+        ksm.whitelist = ["bar"]
+        kernels = ksm.find_kernel_specs()
+        assert not len(kernels)
+
     def test_get_kernel_spec(self):
         ks = self.ksm.get_kernel_spec("SAMPLE")  # Case insensitive
         self.assertEqual(ks.resource_dir, self.sample_kernel_dir)
