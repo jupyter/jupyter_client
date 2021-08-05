@@ -61,7 +61,7 @@ class KernelSpecTests(unittest.TestCase):
 
     def test_allowed_kernel_names(self):
         ksm = kernelspec.KernelSpecManager()
-        ksm.allowed_kernel_names = ["foo"]
+        ksm.allowed_kernelspecs = ["foo"]
         kernels = ksm.find_kernel_specs()
         assert not len(kernels)
 
