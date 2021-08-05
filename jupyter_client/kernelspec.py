@@ -149,7 +149,7 @@ class KernelSpecManager(LoggingConfigurable):
 
     whitelist = Set(
         config=True,
-        help="""Deprecated, use `KernelSpecManager.allowed_kernel_names`
+        help="""Deprecated, use `KernelSpecManager.allowed_kernelspecs`
         """,
     )
     allowed_kernel_names = Set(
