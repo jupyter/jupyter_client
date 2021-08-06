@@ -180,7 +180,10 @@ class KernelSpecManager(LoggingConfigurable):
             # protects backward-compatible config from warnings
             # if they set the same value under both names
             self.log.warning(
-                "{cls}.{old} is deprecated in JupyterLab {version}, use {cls}.{new} instead".format(
+                (
+                    "{cls}.{old} is deprecated in jupyter_client "
+                    "{version}, use {cls}.{new} instead"
+                ).format(
                     cls=self.__class__.__name__,
                     old=old_attr,
                     new=new_attr,
