@@ -420,6 +420,7 @@ class TestParallel:
         km.restart_kernel(now=True)
         assert km.is_alive()
         execute("check")
+        kc.stop_channels()
 
         km.shutdown_kernel()
         assert km.context.closed
