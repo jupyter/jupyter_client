@@ -64,6 +64,7 @@ jobs:
     if: ${{ needs.check_duplicate_runs.outputs.should_skip != 'true' }}
 
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
 
     strategy:
       fail-fast: false
