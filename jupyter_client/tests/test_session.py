@@ -171,16 +171,13 @@ class TestSession(SessionTestCase):
         s.copy_threshold = 1
         ZMQStream(a)
         msg = s.send(a, "hello", track=False)
-        self.assertTrue(msg["tracker"] is ss.DONE)
+        assert msg["tracker"] is ss.DONE
         msg = s.send(a, "hello", track=True)
-        self.assertTrue(isinstance(msg["tracker"], zmq.MessageTracker))
+        assert isinstance(msg["tracker"], zmq.MessageTracker)
         M = zmq.Message(b"hi there", track=True)
         msg = s.send(a, "hello", buffers=[M], track=True)
         t = msg["tracker"]
-        self.assertTrue(isinstance(t, zmq.MessageTracker))
-        self.assertRaises(zmq.NotDone, t.wait, 0.1)
-        del M
-        t.wait(1)  # this will raise
+        assert t is not ss.DONE
 
     def test_unique_msg_ids(self):
         """test that messages receive unique ids"""
