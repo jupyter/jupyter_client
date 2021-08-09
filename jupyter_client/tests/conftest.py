@@ -1,9 +1,12 @@
 import asyncio
+import gc
 import os
 import sys
 
 import pytest
+import zmq
 from jupyter_core import paths
+from zmq.tests import BaseZMQTestCase
 
 from .utils import test_env
 
@@ -39,3 +42,47 @@ def env():
 @pytest.fixture()
 def kernel_dir():
     return pjoin(paths.jupyter_data_dir(), 'kernels')
+
+
+def assert_no_zmq():
+    """Verify that there are no zmq resources
+
+    avoids reference leaks across tests,
+    which can lead to FD exhaustion
+    """
+    # zmq garbage collection uses a zmq socket in a thread
+    # we don't want to delete these from the main thread!
+    from zmq.utils import garbage
+
+    garbage.gc.stop()
+    sockets = [
+        obj
+        for obj in gc.get_referrers(zmq.Socket)
+        if isinstance(obj, zmq.Socket) and not obj.closed
+    ]
+    if sockets:
+        message = f"{len(sockets)} unclosed sockets: {sockets}"
+        for s in sockets:
+            s.close(linger=0)
+        raise AssertionError(message)
+    contexts = [
+        obj
+        for obj in gc.get_referrers(zmq.Context)
+        if isinstance(obj, zmq.Context) and not obj.closed
+    ]
+    # allow for single zmq.Context.instance()
+    if contexts and len(contexts) > 1:
+        message = f"{len(contexts)} unclosed contexts: {contexts}"
+        for ctx in contexts:
+            ctx.destroy(linger=0)
+        raise AssertionError(message)
+
+
+@pytest.fixture(autouse=True)
+def check_zmq(request):
+    yield
+    if request.instance and isinstance(request.instance, BaseZMQTestCase):
+        # can't run this check on old-style TestCases with tearDown methods
+        # because this check runs before tearDown
+        return
+    assert_no_zmq()

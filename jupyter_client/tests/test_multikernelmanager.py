@@ -69,6 +69,7 @@ class TestKernelManager(TestCase):
         assert isinstance(k, KernelManager)
         km.shutdown_kernel(kid, now=True)
         assert kid not in km, f"{kid} not in {km}"
+        km.context.term()
 
     def _run_cinfo(self, km, transport, ip):
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -87,6 +88,7 @@ class TestKernelManager(TestCase):
         stream = km.connect_hb(kid)
         stream.close()
         km.shutdown_kernel(kid, now=True)
+        km.context.term()
 
     # static so picklable for multiprocessing on Windows
     @classmethod
@@ -106,6 +108,7 @@ class TestKernelManager(TestCase):
         self.assertNotIn(kid, km)
         # shutdown again is okay, because we have no kernels
         km.shutdown_all()
+        km.context.term()
 
     def test_tcp_cinfo(self):
         km = self._get_tcp_km()
@@ -217,6 +220,7 @@ class TestKernelManager(TestCase):
         assert km.call_count("cleanup_resources") == 0
 
         assert kid not in km, f"{kid} not in {km}"
+        km.context.term()
 
 
 class TestAsyncKernelManager(AsyncTestCase):
@@ -263,6 +267,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert isinstance(k, AsyncKernelManager)
         await km.shutdown_kernel(kid, now=True)
         assert kid not in km, f"{kid} not in {km}"
+        km.context.term()
 
     async def _run_cinfo(self, km, transport, ip):
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -282,6 +287,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         stream.close()
         await km.shutdown_kernel(kid, now=True)
         self.assertNotIn(kid, km)
+        km.context.term()
 
     @gen_test
     async def test_tcp_lifecycle(self):
@@ -316,6 +322,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         self.assertNotIn(kid, km)
         # shutdown again is okay, because we have no kernels
         await km.shutdown_all()
+        km.context.term()
 
     @gen_test(timeout=20)
     async def test_shutdown_all_while_starting(self):
@@ -333,6 +340,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         self.assertNotIn(kid, km)
         # shutdown again is okay, because we have no kernels
         await km.shutdown_all()
+        km.context.term()
 
     @gen_test
     async def test_tcp_cinfo(self):
@@ -466,3 +474,4 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert mkm.call_count("cleanup_resources") == 0
 
         assert kid not in mkm, f"{kid} not in {mkm}"
+        mkm.context.term()
