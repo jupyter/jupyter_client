@@ -459,7 +459,7 @@ class TestAsyncKernelManager:
         )
         assert keys == expected
 
-    @pytest.mark.timeout(10)
+    @pytest.mark.timeout(20)
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     async def test_signal_kernel_subprocesses(self, install_kernel, start_async_kernel):
 
@@ -499,7 +499,7 @@ class TestAsyncKernelManager:
         # wait up to 5s for subprocesses to handle signal
         for i in range(50):
             reply = await execute("check")
-            if reply["user_expressions"]["poll"] != [-signal.SIGINT] * N:
+            if any(status is None for status in reply["user_expressions"]["poll"]):
                 await asyncio.sleep(0.1)
             else:
                 break
