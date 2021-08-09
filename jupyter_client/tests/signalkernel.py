@@ -3,6 +3,7 @@
 # Distributed under the terms of the Modified BSD License.
 import os
 import signal
+import sys
 import time
 from subprocess import PIPE
 from subprocess import Popen
@@ -40,7 +41,20 @@ class SignalTestKernel(Kernel):
             "user_expressions": {},
         }
         if code == "start":
-            child = Popen(["bash", "-i", "-c", "sleep 30"], stderr=PIPE)
+            child = Popen(
+                [
+                    sys.executable,
+                    "-c",
+                    '; '.join(
+                        [
+                            "import signal, time",
+                            "signal.signal(signal.SIGINT, signal.SIG_DFL)",
+                            "time.sleep(30)",
+                        ]
+                    ),
+                ],
+                stderr=PIPE,
+            )
             self.children.append(child)
             reply["user_expressions"]["pid"] = self.children[-1].pid
         elif code == "check":
