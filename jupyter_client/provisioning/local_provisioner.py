@@ -59,7 +59,9 @@ class LocalProvisioner(KernelProvisionerBase):
                 await asyncio.sleep(0.1)
 
             # Process is no longer alive, wait and clear
-            ret = self.process.wait()
+            # Popen.__exit__ cleans up resources such as pipes
+            with self.process:
+                ret = self.process.wait()
             self.process = None  # allow has_process to now return False
         return ret
 
