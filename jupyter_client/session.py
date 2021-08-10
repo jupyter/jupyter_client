@@ -963,7 +963,7 @@ class Session(Configurable):
             if failed:
                 raise ValueError("DELIM not in msg_list")
             idents, msg_list = msg_list[:idx], msg_list[idx + 1 :]  # noqa
-            return [bytes(m.bytes) for m in idents], msg_list
+            return [bytes(m.bytes) for m in idents], msg_list  # type: ignore
 
     def _add_digest(self, signature: bytes) -> None:
         """add a digest to history to protect against replay attacks"""
@@ -1024,7 +1024,7 @@ class Session(Configurable):
         if not copy:
             # pyzmq didn't copy the first parts of the message, so we'll do it
             msg_list = t.cast(t.List[zmq.Message], msg_list)
-            msg_list_beginning = [bytes(msg.bytes) for msg in msg_list[:minlen]]
+            msg_list_beginning = [bytes(msg.bytes) for msg in msg_list[:minlen]]  # type: ignore
             msg_list = t.cast(t.List[bytes], msg_list)
             msg_list = msg_list_beginning + msg_list[minlen:]
         msg_list = t.cast(t.List[bytes], msg_list)
@@ -1056,7 +1056,7 @@ class Session(Configurable):
         if buffers and buffers[0].shape is None:
             # force copy to workaround pyzmq #646
             msg_list = t.cast(t.List[zmq.Message], msg_list)
-            buffers = [memoryview(bytes(b.bytes)) for b in msg_list[5:]]
+            buffers = [memoryview(bytes(b.bytes)) for b in msg_list[5:]]  # type: ignore
         message["buffers"] = buffers
         if self.debug:
             pprint.pprint(message)

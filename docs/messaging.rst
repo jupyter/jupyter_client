@@ -36,7 +36,7 @@ The basic design is explained in the following diagram:
    :width: 450px
    :alt: IPython kernel/frontend messaging architecture.
    :align: center
-   :target: ../_images/frontend-kernel.png
+   :target: ./figs/frontend-kernel.png
 
 A single kernel can be simultaneously connected to one or more frontends.  The
 kernel has dedicated sockets for the following functions:

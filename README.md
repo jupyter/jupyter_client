@@ -1,7 +1,6 @@
 # Jupyter Client
 
 [![Build Status](https://github.com/jupyter/jupyter_client/workflows/CI/badge.svg)](https://github.com/jupyter/jupyter_client/actions)
-[![Code Health](https://landscape.io/github/jupyter/jupyter_client/master/landscape.svg?style=flat)](https://landscape.io/github/jupyter/jupyter_client/master)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 `jupyter_client` contains the reference implementation of the [Jupyter protocol][].
@@ -70,7 +69,7 @@ pre-commit run
 
 which should run any autoformatting on your code
 and tell you about any errors it couldn't fix automatically.
-You may also install [black integration](https://github.com/psf/black#editor-integration)
+You may also install [black integration](https://black.readthedocs.io/en/stable/integrations/editors.html)
 into your text editor to format code automatically.
 
 If you have already committed files before setting up the pre-commit

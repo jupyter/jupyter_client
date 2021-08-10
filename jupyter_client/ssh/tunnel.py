@@ -19,7 +19,7 @@ from multiprocessing import Process
 try:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
-        import paramiko
+        import paramiko  # type: ignore
 
         SSHException = paramiko.ssh_exception.SSHException
 except ImportError:
