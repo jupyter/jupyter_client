@@ -117,5 +117,11 @@ jobs:
       - name: Run the tests
         run: pytest --cov jupyter_client -v jupyter_client
 
+      - name: Build the docs
+        run: |
+          pip install -r requirements-doc.txt
+          cd docs
+          make html
+
       - name: Code coverage
         run: codecov

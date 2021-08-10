@@ -8,10 +8,6 @@ from setuptools import setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-version_ns = {}
-with open(os.path.join(here, 'jupyter_client', '_version.py')) as f:
-    exec(f.read(), {}, version_ns)
-
 with open(os.path.join(here, 'README.md'), 'r') as f:
     long_description = f.read()
 
@@ -26,7 +22,6 @@ with open(os.path.join(here, 'requirements-doc.txt'), 'r') as f:
 
 setup(
     name='jupyter_client',
-    version=version_ns['__version__'],
     packages=find_packages(exclude=["docs", "docs.*", "tests", "tests.*"]),
     description='Jupyter protocol implementation and client libraries',
     long_description=long_description,

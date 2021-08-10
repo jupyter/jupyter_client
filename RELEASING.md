@@ -1,34 +1,36 @@
 # Releasing
 
-## Prerequisites
+## Using `jupyter_releaser`
 
-- First check that the changelog.rst is up to date for the next release version
+The recommended way to make a release is to use [`jupyter_releaser`](https://github.com/jupyter-server/jupyter_releaser#checklist-for-adoption).
 
-## Bump version
+## Manual Release
 
-- Load `jupyter_client/_version.py` and remove the 'dev' tag
-- Change from patch to minor or major for appropriate version updates.
-- `git commit -am "Bumped version to version {version} for release"`
-- `git tag {new version here}`
+### Prerequisites
 
-## Push to PyPI
+- First check that the CHANGELOG.md is up to date for the next release version
+- Install packaging requirements: `pip install tbump build tomlkit==0.7.0`
+
+### Bump version
+
+- `export version=<NEW_VERSION>`
+- `tbump ${version} --no-push`
+
+### Push to PyPI
 
 ```bash
 rm -rf dist/*
 rm -rf build/*
-python setup.py sdist bdist_wheel
-# You should probably also test downstream libraries against each of the artifacts produced as this isn't tested in the project atm
+python -m build .
 twine upload dist/*
 ```
 
-## Dev version
+### Dev version
 
-- Load `jupyter_client/_version.py` and bump the patch version and add the 'dev' tag back to the end of the version tuple.
+- Bump the patch version and add the 'dev' tag back to the end of the version tuple using `tbump <DEV_VERSION> --no-push`
 
-## Push to GitHub
+### Push to GitHub
 
 ```bash
-
-git commit -am "Added dev back to version"
 git push upstream  && git push upstream --tags
 ```
