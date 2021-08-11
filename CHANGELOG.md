@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.0.0rc1
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/7.0.0rc0...dcfd103f707a67627850b190a2323dd621ed46ae))
+
+### Maintenance and upkeep improvements
+
+- Prepare for use with Jupyter Releaser [#676](https://github.com/jupyter/jupyter_client/pull/676) ([@afshin](https://github.com/afshin))
+- Fix project name [#674](https://github.com/jupyter/jupyter_client/pull/674) ([@vidartf](https://github.com/vidartf))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-08-05&to=2021-08-11&type=c))
+
+[@afshin](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aafshin+updated%3A2021-08-05..2021-08-11&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Avidartf+updated%3A2021-08-05..2021-08-11&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.0.0rc0
 
 ### Enhancements made
@@ -43,8 +60,6 @@
   response [#649](https://github.com/jupyter/jupyter_client/pull/649)
 - Add status field to other replies in documentation
   [#648](https://github.com/jupyter/jupyter_client/pull/648)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.2.0
 
