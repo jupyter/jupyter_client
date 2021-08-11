@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.0.0rc1
+
+No merged PRs
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.0.0rc0
 
 ### Enhancements made
@@ -43,8 +49,6 @@
   response [#649](https://github.com/jupyter/jupyter_client/pull/649)
 - Add status field to other replies in documentation
   [#648](https://github.com/jupyter/jupyter_client/pull/648)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.2.0
 
