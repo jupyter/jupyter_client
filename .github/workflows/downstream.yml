@@ -23,9 +23,9 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install pyqt5 pytest \
-                      ipykernel[test] \
+                      "ipykernel[test] @ git+git://github.com/ipython/ipykernel.git@master" \
                       qtconsole[test] \
-                      nbclient[test] \
+                      "nbclient[test] @ git+git://github.com/jupyter/nbclient.git@master" \
                       nbconvert[test] \
                       jupyter_server[test]
           pip install . --force-reinstall
