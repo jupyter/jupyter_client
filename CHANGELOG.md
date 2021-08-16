@@ -12,7 +12,7 @@ The 7.0 release brings a major feature in [Kernel Provisioners](https://github.c
 
 Being a major release, there are some backward incompatible changes:
 
-- Custom `KernelManager` and `KernelSpecManager` subclasses will want want to be aware of changes from the provisioners, which are detailed in the [documentation](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst). (#612)
+- Custom `KernelManager` and `KernelSpecManager` subclasses will want to be aware of changes from the provisioners, which are detailed in the [documentation](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst). (#612)
 - Removed deprecations in kernel manager: `kernel_cmd` trait and `cleanup()` method (#643)
 - Removed block parameter from `ZMQSocketChannel.get_msg()` (#671)
 - Renamed `KernelSpecManager.whitelist` trait to `KernelSpecManager.allowed_kernelspecs` (with a shim) (#672)
