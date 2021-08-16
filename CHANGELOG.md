@@ -10,7 +10,7 @@
 
 The 7.0 release brings a major feature in [Kernel Provisioners](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst), which enable the ability for third parties to manage the lifecycle of a kernel's runtime environment.
 
-Being a major release, there are a some backward incompatible changes:
+Being a major release, there are some backward incompatible changes:
 
 - Custom `KernelManager` and `KernelSpecManager` subclasses will want want to be aware of changes from the provisioners, which are detailed in the [documentation](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst). (#612)
 - Removed deprecations in kernel manager: `kernel_cmd` trait and `cleanup()` method (#643)
