@@ -23,11 +23,16 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install pyqt5 pytest
-          pip install --pre -U --upgrade-strategy=only-if-needed ipykernel[test]
-          pip install --pre -U --upgrade-strategy=only-if-needed qtconsole[test]
-          pip install --pre -U --upgrade-strategy=only-if-needed nbclient[test]
-          pip install --pre -U --upgrade-strategy=only-if-needed nbconvert[test]
-          pip install --pre -U --upgrade-strategy=only-if-needed jupyter_server[test]
+          pip install ipykernel[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed ipykernel
+          pip install qtconsole[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed qtconsole
+          pip install nbclient[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed nbclient
+          pip install nbconvert[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed nbconvert
+          pip install jupyter_server[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed jupyter_server
           pip install . --force-reinstall
           pip freeze
           python -c 'import jupyter_client; print("jupyter_client", jupyter_client.__version__)'
