@@ -22,12 +22,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install pyqt5 pytest
-          pip install ipykernel[test]       --pre
-          pip install qtconsole[test]       --pre
-          pip install nbclient[test]        --pre
-          pip install nbconvert[test]       --pre
-          pip install jupyter_server[test]  --pre
+          pip install pyqt5 pytest \
+                      "ipykernel[test] @ git+git://github.com/ipython/ipykernel.git@master" \
+                      "qtconsole[test] @ git+git://github.com/jupyter/qtconsole.git@master" \
+                      "nbclient[test] @ git+git://github.com/jupyter/nbclient.git@master" \
+                      "nbconvert[test] @ git+git://github.com/jupyter/nbconvert.git@main" \
+                      "jupyter_server[test] @ git+git://github.com/jupyter-server/jupyter_server.git@master"
           pip install . --force-reinstall
           pip freeze
           python -c 'import jupyter_client; print("jupyter_client", jupyter_client.__version__)'
