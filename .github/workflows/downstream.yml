@@ -22,14 +22,20 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install .
-          pip install pyqt5 pytest \
-                      ipykernel[test] \
-                      qtconsole[test] \
-                      nbclient[test] \
-                      nbconvert[test] \
-                      jupyter_server[test]
+          pip install pyqt5 pytest
+          pip install ipykernel[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed ipykernel
+          pip install qtconsole[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed qtconsole
+          pip install nbclient[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed nbclient
+          pip install nbconvert[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed nbconvert
+          pip install jupyter_server[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed jupyter_server
+          pip install . --force-reinstall
           pip freeze
+          python -c 'import jupyter_client; print("jupyter_client", jupyter_client.__version__)'
 
       - name: Test ipykernel
         if: ${{ always() }}
