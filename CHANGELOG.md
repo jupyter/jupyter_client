@@ -6,14 +6,14 @@
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/26a16c0c91e245f7403aa27a812fee5e905d2964...31750bc87baf88377bcc6967e227b650b38fa872))
 
-### Summary 
+### Summary
 
 The 7.0 release brings a major feature in [Kernel Provisioners](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst), which enable the ability for third parties to manage the lifecycle of a kernel's runtime environment.
 
 Being a major release, there are a some backward incompatible changes:
 
-- Custom `KernelManager` and `KernelSpecManager` subclasses will want want to be aware of changes from the provisioners, which are detailed in the [documentation](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst).  (#612)
-- Removed deprecations in kernel manager:  `kernel_cmd` trait and `cleanup()` method  (#643)
+- Custom `KernelManager` and `KernelSpecManager` subclasses will want want to be aware of changes from the provisioners, which are detailed in the [documentation](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst). (#612)
+- Removed deprecations in kernel manager: `kernel_cmd` trait and `cleanup()` method (#643)
 - Removed block parameter from `ZMQSocketChannel.get_msg()` (#671)
 - Renamed `KernelSpecManager.whitelist` trait to `KernelSpecManager.allowed_kernelspecs` (with a shim) (#672)
 
