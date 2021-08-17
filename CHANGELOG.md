@@ -10,12 +10,7 @@
 
 The 7.0 release brings a major feature in [Kernel Provisioners](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst), which enable the ability for third parties to manage the lifecycle of a kernel's runtime environment.
 
-Being a major release, there are some backward incompatible changes:
-
-- Custom `KernelManager` and `KernelSpecManager` subclasses will want to be aware of changes from the provisioners, which are detailed in the [documentation](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst). (#612)
-- Removed deprecations in kernel manager: `kernel_cmd` trait and `cleanup()` method (#643)
-- Removed block parameter from `ZMQSocketChannel.get_msg()` (#671)
-- Renamed `KernelSpecManager.whitelist` trait to `KernelSpecManager.allowed_kernelspecs` (with a shim) (#672)
+Being a major release, there are some backward incompatible changes.  Please see the [migration guide](https://jupyter-client.readthedocs.io/en/latest/migration.html) for further details.
 
 ### Enhancements made
 
@@ -54,6 +49,7 @@ Being a major release, there are some backward incompatible changes:
 
 ### Documentation improvements
 
+- Create migration guide [#681](https://github.com/jupyter/jupyter_client/pull/681) ([@blink1073](https://github.com/blink1073))
 - Update changelog for 7.0.0rc0 [#673](https://github.com/jupyter/jupyter_client/pull/673) ([@blink1073](https://github.com/blink1073))
 - Added documentation for `richInspectVariables` request [#654](https://github.com/jupyter/jupyter_client/pull/654) ([@JohanMabille](https://github.com/JohanMabille))
 - Change to `edit_magic` payload [#652](https://github.com/jupyter/jupyter_client/pull/652) ([@yitzchak](https://github.com/yitzchak))
