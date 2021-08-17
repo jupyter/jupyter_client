@@ -10,7 +10,7 @@
 
 The 7.0 release brings a major feature in [Kernel Provisioners](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst), which enable the ability for third parties to manage the lifecycle of a kernel's runtime environment.
 
-Being a major release, there are some backward incompatible changes.  Please see the [migration guide](https://jupyter-client.readthedocs.io/en/latest/migration.html) for further details.
+Being a major release, there are some backward incompatible changes. Please see the [migration guide](https://jupyter-client.readthedocs.io/en/latest/migration.html) for further details.
 
 ### Enhancements made
 
