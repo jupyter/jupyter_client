@@ -36,6 +36,7 @@ with Jupyter kernels.
     :caption: Changes
 
     changelog
+    migration
 
 
 Indices and tables
