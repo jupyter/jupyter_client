@@ -6,46 +6,53 @@
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/26a16c0c91e245f7403aa27a812fee5e905d2964...31750bc87baf88377bcc6967e227b650b38fa872))
 
+### Summary
+
+The 7.0 release brings a major feature in [Kernel Provisioners](https://github.com/jupyter/jupyter_client/blob/master/docs/provisioning.rst), which enable the ability for third parties to manage the lifecycle of a kernel's runtime environment.
+
+Being a major release, there are some backward incompatible changes. Please see the [migration guide](https://jupyter-client.readthedocs.io/en/latest/migration.html) for further details.
+
 ### Enhancements made
 
 - Kernel Provisioning - initial implementation [#612](https://github.com/jupyter/jupyter_client/pull/612) ([@kevin-bates](https://github.com/kevin-bates))
-- Added debugger key in kernel_info_reply [#486](https://github.com/jupyter/jupyter_client/pull/486) ([@JohanMabille](https://github.com/JohanMabille))
 
 ### Bugs fixed
 
 - Fix up some async method aliases in KernelManager [#670](https://github.com/jupyter/jupyter_client/pull/670) ([@kevin-bates](https://github.com/kevin-bates))
-- Support answer_yes when removing kernel specs [#659](https://github.com/jupyter/jupyter_client/pull/659) ([@davidbrochart](https://github.com/davidbrochart))
+- Support `answer_yes` when removing kernel specs [#659](https://github.com/jupyter/jupyter_client/pull/659) ([@davidbrochart](https://github.com/davidbrochart))
 - Include process ID in message ID [#655](https://github.com/jupyter/jupyter_client/pull/655) ([@takluyver](https://github.com/takluyver))
 - Fix qtconsole issues [#638](https://github.com/jupyter/jupyter_client/pull/638) ([@davidbrochart](https://github.com/davidbrochart))
 
 ### Maintenance and upkeep improvements
 
+- Added debugger key in `kernel_info_reply` [#486](https://github.com/jupyter/jupyter_client/pull/486) ([@JohanMabille](https://github.com/JohanMabille))
 - Prepare for use with Jupyter Releaser [#676](https://github.com/jupyter/jupyter_client/pull/676) ([@afshin](https://github.com/afshin))
-- Force install jupyter_client master [#675](https://github.com/jupyter/jupyter_client/pull/675) ([@davidbrochart](https://github.com/davidbrochart))
+- Force install `jupyter_client` master [#675](https://github.com/jupyter/jupyter_client/pull/675) ([@davidbrochart](https://github.com/davidbrochart))
 - Fix project name [#674](https://github.com/jupyter/jupyter_client/pull/674) ([@vidartf](https://github.com/vidartf))
-- Rename trait to allowed_kernelspecs [#672](https://github.com/jupyter/jupyter_client/pull/672) ([@blink1073](https://github.com/blink1073))
-- Remove block parameter from get_msg() [#671](https://github.com/jupyter/jupyter_client/pull/671) ([@davidbrochart](https://github.com/davidbrochart))
-- Only import nest_asyncio locally [#665](https://github.com/jupyter/jupyter_client/pull/665) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Rename trait to `allowed_kernelspecs` [#672](https://github.com/jupyter/jupyter_client/pull/672) ([@blink1073](https://github.com/blink1073))
+- Remove block parameter from `get_msg()` [#671](https://github.com/jupyter/jupyter_client/pull/671) ([@davidbrochart](https://github.com/davidbrochart))
+- Only import `nest_asyncio` locally [#665](https://github.com/jupyter/jupyter_client/pull/665) ([@SylvainCorlay](https://github.com/SylvainCorlay))
 - Use a default serializer that is not only for date types [#664](https://github.com/jupyter/jupyter_client/pull/664) ([@martinRenou](https://github.com/martinRenou))
-- Updated debug_info_response [#657](https://github.com/jupyter/jupyter_client/pull/657) ([@JohanMabille](https://github.com/JohanMabille))
-- PR: Don't block on exit [#651](https://github.com/jupyter/jupyter_client/pull/651) ([@impact27](https://github.com/impact27))
-- Update test kernel with native coroutine, remove async_generator dependency [#646](https://github.com/jupyter/jupyter_client/pull/646) ([@kevin-bates](https://github.com/kevin-bates))
-- setup.py and CI improvements [#645](https://github.com/jupyter/jupyter_client/pull/645) ([@dolfinus](https://github.com/dolfinus))
+- Updated `debug_info_response` [#657](https://github.com/jupyter/jupyter_client/pull/657) ([@JohanMabille](https://github.com/JohanMabille))
+- Do not block on exit [#651](https://github.com/jupyter/jupyter_client/pull/651) ([@impact27](https://github.com/impact27))
+- Update test kernel with native coroutine, remove `async_generator` dependency [#646](https://github.com/jupyter/jupyter_client/pull/646) ([@kevin-bates](https://github.com/kevin-bates))
+- `setup.py` and CI improvements [#645](https://github.com/jupyter/jupyter_client/pull/645) ([@dolfinus](https://github.com/dolfinus))
 - Test downstream projects [#644](https://github.com/jupyter/jupyter_client/pull/644) ([@davidbrochart](https://github.com/davidbrochart))
-- [Release 7.0] Remove deprecations in kernel manager [#643](https://github.com/jupyter/jupyter_client/pull/643) ([@kevin-bates](https://github.com/kevin-bates))
-- Add block=True back to get_msg() [#641](https://github.com/jupyter/jupyter_client/pull/641) ([@davidbrochart](https://github.com/davidbrochart))
-- Pin python>=3.6.1 [#636](https://github.com/jupyter/jupyter_client/pull/636) ([@davidbrochart](https://github.com/davidbrochart))
-- Use pre-commit [#631](https://github.com/jupyter/jupyter_client/pull/631) ([@davidbrochart](https://github.com/davidbrochart))
-- Attempt CI with ipykernel 6.0 prerelease [#629](https://github.com/jupyter/jupyter_client/pull/629) ([@SylvainCorlay](https://github.com/SylvainCorlay))
-- Make KernelManager subclass tests DRY [#628](https://github.com/jupyter/jupyter_client/pull/628) ([@davidbrochart](https://github.com/davidbrochart))
+- Remove deprecations in kernel manager [#643](https://github.com/jupyter/jupyter_client/pull/643) ([@kevin-bates](https://github.com/kevin-bates))
+- Add `block=True` back to `get_msg()` [#641](https://github.com/jupyter/jupyter_client/pull/641) ([@davidbrochart](https://github.com/davidbrochart))
+- Pin `python>=3.6.1` [#636](https://github.com/jupyter/jupyter_client/pull/636) ([@davidbrochart](https://github.com/davidbrochart))
+- Use `pre-commit` [#631](https://github.com/jupyter/jupyter_client/pull/631) ([@davidbrochart](https://github.com/davidbrochart))
+- Attempt CI with `ipykernel` 6.0 prerelease [#629](https://github.com/jupyter/jupyter_client/pull/629) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Make `KernelManager` subclass tests DRY [#628](https://github.com/jupyter/jupyter_client/pull/628) ([@davidbrochart](https://github.com/davidbrochart))
 - Add tests to ensure MultiKernelManager subclass methods are called [#627](https://github.com/jupyter/jupyter_client/pull/627) ([@kevin-bates](https://github.com/kevin-bates))
 - Add type annotations, refactor sync/async [#623](https://github.com/jupyter/jupyter_client/pull/623) ([@davidbrochart](https://github.com/davidbrochart))
 
 ### Documentation improvements
 
+- Create migration guide [#681](https://github.com/jupyter/jupyter_client/pull/681) ([@blink1073](https://github.com/blink1073))
 - Update changelog for 7.0.0rc0 [#673](https://github.com/jupyter/jupyter_client/pull/673) ([@blink1073](https://github.com/blink1073))
-- Added documentation for richInspectVariables request [#654](https://github.com/jupyter/jupyter_client/pull/654) ([@JohanMabille](https://github.com/JohanMabille))
-- Change to edit_magic payload [#652](https://github.com/jupyter/jupyter_client/pull/652) ([@yitzchak](https://github.com/yitzchak))
+- Added documentation for `richInspectVariables` request [#654](https://github.com/jupyter/jupyter_client/pull/654) ([@JohanMabille](https://github.com/JohanMabille))
+- Change to `edit_magic` payload [#652](https://github.com/jupyter/jupyter_client/pull/652) ([@yitzchak](https://github.com/yitzchak))
 - Added missing documentation for the inspectVariables request and resp… [#649](https://github.com/jupyter/jupyter_client/pull/649) ([@JohanMabille](https://github.com/JohanMabille))
 - Add status field to other replies in documentation [#648](https://github.com/jupyter/jupyter_client/pull/648) ([@yitzchak](https://github.com/yitzchak))
 
@@ -56,63 +63,6 @@
 [@afshin](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aafshin+updated%3A2021-03-14..2021-08-16&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2021-03-14..2021-08-16&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2021-03-14..2021-08-16&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2021-03-14..2021-08-16&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2021-03-14..2021-08-16&type=Issues) | [@dhirschfeld](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adhirschfeld+updated%3A2021-03-14..2021-08-16&type=Issues) | [@dolfinus](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adolfinus+updated%3A2021-03-14..2021-08-16&type=Issues) | [@echarles](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aecharles+updated%3A2021-03-14..2021-08-16&type=Issues) | [@impact27](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aimpact27+updated%3A2021-03-14..2021-08-16&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AJohanMabille+updated%3A2021-03-14..2021-08-16&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2021-03-14..2021-08-16&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AmartinRenou+updated%3A2021-03-14..2021-08-16&type=Issues) | [@mattip](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Amattip+updated%3A2021-03-14..2021-08-16&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2021-03-14..2021-08-16&type=Issues) | [@MSeal](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AMSeal+updated%3A2021-03-14..2021-08-16&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ASylvainCorlay+updated%3A2021-03-14..2021-08-16&type=Issues) | [@takluyver](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Atakluyver+updated%3A2021-03-14..2021-08-16&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Avidartf+updated%3A2021-03-14..2021-08-16&type=Issues) | [@yitzchak](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ayitzchak+updated%3A2021-03-14..2021-08-16&type=Issues)
 
 <!-- <END NEW CHANGELOG ENTRY> -->
-
-## 7.0.0rc1
-
-([Full Changelog](https://github.com/jupyter/jupyter_client/compare/7.0.0rc0...dcfd103f707a67627850b190a2323dd621ed46ae))
-
-### Maintenance and upkeep improvements
-
-- Prepare for use with Jupyter Releaser [#676](https://github.com/jupyter/jupyter_client/pull/676) ([@afshin](https://github.com/afshin))
-- Fix project name [#674](https://github.com/jupyter/jupyter_client/pull/674) ([@vidartf](https://github.com/vidartf))
-
-### Contributors to this release
-
-([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-08-05&to=2021-08-11&type=c))
-
-[@afshin](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aafshin+updated%3A2021-08-05..2021-08-11&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Avidartf+updated%3A2021-08-05..2021-08-11&type=Issues)
-
-## 7.0.0rc0
-
-### Enhancements made
-
-- Kernel Provisioning - initial implementation
-  [#612](https://github.com/jupyter/jupyter_client/pull/612)
-- Added debugger key in `kernel_info_reply` [#486](https://github.com/jupyter/jupyter_client/pull/486)
-
-### Bugs fixed
-
-- Fix up some async method aliases in `KernelManager`
-  [#670](https://github.com/jupyter/jupyter_client/pull/670)
-- Support `nswer_yes` when removing kernel specs
-  [#659](https://github.com/jupyter/jupyter_client/pull/659)
-- Include process ID in message ID [#655](https://github.com/jupyter/jupyter_client/pull/655)
-
-### Maintenance and upkeep improvements
-
-- Rename trait to `allowed_kernelspecs` [#672](https://github.com/jupyter/jupyter_client/pull/672)
-- Remove block parameter from `get_msg()` [#671](https://github.com/jupyter/jupyter_client/pull/671)
-- Only import `nest_asyncio` locally [#665](https://github.com/jupyter/jupyter_client/pull/665)
-- Use a default serializer that is not only for date types
-  [#664](https://github.com/jupyter/jupyter_client/pull/664)
-- Updated `debug_info_response` [#657](https://github.com/jupyter/jupyter_client/pull/657)
-- Don't block on exit [#651](https://github.com/jupyter/jupyter_client/pull/651)
-- Update test kernel with native coroutine, remove `async_generator`
-  dependency [#646](https://github.com/jupyter/jupyter_client/pull/646)
-- `setup.py` and CI improvements [#645](https://github.com/jupyter/jupyter_client/pull/645)
-- Test downstream projects [#644](https://github.com/jupyter/jupyter_client/pull/644)
-- Remove deprecations in kernel manager [#643](https://github.com/jupyter/jupyter_client/pull/643)
-- Add `block=True` back to `get_msg()` [#641](https://github.com/jupyter/jupyter_client/pull/641)
-
-### Documentation improvements
-
-- Added documentation for `richInspectVariables` request
-  [#654](https://github.com/jupyter/jupyter_client/pull/654)
-- Change to `edit_magic` payload [#652](https://github.com/jupyter/jupyter_client/pull/652)
-- Added missing documentation for the `inspectVariables` request and
-  response [#649](https://github.com/jupyter/jupyter_client/pull/649)
-- Add status field to other replies in documentation
-  [#648](https://github.com/jupyter/jupyter_client/pull/648)
 
 ## 6.2.0
 
