@@ -145,6 +145,18 @@ class KMSubclass(RecordCallMixin):
     def cleanup_resources(self, restart=False):
         """ Record call and defer to superclass """
 
+    @subclass_recorder
+    def signal_kernel(self, signum: int):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def is_alive(self):
+        """ Record call and defer to superclass """
+
+    @subclass_recorder
+    def _send_kernel_sigterm(self, restart: bool = False):
+        """ Record call and defer to superclass """
+
 
 class SyncKMSubclass(KMSubclass, KernelManager):
     """Used to test subclass hierarchies to ensure methods are called when expected."""

@@ -298,6 +298,7 @@ class TestKernelManager:
 
     def test_subclass_callables(self, km_subclass):
         km_subclass.reset_counts()
+
         km_subclass.start_kernel(stdout=PIPE, stderr=PIPE)
         assert km_subclass.call_count("start_kernel") == 1
         assert km_subclass.call_count("_launch_kernel") == 1
@@ -305,6 +306,7 @@ class TestKernelManager:
         is_alive = km_subclass.is_alive()
         assert is_alive
         km_subclass.reset_counts()
+
         km_subclass.restart_kernel(now=True)
         assert km_subclass.call_count("restart_kernel") == 1
         assert km_subclass.call_count("shutdown_kernel") == 1
@@ -313,26 +315,32 @@ class TestKernelManager:
         assert km_subclass.call_count("cleanup_resources") == 1
         assert km_subclass.call_count("start_kernel") == 1
         assert km_subclass.call_count("_launch_kernel") == 1
+        assert km_subclass.call_count("signal_kernel") == 1
 
         is_alive = km_subclass.is_alive()
         assert is_alive
-
+        assert km_subclass.call_count("is_alive") >= 1
         km_subclass.reset_counts()
+
         km_subclass.interrupt_kernel()
         assert km_subclass.call_count("interrupt_kernel") == 1
+        assert km_subclass.call_count("signal_kernel") == 1
 
         assert isinstance(km_subclass, KernelManager)
-
         km_subclass.reset_counts()
+
         km_subclass.shutdown_kernel(now=False)
         assert km_subclass.call_count("shutdown_kernel") == 1
         assert km_subclass.call_count("interrupt_kernel") == 1
         assert km_subclass.call_count("request_shutdown") == 1
         assert km_subclass.call_count("finish_shutdown") == 1
         assert km_subclass.call_count("cleanup_resources") == 1
+        assert km_subclass.call_count("signal_kernel") == 1
+        assert km_subclass.call_count("is_alive") >= 1
 
         is_alive = km_subclass.is_alive()
         assert is_alive is False
+        assert km_subclass.call_count("is_alive") >= 1
         assert km_subclass.context.closed
 
 
@@ -516,13 +524,16 @@ class TestAsyncKernelManager:
 
     async def test_subclass_callables(self, async_km_subclass):
         async_km_subclass.reset_counts()
+
         await async_km_subclass.start_kernel(stdout=PIPE, stderr=PIPE)
         assert async_km_subclass.call_count("start_kernel") == 1
         assert async_km_subclass.call_count("_launch_kernel") == 1
 
         is_alive = await async_km_subclass.is_alive()
         assert is_alive
+        assert async_km_subclass.call_count("is_alive") >= 1
         async_km_subclass.reset_counts()
+
         await async_km_subclass.restart_kernel(now=True)
         assert async_km_subclass.call_count("restart_kernel") == 1
         assert async_km_subclass.call_count("shutdown_kernel") == 1
@@ -531,24 +542,30 @@ class TestAsyncKernelManager:
         assert async_km_subclass.call_count("cleanup_resources") == 1
         assert async_km_subclass.call_count("start_kernel") == 1
         assert async_km_subclass.call_count("_launch_kernel") == 1
+        assert async_km_subclass.call_count("signal_kernel") == 1
 
         is_alive = await async_km_subclass.is_alive()
         assert is_alive
-
+        assert async_km_subclass.call_count("is_alive") >= 1
         async_km_subclass.reset_counts()
+
         await async_km_subclass.interrupt_kernel()
         assert async_km_subclass.call_count("interrupt_kernel") == 1
+        assert async_km_subclass.call_count("signal_kernel") == 1
 
         assert isinstance(async_km_subclass, AsyncKernelManager)
-
         async_km_subclass.reset_counts()
+
         await async_km_subclass.shutdown_kernel(now=False)
         assert async_km_subclass.call_count("shutdown_kernel") == 1
         assert async_km_subclass.call_count("interrupt_kernel") == 1
         assert async_km_subclass.call_count("request_shutdown") == 1
         assert async_km_subclass.call_count("finish_shutdown") == 1
         assert async_km_subclass.call_count("cleanup_resources") == 1
+        assert async_km_subclass.call_count("signal_kernel") == 1
+        assert async_km_subclass.call_count("is_alive") >= 1
 
         is_alive = await async_km_subclass.is_alive()
         assert is_alive is False
+        assert async_km_subclass.call_count("is_alive") >= 1
         assert async_km_subclass.context.closed
