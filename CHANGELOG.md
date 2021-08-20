@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.0.1
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.0.0...0ce9f293ea574d61cae438469df5e53298713b63))
+
+### Merged PRs
+
+- Use formal method names when called internally [#683](https://github.com/jupyter/jupyter_client/pull/683) ([@kevin-bates](https://github.com/kevin-bates))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-08-19&to=2021-08-20&type=c))
+
+[@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2021-08-19..2021-08-20&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.0.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/26a16c0c91e245f7403aa27a812fee5e905d2964...31750bc87baf88377bcc6967e227b650b38fa872))
@@ -61,8 +77,6 @@ Being a major release, there are some backward incompatible changes. Please see 
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-03-14&to=2021-08-16&type=c))
 
 [@afshin](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aafshin+updated%3A2021-03-14..2021-08-16&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2021-03-14..2021-08-16&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2021-03-14..2021-08-16&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2021-03-14..2021-08-16&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2021-03-14..2021-08-16&type=Issues) | [@dhirschfeld](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adhirschfeld+updated%3A2021-03-14..2021-08-16&type=Issues) | [@dolfinus](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adolfinus+updated%3A2021-03-14..2021-08-16&type=Issues) | [@echarles](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aecharles+updated%3A2021-03-14..2021-08-16&type=Issues) | [@impact27](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aimpact27+updated%3A2021-03-14..2021-08-16&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AJohanMabille+updated%3A2021-03-14..2021-08-16&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2021-03-14..2021-08-16&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AmartinRenou+updated%3A2021-03-14..2021-08-16&type=Issues) | [@mattip](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Amattip+updated%3A2021-03-14..2021-08-16&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2021-03-14..2021-08-16&type=Issues) | [@MSeal](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AMSeal+updated%3A2021-03-14..2021-08-16&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ASylvainCorlay+updated%3A2021-03-14..2021-08-16&type=Issues) | [@takluyver](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Atakluyver+updated%3A2021-03-14..2021-08-16&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Avidartf+updated%3A2021-03-14..2021-08-16&type=Issues) | [@yitzchak](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ayitzchak+updated%3A2021-03-14..2021-08-16&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.2.0
 
