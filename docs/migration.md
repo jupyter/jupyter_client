@@ -27,14 +27,48 @@ The following internal methods had signature changes:
 Besides the signature and attribute changes described above, the following internal methods were made `async` for `AsyncKernelManager`:
 
 - `async def pre_start_kernel(self, **kwargs) -> Tuple[List[str], Dict[str, Any]]:`
-- `async def post_start_kernel(self, **kwargs)`
+- `async def post_start_kernel(self, **kwargs):`
 - `async def request_shutdown(self, restart: bool = False):`
 - `async def cleanup_resources(self, restart: bool = False):`
 
+#### `AsyncKernelClient`
+
+We dropped the `block: bool = True` keyword argument for the following methods:
+
+- `async def get_shell_msg(self, timeout: Optional[float] = None) -> Dict[str, Any]:`
+- `async def get_iopub_msg(self, timeout: Optional[float] = None) -> Dict[str, Any]:`
+- `async def get_stdin_msg(self, timeout: Optional[float] = None) -> Dict[str, Any]:`
+- `async def get_control_msg(self, timeout: Optional[float] = None) -> Dict[str, Any]:`
+
+Calling these methods with `block=False` previously translates to calling them with `timeout=0` now.
+Calling these methods with `block=True` previously translates to calling them with a non-zero `timeout` value now.
+
+#### `BlockingKernelClient`
+
+We dropped the `block: bool = True` keyword argument for the following methods:
+
+- `def get_shell_msg(self, timeout: Optional[float] = None) -> Dict[str, Any]:`
+- `def get_iopub_msg(self, timeout: Optional[float] = None) -> Dict[str, Any]:`
+- `def get_stdin_msg(self, timeout: Optional[float] = None) -> Dict[str, Any]:`
+- `def get_control_msg(self, timeout: Optional[float] = None) -> Dict[str, Any]:`
+
+Calling these methods with `block=False` previously translates to calling them with `timeout=0` now.
+Calling these methods with `block=True` previously translates to calling them with a non-zero `timeout` value now.
+
+#### `BlockingKernelClient`
+
 #### `ZMQSocketChannel`
 
-- `async def get_msg(self, timeout: t.Optional[float] = None) -> t.Dict[str, t.Any]:`:
-  We dropped the `block: bool = True` keyword argument. Calling this method with `block=False` previously translates to calling it with `timeout=0` now.
+We dropped the `block: bool = True` keyword argument for the following method:
+
+- `async def get_msg(self, timeout: Optional[float] = None) -> Dict[str, Any]:`:
+
+Calling this method with `block=False` previously translates to calling it with `timeout=0` now.
+Calling this method with `block=True` previously translates to calling it with a non-zero `timeout` value now.
+
+```{admonition} Note
+Prefer calling e.g. `client.get_shell_msg()` over `client.shell_channel.get_msg()`.
+```
 
 ### Deprecations removed
 
