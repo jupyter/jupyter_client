@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.0.2
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.0.1...b2a23d8f8b4f24a2bc908b6d95047242f4da87cd))
+
+### Bugs fixed
+
+- Don't set event loop policy on Windows at import time [#686](https://github.com/jupyter/jupyter_client/pull/686) ([@minrk](https://github.com/minrk))
+
+### Documentation improvements
+
+- Improve migration guide [#685](https://github.com/jupyter/jupyter_client/pull/685) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-08-20&to=2021-08-30&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2021-08-20..2021-08-30&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2021-08-20..2021-08-30&type=Issues) | [@dhirschfeld](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adhirschfeld+updated%3A2021-08-20..2021-08-30&type=Issues) | [@jankatins](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ajankatins+updated%3A2021-08-20..2021-08-30&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2021-08-20..2021-08-30&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2021-08-20..2021-08-30&type=Issues) | [@takluyver](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Atakluyver+updated%3A2021-08-20..2021-08-30&type=Issues) | [@yuvipanda](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ayuvipanda+updated%3A2021-08-20..2021-08-30&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.0.1
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.0.0...0ce9f293ea574d61cae438469df5e53298713b63))
@@ -15,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-08-19&to=2021-08-20&type=c))
 
 [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2021-08-19..2021-08-20&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.0.0
 
