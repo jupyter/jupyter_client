@@ -448,9 +448,8 @@ class ConnectionFileMixin(LoggingConfigurable):
     def blocking_client(self):
         """Make a blocking client connected to my kernel"""
         info = self.get_connection_info()
-        info["parent"] = self
-        bc = self.blocking_class(**info)
-        bc.session.key = self.session.key
+        bc = self.blocking_class(parent=self)
+        bc.load_connection_info(info)
         return bc
 
     def cleanup_connection_file(self) -> None:
