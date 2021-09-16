@@ -8,8 +8,8 @@
 
 ### Bugs fixed
 
-- Address missing local-provisioner scenario [#692](https://github.com/jupyter/jupyter_client/pull/692) ([@kevin-bates](https://github.com/kevin-bates))
-- use load_connection_info(info) when constructing a blocking client [#688](https://github.com/jupyter/jupyter_client/pull/688) ([@minrk](https://github.com/minrk))
+- Address missing `local-provisioner` scenario [#692](https://github.com/jupyter/jupyter_client/pull/692) ([@kevin-bates](https://github.com/kevin-bates))
+- use `load_connection_info(info)` when constructing a blocking client [#688](https://github.com/jupyter/jupyter_client/pull/688) ([@minrk](https://github.com/minrk))
 
 ### Contributors to this release
 
