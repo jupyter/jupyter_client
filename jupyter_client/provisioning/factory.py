@@ -1,7 +1,9 @@
 """Kernel Provisioner Classes"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import os
+import glob
+from os import getenv
+from os import path
 from typing import Any
 from typing import Dict
 from typing import List
@@ -44,7 +46,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
 
     @default('default_provisioner_name')
     def default_provisioner_name_default(self):
-        return os.getenv(self.default_provisioner_name_env, "local-provisioner")
+        return getenv(self.default_provisioner_name_env, "local-provisioner")
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -115,7 +117,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         is_available = True
         if provisioner_name not in self.provisioners:
             try:
-                ep = KernelProvisionerFactory._get_provisioner(provisioner_name)
+                ep = self._get_provisioner(provisioner_name)
                 self.provisioners[provisioner_name] = ep  # Update cache
             except NoSuchEntryPoint:
                 is_available = False
@@ -167,7 +169,33 @@ class KernelProvisionerFactory(SingletonConfigurable):
         """Wrapper around entrypoints.get_group_all() - primarily to facilitate testing."""
         return get_group_all(KernelProvisionerFactory.GROUP_NAME)
 
-    @staticmethod
-    def _get_provisioner(name: str) -> EntryPoint:
+    def _get_provisioner(self, name: str) -> EntryPoint:
         """Wrapper around entrypoints.get_single() - primarily to facilitate testing."""
-        return get_single(KernelProvisionerFactory.GROUP_NAME, name)
+        try:
+            ep = get_single(KernelProvisionerFactory.GROUP_NAME, name)
+        except NoSuchEntryPoint:
+            # Check if the entrypoint name is 'local-provisioner'.  Although this should never
+            # happen, we have seen cases where the previous distribution of jupyter_client has
+            # remained which doesn't include kernel-provisioner entrypoints (so 'local-provisioner'
+            # is deemed not found even though its definition is in THIS package).  In such cass,
+            # the entrypoints package uses what it first finds - which is the older distribution
+            # resulting in a violation of a supposed invariant condition.  To address this scenario,
+            # we will log a warning message indicating this situation, then build the entrypoint
+            # instance ourselves - since we have that information.
+            if name == 'local-provisioner':
+                distros = glob.glob(f"{path.dirname(path.dirname(__file__))}-*")
+                self.log.warn(
+                    f"Kernel Provisioning: The 'local-provisioner' is not found.  This is likely "
+                    f"due to the presence of multiple jupyter_client distributions and a previous "
+                    f"distribution is being used as the source for entrypoints - which does not "
+                    f"include 'local-provisioner'.  That distribution should be removed such that "
+                    f"only the version-appropriate distribution remains (version >= 7).  Until "
+                    f"then, a 'local-provisioner' entrypoint will be automatically constructed "
+                    f"and used.\nThe candidate distribution locations are: {distros}"
+                )
+                ep = EntryPoint(
+                    'local-provisioner', 'jupyter_client.provisioning', 'LocalProvisioner'
+                )
+            else:
+                raise
+        return ep
