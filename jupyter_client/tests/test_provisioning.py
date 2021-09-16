@@ -210,7 +210,7 @@ def mock_get_all_provisioners() -> List[EntryPoint]:
     return result
 
 
-def mock_get_provisioner(name) -> EntryPoint:
+def mock_get_provisioner(factory, name) -> EntryPoint:
     if name == 'new-test-provisioner':
         return EntryPoint(
             'new-test-provisioner', 'jupyter_client.tests.test_provisioning', 'NewTestProvisioner'
