@@ -286,6 +286,7 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
+        self.shutting_down = False
         self.kernel_id = self.kernel_id or kw.pop('kernel_id', str(uuid.uuid4()))
         # save kwargs for use in restart
         self._launch_args = kw.copy()
