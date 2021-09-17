@@ -242,9 +242,9 @@ class MultiKernelManager(LoggingConfigurable):
         Mainly so that a kernel can be removed if it is already dead,
         without having to call shutdown_kernel.
 
-        The kernel object is returned.
+        The kernel object is returned, or `None` if not found.
         """
-        return self._kernels.pop(kernel_id)
+        return self._kernels.pop(kernel_id, None)
 
     async def _shutdown_starting_kernel(self, kid: str, now: bool) -> None:
         if kid in self._starting_kernels:
