@@ -21,9 +21,9 @@ def run_sync(coro):
         future = asyncio.ensure_future(coro(*args, **kwargs))
         try:
             return loop.run_until_complete(future)
-        except KeyboardInterrupt:
+        except BaseException as e:
             future.cancel()
-            raise
+            raise e
 
     wrapped.__doc__ = coro.__doc__
     return wrapped
