@@ -18,7 +18,12 @@ def run_sync(coro):
         import nest_asyncio  # type: ignore
 
         nest_asyncio.apply(loop)
-        return loop.run_until_complete(coro(*args, **kwargs))
+        future = asyncio.ensure_future(coro(*args, **kwargs))
+        try:
+            return loop.run_until_complete(future)
+        except KeyboardInterrupt:
+            future.cancel()
+            raise
 
     wrapped.__doc__ = coro.__doc__
     return wrapped
