@@ -1,9 +1,11 @@
 """Utilities to manipulate JSON objects."""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import numbers
 import re
 import warnings
 from binascii import b2a_base64
+from collections.abc import Iterable
 from datetime import datetime
 from typing import Optional
 from typing import Union
@@ -106,7 +108,17 @@ def json_default(obj):
     if isinstance(obj, datetime):
         obj = _ensure_tzinfo(obj)
         return obj.isoformat().replace('+00:00', 'Z')
-    elif isinstance(obj, bytes):
+
+    if isinstance(obj, bytes):
         return b2a_base64(obj).decode('ascii')
-    else:
-        raise TypeError("%r is not JSON serializable" % obj)
+
+    if isinstance(obj, Iterable):
+        return list(obj)
+
+    if isinstance(obj, numbers.Integral):
+        return int(obj)
+
+    if isinstance(obj, numbers.Real):
+        return float(obj)
+
+    raise TypeError("%r is not JSON serializable" % obj)
