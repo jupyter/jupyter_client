@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.0.4
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.0.3...5b570152c0d88dd5e0ff1711c75fc9987ef76256))
+
+### Bugs fixed
+
+- Fix json_default so that it's closer to what ipykernel had before [#698](https://github.com/jupyter/jupyter_client/pull/698) ([@martinRenou](https://github.com/martinRenou))
+- Clean up the pending task [#697](https://github.com/jupyter/jupyter_client/pull/697) ([@shingo78](https://github.com/shingo78))
+- fix kernel can only restart once issue [#695](https://github.com/jupyter/jupyter_client/pull/695) ([@mofanke](https://github.com/mofanke))
+- Prevent failure if kernel is not found when shutting it down [#694](https://github.com/jupyter/jupyter_client/pull/694) ([@martinRenou](https://github.com/martinRenou))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-09-16&to=2021-09-28&type=c))
+
+[@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2021-09-16..2021-09-28&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AmartinRenou+updated%3A2021-09-16..2021-09-28&type=Issues) | [@mofanke](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Amofanke+updated%3A2021-09-16..2021-09-28&type=Issues) | [@shingo78](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ashingo78+updated%3A2021-09-16..2021-09-28&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.0.3
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.0.2...e2e854c445d697ae1c188171ea0731532b6ac0d9))
@@ -16,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-08-30&to=2021-09-16&type=c))
 
 [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2021-08-30..2021-09-16&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2021-08-30..2021-09-16&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.0.2
 
