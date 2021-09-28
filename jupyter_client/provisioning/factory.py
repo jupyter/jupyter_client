@@ -184,7 +184,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
             # instance ourselves - since we have that information.
             if name == 'local-provisioner':
                 distros = glob.glob(f"{path.dirname(path.dirname(__file__))}-*")
-                self.log.warn(
+                self.log.warning(
                     f"Kernel Provisioning: The 'local-provisioner' is not found.  This is likely "
                     f"due to the presence of multiple jupyter_client distributions and a previous "
                     f"distribution is being used as the source for entrypoints - which does not "
