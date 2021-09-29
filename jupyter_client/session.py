@@ -12,6 +12,7 @@ Sessions.
 # Distributed under the terms of the Modified BSD License.
 import hashlib
 import hmac
+import json
 import logging
 import os
 import pickle
@@ -45,7 +46,6 @@ from traitlets.log import get_logger  # type: ignore
 from traitlets.utils.importstring import import_item  # type: ignore
 from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
-from zmq.utils import jsonapi
 
 from jupyter_client import protocol_version
 from jupyter_client.adapter import adapt
@@ -92,16 +92,18 @@ MAX_BYTES = 1024
 
 
 def json_packer(obj):
-    return jsonapi.dumps(
+    return json.dumps(
         obj,
         default=json_default,
         ensure_ascii=False,
         allow_nan=False,
-    )
+    ).encode("utf8")
 
 
 def json_unpacker(s):
-    return jsonapi.loads(s)
+    if isinstance(s, bytes):
+        s = s.decode("utf8", "replace")
+    return json.loads(s)
 
 
 def pickle_packer(o):
@@ -589,12 +591,9 @@ class Session(Configurable):
         try:
             packed = pack(msg_list)
         except Exception as e:
-            error_msg = "packer '{packer}' could not serialize a simple message: {e}{jsonmsg}"
-            if self.packer == "json":
-                jsonmsg = "\nzmq.utils.jsonapi.jsonmod = %s" % jsonapi.jsonmod
-            else:
-                jsonmsg = ""
-            raise ValueError(error_msg.format(packer=self.packer, e=e, jsonmsg=jsonmsg)) from e
+            raise ValueError(
+                f"packer '{self.packer}' could not serialize a simple message: {e}"
+            ) from e
 
         # ensure packed message is bytes
         if not isinstance(packed, bytes):
@@ -605,15 +604,9 @@ class Session(Configurable):
             unpacked = unpack(packed)
             assert unpacked == msg_list
         except Exception as e:
-            error_msg = (
-                "unpacker '{unpacker}' could not handle output from packer '{packer}': {e}{jsonmsg}"
-            )
-            if self.packer == "json":
-                jsonmsg = "\nzmq.utils.jsonapi.jsonmod = %s" % jsonapi.jsonmod
-            else:
-                jsonmsg = ""
             raise ValueError(
-                error_msg.format(packer=self.packer, unpacker=self.unpacker, e=e, jsonmsg=jsonmsg)
+                f"unpacker '{self.unpacker}' could not handle output from packer"
+                f" '{self.packer}': {e}"
             ) from e
 
         # check datetime support
