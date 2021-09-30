@@ -12,7 +12,6 @@ Sessions.
 # Distributed under the terms of the Modified BSD License.
 import hashlib
 import hmac
-import json
 import logging
 import os
 import pickle
@@ -27,6 +26,7 @@ from hmac import (
     compare_digest,
 )  # We are using compare_digest to limit the surface of timing attacks
 
+import simplejson as json
 import zmq
 from traitlets import Any  # type: ignore
 from traitlets import Bool
@@ -96,7 +96,7 @@ def json_packer(obj):
         obj,
         default=json_default,
         ensure_ascii=False,
-        allow_nan=False,
+        ignore_nan=True,
     ).encode("utf8")
 
 

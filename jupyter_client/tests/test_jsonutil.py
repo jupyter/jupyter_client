@@ -3,6 +3,7 @@
 # Distributed under the terms of the Modified BSD License.
 import datetime
 import json
+import math
 import numbers
 from datetime import timedelta
 from unittest import mock
@@ -12,6 +13,7 @@ from dateutil.tz import tzlocal
 from dateutil.tz import tzoffset
 
 from jupyter_client import jsonutil
+from jupyter_client.session import json_packer
 from jupyter_client.session import utcnow
 
 REFERENCE_DATETIME = datetime.datetime(2013, 7, 3, 16, 34, 52, 249482, tzlocal())
@@ -128,3 +130,9 @@ def test_json_default():
         out = json.loads(json.dumps(val, default=jsonutil.json_default))
         # validate our cleanup
         assert out == jval
+
+
+def test_json_packer():
+    assert json_packer(math.nan) == b'null'
+    assert json_packer(math.inf) == b'null'
+    assert json_packer(-math.inf) == b'null'
