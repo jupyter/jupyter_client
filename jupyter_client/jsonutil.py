@@ -1,8 +1,10 @@
 """Utilities to manipulate JSON objects."""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import math
 import numbers
 import re
+import types
 import warnings
 from binascii import b2a_base64
 from collections.abc import Iterable
@@ -122,3 +124,69 @@ def json_default(obj):
         return float(obj)
 
     raise TypeError("%r is not JSON serializable" % obj)
+
+
+# Copy of the old ipykernel's json_clean
+# This is temporary, it should be removed when we deprecate support for
+# non-valid JSON messages
+def json_clean(obj):
+    # types that are 'atomic' and ok in json as-is.
+    atomic_ok = (str, type(None))
+
+    # containers that we need to convert into lists
+    container_to_list = (tuple, set, types.GeneratorType)
+
+    # Since bools are a subtype of Integrals, which are a subtype of Reals,
+    # we have to check them in that order.
+
+    if isinstance(obj, bool):
+        return obj
+
+    if isinstance(obj, numbers.Integral):
+        # cast int to int, in case subclasses override __str__ (e.g. boost enum, #4598)
+        return int(obj)
+
+    if isinstance(obj, numbers.Real):
+        # cast out-of-range floats to their reprs
+        if math.isnan(obj) or math.isinf(obj):
+            return repr(obj)
+        return float(obj)
+
+    if isinstance(obj, atomic_ok):
+        return obj
+
+    if isinstance(obj, bytes):
+        # unanmbiguous binary data is base64-encoded
+        # (this probably should have happened upstream)
+        return b2a_base64(obj).decode('ascii')
+
+    if isinstance(obj, container_to_list) or (
+        hasattr(obj, '__iter__') and hasattr(obj, next_attr_name)
+    ):
+        obj = list(obj)
+
+    if isinstance(obj, list):
+        return [json_clean(x) for x in obj]
+
+    if isinstance(obj, dict):
+        # First, validate that the dict won't lose data in conversion due to
+        # key collisions after stringification.  This can happen with keys like
+        # True and 'true' or 1 and '1', which collide in JSON.
+        nkeys = len(obj)
+        nkeys_collapsed = len(set(map(str, obj)))
+        if nkeys != nkeys_collapsed:
+            raise ValueError(
+                'dict cannot be safely converted to JSON: '
+                'key collision would lead to dropped values'
+            )
+        # If all OK, proceed by making the new dict that will be json-safe
+        out = {}
+        for k, v in obj.items():
+            out[str(k)] = json_clean(v)
+        return out
+
+    if isinstance(obj, datetime):
+        return obj.strftime(ISO8601)
+
+    # we don't understand it, it's probably an unserializable object
+    raise ValueError("Can't clean for JSON: %r" % obj)

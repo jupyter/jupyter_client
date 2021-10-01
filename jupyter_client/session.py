@@ -50,6 +50,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 from jupyter_client import protocol_version
 from jupyter_client.adapter import adapt
 from jupyter_client.jsonutil import extract_dates
+from jupyter_client.jsonutil import json_clean
 from jupyter_client.jsonutil import json_default
 from jupyter_client.jsonutil import squash_dates
 
@@ -92,12 +93,30 @@ MAX_BYTES = 1024
 
 
 def json_packer(obj):
-    return json.dumps(
-        obj,
-        default=json_default,
-        ensure_ascii=False,
-        allow_nan=False,
-    ).encode("utf8")
+    try:
+        return json.dumps(
+            obj,
+            default=json_default,
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf8")
+    except ValueError as e:
+        # Fallback to trying to clean the json before serializing
+        packed = json.dumps(
+            json_clean(obj),
+            default=json_default,
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf8")
+
+        warnings.warn(
+            f"Message serialization failed with:\n{e}\n"
+            "Supporting this message is deprecated in jupyter-client 7, please make "
+            "sure your message is JSON-compliant",
+            stacklevel=2,
+        )
+
+        return packed
 
 
 def json_unpacker(s):
