@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.0.6
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.0.5...58b11df0ecb729effacc59ce28e9f431fa9c6a4d))
+
+### Bugs fixed
+
+- Fallback to the old ipykernel "json_clean" if we are not able to serialize a JSON message [#708](https://github.com/jupyter/jupyter_client/pull/708) ([@martinRenou](https://github.com/martinRenou))
+
+### Other merged PRs
+
+- Add test for serializing bytes [#707](https://github.com/jupyter/jupyter_client/pull/707) ([@martinRenou](https://github.com/martinRenou))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-09-29&to=2021-10-01&type=c))
+
+[@martinRenou](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AmartinRenou+updated%3A2021-09-29..2021-10-01&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.0.5
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.0.4...e379bf91fea63526b9c4cc6679e7953a325b540c))
@@ -19,8 +39,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-09-28&to=2021-09-29&type=c))
 
 [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2021-09-28..2021-09-29&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2021-09-28..2021-09-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.0.4
 
