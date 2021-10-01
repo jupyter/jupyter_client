@@ -104,7 +104,7 @@ def json_packer(obj):
         # Fallback to trying to clean the json before serializing
         warnings.warn(
             f"Message serialization failed with:\n{e}\n"
-            "Supporting this message is deprecated, please make "
+            "Supporting this message is deprecated in jupyter-client 7, please make "
             "sure your message is JSON-compliant",
             stacklevel=2,
         )
