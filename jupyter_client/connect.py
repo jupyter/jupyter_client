@@ -175,7 +175,7 @@ def write_connection_file(
                 try:
                     os.chmod(runtime_dir, new_permissions)
                 except OSError as e:
-                    if e.errno == errno.EPERM and path == runtime_dir:
+                    if e.errno == errno.EPERM:
                         # suppress permission errors setting sticky bit on runtime_dir,
                         # which we may not own.
                         pass
