@@ -167,7 +167,7 @@ def write_connection_file(
     if hasattr(stat, "S_ISVTX"):
         # set the sticky bit on the file and its parent directory
         # to avoid periodic cleanup
-        paths = [fname]
+        paths = []
         runtime_dir = os.path.dirname(fname)
         if runtime_dir:
             paths.append(runtime_dir)
