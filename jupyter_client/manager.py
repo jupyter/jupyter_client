@@ -8,6 +8,8 @@ import signal
 import sys
 import typing as t
 import uuid
+from asyncio.futures import Future
+from concurrent.futures import Future as CFuture
 from contextlib import contextmanager
 from enum import Enum
 
@@ -58,6 +60,11 @@ class KernelManager(ConnectionFileMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
+        try:
+            self._ready = Future()
+        except RuntimeError:
+            # No event loop running, use concurrent future
+            self._ready = CFuture()
 
     _created_context: Bool = Bool(False)
 
@@ -138,6 +145,11 @@ class KernelManager(ConnectionFileMixin):
     @default("cache_ports")
     def _default_cache_ports(self) -> bool:
         return self.transport == "tcp"
+
+    @property
+    def ready(self) -> Future:
+        """A future that resolves when the kernel process has started for the first time"""
+        return self._ready
 
     @property
     def ipykernel(self) -> bool:
@@ -329,12 +341,22 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        kernel_cmd, kw = await ensure_async(self.pre_start_kernel(**kw))
+        done = self._ready.done()
 
-        # launch the kernel subprocess
-        self.log.debug("Starting kernel: %s", kernel_cmd)
-        await ensure_async(self._launch_kernel(kernel_cmd, **kw))
-        await ensure_async(self.post_start_kernel(**kw))
+        try:
+            kernel_cmd, kw = await ensure_async(self.pre_start_kernel(**kw))
+
+            # launch the kernel subprocess
+            self.log.debug("Starting kernel: %s", kernel_cmd)
+            await ensure_async(self._launch_kernel(kernel_cmd, **kw))
+            await ensure_async(self.post_start_kernel(**kw))
+            if not done:
+                self._ready.set_result(None)
+
+        except Exception as e:
+            if not done:
+                self._ready.set_exception(e)
+            raise e
 
     start_kernel = run_sync(_async_start_kernel)
 
@@ -471,8 +493,8 @@ class KernelManager(ConnectionFileMixin):
             Any options specified here will overwrite those used to launch the
             kernel.
         """
-        if self._launch_args is None:
-            raise RuntimeError("Cannot restart the kernel. " "No previous call to 'start_kernel'.")
+        if not self._ready.done():
+            raise RuntimeError("Cannot restart the kernel. " "Kernel has been not fully started.")
         else:
             # Stop currently running kernel.
             await ensure_async(self.shutdown_kernel(now=now, restart=True))

@@ -52,18 +52,23 @@ class MultiKernelManager(LoggingConfigurable):
     """A class for managing multiple kernels."""
 
     default_kernel_name = Unicode(
-        NATIVE_KERNEL_NAME, config=True, help="The name of the default kernel to start"
-    )
+        NATIVE_KERNEL_NAME, help="The name of the default kernel to start"
+    ).tag(config=True)
 
     kernel_spec_manager = Instance(KernelSpecManager, allow_none=True)
 
     kernel_manager_class = DottedObjectName(
         "jupyter_client.ioloop.IOLoopKernelManager",
-        config=True,
         help="""The kernel manager class.  This is configurable to allow
         subclassing of the KernelManager for customized behavior.
         """,
-    )
+    ).tag(config=True)
+
+    use_pending_kernels = Bool(
+        False,
+        help="""Whether to make kernels available before the process has started.  The
+        kernel has a `.ready` future which can be awaited before connecting""",
+    ).tag(config=True)
 
     @observe("kernel_manager_class")
     def _kernel_manager_class_changed(self, change):
@@ -91,9 +96,8 @@ class MultiKernelManager(LoggingConfigurable):
 
     shared_context = Bool(
         True,
-        config=True,
         help="Share a single zmq.Context to talk to all my kernels",
-    )
+    ).tag(config=True)
 
     _created_context = Bool(False)
 
@@ -182,12 +186,18 @@ class MultiKernelManager(LoggingConfigurable):
                 )
             )
         kwargs['kernel_id'] = kernel_id  # Make kernel_id available to manager and provisioner
-        fut = asyncio.ensure_future(
-            self._add_kernel_when_ready(kernel_id, km, ensure_async(km.start_kernel(**kwargs)))
-        )
-        self._starting_kernels[kernel_id] = fut
-        await fut
-        del self._starting_kernels[kernel_id]
+
+        starter = ensure_async(km.start_kernel(**kwargs))
+
+        if self.use_pending_kernels:
+            asyncio.create_task(starter)
+            self._kernels[kernel_id] = km
+        else:
+            fut = asyncio.ensure_future(self._add_kernel_when_ready(kernel_id, km, starter))
+            self._starting_kernels[kernel_id] = fut
+            await fut
+            del self._starting_kernels[kernel_id]
+
         return kernel_id
 
     start_kernel = run_sync(_async_start_kernel)
@@ -212,7 +222,7 @@ class MultiKernelManager(LoggingConfigurable):
         self.log.info("Kernel shutdown: %s" % kernel_id)
 
         km = self.get_kernel(kernel_id)
-
+        await km.ready
         await ensure_async(km.shutdown_kernel(now, restart))
         self.remove_kernel(kernel_id)
 
