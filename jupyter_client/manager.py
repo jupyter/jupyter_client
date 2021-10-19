@@ -493,18 +493,21 @@ class KernelManager(ConnectionFileMixin):
             Any options specified here will overwrite those used to launch the
             kernel.
         """
+        if self._launch_args is None:
+            raise RuntimeError("Cannot restart the kernel. " "No previous call to 'start_kernel'.")
+
         if not self._ready.done():
-            raise RuntimeError("Cannot restart the kernel. " "Kernel has been not fully started.")
-        else:
-            # Stop currently running kernel.
-            await ensure_async(self.shutdown_kernel(now=now, restart=True))
+            raise RuntimeError("Cannot restart the kernel. " "Kernel has not fully started.")
 
-            if newports:
-                self.cleanup_random_ports()
+        # Stop currently running kernel.
+        await ensure_async(self.shutdown_kernel(now=now, restart=True))
 
-            # Start new kernel.
-            self._launch_args.update(kw)
-            await ensure_async(self.start_kernel(**self._launch_args))
+        if newports:
+            self.cleanup_random_ports()
+
+        # Start new kernel.
+        self._launch_args.update(kw)
+        await ensure_async(self.start_kernel(**self._launch_args))
 
     restart_kernel = run_sync(_async_restart_kernel)
 
