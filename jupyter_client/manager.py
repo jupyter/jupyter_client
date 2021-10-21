@@ -351,11 +351,14 @@ class KernelManager(ConnectionFileMixin):
             await ensure_async(self._launch_kernel(kernel_cmd, **kw))
             await ensure_async(self.post_start_kernel(**kw))
             if not done:
+                # Add a small sleep to ensure tests can capture the state before done
+                await asyncio.sleep(0.01)
                 self._ready.set_result(None)
 
         except Exception as e:
             if not done:
                 self._ready.set_exception(e)
+                self.log.exception(self._ready.exception())
             raise e
 
     start_kernel = run_sync(_async_start_kernel)
@@ -449,6 +452,10 @@ class KernelManager(ConnectionFileMixin):
             Will this kernel be restarted after it is shutdown. When this
             is True, connection files will not be cleaned up.
         """
+        # Shutdown is a no-op for a kernel that had a failed startup
+        if self._ready.exception():
+            return
+
         self.shutting_down = True  # Used by restarter to prevent race condition
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()

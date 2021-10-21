@@ -1,12 +1,14 @@
 """Tests for the notebook kernel and session manager."""
 import asyncio
 import concurrent.futures
+import os
 import sys
 import uuid
 from subprocess import PIPE
 from unittest import TestCase
 
 import pytest
+from jupyter_core import paths
 from tornado.testing import AsyncTestCase
 from tornado.testing import gen_test
 from traitlets.config.loader import Config
@@ -14,9 +16,11 @@ from traitlets.config.loader import Config
 from ..localinterfaces import localhost
 from .utils import AsyncKMSubclass
 from .utils import AsyncMKMSubclass
+from .utils import install_kernel
 from .utils import skip_win32
 from .utils import SyncKMSubclass
 from .utils import SyncMKMSubclass
+from .utils import test_env
 from jupyter_client import AsyncKernelManager
 from jupyter_client import KernelManager
 from jupyter_client.multikernelmanager import AsyncMultiKernelManager
@@ -26,6 +30,10 @@ TIMEOUT = 30
 
 
 class TestKernelManager(TestCase):
+    def setUp(self):
+        self.env_patch = test_env()
+        self.env_patch.start()
+        super().setUp()
 
     # static so picklable for multiprocessing on Windows
     @staticmethod
@@ -58,6 +66,7 @@ class TestKernelManager(TestCase):
         else:
             kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
         assert km.is_alive(kid)
+        assert km.get_kernel(kid).ready.done()
         assert kid in km
         assert kid in km.list_kernel_ids()
         assert len(km) == 1, f"{len(km)} != {1}"
@@ -220,6 +229,10 @@ class TestKernelManager(TestCase):
 
 
 class TestAsyncKernelManager(AsyncTestCase):
+    def setUp(self):
+        self.env_patch = test_env()
+        self.env_patch.start()
+        super().setUp()
 
     # static so picklable for multiprocessing on Windows
     @staticmethod
@@ -240,6 +253,13 @@ class TestAsyncKernelManager(AsyncTestCase):
         c = Config()
         c.KernelManager.transport = "ipc"
         c.KernelManager.ip = "test"
+        km = AsyncMultiKernelManager(config=c)
+        return km
+
+    @staticmethod
+    def _get_pending_kernels_km():
+        c = Config()
+        c.AsyncMultiKernelManager.use_pending_kernels = True
         km = AsyncMultiKernelManager(config=c)
         return km
 
@@ -333,6 +353,57 @@ class TestAsyncKernelManager(AsyncTestCase):
         self.assertNotIn(kid, km)
         # shutdown again is okay, because we have no kernels
         await km.shutdown_all()
+
+    @gen_test
+    async def test_use_pending_kernels(self):
+        km = self._get_pending_kernels_km()
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kernel = km.get_kernel(kid)
+        assert not kernel.ready.done()
+        assert kid in km
+        assert kid in km.list_kernel_ids()
+        assert len(km) == 1, f"{len(km)} != {1}"
+        await kernel.ready
+        await km.restart_kernel(kid, now=True)
+        assert await km.is_alive(kid)
+        assert kid in km.list_kernel_ids()
+        await km.interrupt_kernel(kid)
+        k = km.get_kernel(kid)
+        assert isinstance(k, AsyncKernelManager)
+        await km.shutdown_kernel(kid, now=True)
+        assert kid not in km, f"{kid} not in {km}"
+
+    @gen_test
+    async def test_use_pending_kernels_early_restart(self):
+        km = self._get_pending_kernels_km()
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kernel = km.get_kernel(kid)
+        assert not kernel.ready.done()
+        with pytest.raises(RuntimeError):
+            await km.restart_kernel(kid, now=True)
+        await kernel.ready
+        await km.shutdown_kernel(kid, now=True)
+        assert kid not in km, f"{kid} not in {km}"
+
+    @gen_test
+    async def test_use_pending_kernels_early_shutdown(self):
+        km = self._get_pending_kernels_km()
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kernel = km.get_kernel(kid)
+        assert not kernel.ready.done()
+        await km.shutdown_kernel(kid, now=True)
+        assert kid not in km, f"{kid} not in {km}"
+
+    @gen_test
+    async def test_use_pending_kernels_early_interrupt(self):
+        km = self._get_pending_kernels_km()
+        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kernel = km.get_kernel(kid)
+        assert not kernel.ready.done()
+        with pytest.raises(RuntimeError):
+            await km.interrupt_kernel(kid)
+        await km.shutdown_kernel(kid, now=True)
+        assert kid not in km, f"{kid} not in {km}"
 
     @gen_test
     async def test_tcp_cinfo(self):
@@ -466,3 +537,30 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert mkm.call_count("cleanup_resources") == 0
 
         assert kid not in mkm, f"{kid} not in {mkm}"
+
+    @gen_test
+    async def test_bad_kernelspec(self):
+        km = self._get_tcp_km()
+        install_kernel(
+            os.path.join(paths.jupyter_data_dir(), "kernels"),
+            argv=["non_existent_executable"],
+            name="bad",
+        )
+        with pytest.raises(FileNotFoundError):
+            await km.start_kernel(kernel_name="bad", stdout=PIPE, stderr=PIPE)
+
+    @gen_test
+    async def test_bad_kernelspec_pending(self):
+        km = self._get_pending_kernels_km()
+        install_kernel(
+            os.path.join(paths.jupyter_data_dir(), "kernels"),
+            argv=["non_existent_executable"],
+            name="bad",
+        )
+        kernel_id = await km.start_kernel(kernel_name="bad", stdout=PIPE, stderr=PIPE)
+        assert kernel_id in km._starting_kernels
+        with pytest.raises(FileNotFoundError):
+            await km.get_kernel(kernel_id).ready
+        assert kernel_id in km.list_kernel_ids()
+        await km.shutdown_kernel(kernel_id)
+        assert kernel_id not in km.list_kernel_ids()
