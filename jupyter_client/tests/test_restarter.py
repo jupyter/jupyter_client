@@ -1,27 +1,21 @@
 """Tests for the KernelManager"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-
 import asyncio
-import concurrent.futures
 import json
 import os
-import signal
 import sys
-import time
-from subprocess import PIPE
 
 import pytest
 from jupyter_core import paths
 from traitlets.config.loader import Config
 from traitlets.log import get_logger
 
-from jupyter_client import AsyncKernelManager
-from jupyter_client.ioloop import AsyncIOLoopKernelManager, IOLoopKernelManager
-from ..manager import start_new_async_kernel
-from ..manager import start_new_kernel
+from jupyter_client.ioloop import AsyncIOLoopKernelManager
+from jupyter_client.ioloop import IOLoopKernelManager
 
 pjoin = os.path.join
+
 
 def _install_kernel(name="problemtest", extra_env=None):
     if extra_env is None:
@@ -46,28 +40,30 @@ def _install_kernel(name="problemtest", extra_env=None):
         )
     return name
 
+
 @pytest.fixture
 def install_kernel():
     return _install_kernel("problemtest")
 
+
 @pytest.fixture
 def install_fail_kernel():
-    return _install_kernel("problemtest-fail", extra_env={
-        "FAIL_ON_START": "1"
-    })
+    return _install_kernel("problemtest-fail", extra_env={"FAIL_ON_START": "1"})
+
 
 @pytest.fixture
 def install_slow_fail_kernel():
-    return _install_kernel("problemtest-slow", extra_env={
-        "STARTUP_DELAY": "5",
-        "FAIL_ON_START": "1"
-    })
+    return _install_kernel(
+        "problemtest-slow", extra_env={"STARTUP_DELAY": "5", "FAIL_ON_START": "1"}
+    )
+
 
 @pytest.fixture(params=["tcp", "ipc"])
 def transport(request):
     if sys.platform == "win32" and request.param == "ipc":  #
         pytest.skip("Transport 'ipc' not supported on Windows.")
     return request.param
+
 
 @pytest.fixture
 def config(transport):
@@ -76,6 +72,7 @@ def config(transport):
     if transport == "ipc":
         c.KernelManager.ip = "test"
     return c
+
 
 @pytest.fixture
 def debug_logging():
@@ -93,6 +90,7 @@ async def test_restart_check(config, install_kernel):
 
     cbs = 0
     restarts = [asyncio.Future() for i in range(N_restarts)]
+
     def cb():
         nonlocal cbs
         if cbs >= N_restarts:
@@ -103,7 +101,7 @@ async def test_restart_check(config, install_kernel):
     try:
         km.start_kernel()
         km.add_restart_callback(cb, 'restart')
-    except:
+    except BaseException:
         if km.has_kernel:
             km.shutdown_kernel()
         raise
@@ -127,6 +125,7 @@ async def test_restart_check(config, install_kernel):
         km.shutdown_kernel(now=True)
         assert km.context.closed
 
+
 @pytest.mark.asyncio
 async def test_restarter_gives_up(config, install_fail_kernel):
     """Test that the restarter gives up after reaching the restart limit"""
@@ -138,6 +137,7 @@ async def test_restarter_gives_up(config, install_fail_kernel):
 
     cbs = 0
     restarts = [asyncio.Future() for i in range(N_restarts)]
+
     def cb():
         nonlocal cbs
         if cbs >= N_restarts:
@@ -146,6 +146,7 @@ async def test_restarter_gives_up(config, install_fail_kernel):
         cbs += 1
 
     died = asyncio.Future()
+
     def on_death():
         died.set_result(True)
 
@@ -153,7 +154,7 @@ async def test_restarter_gives_up(config, install_fail_kernel):
         km.start_kernel()
         km.add_restart_callback(cb, 'restart')
         km.add_restart_callback(on_death, 'dead')
-    except:
+    except BaseException:
         if km.has_kernel:
             km.shutdown_kernel()
         raise
@@ -182,6 +183,7 @@ async def test_async_restart_check(config, install_kernel):
 
     cbs = 0
     restarts = [asyncio.Future() for i in range(N_restarts)]
+
     def cb():
         nonlocal cbs
         if cbs >= N_restarts:
@@ -192,7 +194,7 @@ async def test_async_restart_check(config, install_kernel):
     try:
         await km.start_kernel()
         km.add_restart_callback(cb, 'restart')
-    except:
+    except BaseException:
         if km.has_kernel:
             await km.shutdown_kernel()
         raise
@@ -216,6 +218,7 @@ async def test_async_restart_check(config, install_kernel):
         await km.shutdown_kernel(now=True)
         assert km.context.closed
 
+
 @pytest.mark.asyncio
 async def test_async_restarter_gives_up(config, install_slow_fail_kernel):
     """Test that the restarter gives up after reaching the restart limit"""
@@ -223,11 +226,12 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel):
     N_restarts = 2
     config.KernelRestarter.restart_limit = N_restarts
     config.KernelRestarter.debug = True
-    config.KernelRestarter.stable_start_time = 30.
+    config.KernelRestarter.stable_start_time = 30.0
     km = AsyncIOLoopKernelManager(kernel_name=install_slow_fail_kernel, config=config)
 
     cbs = 0
     restarts = [asyncio.Future() for i in range(N_restarts)]
+
     def cb():
         nonlocal cbs
         if cbs >= N_restarts:
@@ -236,6 +240,7 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel):
         cbs += 1
 
     died = asyncio.Future()
+
     def on_death():
         died.set_result(True)
 
@@ -243,7 +248,7 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel):
         await km.start_kernel()
         km.add_restart_callback(cb, 'restart')
         km.add_restart_callback(on_death, 'dead')
-    except:
+    except BaseException:
         if km.has_kernel:
             await km.shutdown_kernel()
         raise
@@ -258,4 +263,3 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel):
 
         await km.shutdown_kernel(now=True)
         assert km.context.closed
-

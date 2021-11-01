@@ -2,10 +2,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
-import signal
 import time
-from subprocess import PIPE
-from subprocess import Popen
 
 from ipykernel.displayhook import ZMQDisplayHook
 from ipykernel.kernelapp import IPKernelApp

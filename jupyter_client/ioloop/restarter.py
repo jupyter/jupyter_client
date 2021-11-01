@@ -6,6 +6,7 @@ restarts the kernel if it dies.
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import inspect
+import time
 import warnings
 
 from traitlets import Instance
@@ -34,7 +35,10 @@ class IOLoopKernelRestarter(KernelRestarter):
         """Start the polling of the kernel."""
         if self._pcallback is None:
             if inspect.isawaitable(self.poll):
-                cb = lambda: run_sync(self.poll)
+
+                def cb():
+                    run_sync(self.poll)
+
             else:
                 cb = self.poll
             self._pcallback = ioloop.PeriodicCallback(
@@ -55,13 +59,15 @@ class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
         if self.debug:
             self.log.debug("Polling kernel...")
         is_alive = await self.kernel_manager.is_alive()
+        now = time.time()
         if not is_alive:
+            self._last_dead = now
             if self._restarting:
                 self._restart_count += 1
             else:
                 self._restart_count = 1
 
-            if self._restart_count >= self.restart_limit:
+            if self._restart_count > self.restart_limit:
                 self.log.warning("AsyncIOLoopKernelRestarter: restart failed")
                 self._fire_callbacks("dead")
                 self._restarting = False
@@ -79,8 +85,8 @@ class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
                 await self.kernel_manager.restart_kernel(now=True, newports=newports)
                 self._restarting = True
         else:
-            if self._initial_startup:
+            if self._initial_startup and self._last_dead - now >= self.stable_start_time:
                 self._initial_startup = False
-            if self._restarting:
+            if self._restarting and self._last_dead - now >= self.stable_start_time:
                 self.log.debug("AsyncIOLoopKernelRestarter: restart apparently succeeded")
-            self._restarting = False
+                self._restarting = False
