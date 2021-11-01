@@ -5,12 +5,14 @@ restarts the kernel if it dies.
 """
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import inspect
 import warnings
 
 from traitlets import Instance
 from zmq.eventloop import ioloop
 
 from jupyter_client.restarter import KernelRestarter
+from jupyter_client.utils import run_sync
 
 
 class IOLoopKernelRestarter(KernelRestarter):
@@ -31,8 +33,12 @@ class IOLoopKernelRestarter(KernelRestarter):
     def start(self):
         """Start the polling of the kernel."""
         if self._pcallback is None:
+            if inspect.isawaitable(self.poll):
+                cb = lambda: run_sync(self.poll)
+            else:
+                cb = self.poll
             self._pcallback = ioloop.PeriodicCallback(
-                self.poll,
+                cb,
                 1000 * self.time_to_dead,
             )
             self._pcallback.start()
