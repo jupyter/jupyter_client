@@ -7,6 +7,10 @@ import asyncio
 import inspect
 import os
 
+import nest_asyncio  # type: ignore
+
+nest_asyncio.apply()
+
 
 def run_sync(coro):
     def wrapped(*args, **kwargs):
@@ -15,7 +19,6 @@ def run_sync(coro):
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-        import nest_asyncio  # type: ignore
 
         nest_asyncio.apply(loop)
         future = asyncio.ensure_future(coro(*args, **kwargs))
