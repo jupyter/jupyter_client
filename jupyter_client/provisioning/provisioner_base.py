@@ -206,12 +206,21 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
 
     def get_shutdown_wait_time(self, recommended: float = 5.0) -> float:
         """
-        Returns the time allowed for a complete shutdown.  This may vary by provisioner.
+        Returns the time allowed for a complete shutdown. This may vary by provisioner.
 
         This method is called from `KernelManager.finish_shutdown()` during the graceful
         phase of its kernel shutdown sequence.
 
         The recommended value will typically be what is configured in the kernel manager.
+        """
+        return recommended
+
+    def get_stable_start_time(self, recommended: float = 10.0) -> float:
+        """
+        Returns the expected upper bound for a kernel (re-)start to complete.
+        This may vary by provisioner.
+
+        The recommended value will typically be what is configured in the kernel restarter.
         """
         return recommended
 

@@ -92,8 +92,13 @@ class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
             # restarter. Therefore, we use "has been alive continuously for X time" as a
             # heuristic for a stable start up.
             # See https://github.com/jupyter/jupyter_client/pull/717 for details.
-            if self._initial_startup and self._last_dead - now >= self.stable_start_time:
+            stable_start_time = self.stable_start_time
+            if self.kernel_manager.provisioner:
+                stable_start_time = self.kernel_manager.provisioner.get_stable_start_time(
+                    recommended=stable_start_time
+                )
+            if self._initial_startup and self._last_dead - now >= stable_start_time:
                 self._initial_startup = False
-            if self._restarting and self._last_dead - now >= self.stable_start_time:
+            if self._restarting and self._last_dead - now >= stable_start_time:
                 self.log.debug("AsyncIOLoopKernelRestarter: restart apparently succeeded")
                 self._restarting = False
