@@ -143,6 +143,13 @@ class KernelRestarter(LoggingConfigurable):
                 self.kernel_manager.restart_kernel(now=True, newports=newports)
                 self._restarting = True
         else:
+            # Since `is_alive` only tests that the kernel process is alive, it does not
+            # indicate that the kernel has successfully completed startup. To solve this
+            # correctly, we would need to wait for a kernel info reply, but it is not
+            # necessarily appropriate to start a kernel client + channels in the
+            # restarter. Therefore, we use "has been alive continuously for X time" as a
+            # heuristic for a stable start up.
+            # See https://github.com/jupyter/jupyter_client/pull/717 for details.
             if self._initial_startup and self._last_dead - now >= self.stable_start_time:
                 self._initial_startup = False
             if self._restarting and self._last_dead - now >= self.stable_start_time:

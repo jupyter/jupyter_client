@@ -80,7 +80,7 @@ def debug_logging():
 
 
 @pytest.mark.asyncio
-async def test_restart_check(config, install_kernel):
+async def test_restart_check(config, install_kernel, debug_logging):
     """Test that the kernel is restarted and recovers"""
     # If this test failes, run it with --log-cli-level=DEBUG to inspect
     N_restarts = 1
@@ -116,6 +116,15 @@ async def test_restart_check(config, install_kernel):
                 # Kill without cleanup to simulate crash:
                 await km.provisioner.kill()
                 await restarts[i]
+                # Wait for kill + restart
+                max_wait = 10.0
+                waited = 0.0
+                while waited < max_wait and km.is_alive():
+                    await asyncio.sleep(0.1)
+                    waited += 0.1
+                while waited < max_wait and not km.is_alive():
+                    await asyncio.sleep(0.1)
+                    waited += 0.1
 
         assert cbs == N_restarts
         assert km.is_alive()
@@ -127,7 +136,7 @@ async def test_restart_check(config, install_kernel):
 
 
 @pytest.mark.asyncio
-async def test_restarter_gives_up(config, install_fail_kernel):
+async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
     """Test that the restarter gives up after reaching the restart limit"""
     # If this test failes, run it with --log-cli-level=DEBUG to inspect
     N_restarts = 1
@@ -173,7 +182,7 @@ async def test_restarter_gives_up(config, install_fail_kernel):
 
 
 @pytest.mark.asyncio
-async def test_async_restart_check(config, install_kernel):
+async def test_async_restart_check(config, install_kernel, debug_logging):
     """Test that the kernel is restarted and recovers"""
     # If this test failes, run it with --log-cli-level=DEBUG to inspect
     N_restarts = 1
@@ -209,6 +218,15 @@ async def test_async_restart_check(config, install_kernel):
                 # Kill without cleanup to simulate crash:
                 await km.provisioner.kill()
                 await restarts[i]
+                # Wait for kill + restart
+                max_wait = 10.0
+                waited = 0.0
+                while waited < max_wait and await km.is_alive():
+                    await asyncio.sleep(0.1)
+                    waited += 0.1
+                while waited < max_wait and not await km.is_alive():
+                    await asyncio.sleep(0.1)
+                    waited += 0.1
 
         assert cbs == N_restarts
         assert await km.is_alive()
@@ -220,7 +238,7 @@ async def test_async_restart_check(config, install_kernel):
 
 
 @pytest.mark.asyncio
-async def test_async_restarter_gives_up(config, install_slow_fail_kernel):
+async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_logging):
     """Test that the restarter gives up after reaching the restart limit"""
     # If this test failes, run it with --log-cli-level=DEBUG to inspect
     N_restarts = 2
