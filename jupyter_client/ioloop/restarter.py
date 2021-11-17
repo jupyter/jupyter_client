@@ -5,7 +5,7 @@ restarts the kernel if it dies.
 """
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import inspect
+import asyncio
 import time
 import warnings
 
@@ -34,11 +34,8 @@ class IOLoopKernelRestarter(KernelRestarter):
     def start(self):
         """Start the polling of the kernel."""
         if self._pcallback is None:
-            if inspect.isawaitable(self.poll):
-
-                def cb():
-                    run_sync(self.poll)
-
+            if asyncio.iscoroutinefunction(self.poll):
+                cb = run_sync(self.poll)
             else:
                 cb = self.poll
             self._pcallback = ioloop.PeriodicCallback(
@@ -97,8 +94,8 @@ class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
                 stable_start_time = self.kernel_manager.provisioner.get_stable_start_time(
                     recommended=stable_start_time
                 )
-            if self._initial_startup and self._last_dead - now >= stable_start_time:
+            if self._initial_startup and now - self._last_dead >= stable_start_time:
                 self._initial_startup = False
-            if self._restarting and self._last_dead - now >= stable_start_time:
+            if self._restarting and now - self._last_dead >= stable_start_time:
                 self.log.debug("AsyncIOLoopKernelRestarter: restart apparently succeeded")
                 self._restarting = False

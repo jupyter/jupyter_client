@@ -155,8 +155,8 @@ class KernelRestarter(LoggingConfigurable):
                 stable_start_time = self.kernel_manager.provisioner.get_stable_start_time(
                     recommended=stable_start_time
                 )
-            if self._initial_startup and self._last_dead - now >= stable_start_time:
+            if self._initial_startup and now - self._last_dead >= stable_start_time:
                 self._initial_startup = False
-            if self._restarting and self._last_dead - now >= stable_start_time:
+            if self._restarting and now - self._last_dead >= stable_start_time:
                 self.log.debug("KernelRestarter: restart apparently succeeded")
                 self._restarting = False
