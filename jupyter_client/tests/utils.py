@@ -1,6 +1,7 @@
 """Testing utils for jupyter_client tests
 
 """
+import json
 import os
 import sys
 from tempfile import TemporaryDirectory
@@ -17,6 +18,26 @@ from jupyter_client import MultiKernelManager
 pjoin = os.path.join
 
 skip_win32 = pytest.mark.skipif(sys.platform.startswith("win"), reason="Windows")
+
+
+sample_kernel_json = {
+    "argv": ["cat", "{connection_file}"],
+    "display_name": "Test kernel",
+}
+
+
+def install_kernel(kernels_dir, argv=None, name="test", display_name=None):
+    """install a kernel in a kernels directory"""
+    kernel_dir = pjoin(kernels_dir, name)
+    os.makedirs(kernel_dir)
+    kernel_json = {
+        "argv": argv or sample_kernel_json["argv"],
+        "display_name": display_name or sample_kernel_json["display_name"],
+    }
+    json_file = pjoin(kernel_dir, "kernel.json")
+    with open(json_file, "w") as f:
+        json.dump(kernel_json, f)
+    return kernel_dir
 
 
 class test_env(object):

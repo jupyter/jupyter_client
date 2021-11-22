@@ -18,30 +18,18 @@ from tempfile import TemporaryDirectory
 import pytest
 from jupyter_core import paths
 
+from .utils import install_kernel
+from .utils import sample_kernel_json
 from .utils import test_env
 from jupyter_client import kernelspec
 
-sample_kernel_json = {
-    "argv": ["cat", "{connection_file}"],
-    "display_name": "Test kernel",
-}
-
 
 class KernelSpecTests(unittest.TestCase):
-    def _install_sample_kernel(self, kernels_dir):
-        """install a sample kernel in a kernels directory"""
-        sample_kernel_dir = pjoin(kernels_dir, "sample")
-        os.makedirs(sample_kernel_dir)
-        json_file = pjoin(sample_kernel_dir, "kernel.json")
-        with open(json_file, "w") as f:
-            json.dump(sample_kernel_json, f)
-        return sample_kernel_dir
-
     def setUp(self):
         self.env_patch = test_env()
         self.env_patch.start()
-        self.sample_kernel_dir = self._install_sample_kernel(
-            pjoin(paths.jupyter_data_dir(), "kernels")
+        self.sample_kernel_dir = install_kernel(
+            pjoin(paths.jupyter_data_dir(), "kernels"), name="sample"
         )
 
         self.ksm = kernelspec.KernelSpecManager()
@@ -87,7 +75,7 @@ class KernelSpecTests(unittest.TestCase):
     def test_kernel_spec_priority(self):
         td = TemporaryDirectory()
         self.addCleanup(td.cleanup)
-        sample_kernel = self._install_sample_kernel(td.name)
+        sample_kernel = install_kernel(td.name, name="sample")
         self.ksm.kernel_dirs.append(td.name)
         kernels = self.ksm.find_kernel_specs()
         self.assertEqual(kernels["sample"], self.sample_kernel_dir)
