@@ -2,6 +2,34 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.1.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.0.6...6b76603578fd3a76fd577d3319393c9933f53ab0))
+
+### Enhancements made
+
+- Add support for pending kernels [#712](https://github.com/jupyter/jupyter_client/pull/712) ([@blink1073](https://github.com/blink1073))
+
+### Bugs fixed
+
+- Improve restarter logic [#717](https://github.com/jupyter/jupyter_client/pull/717) ([@vidartf](https://github.com/vidartf))
+
+### Maintenance and upkeep improvements
+
+- Enforce labels on PRs [#720](https://github.com/jupyter/jupyter_client/pull/720) ([@blink1073](https://github.com/blink1073))
+
+### Other merged PRs
+
+- Set sticky bit only on the directory [#711](https://github.com/jupyter/jupyter_client/pull/711) ([@ci4ic4](https://github.com/ci4ic4))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-10-01&to=2021-11-22&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2021-10-01..2021-11-22&type=Issues) | [@ci4ic4](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aci4ic4+updated%3A2021-10-01..2021-11-22&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2021-10-01..2021-11-22&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2021-10-01..2021-11-22&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Avidartf+updated%3A2021-10-01..2021-11-22&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.0.6
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.0.5...58b11df0ecb729effacc59ce28e9f431fa9c6a4d))
@@ -19,8 +47,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-09-29&to=2021-10-01&type=c))
 
 [@martinRenou](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AmartinRenou+updated%3A2021-09-29..2021-10-01&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.0.5
 
