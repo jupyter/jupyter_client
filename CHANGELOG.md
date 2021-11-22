@@ -13,14 +13,11 @@
 ### Bugs fixed
 
 - Improve restarter logic [#717](https://github.com/jupyter/jupyter_client/pull/717) ([@vidartf](https://github.com/vidartf))
+- Set sticky bit only on the directory [#711](https://github.com/jupyter/jupyter_client/pull/711) ([@ci4ic4](https://github.com/ci4ic4))
 
 ### Maintenance and upkeep improvements
 
 - Enforce labels on PRs [#720](https://github.com/jupyter/jupyter_client/pull/720) ([@blink1073](https://github.com/blink1073))
-
-### Other merged PRs
-
-- Set sticky bit only on the directory [#711](https://github.com/jupyter/jupyter_client/pull/711) ([@ci4ic4](https://github.com/ci4ic4))
 
 ### Contributors to this release
 
