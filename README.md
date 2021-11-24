@@ -29,7 +29,7 @@ and download the dependencies of code and test suite by executing:
 
 ```bash
 cd /my/projects/jupyter_client/
-pip install -e .[test]
+pip install -e ".[test]"
 pytest
 ```
 
@@ -41,7 +41,7 @@ The documentation of Jupyter Client is generated from the files in `docs/` using
 For a minimal Sphinx installation to process the Jupyter Client docs, execute:
 
 ```bash
-pip install .[doc]
+pip install ".[doc]"
 ```
 
 The following commands build the documentation in HTML format and check for broken links:
