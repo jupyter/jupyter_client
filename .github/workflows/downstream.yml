@@ -34,6 +34,8 @@ jobs:
           pip install jupyter_server[test]
           pip install --pre -U --upgrade-strategy=only-if-needed jupyter_server
           pip install . --force-reinstall
+          pip install --pre -U --upgrade-strategy=only-if-needed jupyter_kernel_test
+          pip install . --force-reinstall
           pip freeze
           python -c 'import jupyter_client; print("jupyter_client", jupyter_client.__version__)'
 
