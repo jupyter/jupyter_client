@@ -34,8 +34,6 @@ jobs:
           pip install jupyter_server[test]
           pip install --pre -U --upgrade-strategy=only-if-needed jupyter_server
           pip install . --force-reinstall
-          pip install --pre -U --upgrade-strategy=only-if-needed jupyter_kernel_test
-          pip install . --force-reinstall
           pip freeze
           python -c 'import jupyter_client; print("jupyter_client", jupyter_client.__version__)'
 
@@ -48,6 +46,12 @@ jobs:
       - name: Test nbconvert
         if: ${{ always() }}
         run: pytest --pyargs nbconvert
+      - name: Test jupyter_kernel_test
+        run:
+          git clone git@github.com:jupyter/jupyter_kernel_test.git
+          cd jupyter_kernel_test
+          pip install -e ".[test]"
+          python test_ipykernel.py
       #qtconsole tests disabled because of a core dump
       #- name: Test qtconsole
       #  if: ${{ always() }}
