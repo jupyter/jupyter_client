@@ -47,7 +47,7 @@ jobs:
         if: ${{ always() }}
         run: pytest --pyargs nbconvert
       - name: Test jupyter_kernel_test
-        run:
+        run: |
           git clone git@github.com:jupyter/jupyter_kernel_test.git
           cd jupyter_kernel_test
           pip install -e ".[test]"
