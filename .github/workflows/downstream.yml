@@ -21,6 +21,7 @@ jobs:
 
       - name: Test Package
         run: |
+          python -m pip install -U pip
           python -m venv test
           ./test/bin/python -m pip install ipykernel[test]
           ./test/bin/python -m pip install --pre -U --upgrade-strategy=only-if-needed ipykernel
