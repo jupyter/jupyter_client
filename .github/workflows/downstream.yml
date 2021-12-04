@@ -24,16 +24,16 @@ jobs:
       #     package_spec: "pyqt5 ipykernel[test]"
 
 
-      - name: Test NBClient
-        uses: ./.github/actions/test-downstream
-        with:
-          package_name: nbclient
-          env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
+      # - name: Test NBClient
+      #   uses: ./.github/actions/test-downstream
+      #   with:
+      #     package_name: nbclient
+      #     env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
 
-      - name: Test QtConsole
-        uses: ./.github/actions/test-downstream
-        with:
-          package_name: qtconsole
+      # - name: Test QtConsole
+      #   uses: ./.github/actions/test-downstream
+      #   with:
+      #     package_name: qtconsole
 
       - name: Test nbconvert
         uses: ./.github/actions/test-downstream
