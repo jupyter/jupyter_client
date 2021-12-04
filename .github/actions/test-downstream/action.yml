@@ -17,7 +17,7 @@ runs:
       shell: bash
       run: |
           package_spec=${"${{inputs.package_spec}}":-"${{inputs.package_name}}[test]"}
-          pytest_args=${"${{inputs.pytest_args}"}:-"--pyargs ${{inputs.package_name}}"}
+          pytest_args=${"${{inputs.pytest_args}}":-"--pyargs ${{inputs.package_name}}"}
           python -m venv test_venv
           bin_dir=./test_venv/bin
           ${bin_dir}/python -m pip install -U pip
