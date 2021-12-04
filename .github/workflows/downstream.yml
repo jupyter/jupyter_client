@@ -23,6 +23,7 @@ jobs:
       #     package_name: ipykernel
       #     package_spec: "pyqt5 ipykernel[test]"
 
+
       - name: Test NBClient
         uses: ./.github/actions/test-downstream
         with:
