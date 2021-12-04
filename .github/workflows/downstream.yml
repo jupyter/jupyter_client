@@ -17,28 +17,29 @@ jobs:
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
-      # - name: Test IPykernel
-      #   uses: ./.github/actions/test-downstream
-      #   with:
-      #     package_name: ipykernel
-      #     package_spec: "pyqt5 ipykernel[test]"
+      - name: Test IPykernel
+        uses: ./.github/actions/test-downstream
+        with:
+          package_name: ipykernel
+          package_spec: "pyqt5 ipykernel[test]"
 
 
-      # - name: Test NBClient
-      #   uses: ./.github/actions/test-downstream
-      #   with:
-      #     package_name: nbclient
-      #     env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
+      - name: Test NBClient
+        uses: ./.github/actions/test-downstream
+        with:
+          package_name: nbclient
+          env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
 
+      # Note: Currently fails
       # - name: Test QtConsole
       #   uses: ./.github/actions/test-downstream
       #   with:
       #     package_name: qtconsole
 
-      # - name: Test nbconvert
-      #   uses: ./.github/actions/test-downstream
-      #   with:
-      #     package_name: nbconvert
+      - name: Test nbconvert
+        uses: ./.github/actions/test-downstream
+        with:
+          package_name: nbconvert
 
       - name: Test jupyter_server
         uses: ./.github/actions/test-downstream
