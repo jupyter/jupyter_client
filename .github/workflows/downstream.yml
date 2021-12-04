@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/action/base-setup@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
       - name: Test Ipykernel
         uses: ./github/actions/downstream-test
