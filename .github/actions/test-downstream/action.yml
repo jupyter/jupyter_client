@@ -26,7 +26,7 @@ runs:
 
           # Set up venv
           python -m venv test_venv
-          ./test_venv/bin/activate
+          export PATH=$(pwd)/test_venv/bin:$PATH
           python -m pip install -U pip
           python -m pip install ${package_spec}
           python -m pip install . --force-reinstall
