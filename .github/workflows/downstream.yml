@@ -18,6 +18,6 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
       - name: Test Ipykernel
-        uses: ./github/actions/downstream-test
+        uses: ./.github/actions/downstream-test
         with:
           package_name: ipykernel
