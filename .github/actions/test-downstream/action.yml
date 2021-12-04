@@ -30,6 +30,7 @@ runs:
           python -m pip install -U pip
           python -m pip install ${package_spec}
           python -m pip install . --force-reinstall
+          cd $HOME
 
           # Test the downstream package
           pytest ${pytest_args}
