@@ -1,0 +1,27 @@
+name: "Downstream Test"
+description: "Test against a downstream library"
+inputs:
+  package_name:
+    description: "The downstream package name"
+    required: true
+  package_spec:
+    description: "The package spec(s) to install, defaults to '<package_name>[test]"
+  pytest_args:
+    description: "The pytest args (defaults to '--pyargs <package_name>'"
+  env_values:
+    description: "Optional env values to set for test, e.g. 'FOO=BAR FIZZ=BUZZ'"
+runs:
+  using: "composite"
+  steps:
+    - name: set up venv
+      shell: bash
+      run: |
+          package_spec=${${{input.package_spec}}:-"${{inputs.package_name}}[test]"}
+          pytest_args=${${{input.pytest_args}}:-"--pyargs ${{inputs.package_name}}"}
+          python -m venv test_venv
+          bin_dir=./test_venv/bin
+          ${bin_dir}/python -m pip install -U pip
+          ${bin_dir}/python -m pip install ${package_spec}
+          ${bin_dir}/python -m pip install . --force-reinstall
+          ${{ input.env_values }} ${bin_dir}/pytest ${pytest_args}
+          rm -rf ./test_venv
