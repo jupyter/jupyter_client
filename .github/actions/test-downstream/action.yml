@@ -22,7 +22,7 @@ runs:
           package_spec=${package_spec:-"${{inputs.package_name}}[test]"}
           pytest_args="${{inputs.pytest_args}}"
           pytest_args=${pytest_args:-"--pyargs ${{inputs.package_name}}"}
-          eval ${{inputs.env_values}}
+          eval "${{inputs.env_values}}"
 
           # Set up venv
           python -m venv test_venv
