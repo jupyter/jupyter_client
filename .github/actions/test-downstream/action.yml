@@ -33,7 +33,7 @@ runs:
           ${bin_dir}/python -m pip install . --force-reinstall
 
           # Test the downstream package
-          ${env_values}; ${bin_dir}/pytest ${pytest_args}
+          ${env_values} ${bin_dir}/pytest ${pytest_args}
 
           # Cleanup
           rm -rf ./test_venv
