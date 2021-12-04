@@ -16,9 +16,9 @@ runs:
     - name: set up venv
       shell: bash
       run: |
-          package_spec=${{inputs.package_spec}}
+          package_spec="${{inputs.package_spec}}"
           package_spec=${package_spec:-"${{inputs.package_name}}[test]"}
-          pytest_args=${{inputs.pytest_args}}
+          pytest_args="${{inputs.pytest_args}}"
           pytest_args=${pytest_args:-"--pyargs ${{inputs.package_name}}"}
           python -m venv test_venv
           bin_dir=./test_venv/bin
