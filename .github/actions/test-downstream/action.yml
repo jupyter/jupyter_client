@@ -22,7 +22,7 @@ runs:
           package_spec=${package_spec:-"${{inputs.package_name}}[test]"}
           pytest_args="${{inputs.pytest_args}}"
           pytest_args=${pytest_args:-"--pyargs ${{inputs.package_name}}"}
-          env_values=${{ inputs.env_values }}
+          eval ${{inputs.env_values}}
 
           # Set up venv
           python -m venv test_venv
@@ -32,10 +32,6 @@ runs:
           ${bin_dir}/python -m pip install . --force-reinstall
 
           # Test the downstream package
-          if [ -z ${env_values} ]; then
-            eval ${env_values}
-          fi
-
           ${bin_dir}/pytest ${pytest_args}
 
           # Cleanup
