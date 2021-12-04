@@ -26,13 +26,13 @@ runs:
 
           # Set up venv
           python -m venv test_venv
-          bin_dir=./test_venv/bin
-          ${bin_dir}/python -m pip install -U pip
-          ${bin_dir}/python -m pip install ${package_spec}
-          ${bin_dir}/python -m pip install . --force-reinstall
+          ./test_venv/bin/activate
+          python -m pip install -U pip
+          python -m pip install ${package_spec}
+          python -m pip install . --force-reinstall
 
           # Test the downstream package
-          ${bin_dir}/pytest ${pytest_args}
+          pytest ${pytest_args}
 
           # Cleanup
           rm -rf ./test_venv
