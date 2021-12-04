@@ -14,18 +14,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/action/base-setup@v1
+
+      - name: Test Ipykernel
+        uses: ./github/actions/downstream-test
         with:
-          python-version: 3.9
-
-      - name: Test Package
-        run: |
-
-          python -m venv test
-          ./test/bin/python -m pip install -U pip
-          ./test/bin/python -m pip install ipykernel[test]
-          ./test/bin/python -m pip install --pre -U --upgrade-strategy=only-if-needed ipykernel
-          ./test/bin/python -m pip install . --force-reinstall
-          ./test/bin/pytest --pyargs ipykernel
-          rm -rf ./test
+          package_name: ipykernel
