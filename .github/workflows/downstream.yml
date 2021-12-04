@@ -27,7 +27,7 @@ jobs:
         uses: ./.github/actions/test-downstream
         with:
           package_name: nbclient
-          env_values: "IPYKERNEL_CELL_NAME="<IPY-INPUT>"
+          env_values: 'IPYKERNEL_CELL_NAME="<IPY-INPUT>"'
 
       - name: Test QtConsole
         uses: ./.github/actions/test-downstream
