@@ -14,44 +14,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Test IPykernel
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
-          python-version: 3.9
+          package_name: ipykernel
+          package_spec: "pyqt5 ipykernel[test]"
 
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install pyqt5 pytest
-          pip install ipykernel[test]
-          pip install --pre -U --upgrade-strategy=only-if-needed ipykernel
-          pip install qtconsole[test]
-          pip install --pre -U --upgrade-strategy=only-if-needed qtconsole
-          pip install nbclient[test]
-          pip install --pre -U --upgrade-strategy=only-if-needed nbclient
-          pip install nbconvert[test]
-          pip install --pre -U --upgrade-strategy=only-if-needed nbconvert
-          pip install jupyter_server[test]
-          pip install --pre -U --upgrade-strategy=only-if-needed jupyter_server
-          pip install . --force-reinstall
-          pip freeze
-          python -c 'import jupyter_client; print("jupyter_client", jupyter_client.__version__)'
+      - name: Test NBClient
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        with:
+          package_name: nbclient
+          env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
 
-      - name: Test ipykernel
-        if: ${{ always() }}
-        run: pytest --pyargs ipykernel
-      - name: Test nbclient
-        if: ${{ always() }}
-        run: IPYKERNEL_CELL_NAME="<IPY-INPUT>" pytest --pyargs nbclient
+      # Note: Currently fails
+      # - name: Test QtConsole
+      #   uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+      #   with:
+      #     package_name: qtconsole
+
       - name: Test nbconvert
-        if: ${{ always() }}
-        run: pytest --pyargs nbconvert
-      #qtconsole tests disabled because of a core dump
-      #- name: Test qtconsole
-      #  if: ${{ always() }}
-      #  run: pytest --pyargs qtconsole
-      #jupyter_server tests disabled because pip package doesn't allow for testing
-      #see https://github.com/jupyter-server/jupyter_server/issues/563
-      #- name: Test jupyter_server
-      #  if: ${{ always() }}
-      #  run: pytest --pyargs jupyter_server
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        with:
+          package_name: nbconvert
+
+      - name: Test jupyter_server
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        with:
+          package_name: jupyter_server
+
+      - name: Test jupyter_kernel_test
+        run: |
+          git clone https://github.com/jupyter/jupyter_kernel_test.git
+          cd jupyter_kernel_test
+          pip install -e ".[test]"
+          python test_ipykernel.py
