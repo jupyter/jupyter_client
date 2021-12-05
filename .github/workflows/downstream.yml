@@ -44,3 +44,10 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: jupyter_server
+
+      - name: Test jupyter_kernel_test
+        run: |
+          git clone https://github.com/jupyter/jupyter_kernel_test.git
+          cd jupyter_kernel_test
+          pip install -e ".[test]"
+          python test_ipykernel.py
