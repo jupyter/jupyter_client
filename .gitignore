@@ -17,6 +17,8 @@ absolute.json
 htmlcov/
 docs/changelog.md
 .mypy_cache
+Pipfile
+Pipfle.lock
 
 # Sphinx documentation
 _build
