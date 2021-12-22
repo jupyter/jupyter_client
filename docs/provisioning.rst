@@ -153,7 +153,7 @@ in the role meant for this kernel by calling a method implemented within *this* 
                 raise PermissionError(f"User is not in role {self.role} and "
                                       f"cannot launch this kernel.")
 
-            return super().pre_launch(**kwargs)
+            return await super().pre_launch(**kwargs)
 
 It is important to note *when* it's necessary to call the superclass in
 a given method - since the operations it performs may be critical to the
