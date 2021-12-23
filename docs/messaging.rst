@@ -1582,7 +1582,7 @@ Completion:
 - ``clear_output``: ``stdout``, ``stderr``, and ``display`` boolean keys for selective clearing are removed,
   and ``wait`` is added.
   The selective clearing keys are ignored in v4 and the default behavior remains the same,
-  so v4 clear_output messages will be safely handled by a v4.1 frontend.
+  so v4 ``clear_output`` messages will be safely handled by a v4.1 frontend.
 
 
 Notes
