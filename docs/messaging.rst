@@ -1667,6 +1667,114 @@ handlers should set the parent header and publish status busy / idle,
 just like an execute request.
 
 
+Changelog
+=========
+
+5.5 (draft)
+-----------
+
+- Added ``debug_request/reply`` messages
+- Added ``debug_event`` message
+
+5.4
+---
+
+- Sending a ``shutdown_request`` message on the ``shell`` channel is deprecated.
+  It should be sent on the control channel.
+
+5.3
+---
+
+- Kernels can now opt to be interrupted by a message sent on the control channel
+  instead of a system signal. See :ref:`kernelspecs` and :ref:`msging_interrupt`.
+
+5.2
+---
+
+- Resolve ambiguity of ``cursor_pos`` field in the presence
+  of unicode surrogate pairs.
+  In 5.2, cursor_pos **must be** the actual encoding-independent offset in unicode codepoints.
+
+  .. seealso::
+
+      :ref:`cursor_pos_unicode_note`
+
+5.1
+---
+
+- ``date`` in the header was accidentally omitted from the spec prior to 5.1,
+  but it has always been in the canonical implementation,
+  so implementers are strongly encouraged to include it.
+  It is mandatory in 5.1.
+- ``status='abort'`` in replies has not proved useful, and is considered deprecated.
+  Kernels should send ``status='error'`` instead.
+- ``comm_info_request/reply`` added
+- ``connect_request/reply`` have not proved useful, and are considered deprecated.
+  Kernels are not expected to implement handlers for this message.
+- new ``transient`` field in ``display_data``
+- new ``update_display_data`` message
+
+5.0
+---
+
+General changes:
+
+- ``version`` key added to message headers
+- busy and idle status messages should be sent before/after handling every request,
+  not just execution
+
+Message renames to remove Python-specific-ness:
+
+- ``pyin`` message renamed to ``execute_input``
+- ``pyerr`` renamed to ``error``
+- ``object_info_request/reply`` messages renamed to ``inspect_request/reply``
+
+Kernel info:
+
+- versions changed from lists of integers to strings
+- ``ipython_version`` is removed
+- ``language_info``, ``implementation``, ``implementation_version``, ``banner``
+    and ``help_links`` keys are added.
+- ``language_version`` is moved to ``language_info.version``
+- ``language`` is moved to ``language_info.name``
+
+Execution:
+
+- ``user_variables`` is removed from ``execute_request/reply`` because it is redundant with ``user_expressions``
+- ``password`` key added to ``input_request``
+
+Output:
+
+- ``data`` key in stream messages renamed to ``text`` for consistency with the notebook format.
+- ``application/json`` in mimebundles should be unpacked JSON data,
+  not a double-serialized JSON string.
+
+Inspection:
+
+- ``name`` key in ``inspect_request`` replaced with ``code`` and ``cursor_pos``,
+  moving the lexing responsibility to the kernel.
+- ``object_info_reply`` is now a mimebundle,
+  allowing formatting decisions to be made by the kernel.
+
+Completion:
+
+- ``complete_request``: ``line``, ``block``, and ``text`` keys are removed in favor of a single ``code`` for context.
+    Lexing is up to the kernel.
+- ``complete_reply``:
+    - ``matched_text`` is removed in favor of ``cursor_start`` and ``cursor_end``.
+    - ``metadata`` is added for extended information.
+- new ``is_complete_request`` and ``is_complete_reply`` messages
+
+4.1
+---
+
+- ``comm_open/close/msg`` messages added
+- ``clear_output``: ``stdout``, ``stderr``, and ``display`` boolean keys for selective clearing are removed,
+  and ``wait`` is added.
+  The selective clearing keys are ignored in v4 and the default behavior remains the same,
+  so v4 ``clear_output`` messages will be safely handled by a v4.1 frontend.
+
+
 Notes
 =====
 
