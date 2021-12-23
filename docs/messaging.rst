@@ -1557,7 +1557,7 @@ Output:
 
 - ``data`` key in stream messages renamed to ``text`` for consistency with the notebook format.
 - ``application/json`` in mimebundles should be unpacked JSON data,
-  not a double-serialized JSON strong.
+  not a double-serialized JSON string.
 
 Inspection:
 
