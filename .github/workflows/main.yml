@@ -79,7 +79,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/base-setup@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
       - name: Install dependencies
         run: |
@@ -89,8 +89,13 @@ jobs:
       - name: Check types
         run: mypy jupyter_client --exclude '\/tests|kernelspecapp|ioloop|runapp' --install-types --non-interactive
 
-      - name: Run the tests
+      - name: Run the tests with coverage
+        if: ${{ !startsWith(matrix.python-version, 'pypy') }}
         run: pytest --cov jupyter_client -v jupyter_client
+
+      - name: Run the tests on pypy
+        if: startsWith(matrix.python-version, 'pypy')
+        run: pytest -v jupyter_client
 
       - name: Build the docs
         run: |
