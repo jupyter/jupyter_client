@@ -45,9 +45,18 @@ jobs:
         with:
           package_name: jupyter_server
 
+      - name: Setup conda ${{ matrix.python-version }}
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          activate-environment: jupyter_kernel_test
+          python-version: ${{ matrix.python-version }}
+
       - name: Test jupyter_kernel_test
+        shell: bash -l {0}
         run: |
           git clone https://github.com/jupyter/jupyter_kernel_test.git
           cd jupyter_kernel_test
+          conda env update --name jupyter_kernel_test --file environment.yml
           pip install -e ".[test]"
-          python test_ipykernel.py
+          python -m unittest -v

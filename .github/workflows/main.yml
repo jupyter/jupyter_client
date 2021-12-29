@@ -69,7 +69,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.6, 3.7, 3.8, 3.9, "3.10", "pypy-3.7"]
 
     env:
       OS: ${{ matrix.os }}
@@ -78,33 +78,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Update pip
-        run: |
-          pip install --upgrade pip
-          pip install --upgrade wheel setuptools
-
-      - name: Get pip cache dir
-        id: pip-cache
-        run: |
-          echo "::set-output name=dir::$(pip cache dir)"
-
-      - name: Cache pip
-        uses: actions/cache@v2
-        with:
-          path: |
-            ${{ steps.pip-cache.outputs.dir }}
-            .mypy_cache
-          key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements*.txt') }}-git-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements*.txt') }}
-            ${{ runner.os }}-python-${{ matrix.python-version }}-pip-
-            ${{ runner.os }}-python
-            ${{ runner.os }}-
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/base-setup@v1
 
       - name: Install dependencies
         run: |
