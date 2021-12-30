@@ -55,6 +55,7 @@ jobs:
         with:
           auto-update-conda: true
           activate-environment: jupyter_kernel_test
+          miniforge-variant: Mambaforge
           python-version: ${{ matrix.python-version }}
 
       - name: Test jupyter_kernel_test
