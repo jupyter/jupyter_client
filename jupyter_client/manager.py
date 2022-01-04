@@ -3,6 +3,7 @@
 # Distributed under the terms of the Modified BSD License.
 import asyncio
 import os
+import functools
 import re
 import signal
 import sys
@@ -49,6 +50,32 @@ class _ShutdownStatus(Enum):
     ShutdownRequest = "ShutdownRequest"
     SigtermRequest = "SigtermRequest"
     SigkillRequest = "SigkillRequest"
+
+
+def in_pending_state(method):
+    """Sets the kernel to a pending state by
+    creating a fresh Future for the KernelManager's `ready`
+    attribute. Once the method is finished, set the Future's results.
+    """
+    @functools.wraps(method)
+    async def wrapper(self, *args, **kwargs):
+        # Create a future for the decorated method
+        try:
+            self._ready = Future()
+        except RuntimeError:
+            # No event loop running, use concurrent future
+            self._ready = CFuture()
+        try:
+            # call wrapped method, await, and set the result or exception.
+            out = await method(self, *args, **kwargs)
+            # Add a small sleep to ensure tests can capture the state before done
+            await asyncio.sleep(0.01)
+            self._ready.set_result(None)
+            return out
+        except Exception as e:
+            self._ready.set_exception(e)
+            self.log.exception(self._ready.exception())
+    return wrapper
 
 
 class KernelManager(ConnectionFileMixin):
@@ -329,6 +356,7 @@ class KernelManager(ConnectionFileMixin):
 
     post_start_kernel = run_sync(_async_post_start_kernel)
 
+    @in_pending_state
     async def _async_start_kernel(self, **kw):
         """Starts a kernel on this host in a separate process.
 
@@ -341,25 +369,12 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        done = self._ready.done()
+        kernel_cmd, kw = await ensure_async(self.pre_start_kernel(**kw))
 
-        try:
-            kernel_cmd, kw = await ensure_async(self.pre_start_kernel(**kw))
-
-            # launch the kernel subprocess
-            self.log.debug("Starting kernel: %s", kernel_cmd)
-            await ensure_async(self._launch_kernel(kernel_cmd, **kw))
-            await ensure_async(self.post_start_kernel(**kw))
-            if not done:
-                # Add a small sleep to ensure tests can capture the state before done
-                await asyncio.sleep(0.01)
-                self._ready.set_result(None)
-
-        except Exception as e:
-            if not done:
-                self._ready.set_exception(e)
-                self.log.exception(self._ready.exception())
-            raise e
+        # launch the kernel subprocess
+        self.log.debug("Starting kernel: %s", kernel_cmd)
+        await ensure_async(self._launch_kernel(kernel_cmd, **kw))
+        await ensure_async(self.post_start_kernel(**kw))
 
     start_kernel = run_sync(_async_start_kernel)
 
@@ -434,6 +449,7 @@ class KernelManager(ConnectionFileMixin):
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
+    @in_pending_state
     async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False):
         """Attempts to stop the kernel process cleanly.
 
@@ -452,10 +468,6 @@ class KernelManager(ConnectionFileMixin):
             Will this kernel be restarted after it is shutdown. When this
             is True, connection files will not be cleaned up.
         """
-        # Shutdown is a no-op for a kernel that had a failed startup
-        if self._ready.exception():
-            return
-
         self.shutting_down = True  # Used by restarter to prevent race condition
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
@@ -472,6 +484,7 @@ class KernelManager(ConnectionFileMixin):
             await ensure_async(self.finish_shutdown(restart=restart))
 
         await ensure_async(self.cleanup_resources(restart=restart))
+
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
@@ -502,9 +515,6 @@ class KernelManager(ConnectionFileMixin):
         """
         if self._launch_args is None:
             raise RuntimeError("Cannot restart the kernel. " "No previous call to 'start_kernel'.")
-
-        if not self._ready.done():
-            raise RuntimeError("Cannot restart the kernel. " "Kernel has not fully started.")
 
         # Stop currently running kernel.
         await ensure_async(self.shutdown_kernel(now=now, restart=True))
