@@ -2,8 +2,8 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
-import os
 import functools
+import os
 import re
 import signal
 import sys
@@ -57,6 +57,7 @@ def in_pending_state(method):
     creating a fresh Future for the KernelManager's `ready`
     attribute. Once the method is finished, set the Future's results.
     """
+
     @functools.wraps(method)
     async def wrapper(self, *args, **kwargs):
         # Create a future for the decorated method
@@ -75,6 +76,7 @@ def in_pending_state(method):
         except Exception as e:
             self._ready.set_exception(e)
             self.log.exception(self._ready.exception())
+
     return wrapper
 
 
