@@ -214,6 +214,14 @@ class MultiKernelManager(LoggingConfigurable):
         restart : bool
             Will the kernel be restarted?
         """
+        kernel = self.get_kernel(kernel_id)
+        if getattr(self, 'use_pending_kernels', False):
+            # Make sure the previous kernel started before trying to shutdown.
+            if not kernel.ready.done():
+                raise RuntimeError("Kernel is in a pending state. Cannot shutdown.")
+            # If the kernel didn't start properly, no need to shutdown.
+            elif kernel.ready.exception():
+                return
         self.log.info("Kernel shutdown: %s" % kernel_id)
         if kernel_id in self._starting_kernels:
             try:
@@ -291,8 +299,7 @@ class MultiKernelManager(LoggingConfigurable):
         """
         self.log.info("Signaled Kernel %s with %s" % (kernel_id, signum))
 
-    @kernel_method
-    def restart_kernel(self, kernel_id: str, now: bool = False) -> None:
+    async def _async_restart_kernel(self, kernel_id: str, now: bool = False) -> None:
         """Restart a kernel by its uuid, keeping the same ports.
 
         Parameters
@@ -307,7 +314,15 @@ class MultiKernelManager(LoggingConfigurable):
             In all cases the kernel is restarted, the only difference is whether
             it is given a chance to perform a clean shutdown or not.
         """
+        kernel = self.get_kernel(kernel_id)
+        if getattr(self, 'use_pending_kernels', False):
+            if not kernel.ready.done():
+                raise RuntimeError("Kernel is in a pending state. Cannot restart.")
+        out = await ensure_async(kernel.restart_kernel(now=now))
         self.log.info("Kernel restarted: %s" % kernel_id)
+        return out
+
+    restart_kernel = run_sync(_async_restart_kernel)
 
     @kernel_method
     def is_alive(self, kernel_id: str) -> bool:
@@ -475,5 +490,6 @@ class AsyncMultiKernelManager(MultiKernelManager):
     ).tag(config=True)
 
     start_kernel = MultiKernelManager._async_start_kernel
+    restart_kernel = MultiKernelManager._async_restart_kernel
     shutdown_kernel = MultiKernelManager._async_shutdown_kernel
     shutdown_all = MultiKernelManager._async_shutdown_all

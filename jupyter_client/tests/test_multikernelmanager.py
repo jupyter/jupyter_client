@@ -29,6 +29,14 @@ from jupyter_client.multikernelmanager import MultiKernelManager
 TIMEOUT = 30
 
 
+async def now(awaitable):
+    """Use this function ensure that this awaitable
+    happens before other awaitables defined after it.
+    """
+    (out,) = await asyncio.gather(awaitable)
+    return out
+
+
 class TestKernelManager(TestCase):
     def setUp(self):
         self.env_patch = test_env()
@@ -357,32 +365,32 @@ class TestAsyncKernelManager(AsyncTestCase):
     @gen_test
     async def test_use_pending_kernels(self):
         km = self._get_pending_kernels_km()
-        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kid = await now(km.start_kernel(stdout=PIPE, stderr=PIPE))
         kernel = km.get_kernel(kid)
         assert not kernel.ready.done()
         assert kid in km
         assert kid in km.list_kernel_ids()
         assert len(km) == 1, f"{len(km)} != {1}"
-        await kernel.ready
-        await km.restart_kernel(kid, now=True)
+        await now(kernel.ready)
+        await now(km.restart_kernel(kid, now=True))
         assert await km.is_alive(kid)
         assert kid in km.list_kernel_ids()
-        await km.interrupt_kernel(kid)
+        await now(km.interrupt_kernel(kid))
         k = km.get_kernel(kid)
         assert isinstance(k, AsyncKernelManager)
-        await km.shutdown_kernel(kid, now=True)
+        await now(km.shutdown_kernel(kid, now=True))
         assert kid not in km, f"{kid} not in {km}"
 
     @gen_test
     async def test_use_pending_kernels_early_restart(self):
         km = self._get_pending_kernels_km()
-        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kid = await now(km.start_kernel(stdout=PIPE, stderr=PIPE))
         kernel = km.get_kernel(kid)
         assert not kernel.ready.done()
         with pytest.raises(RuntimeError):
             await km.restart_kernel(kid, now=True)
-        await kernel.ready
-        await km.shutdown_kernel(kid, now=True)
+        await now(kernel.ready)
+        await now(km.shutdown_kernel(kid, now=True))
         assert kid not in km, f"{kid} not in {km}"
 
     @gen_test
