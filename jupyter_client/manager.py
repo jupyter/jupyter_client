@@ -485,7 +485,6 @@ class KernelManager(ConnectionFileMixin):
 
         await ensure_async(self.cleanup_resources(restart=restart))
 
-
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
     async def _async_restart_kernel(self, now: bool = False, newports: bool = False, **kw) -> None:
