@@ -217,7 +217,7 @@ class MultiKernelManager(LoggingConfigurable):
             await fut
             # raise an exception if one occurred during kernel startup.
             if km.ready.exception():
-                raise km.ready.exception()
+                raise km.ready.exception()  # type: ignore
 
         return kernel_id
 
