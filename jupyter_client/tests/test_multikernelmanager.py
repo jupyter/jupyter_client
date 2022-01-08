@@ -4,6 +4,7 @@ import concurrent.futures
 import os
 import sys
 import uuid
+from asyncio import ensure_future
 from subprocess import PIPE
 from unittest import TestCase
 
@@ -354,7 +355,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         self.assertNotIn(kid, km)
 
         # Start another kernel
-        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kid = await ensure_future(km.start_kernel(stdout=PIPE, stderr=PIPE))
         self.assertIn(kid, km)
         self.assertEqual(len(km), 1)
         await km.shutdown_all()
@@ -365,52 +366,69 @@ class TestAsyncKernelManager(AsyncTestCase):
     @gen_test
     async def test_use_pending_kernels(self):
         km = self._get_pending_kernels_km()
-        kid = await now(km.start_kernel(stdout=PIPE, stderr=PIPE))
+        kid = await ensure_future(km.start_kernel(stdout=PIPE, stderr=PIPE))
         kernel = km.get_kernel(kid)
         assert not kernel.ready.done()
         assert kid in km
         assert kid in km.list_kernel_ids()
         assert len(km) == 1, f"{len(km)} != {1}"
-        await now(kernel.ready)
-        await now(km.restart_kernel(kid, now=True))
-        assert await km.is_alive(kid)
+        # Wait for the kernel to start.
+        await kernel.ready
+        await km.restart_kernel(kid, now=True)
+        out = await km.is_alive(kid)
+        assert out
         assert kid in km.list_kernel_ids()
-        await now(km.interrupt_kernel(kid))
+        await km.interrupt_kernel(kid)
         k = km.get_kernel(kid)
         assert isinstance(k, AsyncKernelManager)
-        await now(km.shutdown_kernel(kid, now=True))
+        await ensure_future(km.shutdown_kernel(kid, now=True))
+        # Wait for the kernel to shutdown
+        await kernel.ready
         assert kid not in km, f"{kid} not in {km}"
 
     @gen_test
     async def test_use_pending_kernels_early_restart(self):
         km = self._get_pending_kernels_km()
-        kid = await now(km.start_kernel(stdout=PIPE, stderr=PIPE))
+        kid = await ensure_future(km.start_kernel(stdout=PIPE, stderr=PIPE))
         kernel = km.get_kernel(kid)
         assert not kernel.ready.done()
         with pytest.raises(RuntimeError):
             await km.restart_kernel(kid, now=True)
-        await now(kernel.ready)
-        await now(km.shutdown_kernel(kid, now=True))
+        await kernel.ready
+        await ensure_future(km.shutdown_kernel(kid, now=True))
+        # Wait for the kernel to shutdown
+        await kernel.ready
         assert kid not in km, f"{kid} not in {km}"
 
     @gen_test
     async def test_use_pending_kernels_early_shutdown(self):
         km = self._get_pending_kernels_km()
-        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kid = await ensure_future(km.start_kernel(stdout=PIPE, stderr=PIPE))
         kernel = km.get_kernel(kid)
         assert not kernel.ready.done()
-        await km.shutdown_kernel(kid, now=True)
+        # Try shutting down while the kernel is pending
+        with pytest.raises(RuntimeError):
+            await ensure_future(km.shutdown_kernel(kid, now=True))
+        await kernel.ready
+        # Shutdown once the kernel is ready
+        await ensure_future(km.shutdown_kernel(kid, now=True))
+        # Wait for the kernel to shutdown
+        await kernel.ready
         assert kid not in km, f"{kid} not in {km}"
 
     @gen_test
     async def test_use_pending_kernels_early_interrupt(self):
         km = self._get_pending_kernels_km()
-        kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kid = await ensure_future(km.start_kernel(stdout=PIPE, stderr=PIPE))
         kernel = km.get_kernel(kid)
         assert not kernel.ready.done()
         with pytest.raises(RuntimeError):
             await km.interrupt_kernel(kid)
-        await km.shutdown_kernel(kid, now=True)
+        # Now wait for the kernel to be ready.
+        await kernel.ready
+        await ensure_future(km.shutdown_kernel(kid, now=True))
+        # Wait for the kernel to shutdown
+        await kernel.ready
         assert kid not in km, f"{kid} not in {km}"
 
     @gen_test
@@ -555,7 +573,7 @@ class TestAsyncKernelManager(AsyncTestCase):
             name="bad",
         )
         with pytest.raises(FileNotFoundError):
-            await km.start_kernel(kernel_name="bad", stdout=PIPE, stderr=PIPE)
+            await ensure_future(km.start_kernel(kernel_name="bad", stdout=PIPE, stderr=PIPE))
 
     @gen_test
     async def test_bad_kernelspec_pending(self):
@@ -565,10 +583,11 @@ class TestAsyncKernelManager(AsyncTestCase):
             argv=["non_existent_executable"],
             name="bad",
         )
-        kernel_id = await km.start_kernel(kernel_name="bad", stdout=PIPE, stderr=PIPE)
-        assert kernel_id in km._starting_kernels
+        kernel_id = await ensure_future(
+            km.start_kernel(kernel_name="bad", stdout=PIPE, stderr=PIPE)
+        )
         with pytest.raises(FileNotFoundError):
             await km.get_kernel(kernel_id).ready
         assert kernel_id in km.list_kernel_ids()
-        await km.shutdown_kernel(kernel_id)
+        await ensure_future(km.shutdown_kernel(kernel_id))
         assert kernel_id not in km.list_kernel_ids()

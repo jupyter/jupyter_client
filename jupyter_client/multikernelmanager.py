@@ -97,7 +97,12 @@ class MultiKernelManager(LoggingConfigurable):
 
     context = Instance("zmq.Context")
 
-    _starting_kernels = Dict()
+    _pending_kernels = Dict()
+
+    @property
+    def _starting_kernels(self):
+        """A shim for backwards compatibility."""
+        return self._pending_kernels
 
     @default("context")
     def _context_default(self) -> zmq.Context:
@@ -165,7 +170,22 @@ class MultiKernelManager(LoggingConfigurable):
             await kernel_awaitable
             self._kernels[kernel_id] = km
         finally:
-            self._starting_kernels.pop(kernel_id, None)
+            self._pending_kernels.pop(kernel_id, None)
+
+    async def _remove_kernel_when_ready(
+        self, kernel_id: str, kernel_awaitable: t.Awaitable
+    ) -> None:
+        try:
+            await kernel_awaitable
+            self.remove_kernel(kernel_id)
+        finally:
+            self._pending_kernels.pop(kernel_id, None)
+
+    def _using_pending_kernels(self):
+        """Returns a boolean; a clearer method for determining if
+        this multikernelmanager is using pending kernels or not
+        """
+        return getattr(self, 'use_pending_kernels', False)
 
     async def _async_start_kernel(self, kernel_name: t.Optional[str] = None, **kwargs) -> str:
         """Start a new kernel.
@@ -186,12 +206,18 @@ class MultiKernelManager(LoggingConfigurable):
 
         starter = ensure_async(km.start_kernel(**kwargs))
         fut = asyncio.ensure_future(self._add_kernel_when_ready(kernel_id, km, starter))
-        self._starting_kernels[kernel_id] = fut
+        self._pending_kernels[kernel_id] = fut
 
-        if getattr(self, 'use_pending_kernels', False):
+        # Handling a Pending Kernel
+        if self._using_pending_kernels():
+            # If using pending kernels, do not block
+            # on the kernel start.
             self._kernels[kernel_id] = km
         else:
             await fut
+            # raise an exception if one occurred during kernel startup.
+            if km.ready.exception():
+                raise km.ready.exception()
 
         return kernel_id
 
@@ -215,23 +241,28 @@ class MultiKernelManager(LoggingConfigurable):
             Will the kernel be restarted?
         """
         kernel = self.get_kernel(kernel_id)
-        if getattr(self, 'use_pending_kernels', False):
+        if self._using_pending_kernels():
             # Make sure the previous kernel started before trying to shutdown.
             if not kernel.ready.done():
                 raise RuntimeError("Kernel is in a pending state. Cannot shutdown.")
             # If the kernel didn't start properly, no need to shutdown.
             elif kernel.ready.exception():
+                self.remove_kernel(kernel_id)
                 return
         self.log.info("Kernel shutdown: %s" % kernel_id)
-        if kernel_id in self._starting_kernels:
+        if kernel_id in self._pending_kernels:
             try:
-                await self._starting_kernels[kernel_id]
+                await self._pending_kernels[kernel_id]
             except Exception:
                 self.remove_kernel(kernel_id)
                 return
         km = self.get_kernel(kernel_id)
-        await ensure_async(km.shutdown_kernel(now, restart))
-        self.remove_kernel(kernel_id)
+        stopper = ensure_async(km.shutdown_kernel(now, restart))
+        fut = asyncio.ensure_future(self._remove_kernel_when_ready(kernel_id, stopper))
+        self._pending_kernels[kernel_id] = fut
+        # Await the kernel if not using pending kernels.
+        if not self._using_pending_kernels():
+            await fut
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
@@ -266,13 +297,13 @@ class MultiKernelManager(LoggingConfigurable):
     async def _async_shutdown_all(self, now: bool = False) -> None:
         """Shutdown all kernels."""
         kids = self.list_kernel_ids()
-        kids += list(self._starting_kernels)
+        kids += list(self._pending_kernels)
         futs = [ensure_async(self.shutdown_kernel(kid, now=now)) for kid in set(kids)]
         await asyncio.gather(*futs)
 
     shutdown_all = run_sync(_async_shutdown_all)
 
-    @kernel_method
+    # @kernel_method
     def interrupt_kernel(self, kernel_id: str) -> None:
         """Interrupt (SIGINT) the kernel by its uuid.
 
@@ -281,7 +312,12 @@ class MultiKernelManager(LoggingConfigurable):
         kernel_id : uuid
             The id of the kernel to interrupt.
         """
+        kernel = self.get_kernel(kernel_id)
+        if not kernel.ready.done():
+            raise RuntimeError("Kernel is in a pending state. Cannot interrupt.")
+        out = kernel.interrupt_kernel()
         self.log.info("Kernel interrupted: %s" % kernel_id)
+        return out
 
     @kernel_method
     def signal_kernel(self, kernel_id: str, signum: int) -> None:
@@ -315,7 +351,7 @@ class MultiKernelManager(LoggingConfigurable):
             it is given a chance to perform a clean shutdown or not.
         """
         kernel = self.get_kernel(kernel_id)
-        if getattr(self, 'use_pending_kernels', False):
+        if self._using_pending_kernels():
             if not kernel.ready.done():
                 raise RuntimeError("Kernel is in a pending state. Cannot restart.")
         out = await ensure_async(kernel.restart_kernel(now=now))

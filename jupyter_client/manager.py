@@ -89,6 +89,7 @@ class KernelManager(ConnectionFileMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
+        # Create a place holder future.
         try:
             self._ready = Future()
         except RuntimeError:
