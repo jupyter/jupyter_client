@@ -86,6 +86,7 @@ app_aliases = dict(
     f="JupyterConsoleApp.connection_file",
     kernel="JupyterConsoleApp.kernel_name",
     ssh="JupyterConsoleApp.sshserver",
+    sshkey="JupyterConsoleApp.sshkey",
 )
 aliases.update(app_aliases)
 
