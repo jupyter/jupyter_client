@@ -239,19 +239,14 @@ class MultiKernelManager(LoggingConfigurable):
         restart : bool
             Will the kernel be restarted?
         """
-        kernel = self.get_kernel(kernel_id)
-        if self._using_pending_kernels():
-            # Make sure the previous kernel started before trying to shutdown.
-            if not kernel.ready.done():
-                raise RuntimeError("Kernel is in a pending state. Cannot shutdown.")
-            # If the kernel didn't start properly, no need to shutdown.
-            elif kernel.ready.exception():
-                self.remove_kernel(kernel_id)
-                return
+        # If the kernel in a pending state?
         self.log.info("Kernel shutdown: %s" % kernel_id)
-        if kernel_id in self._pending_kernels:
+        if self._using_pending_kernels() and kernel_id in self._pending_kernels:
+            raise RuntimeError("Kernel is in a pending state. Cannot shutdown.")
+        elif kernel_id in self._pending_kernels:
+            kernel = self._pending_kernels[kernel_id]
             try:
-                await self._pending_kernels[kernel_id]
+                await kernel
             except Exception:
                 self.remove_kernel(kernel_id)
                 return
@@ -296,7 +291,7 @@ class MultiKernelManager(LoggingConfigurable):
     async def _async_shutdown_all(self, now: bool = False) -> None:
         """Shutdown all kernels."""
         kids = self.list_kernel_ids()
-        kids += list(self._pending_kernels)
+        kids += list(self._starting_kernels)
         futs = [ensure_async(self.shutdown_kernel(kid, now=now)) for kid in set(kids)]
         await asyncio.gather(*futs)
 
