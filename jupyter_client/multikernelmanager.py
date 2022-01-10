@@ -222,6 +222,22 @@ class MultiKernelManager(LoggingConfigurable):
 
     start_kernel = run_sync(_async_start_kernel)
 
+    async def _shutdown_kernel_when_ready(
+        self,
+        kernel_id: str,
+        now: t.Optional[bool] = False,
+        restart: t.Optional[bool] = False,
+    ) -> None:
+        """Wait for a pending kernel to be ready
+        before shutting the kernel down.
+        """
+        # Only do this if using pending kernels
+        if self._using_pending_kernels():
+            kernel = self._kernels[kernel_id]
+            await kernel.ready
+        # Once out of a pending state, we can call shutdown.
+        await ensure_async(self.shutdown_kernel(kernel_id, now=now, restart=restart))
+
     async def _async_shutdown_kernel(
         self,
         kernel_id: str,
@@ -243,9 +259,9 @@ class MultiKernelManager(LoggingConfigurable):
         # If we're using pending kernels, block shutdown when a kernel is pending.
         if self._using_pending_kernels() and kernel_id in self._pending_kernels:
             raise RuntimeError("Kernel is in a pending state. Cannot shutdown.")
-        # If the kernel isn't in a ready state, wait for it to be ready.
-        elif kernel_id in self._pending_kernels:
-            kernel = self._pending_kernels[kernel_id]
+        # If the kernel is still starting, wait for it to be ready.
+        elif kernel_id in self._starting_kernels:
+            kernel = self._starting_kernels[kernel_id]
             try:
                 await kernel
             except Exception:
@@ -262,6 +278,9 @@ class MultiKernelManager(LoggingConfigurable):
         # Await the kernel if not using pending kernels.
         if not self._using_pending_kernels():
             await fut
+            # raise an exception if one occurred during kernel shutdown.
+            if km.ready.exception():
+                raise km.ready.exception()  # type: ignore
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
@@ -296,9 +315,14 @@ class MultiKernelManager(LoggingConfigurable):
     async def _async_shutdown_all(self, now: bool = False) -> None:
         """Shutdown all kernels."""
         kids = self.list_kernel_ids()
-        kids += list(self._starting_kernels)
-        futs = [ensure_async(self.shutdown_kernel(kid, now=now)) for kid in set(kids)]
+        kids += list(self._pending_kernels)
+        futs = [ensure_async(self._shutdown_kernel_when_ready(kid, now=now)) for kid in set(kids)]
         await asyncio.gather(*futs)
+        # When using "shutdown all", all pending kernels
+        # should be awaited before exiting this method.
+        if self._using_pending_kernels():
+            for km in self._kernels.values():
+                await km.ready
 
     shutdown_all = run_sync(_async_shutdown_all)
 
