@@ -207,7 +207,6 @@ class MultiKernelManager(LoggingConfigurable):
         starter = ensure_async(km.start_kernel(**kwargs))
         fut = asyncio.ensure_future(self._add_kernel_when_ready(kernel_id, km, starter))
         self._pending_kernels[kernel_id] = fut
-
         # Handling a Pending Kernel
         if self._using_pending_kernels():
             # If using pending kernels, do not block

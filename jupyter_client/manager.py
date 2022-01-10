@@ -76,6 +76,7 @@ def in_pending_state(method):
         except Exception as e:
             self._ready.set_exception(e)
             self.log.exception(self._ready.exception())
+            raise e
 
     return wrapper
 
