@@ -24,6 +24,7 @@ with Jupyter kernels.
    kernels
    wrapperkernels
    provisioning
+   pending-kernels
 
 .. toctree::
    :maxdepth: 2
