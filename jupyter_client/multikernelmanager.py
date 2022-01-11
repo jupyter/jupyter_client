@@ -326,7 +326,6 @@ class MultiKernelManager(LoggingConfigurable):
 
     shutdown_all = run_sync(_async_shutdown_all)
 
-    # @kernel_method
     def interrupt_kernel(self, kernel_id: str) -> None:
         """Interrupt (SIGINT) the kernel by its uuid.
 
