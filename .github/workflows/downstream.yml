@@ -12,7 +12,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9"]
-      fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -22,14 +21,12 @@ jobs:
 
       - name: Test IPykernel
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
-        continue-on-error: true
         with:
           package_name: ipykernel
           package_spec: "pyqt5 ipykernel[test]"
 
       - name: Test NBClient
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
-        continue-on-error: true
         with:
           package_name: nbclient
           env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
@@ -42,7 +39,6 @@ jobs:
 
       - name: Test nbconvert
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
-        continue-on-error: true
         with:
           package_name: nbconvert
 
@@ -55,7 +51,6 @@ jobs:
 
       - name: Setup conda ${{ matrix.python-version }}
         uses: conda-incubator/setup-miniconda@v2
-        continue-on-error: true
         with:
           auto-update-conda: true
           activate-environment: jupyter_kernel_test
