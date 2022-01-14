@@ -2,6 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.1.1
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.1.0...4428715b65741ddccac9305d318d4ace08fa711a))
+
+### Enhancements made
+
+- Further improvements to pending kernels managment [#732](https://github.com/jupyter/jupyter_client/pull/732) ([@Zsailer](https://github.com/Zsailer))
+
+### Maintenance and upkeep improvements
+
+- Test against all kernels in jupyter kernel test and clean up CI [#731](https://github.com/jupyter/jupyter_client/pull/731) ([@blink1073](https://github.com/blink1073))
+- Replace master with main [#729](https://github.com/jupyter/jupyter_client/pull/729) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Documentation improvements
+
+- [DOC] improve kernel provisioner doc [#730](https://github.com/jupyter/jupyter_client/pull/730) ([@abzymeinsjtu](https://github.com/abzymeinsjtu))
+- add changelog for message spec [#525](https://github.com/jupyter/jupyter_client/pull/525) ([@minrk](https://github.com/minrk))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-11-22&to=2022-01-14&type=c))
+
+[@abzymeinsjtu](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aabzymeinsjtu+updated%3A2021-11-22..2022-01-14&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2021-11-22..2022-01-14&type=Issues) | [@BoPeng](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ABoPeng+updated%3A2021-11-22..2022-01-14&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2021-11-22..2022-01-14&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2021-11-22..2022-01-14&type=Issues) | [@rgbkrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Argbkrk+updated%3A2021-11-22..2022-01-14&type=Issues) | [@willingc](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Awillingc+updated%3A2021-11-22..2022-01-14&type=Issues) | [@Zsailer](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AZsailer+updated%3A2021-11-22..2022-01-14&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.1.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.0.6...6b76603578fd3a76fd577d3319393c9933f53ab0))
@@ -24,8 +50,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2021-10-01&to=2021-11-22&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2021-10-01..2021-11-22&type=Issues) | [@ci4ic4](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aci4ic4+updated%3A2021-10-01..2021-11-22&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2021-10-01..2021-11-22&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2021-10-01..2021-11-22&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Avidartf+updated%3A2021-10-01..2021-11-22&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.0.6
 
