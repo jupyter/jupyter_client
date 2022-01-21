@@ -260,10 +260,12 @@ class MultiKernelManager(LoggingConfigurable):
         if self._using_pending_kernels() and kernel_id in self._pending_kernels:
             raise RuntimeError("Kernel is in a pending state. Cannot shutdown.")
         # If the kernel is still starting, wait for it to be ready.
-        elif kernel_id in self._starting_kernels:
-            kernel = self._starting_kernels[kernel_id]
+        elif kernel_id in self._pending_kernels:
+            kernel = self._pending_kernels[kernel_id]
             try:
                 await kernel
+                km = self.get_kernel(kernel_id)
+                await km.ready
             except Exception:
                 self.remove_kernel(kernel_id)
                 return
