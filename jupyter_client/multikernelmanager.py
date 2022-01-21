@@ -264,7 +264,8 @@ class MultiKernelManager(LoggingConfigurable):
             kernel = self._pending_kernels[kernel_id]
             try:
                 await kernel
-                await kernel.ready
+                km = self.get_kernel(kernel_id)
+                await km.ready
             except Exception:
                 self.remove_kernel(kernel_id)
                 return
