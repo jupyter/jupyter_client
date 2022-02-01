@@ -9,7 +9,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   # Run "pre-commit run --all-files"
   pre-commit:
     name: Run pre-commit hook
