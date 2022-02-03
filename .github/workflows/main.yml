@@ -4,29 +4,14 @@ on:
   push:
   pull_request:
 
-jobs:
-  check_duplicate_runs:
-    name: Check for duplicate runs
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-    steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
-        with:
-          concurrent_skipping: always
-          cancel_others: true
-          skip_after_successful_duplicate: true
-          paths_ignore: '["**/README.md", "**/CHANGELOG.md", "**/COPYING.md"]'
-          do_not_skip: '["pull_request"]'
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
   # Run "pre-commit run --all-files"
   pre-commit:
     name: Run pre-commit hook
-
-    needs: check_duplicate_runs
-    if: ${{ needs.check_duplicate_runs.outputs.should_skip != 'true' }}
 
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -59,9 +44,6 @@ jobs:
 
   build-n-test-n-coverage:
     name: Build, test and code coverage
-
-    needs: check_duplicate_runs
-    if: ${{ needs.check_duplicate_runs.outputs.should_skip != 'true' }}
 
     runs-on: ${{ matrix.os }}
 
