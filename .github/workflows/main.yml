@@ -96,7 +96,7 @@ jobs:
       - name: Install miniumum versions
         uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
       - name: Run the unit tests
-        run: pytest -vv jupyter_client
+        run: pytest -vv jupyter_client || pytest -vv jupyter_client --lf
 
   test_prereleases:
     name: Test Prereleases
@@ -115,4 +115,4 @@ jobs:
           pip check
       - name: Run the tests
         run: |
-          pytest -vv jupyter_client
+          pytest -vv jupyter_client || pytest -vv jupyter_client --lf
