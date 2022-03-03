@@ -1,6 +1,6 @@
 codecov
 coverage
-ipykernel>=5
+ipykernel>=6
 ipython
 jedi<0.18; python_version<="3.6"
 mock
