@@ -164,7 +164,12 @@ class TestKernelManagerShutDownGracefully:
         kc.stop_channels()
         km.shutdown_kernel()
 
-        assert km._shutdown_status == expected
+        if expected == _ShutdownStatus.ShutdownRequest:
+            expected = [expected, _ShutdownStatus.SigtermRequest]
+        else:
+            expected = [expected]
+
+        assert km._shutdown_status in expected
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
