@@ -185,7 +185,7 @@ class TestSession(SessionTestCase):
     def test_unique_msg_ids(self):
         """test that messages receive unique ids"""
         ids = set()
-        for i in range(2 ** 12):
+        for i in range(2**12):
             h = self.session.msg_header("test")
             msg_id = h["msg_id"]
             self.assertTrue(msg_id not in ids)
