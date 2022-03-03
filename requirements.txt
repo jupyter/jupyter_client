@@ -1,5 +1,5 @@
 entrypoints
-jupyter_core>=4.6.0
+jupyter_core>=4.9.2
 nest-asyncio>=1.5
 python-dateutil>=2.1
 pyzmq>=17
