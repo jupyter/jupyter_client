@@ -261,7 +261,7 @@ class TestDiscovery:
 
 class TestRuntime:
     async def akm_test(self, kernel_mgr):
-        """Starts a kernel, validates the associated provisioner's config, shuts down kernel """
+        """Starts a kernel, validates the associated provisioner's config, shuts down kernel"""
 
         assert kernel_mgr.provisioner is None
         if kernel_mgr.kernel_name == 'missing_provisioner':

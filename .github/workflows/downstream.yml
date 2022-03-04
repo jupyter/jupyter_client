@@ -2,9 +2,8 @@ name: Test downstream projects
 
 on:
   push:
-    branches: "*"
+    branches: ["main"]
   pull_request:
-    branches: "*"
 
 concurrency:
   group: downstream-${{ github.ref }}

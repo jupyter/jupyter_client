@@ -164,15 +164,17 @@ class TestKernelManagerShutDownGracefully:
         kc.stop_channels()
         km.shutdown_kernel()
 
-        assert km._shutdown_status == expected
+        if expected == _ShutdownStatus.ShutdownRequest:
+            expected = [expected, _ShutdownStatus.SigtermRequest]
+        else:
+            expected = [expected]
+
+        assert km._shutdown_status in expected
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     @pytest.mark.parametrize(*parameters)
     async def test_async_signal_kernel_subprocesses(self, name, install, expected):
-        # ipykernel doesn't support 3.6 and this test uses async shutdown_request
-        if expected == _ShutdownStatus.ShutdownRequest and sys.version_info < (3, 7):
-            pytest.skip()
         install()
         km, kc = await start_new_async_kernel(kernel_name=name)
         assert km._shutdown_status == _ShutdownStatus.Unset
@@ -181,7 +183,12 @@ class TestKernelManagerShutDownGracefully:
         kc.stop_channels()
         await km.shutdown_kernel()
 
-        assert km._shutdown_status == expected
+        if expected == _ShutdownStatus.ShutdownRequest:
+            expected = [expected, _ShutdownStatus.SigtermRequest]
+        else:
+            expected = [expected]
+
+        assert km._shutdown_status in expected
 
 
 class TestKernelManager:

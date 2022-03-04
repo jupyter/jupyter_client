@@ -465,7 +465,7 @@ class Session(Configurable):
 
     digest_history = Set()
     digest_history_size = Integer(
-        2 ** 16,
+        2**16,
         config=True,
         help="""The maximum number of digests to remember.
 
@@ -504,7 +504,7 @@ class Session(Configurable):
 
     # thresholds:
     copy_threshold = Integer(
-        2 ** 16,
+        2**16,
         config=True,
         help="Threshold (in bytes) beyond which a buffer should be sent without copying.",
     )

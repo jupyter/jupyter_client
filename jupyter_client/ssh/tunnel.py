@@ -28,7 +28,6 @@ except ImportError:
     class SSHException(Exception):  # type: ignore
         pass
 
-
 else:
     from .forward import forward_tunnel
 
