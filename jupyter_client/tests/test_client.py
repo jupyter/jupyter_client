@@ -22,14 +22,16 @@ class TestKernelClient(TestCase):
     def setUp(self):
         self.env_patch = test_env()
         self.env_patch.start()
-        self.addCleanup(self.env_patch.stop)
         try:
             KernelSpecManager().get_kernel_spec(NATIVE_KERNEL_NAME)
         except NoSuchKernel:
             pytest.skip()
         self.km, self.kc = start_new_kernel(kernel_name=NATIVE_KERNEL_NAME)
-        self.addCleanup(self.kc.stop_channels)
-        self.addCleanup(self.km.shutdown_kernel)
+
+    def tearDown(self):
+        self.env_patch.stop()
+        self.km.shutdown_kernel()
+        self.kc.stop_channels()
 
     def test_execute_interactive(self):
         kc = self.kc

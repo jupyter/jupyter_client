@@ -47,7 +47,7 @@ class ThreadedZMQSocketChannel(object):
         self,
         socket: Optional[zmq.Socket],
         session: Optional[Session],
-        loop: Optional[zmq.eventloop.ioloop.ZMQIOLoop],
+        loop: Optional[Any],
     ) -> None:
         """Create a channel.
 

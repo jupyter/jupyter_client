@@ -18,6 +18,7 @@ def run_sync(coro):
         import nest_asyncio  # type: ignore
 
         nest_asyncio.apply(loop)
+
         future = asyncio.ensure_future(coro(*args, **kwargs))
         try:
             return loop.run_until_complete(future)

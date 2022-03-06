@@ -31,6 +31,8 @@ NATIVE_KERNEL_NAME = "python3"
 
 class KernelSpec(HasTraits):
     argv = List()
+    name = Unicode()
+    mimetype = Unicode()
     display_name = Unicode()
     language = Unicode()
     env = Dict()

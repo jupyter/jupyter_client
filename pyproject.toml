@@ -27,3 +27,15 @@ tag_template = "v{new_version}"
 
 [[tool.tbump.file]]
 src = "jupyter_client/_version.py"
+
+[tool.pytest.ini_options]
+norecursedirs = "dist build"
+addopts= "-r sxX"
+filterwarnings= [
+  # Fail on warnings
+  "error",
+
+  # Workarounds for https://github.com/pytest-dev/pytest-asyncio/issues/77
+  "ignore:unclosed <socket.socket:ResourceWarning",
+  "ignore:unclosed event loop:ResourceWarning"
+]

@@ -387,8 +387,9 @@ class KernelManager(ConnectionFileMixin):
         content = dict(restart=restart)
         msg = self.session.msg("shutdown_request", content=content)
         # ensure control socket is connected
-        self._connect_control_socket()
-        self.session.send(self._control_socket, msg)
+        if self._control_socket and not self._control_socket.closed:
+            self._connect_control_socket()
+            self.session.send(self._control_socket, msg)
         assert self.provisioner is not None
         await self.provisioner.shutdown_requested(restart=restart)
         self._shutdown_status = _ShutdownStatus.ShutdownRequest
@@ -453,7 +454,6 @@ class KernelManager(ConnectionFileMixin):
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
-    @in_pending_state
     async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False):
         """Attempts to stop the kernel process cleanly.
 
@@ -476,7 +476,10 @@ class KernelManager(ConnectionFileMixin):
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
 
-        await ensure_async(self.interrupt_kernel())
+        # If the kernel has already started, interrupt it to give it a
+        # chance to clean up.
+        if self.has_kernel:
+            await ensure_async(self.interrupt_kernel())
 
         if now:
             await ensure_async(self._kill_kernel())

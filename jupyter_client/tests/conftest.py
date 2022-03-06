@@ -7,14 +7,32 @@ from jupyter_core import paths
 
 from .utils import test_env
 
+try:
+    import resource
+except ImportError:
+    # Windows
+    resource = None
+
 pjoin = os.path.join
 
 
-if os.name == "nt" and sys.version_info >= (3, 7):
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+# Handle resource limit
+if resource is not None:
+    soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+
+    DEFAULT_SOFT = 4096
+    if hard >= DEFAULT_SOFT:
+        soft = DEFAULT_SOFT
+
+    old_soft, old_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    hard = old_hard
+    if old_soft < soft:
+        if hard < soft:
+            hard = soft
+        resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def event_loop():
     # Make sure we test against a selector event loop
     # since pyzmq doesn't like the proactor loop.
@@ -22,6 +40,7 @@ def event_loop():
     if os.name == "nt" and sys.version_info >= (3, 7):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     loop = asyncio.SelectorEventLoop()
+    asyncio.set_event_loop(loop)
     try:
         yield loop
     finally:

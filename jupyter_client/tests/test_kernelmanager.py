@@ -441,6 +441,8 @@ class TestParallel:
         km.shutdown_kernel()
         assert km.context.closed
 
+        kc.stop_channels()
+
 
 @pytest.mark.asyncio
 class TestAsyncKernelManager:
@@ -524,6 +526,8 @@ class TestAsyncKernelManager:
                 break
         # verify that subprocesses were interrupted
         assert reply["user_expressions"]["poll"] == [-signal.SIGINT] * N
+
+        await km.shutdown_kernel()
 
     @pytest.mark.timeout(10)
     async def test_start_new_async_kernel(self, install_kernel, start_async_kernel):
