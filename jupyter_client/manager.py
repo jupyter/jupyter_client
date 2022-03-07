@@ -95,8 +95,8 @@ class KernelManager(ConnectionFileMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
-        # Create a place holder future.
         self._shutdown_ready = None
+        # Create a place holder future.
         try:
             asyncio.get_running_loop()
             self._ready = Future()

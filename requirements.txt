@@ -1,6 +1,6 @@
 entrypoints
 jupyter_core>=4.9.2
-nest-asyncio>=1.5.1
+nest-asyncio>=1.5.4
 python-dateutil>=2.1
 pyzmq>=18.0.2
 tornado>=5.0
