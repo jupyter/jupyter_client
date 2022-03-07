@@ -31,6 +31,7 @@ src = "jupyter_client/_version.py"
 [tool.pytest.ini_options]
 norecursedirs = "dist build"
 addopts= "-r sxX"
+asyncio_mode = "strict"
 filterwarnings= [
   # Fail on warnings
   "error",

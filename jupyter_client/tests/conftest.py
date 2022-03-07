@@ -32,7 +32,7 @@ if resource is not None:
         resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def event_loop():
     # Make sure we test against a selector event loop
     # since pyzmq doesn't like the proactor loop.
@@ -40,7 +40,7 @@ def event_loop():
     if os.name == "nt" and sys.version_info >= (3, 7):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     loop = asyncio.SelectorEventLoop()
-    asyncio.set_event_loop(loop)
+
     try:
         yield loop
     finally:
