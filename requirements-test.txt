@@ -2,7 +2,6 @@ codecov
 coverage
 ipykernel>=6.9
 ipython
-jedi<0.18; python_version<="3.6"
 mock
 mypy
 pre-commit
