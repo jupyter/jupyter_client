@@ -46,6 +46,8 @@ jobs:
   build-n-test-n-coverage:
     name: Build, test and code coverage
 
+    timeout-minutes: 15
+
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -87,6 +89,7 @@ jobs:
   test_miniumum_verisons:
     name: Test Minimum Versions
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
       - name: Base Setup
@@ -100,6 +103,7 @@ jobs:
 
   test_prereleases:
     name: Test Prereleases
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
