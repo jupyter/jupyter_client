@@ -44,6 +44,10 @@ class TestKernelManager(TestCase):
         self.env_patch.start()
         super().setUp()
 
+    def tearDown(self) -> None:
+        self.env_patch.stop()
+        return super().tearDown()
+
     # static so picklable for multiprocessing on Windows
     @staticmethod
     def _get_tcp_km():
@@ -243,6 +247,10 @@ class TestAsyncKernelManager(AsyncTestCase):
         self.env_patch.start()
         super().setUp()
 
+    def tearDown(self):
+        self.env_patch.stop()
+        super().setUp()
+
     # static so picklable for multiprocessing on Windows
     @staticmethod
     def _get_tcp_km():
@@ -382,9 +390,8 @@ class TestAsyncKernelManager(AsyncTestCase):
         k = km.get_kernel(kid)
         assert isinstance(k, AsyncKernelManager)
         await ensure_future(km.shutdown_kernel(kid, now=True))
-        # Wait for the kernel to shutdown
-        await kernel.ready
-        assert kid not in km, f"{kid} not in {km}"
+        await kernel.shutdown_ready
+        assert kid not in km, f"{kid} aws in {km}"
 
     @gen_test
     async def test_use_pending_kernels_early_restart(self):
@@ -396,9 +403,8 @@ class TestAsyncKernelManager(AsyncTestCase):
             await km.restart_kernel(kid, now=True)
         await kernel.ready
         await ensure_future(km.shutdown_kernel(kid, now=True))
-        # Wait for the kernel to shutdown
-        await kernel.ready
-        assert kid not in km, f"{kid} not in {km}"
+        await kernel.shutdown_ready
+        assert kid not in km, f"{kid} was in {km}"
 
     @gen_test
     async def test_use_pending_kernels_early_shutdown(self):
@@ -412,9 +418,8 @@ class TestAsyncKernelManager(AsyncTestCase):
         await kernel.ready
         # Shutdown once the kernel is ready
         await ensure_future(km.shutdown_kernel(kid, now=True))
-        # Wait for the kernel to shutdown
-        await kernel.ready
-        assert kid not in km, f"{kid} not in {km}"
+        await kernel.shutdown_ready
+        assert kid not in km, f"{kid} was in {km}"
 
     @gen_test
     async def test_use_pending_kernels_early_interrupt(self):
@@ -427,9 +432,8 @@ class TestAsyncKernelManager(AsyncTestCase):
         # Now wait for the kernel to be ready.
         await kernel.ready
         await ensure_future(km.shutdown_kernel(kid, now=True))
-        # Wait for the kernel to shutdown
-        await kernel.ready
-        assert kid not in km, f"{kid} not in {km}"
+        await kernel.shutdown_ready
+        assert kid not in km, f"{kid} was in {km}"
 
     @gen_test
     async def test_tcp_cinfo(self):

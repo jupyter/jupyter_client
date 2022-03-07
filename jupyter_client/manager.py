@@ -52,33 +52,37 @@ class _ShutdownStatus(Enum):
     SigkillRequest = "SigkillRequest"
 
 
-def in_pending_state(method):
+def in_pending_state(attr='_ready'):
     """Sets the kernel to a pending state by
     creating a fresh Future for the KernelManager's `ready`
     attribute. Once the method is finished, set the Future's results.
     """
 
-    @functools.wraps(method)
-    async def wrapper(self, *args, **kwargs):
-        # Create a future for the decorated method
-        try:
-            self._ready = Future()
-        except RuntimeError:
-            # No event loop running, use concurrent future
-            self._ready = CFuture()
-        try:
-            # call wrapped method, await, and set the result or exception.
-            out = await method(self, *args, **kwargs)
-            # Add a small sleep to ensure tests can capture the state before done
-            await asyncio.sleep(0.01)
-            self._ready.set_result(None)
-            return out
-        except Exception as e:
-            self._ready.set_exception(e)
-            self.log.exception(self._ready.exception())
-            raise e
+    def inner(method):
+        @functools.wraps(method)
+        async def wrapper(self, *args, **kwargs):
+            # Create a future for the decorated method
+            try:
+                fut = Future()
+            except RuntimeError:
+                # No event loop running, use concurrent future
+                fut = CFuture()
+            setattr(self, attr, fut)
+            try:
+                # call wrapped method, await, and set the result or exception.
+                out = await method(self, *args, **kwargs)
+                # Add a small sleep to ensure tests can capture the state before done
+                await asyncio.sleep(0.01)
+                fut.set_result(None)
+                return out
+            except Exception as e:
+                fut.set_exception(e)
+                self.log.exception(fut.exception())
+                raise e
 
-    return wrapper
+        return wrapper
+
+    return inner
 
 
 class KernelManager(ConnectionFileMixin):
@@ -91,6 +95,7 @@ class KernelManager(ConnectionFileMixin):
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
         # Create a place holder future.
+        self._shutdown_ready = None
         try:
             self._ready = Future()
         except RuntimeError:
@@ -181,6 +186,11 @@ class KernelManager(ConnectionFileMixin):
     def ready(self) -> Future:
         """A future that resolves when the kernel process has started for the first time"""
         return self._ready
+
+    @property
+    def shutdown_ready(self) -> Future:
+        """A future that resolves when a shutdown has completed"""
+        return self._shutdown_ready
 
     @property
     def ipykernel(self) -> bool:
@@ -360,7 +370,7 @@ class KernelManager(ConnectionFileMixin):
 
     post_start_kernel = run_sync(_async_post_start_kernel)
 
-    @in_pending_state
+    @in_pending_state()
     async def _async_start_kernel(self, **kw):
         """Starts a kernel on this host in a separate process.
 
@@ -454,6 +464,7 @@ class KernelManager(ConnectionFileMixin):
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
+    @in_pending_state('_shutdown_ready')
     async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False):
         """Attempts to stop the kernel process cleanly.
 
