@@ -245,6 +245,13 @@ class TestAsyncKernelManager(AsyncTestCase):
     def setUp(self):
         self.env_patch = test_env()
         self.env_patch.start()
+        # Work around deprecation warning in Python 3.10+
+        # when there is not running event loop and
+        # get_event_loop() is called by tornado.
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            asyncio.set_event_loop(asyncio.new_event_loop())
         super().setUp()
 
     def tearDown(self):
