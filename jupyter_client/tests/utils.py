@@ -64,7 +64,7 @@ class test_env(object):
         self.env_patch.stop()
         try:
             self.test_dir.cleanup()
-        except PermissionError:
+        except (PermissionError, NotADirectoryError):
             if os.name != 'nt':
                 raise
 

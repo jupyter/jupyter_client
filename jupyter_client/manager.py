@@ -9,7 +9,6 @@ import signal
 import sys
 import typing as t
 import uuid
-import warnings
 from asyncio.futures import Future
 from concurrent.futures import Future as CFuture
 from contextlib import contextmanager
@@ -64,8 +63,8 @@ def in_pending_state(attr='_ready'):
         async def wrapper(self, *args, **kwargs):
             # Create a future for the decorated method
             try:
-                with warnings.catch_warnings():
-                    fut = Future()
+                asyncio.get_running_loop()
+                fut = Future()
             except RuntimeError:
                 # No event loop running, use concurrent future
                 fut = CFuture()
@@ -99,8 +98,8 @@ class KernelManager(ConnectionFileMixin):
         # Create a place holder future.
         self._shutdown_ready = None
         try:
-            with warnings.catch_warnings():
-                self._ready = Future()
+            asyncio.get_running_loop()
+            self._ready = Future()
         except RuntimeError:
             # No event loop running, use concurrent future
             self._ready = CFuture()
