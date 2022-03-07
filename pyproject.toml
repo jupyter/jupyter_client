@@ -39,4 +39,7 @@ filterwarnings= [
   # Workarounds for https://github.com/pytest-dev/pytest-asyncio/issues/77
   "ignore:unclosed <socket.socket:ResourceWarning",
   "ignore:unclosed event loop:ResourceWarning"
+
+  # Workaround for https://github.com/zeromq/pyzmq/issues/1004
+  "ignore:Importing zmq.backend.cython failed:ImportError"
 ]
