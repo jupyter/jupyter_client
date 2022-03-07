@@ -3,5 +3,5 @@ jupyter_core>=4.9.2
 nest-asyncio>=1.5.4
 python-dateutil>=2.1
 pyzmq>=22.3
-tornado>=6.1
+tornado>=6.0
 traitlets

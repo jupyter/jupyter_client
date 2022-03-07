@@ -1,6 +1,6 @@
 codecov
 coverage
-ipykernel>=6.9
+ipykernel>=6.2
 ipython
 mock
 mypy
