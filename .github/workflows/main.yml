@@ -73,7 +73,7 @@ jobs:
         run: mypy jupyter_client --exclude '\/tests|kernelspecapp|ioloop|runapp' --install-types --non-interactive
 
       - name: Run the tests with coverage
-        run: pytest --cov jupyter_client -v jupyter_client
+        run: pytest --cov jupyter_client -vv jupyter_client || || pytest --cov jupyter_client -vv jupyter_client --lf
 
       - name: Build the docs
         run: |

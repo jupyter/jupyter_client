@@ -2,6 +2,6 @@ entrypoints
 jupyter_core>=4.9.2
 nest-asyncio>=1.5.4
 python-dateutil>=2.1
-pyzmq>=18.0.2
+pyzmq>=22
 tornado>=5.0
 traitlets
