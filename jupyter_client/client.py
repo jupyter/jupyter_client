@@ -286,8 +286,8 @@ class KernelClient(ConnectionFileMixin):
         :meth:`start_kernel`. If the channels have been stopped and you
         call this, :class:`RuntimeError` will be raised.
         """
-        # Re-create the context if needed.
-        if self._created_context:
+        # Create the context if needed.
+        if not self._created_context:
             self.context = self._context_default()
         if iopub:
             self.iopub_channel.start()
@@ -319,6 +319,7 @@ class KernelClient(ConnectionFileMixin):
         if self.control_channel.is_alive():
             self.control_channel.stop()
         if self._created_context:
+            self._created_context = False
             self.context.destroy()
 
     @property

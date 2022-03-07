@@ -17,6 +17,7 @@ pjoin = os.path.join
 
 
 # Handle resource limit
+# Ensure a minimal soft limit of DEFAULT_SOFT if the current hard limit is at least that much.
 if resource is not None:
     soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
 
@@ -24,12 +25,10 @@ if resource is not None:
     if hard >= DEFAULT_SOFT:
         soft = DEFAULT_SOFT
 
-    old_soft, old_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-    hard = old_hard
-    if old_soft < soft:
-        if hard < soft:
-            hard = soft
-        resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
+    if hard < soft:
+        hard = soft
+
+    resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
 
 if os.name == "nt" and sys.version_info >= (3, 7):
