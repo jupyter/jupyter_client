@@ -100,7 +100,7 @@ def json_packer(obj):
             ensure_ascii=False,
             allow_nan=False,
         ).encode("utf8")
-    except ValueError as e:
+    except (TypeError, ValueError) as e:
         # Fallback to trying to clean the json before serializing
         packed = json.dumps(
             json_clean(obj),
