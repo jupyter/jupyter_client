@@ -11,7 +11,7 @@ import os
 def run_sync(coro):
     def wrapped(*args, **kwargs):
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -19,7 +19,7 @@ def run_sync(coro):
 
         nest_asyncio.apply(loop)
 
-        future = asyncio.ensure_future(coro(*args, **kwargs))
+        future = asyncio.ensure_future(coro(*args, **kwargs), loop=loop)
         try:
             return loop.run_until_complete(future)
         except BaseException as e:
