@@ -46,8 +46,4 @@ filterwarnings= [
 
   # Workaround for distutils.Version used in ipykernel
   "ignore:The distutils package is deprecated and slated for removal:DeprecationWarning:ipykernel",
-
-  # ZMQ uses Future internally, which raises a DeprecationWarning
-  # When there is no loop running.
-  "ignore:There is no current event loop:DeprecationWarning:zmq"
 ]
