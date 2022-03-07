@@ -32,6 +32,10 @@ if resource is not None:
         resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
 
+if os.name == "nt" and sys.version_info >= (3, 7):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
 @pytest.fixture
 def event_loop():
     # Make sure we test against a selector event loop

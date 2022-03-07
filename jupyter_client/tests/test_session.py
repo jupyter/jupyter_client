@@ -9,6 +9,7 @@ from unittest import mock
 
 import pytest
 import zmq
+from tornado import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 from zmq.tests import BaseZMQTestCase
 
@@ -169,7 +170,8 @@ class TestSession(SessionTestCase):
         a, b = self.create_bound_pair(zmq.PAIR, zmq.PAIR)
         s = self.session
         s.copy_threshold = 1
-        ZMQStream(a)
+        loop = ioloop.IOLoop(make_current=False)
+        ZMQStream(a, io_loop=loop)
         msg = s.send(a, "hello", track=False)
         self.assertTrue(msg["tracker"] is ss.DONE)
         msg = s.send(a, "hello", track=True)
