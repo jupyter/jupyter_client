@@ -62,7 +62,11 @@ class test_env(object):
 
     def stop(self):
         self.env_patch.stop()
-        self.test_dir.cleanup()
+        try:
+            self.test_dir.cleanup()
+        except PermissionError:
+            if os.name != 'nt':
+                raise
 
     def __enter__(self):
         self.start()
