@@ -324,7 +324,7 @@ class MultiKernelManager(LoggingConfigurable):
         # should be awaited before exiting this method.
         if self._using_pending_kernels():
             for km in self._kernels.values():
-                await km.ready
+                await km.shutdown_ready
 
     shutdown_all = run_sync(_async_shutdown_all)
 
