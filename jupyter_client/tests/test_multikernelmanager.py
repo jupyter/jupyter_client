@@ -422,7 +422,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         kernel = km.get_kernel(kid)
         assert kernel.starting
         if kernel.has_kernel:
-            await km.interrupt_kernel()
+            await km.interrupt_kernel(kid)
         else:
             with pytest.raises(RuntimeError):
                 await km.interrupt_kernel(kid)
