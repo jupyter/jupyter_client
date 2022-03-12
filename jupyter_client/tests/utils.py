@@ -139,7 +139,7 @@ class KMSubclass(RecordCallMixin):
         """Record call and defer to superclass"""
 
     @subclass_recorder
-    def shutdown_kernel(self, now=False, restart=False):
+    def shutdown_kernel(self, now=False, restart=False, force_wait=False):
         """Record call and defer to superclass"""
 
     @subclass_recorder
@@ -212,7 +212,7 @@ class MKMSubclass(RecordCallMixin):
         """Record call and defer to superclass"""
 
     @subclass_recorder
-    def shutdown_kernel(self, kernel_id, now=False, restart=False):
+    def shutdown_kernel(self, kernel_id, now=False, restart=False, force_wait=False):
         """Record call and defer to superclass"""
 
     @subclass_recorder

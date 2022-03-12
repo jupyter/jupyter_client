@@ -65,7 +65,12 @@ def in_pending_state(future_name='_start_future', flag='starting'):
             elif flag == 'shutting_down':
                 if self.shutting_down:
                     return
-            fut = Future()
+            fut = getattr(self, future_name)
+
+            # Create a new future as needed.
+            if fut.done:
+                fut = Future()
+
             setattr(self, future_name, fut)
             setattr(self, flag, True)
             try:
@@ -81,7 +86,6 @@ def in_pending_state(future_name='_start_future', flag='starting'):
                 raise e
             finally:
                 setattr(self, flag, False)
-                setattr(self, future_name, None)
 
         return wrapper
 
@@ -98,9 +102,9 @@ class KernelManager(ConnectionFileMixin):
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
         self._shutdown_ready = None
-        # Add placeholders for start and shutdown futures
-        self._start_future = None
-        self._shutdown_future = None
+        # Add initial start and shutdown futures.
+        self._start_future = Future()
+        self._shutdown_future = Future()
 
     _created_context: Bool = Bool(False)
 
@@ -250,22 +254,18 @@ class KernelManager(ConnectionFileMixin):
 
     async def wait_for_start_ready(self):
         """Wait for a pending start to be ready."""
-        if not self._start_future:
-            raise RuntimeError('Not starting')
         future = self._start_future
-        await asyncio.ensure_future(future)
+        await asyncio.ensure_future(asyncio.wrap_future(future))
         # Recurse if needed.
-        if self._start_future and self._start_future != future:
+        if self._start_future != future:
             await self.wait_for_start_ready()
 
     async def wait_for_shutdown_ready(self):
         """Wait for a pending shutdown to be ready."""
-        if not self._shutdown_future:
-            raise RuntimeError('Not shutting down')
         future = self._shutdown_future
-        await asyncio.ensure_future(future)
+        await asyncio.ensure_future(asyncio.wrap_future(future))
         # Recurse if needed.
-        if self._shutdown_future and self._shutdown_future != future:
+        if self._shutdown_future != future:
             await self.wait_for_shutdown_ready()
 
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
@@ -493,6 +493,9 @@ class KernelManager(ConnectionFileMixin):
             Will this kernel be restarted after it is shutdown. When this
             is True, connection files will not be cleaned up.
         """
+        if self.starting:
+            await self.wait_for_start_ready()
+
         self.shutting_down = True  # Used by restarter to prevent race condition
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()

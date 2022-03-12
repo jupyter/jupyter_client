@@ -195,8 +195,7 @@ class TestKernelManager:
     def test_lifecycle(self, km):
         km.start_kernel(stdout=PIPE, stderr=PIPE)
         assert km.is_alive()
-        is_done = km.ready.done()
-        assert is_done
+        assert km.has_kernel
         km.restart_kernel(now=True)
         assert km.is_alive()
         km.interrupt_kernel()
@@ -450,8 +449,7 @@ class TestAsyncKernelManager:
         await async_km.start_kernel(stdout=PIPE, stderr=PIPE)
         is_alive = await async_km.is_alive()
         assert is_alive
-        is_ready = async_km.ready.done()
-        assert is_ready
+        assert async_km.has_kernel
         await async_km.restart_kernel(now=True)
         is_alive = await async_km.is_alive()
         assert is_alive
