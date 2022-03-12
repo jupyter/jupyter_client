@@ -9,8 +9,7 @@ import signal
 import sys
 import typing as t
 import uuid
-from asyncio.futures import Future
-from concurrent.futures import Future as CFuture
+from concurrent.futures import Future
 from contextlib import contextmanager
 from enum import Enum
 
@@ -52,23 +51,23 @@ class _ShutdownStatus(Enum):
     SigkillRequest = "SigkillRequest"
 
 
-def in_pending_state(attr='_ready'):
-    """Sets the kernel to a pending state by
-    creating a fresh Future for the KernelManager's `ready`
-    attribute. Once the method is finished, set the Future's results.
-    """
+def in_pending_state(future_name='_start_future', flag='starting'):
+    """Manages the future for a pending operation"""
 
     def inner(method):
         @functools.wraps(method)
         async def wrapper(self, *args, **kwargs):
-            # Create a future for the decorated method
-            try:
-                asyncio.get_running_loop()
-                fut = Future()
-            except RuntimeError:
-                # No event loop running, use concurrent future
-                fut = CFuture()
-            setattr(self, attr, fut)
+            # If we are aleady starting, error out.
+            if flag == 'starting':
+                if self.starting:
+                    raise RuntimeError('Pending Start')
+            # If we are already shutting down, bail.
+            elif flag == 'shutting_down':
+                if self.shutting_down:
+                    return
+            fut = Future()
+            setattr(self, future_name, fut)
+            setattr(self, flag, True)
             try:
                 # call wrapped method, await, and set the result or exception.
                 out = await method(self, *args, **kwargs)
@@ -80,6 +79,9 @@ def in_pending_state(attr='_ready'):
                 fut.set_exception(e)
                 self.log.exception(fut.exception())
                 raise e
+            finally:
+                setattr(self, flag, False)
+                setattr(self, future_name, None)
 
         return wrapper
 
@@ -96,13 +98,9 @@ class KernelManager(ConnectionFileMixin):
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
         self._shutdown_ready = None
-        # Create a place holder future.
-        try:
-            asyncio.get_running_loop()
-            self._ready = Future()
-        except RuntimeError:
-            # No event loop running, use concurrent future
-            self._ready = CFuture()
+        # Add placeholders for start and shutdown futures
+        self._start_future = None
+        self._shutdown_future = None
 
     _created_context: Bool = Bool(False)
 
@@ -185,16 +183,6 @@ class KernelManager(ConnectionFileMixin):
         return self.transport == "tcp"
 
     @property
-    def ready(self) -> Future:
-        """A future that resolves when the kernel process has started for the first time"""
-        return self._ready
-
-    @property
-    def shutdown_ready(self) -> Future:
-        """A future that resolves when a shutdown has completed"""
-        return self._shutdown_ready
-
-    @property
     def ipykernel(self) -> bool:
         return self.kernel_name in {"python", "python2", "python3"}
 
@@ -208,6 +196,7 @@ class KernelManager(ConnectionFileMixin):
         True, config=True, help="""Should we autorestart the kernel if it dies."""
     )
 
+    starting: bool = False
     shutting_down: bool = False
 
     def __del__(self) -> None:
@@ -258,6 +247,26 @@ class KernelManager(ConnectionFileMixin):
     # --------------------------------------------------------------------------
     # Kernel management
     # --------------------------------------------------------------------------
+
+    async def wait_for_start_ready(self):
+        """Wait for a pending start to be ready."""
+        if not self._start_future:
+            raise RuntimeError('Not starting')
+        future = self._start_future
+        await asyncio.ensure_future(future)
+        # Recurse if needed.
+        if self._start_future and self._start_future != future:
+            await self.wait_for_start_ready()
+
+    async def wait_for_shutdown_ready(self):
+        """Wait for a pending shutdown to be ready."""
+        if not self._shutdown_future:
+            raise RuntimeError('Not shutting down')
+        future = self._shutdown_future
+        await asyncio.ensure_future(future)
+        # Recurse if needed.
+        if self._shutdown_future and self._shutdown_future != future:
+            await self.wait_for_shutdown_ready()
 
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """replace templated args (e.g. {connection_file})"""
@@ -341,7 +350,6 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        self.shutting_down = False
         self.kernel_id = self.kernel_id or kw.pop('kernel_id', str(uuid.uuid4()))
         # save kwargs for use in restart
         self._launch_args = kw.copy()
@@ -466,7 +474,7 @@ class KernelManager(ConnectionFileMixin):
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
-    @in_pending_state('_shutdown_ready')
+    @in_pending_state('_shutdown_future', 'shutting_down')
     async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False):
         """Attempts to stop the kernel process cleanly.
 
@@ -504,6 +512,7 @@ class KernelManager(ConnectionFileMixin):
             await ensure_async(self.finish_shutdown(restart=restart))
 
         await ensure_async(self.cleanup_resources(restart=restart))
+        self.shutting_down = False
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
