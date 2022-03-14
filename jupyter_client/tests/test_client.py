@@ -1,12 +1,15 @@
 """Tests for the KernelClient"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import asyncio
 import os
+from textwrap import dedent
 from unittest import TestCase
 
 import pytest
 from IPython.utils.capture import capture_output
 
+from ..manager import start_new_async_kernel
 from ..manager import start_new_kernel
 from .utils import test_env
 from jupyter_client.kernelspec import KernelSpecManager
@@ -16,6 +19,40 @@ from jupyter_client.kernelspec import NoSuchKernel
 TIMEOUT = 30
 
 pjoin = os.path.join
+
+
+@pytest.mark.asyncio
+async def test_interrupt_coroutine():
+    try:
+        KernelSpecManager().get_kernel_spec(NATIVE_KERNEL_NAME)
+    except NoSuchKernel:
+        pytest.skip()
+
+    km, kc = await start_new_async_kernel(kernel_name=NATIVE_KERNEL_NAME)
+
+    code = dedent(
+        """
+        import asyncio
+
+        async def main():
+            print("sleeping")
+            await asyncio.sleep(0.5)
+            print("done")
+
+        await main()
+    """
+    )
+    with capture_output() as io:
+        asyncio.create_task(kc.execute_interactive(code, timeout=TIMEOUT))
+        # wait for coroutine to start, this should print "sleeping"
+        await asyncio.sleep(0.2)
+        # interrupt kernel before coroutine completes execution, "done" should not be printed
+        await km.interrupt_kernel()
+
+    assert "sleeping" in io.stdout
+    assert "done" not in io.stdout
+    kc.stop_channels()
+    await km.shutdown_kernel()
 
 
 class TestKernelClient(TestCase):
