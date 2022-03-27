@@ -104,6 +104,7 @@ jobs:
       - name: Build the docs
         run: |
           pip install -r requirements-doc.txt
+          pip install .
           cd docs
           make html SPHINXOPTS="-W"
 
