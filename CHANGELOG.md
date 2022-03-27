@@ -532,7 +532,7 @@ GitHub](https://github.com/jupyter/jupyter_client/milestones/5.1)
 
 ## 5.0
 
-#### 5.0.1
+### 5.0.1
 
 [5.0.1 on
 GitHub](https://github.com/jupyter/jupyter_client/milestones/5.0.1)
@@ -540,7 +540,7 @@ GitHub](https://github.com/jupyter/jupyter_client/milestones/5.0.1)
 - Update internal protocol version number to 5.1, which should have
   been done in 5.0.0.
 
-#### 5.0.0
+### 5.0.0
 
 [5.0.0 on
 GitHub](https://github.com/jupyter/jupyter_client/milestones/5.0)
@@ -590,7 +590,7 @@ Backward-incompatible changes:
 
 ## 4.4
 
-#### 4.4.0
+### 4.4.0
 
 [4.4 on
 GitHub](https://github.com/jupyter/jupyter_client/milestones/4.4)
@@ -603,7 +603,7 @@ GitHub](https://github.com/jupyter/jupyter_client/milestones/4.4)
 
 ## 4.3
 
-#### 4.3.0
+### 4.3.0
 
 [4.3 on
 GitHub](https://github.com/jupyter/jupyter_client/milestones/4.3)
@@ -614,21 +614,21 @@ GitHub](https://github.com/jupyter/jupyter_client/milestones/4.3)
 
 ## 4.2
 
-#### 4.2.2
+### 4.2.2
 
 [4.2.2 on
 GitHub](https://github.com/jupyter/jupyter_client/milestones/4.2.2)
 
 - Another fix for the `start_new_kernel` issue in 4.2.1 affecting slow-starting kernels.
 
-#### 4.2.1
+### 4.2.1
 
 [4.2.1 on
 GitHub](https://github.com/jupyter/jupyter_client/milestones/4.2.1)
 
 - Fix regression in 4.2 causing `start_new_kernel` to fail while waiting for kernels to become available.
 
-#### 4.2.0
+### 4.2.0
 
 [4.2.0 on
 GitHub](https://github.com/jupyter/jupyter_client/milestones/4.2)
@@ -645,7 +645,7 @@ GitHub](https://github.com/jupyter/jupyter_client/milestones/4.2)
 
 ## 4.1
 
-#### 4.1.0
+### 4.1.0
 
 [4.1.0 on
 GitHub](https://github.com/jupyter/jupyter_client/milestones/4.1)

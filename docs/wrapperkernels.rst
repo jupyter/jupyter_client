@@ -134,7 +134,7 @@ You can override a number of other methods to improve the functionality of your
 kernel. All of these methods should return a dictionary as described in the
 relevant section of the :doc:`messaging spec <messaging>`.
 
-.. class:: MyKernel
+.. class:: MyCustomKernel
 
    .. method:: do_complete(code, cursor_pos)
 
