@@ -1,4 +1,4 @@
-.. _provisioning
+.. _provisioning:
 
 Customizing the kernel's runtime environment
 ============================================

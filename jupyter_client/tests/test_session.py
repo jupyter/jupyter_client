@@ -3,6 +3,7 @@
 # Distributed under the terms of the Modified BSD License.
 import hmac
 import os
+import platform
 import uuid
 from datetime import datetime
 from unittest import mock
@@ -164,6 +165,7 @@ class TestSession(SessionTestCase):
         self.assertEqual(s.session, u)
         self.assertEqual(s.username, "carrot")
 
+    @pytest.mark.skipif(platform.python_implementation() == 'PyPy', reason='Test fails on PyPy')
     def test_tracking(self):
         """test tracking messages"""
         a, b = self.create_bound_pair(zmq.PAIR, zmq.PAIR)

@@ -27,3 +27,12 @@ tag_template = "v{new_version}"
 
 [[tool.tbump.file]]
 src = "jupyter_client/_version.py"
+
+[tool.pytest.ini_options]
+addopts = "-raXs --durations 10 --color=yes --doctest-modules"
+testpaths = [
+    "jupyter_client/tests/"
+]
+timeout = 300
+# Restore this setting to debug failures
+# timeout_method = "thread"
