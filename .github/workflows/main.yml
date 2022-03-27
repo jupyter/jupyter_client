@@ -105,7 +105,7 @@ jobs:
         run: |
           pip install -r requirements-doc.txt
           cd docs
-          make html
+          make html SPHINXOPTS="-W"
 
   test_miniumum_verisons:
     name: Test Minimum Versions
