@@ -82,7 +82,7 @@ jobs:
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
         run: |
-          args="-vv --cov jupyter_client--cov-branch --cov-report term-missing:skip-covered --cov-fail-under 70"
+          args="-vv --cov jupyter_client --cov-branch --cov-report term-missing:skip-covered --cov-fail-under 70"
           python -m pytest $args || python -m pytest $args --lf
       - name: Run the tests on pypy and windows
         if: ${{ startsWith(matrix.python-version, 'pypy') || startsWith(matrix.os, 'windows') }}
