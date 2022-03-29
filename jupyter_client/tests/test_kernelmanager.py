@@ -440,6 +440,7 @@ class TestParallel:
 
         km.shutdown_kernel()
         assert km.context.closed
+        kc.stop_channels()
 
 
 @pytest.mark.asyncio

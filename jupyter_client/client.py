@@ -11,6 +11,7 @@ from queue import Empty
 
 import zmq.asyncio
 from traitlets import Any  # type: ignore
+from traitlets import Bool
 from traitlets import Instance
 from traitlets import Type
 
@@ -92,7 +93,10 @@ class KernelClient(ConnectionFileMixin):
     # The PyZMQ Context to use for communication with the kernel.
     context = Instance(zmq.asyncio.Context)
 
+    _created_context: Bool = Bool(False)
+
     def _context_default(self) -> zmq.asyncio.Context:
+        self._created_context = True
         return zmq.asyncio.Context()
 
     # The classes to use for the various channels
@@ -282,6 +286,9 @@ class KernelClient(ConnectionFileMixin):
         :meth:`start_kernel`. If the channels have been stopped and you
         call this, :class:`RuntimeError` will be raised.
         """
+        # Create the context if needed.
+        if not self._created_context:
+            self.context = self._context_default()
         if iopub:
             self.iopub_channel.start()
         if shell:
@@ -311,6 +318,9 @@ class KernelClient(ConnectionFileMixin):
             self.hb_channel.stop()
         if self.control_channel.is_alive():
             self.control_channel.stop()
+        if self._created_context:
+            self._created_context = False
+            self.context.destroy()
 
     @property
     def channels_running(self) -> bool:

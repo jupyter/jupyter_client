@@ -66,6 +66,11 @@ class CustomTestProvisioner(KernelProvisionerBase):
 
             # Process is no longer alive, wait and clear
             ret = self.process.wait()
+            # Make sure all the fds get closed.
+            for attr in ['stdout', 'stderr', 'stdin']:
+                fid = getattr(self.process, attr)
+                if fid:
+                    fid.close()
             self.process = None
         return ret
 

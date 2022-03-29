@@ -1,11 +1,10 @@
 codecov
 coverage
-ipykernel>=5.5.6
+ipykernel>=6.5
 ipython
-jedi<0.18; python_version<="3.6"
 mypy
 pre-commit
 pytest
-pytest-asyncio
+pytest-asyncio>0.18
 pytest-cov
 pytest-timeout
