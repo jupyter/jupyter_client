@@ -30,7 +30,9 @@ src = "jupyter_client/_version.py"
 
 [tool.pytest.ini_options]
 norecursedirs = "dist build"
-addopts= "-r sxX"
+addopts = "-raXs --durations 10 --color=yes --doctest-modules"
+testpaths = [
+    "jupyter_client/tests/"
 asyncio_mode = "auto"
 filterwarnings= [
   # Fail on warnings
