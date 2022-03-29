@@ -2,6 +2,34 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.2.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.1.2...098de3e51bd4ee1b1a3aded889e8f109ac5eff89))
+
+### Enhancements made
+
+- Update consoleapp.py [#733](https://github.com/jupyter/jupyter_client/pull/733) ([@you-n-g](https://github.com/you-n-g))
+
+### Bugs fixed
+
+- Json packer: handle TypeError and fallback to old json_clean [#752](https://github.com/jupyter/jupyter_client/pull/752) ([@martinRenou](https://github.com/martinRenou))
+- Prefer sending signals to kernel process group [#743](https://github.com/jupyter/jupyter_client/pull/743) ([@kevin-bates](https://github.com/kevin-bates))
+
+### Maintenance and upkeep improvements
+
+- Mock is not needed [#758](https://github.com/jupyter/jupyter_client/pull/758) ([@hroncok](https://github.com/hroncok))
+- Add pytest opts and clean up workflows [#757](https://github.com/jupyter/jupyter_client/pull/757) ([@blink1073](https://github.com/blink1073))
+- Clean up dependency handling [#750](https://github.com/jupyter/jupyter_client/pull/750) ([@blink1073](https://github.com/blink1073))
+- Use built in run cancellation [#742](https://github.com/jupyter/jupyter_client/pull/742) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-01-21&to=2022-03-28&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-01-21..2022-03-28&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-01-21..2022-03-28&type=Issues) | [@echarles](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aecharles+updated%3A2022-01-21..2022-03-28&type=Issues) | [@hroncok](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahroncok+updated%3A2022-01-21..2022-03-28&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2022-01-21..2022-03-28&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AmartinRenou+updated%3A2022-01-21..2022-03-28&type=Issues) | [@you-n-g](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ayou-n-g+updated%3A2022-01-21..2022-03-28&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.1.2
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.1.1...2c9fbf499f63d4287851021b8f8efc9d3c0e336e))
@@ -15,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-01-14&to=2022-01-21&type=c))
 
 [@jtpio](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ajtpio+updated%3A2022-01-14..2022-01-21&type=Issues) | [@Zsailer](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AZsailer+updated%3A2022-01-14..2022-01-21&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.1.1
 
