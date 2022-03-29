@@ -33,6 +33,7 @@ norecursedirs = "dist build"
 addopts = "-raXs --durations 10 --color=yes --doctest-modules"
 testpaths = [
     "jupyter_client/tests/"
+]
 asyncio_mode = "auto"
 filterwarnings= [
   # Fail on warnings
