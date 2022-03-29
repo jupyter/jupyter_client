@@ -5,6 +5,6 @@ ipython
 mypy
 pre-commit
 pytest
-pytest-asyncio>0.18
+pytest-asyncio>=0.18
 pytest-cov
 pytest-timeout
