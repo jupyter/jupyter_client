@@ -477,7 +477,8 @@ class KernelManager(ConnectionFileMixin):
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
 
-        await ensure_async(self.interrupt_kernel())
+        if self.has_kernel:
+            await ensure_async(self.interrupt_kernel())
 
         if now:
             await ensure_async(self._kill_kernel())
