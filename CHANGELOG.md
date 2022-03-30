@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.2.1
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.2.0...683e8dd96ecd52da48a85f67e4ae31d85f1c6616))
+
+### Maintenance and upkeep improvements
+
+- Handle Warnings [#760](https://github.com/jupyter/jupyter_client/pull/760) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-03-29&to=2022-03-30&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-03-29..2022-03-30&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.2.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.1.2...098de3e51bd4ee1b1a3aded889e8f109ac5eff89))
@@ -27,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-01-21&to=2022-03-28&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-01-21..2022-03-28&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-01-21..2022-03-28&type=Issues) | [@echarles](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aecharles+updated%3A2022-01-21..2022-03-28&type=Issues) | [@hroncok](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahroncok+updated%3A2022-01-21..2022-03-28&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2022-01-21..2022-03-28&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AmartinRenou+updated%3A2022-01-21..2022-03-28&type=Issues) | [@you-n-g](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ayou-n-g+updated%3A2022-01-21..2022-03-28&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.1.2
 
