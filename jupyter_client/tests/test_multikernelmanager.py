@@ -44,6 +44,10 @@ class TestKernelManager(TestCase):
         self.env_patch.start()
         super().setUp()
 
+    def tearDown(self) -> None:
+        self.env_patch.stop()
+        return super().tearDown()
+
     # static so picklable for multiprocessing on Windows
     @staticmethod
     def _get_tcp_km():
@@ -242,6 +246,10 @@ class TestAsyncKernelManager(AsyncTestCase):
         self.env_patch = test_env()
         self.env_patch.start()
         super().setUp()
+
+    def tearDown(self) -> None:
+        self.env_patch.stop()
+        return super().tearDown()
 
     # static so picklable for multiprocessing on Windows
     @staticmethod
@@ -465,8 +473,9 @@ class TestAsyncKernelManager(AsyncTestCase):
 
     def tcp_lifecycle_with_loop(self):
         # Ensure each thread has an event loop
-        asyncio.set_event_loop(asyncio.new_event_loop())
-        asyncio.get_event_loop().run_until_complete(self.raw_tcp_lifecycle())
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self.raw_tcp_lifecycle())
 
     # static so picklable for multiprocessing on Windows
     @classmethod
@@ -479,11 +488,8 @@ class TestAsyncKernelManager(AsyncTestCase):
     # static so picklable for multiprocessing on Windows
     @classmethod
     def raw_tcp_lifecycle_sync(cls, test_kid=None):
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # Forked MP, make new loop
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         loop.run_until_complete(cls.raw_tcp_lifecycle(test_kid=test_kid))
 
     @gen_test

@@ -182,7 +182,7 @@ class RemoveKernelSpec(JupyterApp):
         return KernelSpecManager(data_dir=self.data_dir, parent=self)
 
     flags = {
-        "f": ({"RemoveKernelSpec": {"force": True}}, force.get_metadata("help")),
+        "f": ({"RemoveKernelSpec": {"force": True}}, force.help),
     }
     flags.update(JupyterApp.flags)
 

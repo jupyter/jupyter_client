@@ -12,9 +12,11 @@ concurrency:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       matrix:
         python-version: ["3.9"]
+      fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -50,7 +52,15 @@ jobs:
         with:
           package_name: jupyter_server
 
-      # Test using jupyter_kernel_test
+  jupyter_kernel_test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
       - name: Setup conda ${{ matrix.python-version }}
         uses: conda-incubator/setup-miniconda@v2

@@ -92,6 +92,7 @@ class KernelManager(ConnectionFileMixin):
         self._shutdown_status = _ShutdownStatus.Unset
         # Create a place holder future.
         try:
+            asyncio.get_running_loop()
             self._ready = Future()
         except RuntimeError:
             # No event loop running, use concurrent future
@@ -476,7 +477,8 @@ class KernelManager(ConnectionFileMixin):
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
 
-        await ensure_async(self.interrupt_kernel())
+        if self.has_kernel:
+            await ensure_async(self.interrupt_kernel())
 
         if now:
             await ensure_async(self._kill_kernel())

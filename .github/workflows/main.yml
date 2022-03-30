@@ -45,8 +45,8 @@ jobs:
 
   build-n-test-n-coverage:
     name: Build, test and code coverage
-
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
 
     strategy:
       fail-fast: false
@@ -94,6 +94,7 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -111,6 +112,7 @@ jobs:
   test_miniumum_verisons:
     name: Test Minimum Versions
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
       - name: Base Setup
@@ -124,6 +126,7 @@ jobs:
 
   test_prereleases:
     name: Test Prereleases
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -144,7 +147,7 @@ jobs:
   make_sdist:
     name: Make SDist
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
       - name: Base Setup

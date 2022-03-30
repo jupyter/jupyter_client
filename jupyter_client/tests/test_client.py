@@ -28,8 +28,12 @@ class TestKernelClient(TestCase):
         except NoSuchKernel:
             pytest.skip()
         self.km, self.kc = start_new_kernel(kernel_name=NATIVE_KERNEL_NAME)
-        self.addCleanup(self.kc.stop_channels)
-        self.addCleanup(self.km.shutdown_kernel)
+
+    def tearDown(self):
+        self.env_patch.stop()
+        self.km.shutdown_kernel()
+        self.kc.stop_channels()
+        return super().tearDown()
 
     def test_execute_interactive(self):
         kc = self.kc
