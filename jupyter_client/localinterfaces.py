@@ -237,16 +237,16 @@ def _load_ips(suppress_exceptions=True):
         if os.name == "nt":
             try:
                 return _load_ips_ipconfig()
-            except NoIPAddresses:
+            except (OSError, NoIPAddresses):
                 pass
         else:
             try:
                 return _load_ips_ip()
-            except NoIPAddresses:
+            except (OSError, NoIPAddresses):
                 pass
             try:
                 return _load_ips_ifconfig()
-            except NoIPAddresses:
+            except (OSError, NoIPAddresses):
                 pass
 
         # lowest priority, use gethostbyname
