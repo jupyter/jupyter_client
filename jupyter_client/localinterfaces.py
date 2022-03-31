@@ -102,7 +102,7 @@ def _load_ips_ifconfig():
 
     try:
         out = _get_output("ifconfig")
-    except (IOError, OSError):
+    except OSError:
         # no ifconfig, it's usually in /sbin and /sbin is not on everyone's PATH
         out = _get_output("/sbin/ifconfig")
 
@@ -237,16 +237,16 @@ def _load_ips(suppress_exceptions=True):
         if os.name == "nt":
             try:
                 return _load_ips_ipconfig()
-            except (IOError, NoIPAddresses):
+            except NoIPAddresses:
                 pass
         else:
             try:
                 return _load_ips_ip()
-            except (IOError, OSError, NoIPAddresses):
+            except NoIPAddresses:
                 pass
             try:
                 return _load_ips_ifconfig()
-            except (IOError, OSError, NoIPAddresses):
+            except NoIPAddresses:
                 pass
 
         # lowest priority, use gethostbyname

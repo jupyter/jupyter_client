@@ -41,7 +41,7 @@ def select_random_ports(n):
     """Select and return n random ports that are available."""
     ports = []
     sockets = []
-    for i in range(n):
+    for _ in range(n):
         sock = socket.socket()
         sock.bind(("", 0))
         ports.append(sock.getsockname()[1])

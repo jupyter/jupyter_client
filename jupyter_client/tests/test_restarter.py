@@ -19,7 +19,7 @@ pjoin = os.path.join
 
 def _install_kernel(name="problemtest", extra_env=None):
     if extra_env is None:
-        extra_env = dict()
+        extra_env = {}
     kernel_dir = pjoin(paths.jupyter_data_dir(), "kernels", name)
     os.makedirs(kernel_dir)
     with open(pjoin(kernel_dir, "kernel.json"), "w") as f:

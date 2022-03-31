@@ -73,7 +73,7 @@ kernel has dedicated sockets for the following functions:
    appropriately.
 
 4. **Control**: This channel is identical to Shell, but operates on a separate
-   socket to avoid queueing behind execution requests. The control channel is 
+   socket to avoid queueing behind execution requests. The control channel is
    used for shutdown and restart messages, as well as for debugging messages.
 
    For a smoother user experience, we recommend running the control channel in
@@ -1176,7 +1176,7 @@ In order to support page reloading, or a client connecting at a later stage, Jup
               ],
               'stoppedThreads' : list(int),  # threads in which the debugger is currently in a stopped state
               'richRendering' : bool,  # whether the debugger supports rich rendering of variables
-              'exceptionPaths' : list(str),  # exception names used to match leaves or nodes in a tree of exception 
+              'exceptionPaths' : list(str),  # exception names used to match leaves or nodes in a tree of exception
           }
       }
 
