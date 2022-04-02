@@ -117,7 +117,7 @@ def write_connection_file(
         + int(hb_port <= 0)
     )
     if transport == "tcp":
-        for i in range(ports_needed):
+        for _ in range(ports_needed):
             sock = socket.socket()
             # struct.pack('ii', (0,0)) is 8 null bytes
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, b"\0" * 8)
@@ -129,7 +129,7 @@ def write_connection_file(
             ports.append(port)
     else:
         N = 1
-        for i in range(ports_needed):
+        for _ in range(ports_needed):
             while os.path.exists("%s-%s" % (ip, str(N))):
                 N += 1
             ports.append(N)
@@ -450,7 +450,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             self._connection_file_written = False
             try:
                 os.remove(self.connection_file)
-            except (IOError, OSError, AttributeError):
+            except (OSError, AttributeError):
                 pass
 
     def cleanup_ipc_files(self) -> None:
@@ -461,7 +461,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             ipcfile = "%s-%i" % (self.ip, port)
             try:
                 os.remove(ipcfile)
-            except (IOError, OSError):
+            except OSError:
                 pass
 
     def _record_random_port_names(self) -> None:

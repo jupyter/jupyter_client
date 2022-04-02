@@ -164,7 +164,7 @@ class ThreadedZMQSocketChannel(object):
         # gets to perform at least one full poll.
         stop_time = time.time() + timeout
         assert self.ioloop is not None
-        for i in range(2):
+        for _ in range(2):
             self._flushed = False
             self.ioloop.add_callback(self._flush)
             while not self._flushed and time.time() < stop_time:

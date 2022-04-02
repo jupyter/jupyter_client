@@ -121,7 +121,9 @@ The user location takes priority over the system locations, and the case of the
 names is ignored, so selecting kernels works the same way whether or not the
 filesystem is case sensitive.
 Since kernelspecs show up in URLs and other places,
-a kernelspec is required to have a simple name, only containing ASCII letters, ASCII numbers, and the simple separators: ``-`` hyphen, ``.`` period, ``_`` underscore.
+a kernelspec is required to have a simple name, only containing ASCII letters,
+ASCII numbers, and the simple separators: ``-`` hyphen, ``.`` period, ``_``
+underscore.
 
 Other locations may also be searched if the :envvar:`JUPYTER_PATH` environment
 variable is set.
@@ -143,7 +145,8 @@ JSON serialised dictionary containing the following keys and values:
   When loading notebooks, if no matching kernelspec key (may differ across machines)
   is found, a kernel with a matching `language` will be used.
   This allows a notebook written on any Python or Julia kernel to be properly associated
-  with the user's Python or Julia kernel, even if they aren't listed under the same name as the author's.
+  with the user's Python or Julia kernel, even if they aren't listed under the
+  same name as the author's.
 - **interrupt_mode** (optional): May be either ``signal`` or ``message`` and
   specifies how a client is supposed to interrupt cell execution on this kernel,
   either by sending an interrupt ``signal`` via the operating system's

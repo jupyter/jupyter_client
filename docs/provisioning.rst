@@ -139,7 +139,8 @@ behavior, there's a good chance you can simply extend
 custom functionality.
 
 In this example, RBACProvisioner will verify whether the current user is
-in the role meant for this kernel by calling a method implemented within *this* provisioner. If the user is not in the role, an exception will be thrown.
+in the role meant for this kernel by calling a method implemented within *this*
+provisioner. If the user is not in the role, an exception will be thrown.
 
 .. code:: python
 

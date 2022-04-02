@@ -519,7 +519,7 @@ class KernelManager(ConnectionFileMixin):
             kernel.
         """
         if self._launch_args is None:
-            raise RuntimeError("Cannot restart the kernel. " "No previous call to 'start_kernel'.")
+            raise RuntimeError("Cannot restart the kernel. No previous call to 'start_kernel'.")
 
         # Stop currently running kernel.
         await ensure_async(self.shutdown_kernel(now=now, restart=True))

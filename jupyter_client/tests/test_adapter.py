@@ -314,7 +314,7 @@ class V5toV4TestCase(AdapterTest):
         msg = self.msg(
             "complete_request",
             {
-                "code": "def foo():\n" "    a.is\n" "foo()",
+                "code": "def foo():\n    a.is\nfoo()",
                 "cursor_pos": 19,
             },
         )
@@ -352,7 +352,7 @@ class V5toV4TestCase(AdapterTest):
         msg = self.msg(
             "inspect_request",
             {
-                "code": "def foo():\n" "    apple\n" "bar()",
+                "code": "def foo():\n    apple\nbar()",
                 "cursor_pos": 18,
                 "detail_level": 1,
             },

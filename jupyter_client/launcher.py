@@ -157,7 +157,7 @@ def launch_kernel(
         proc = Popen(cmd, **kwargs)
     except Exception as ex:
         try:
-            msg = "Failed to run command:\n{}\n" "    PATH={!r}\n" "    with kwargs:\n{!r}\n"
+            msg = "Failed to run command:\n{}\n    PATH={!r}\n    with kwargs:\n{!r}\n"
             # exclude environment variables,
             # which may contain access tokens and the like.
             without_env = {key: value for key, value in kwargs.items() if key != "env"}

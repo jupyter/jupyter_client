@@ -10,45 +10,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests:
+  ipykernel:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      matrix:
-        python-version: ["3.9"]
-      fail-fast: false
+    timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-
-      - name: Test IPykernel
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+      - uses: actions/checkout@v2
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: ipykernel
           package_spec: "pyqt5 ipykernel[test]"
 
-      - name: Test NBClient
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+  nbclient:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: nbclient
           env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
 
-      # Note: Currently fails
-      # - name: Test QtConsole
-      #   uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
-      #   with:
-      #     package_name: qtconsole
-
-      - name: Test nbconvert
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+  nbconvert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: nbconvert
 
-      - name: Test jupyter_server
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+  jupyter_server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: jupyter_server
 

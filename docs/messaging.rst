@@ -73,7 +73,7 @@ kernel has dedicated sockets for the following functions:
    appropriately.
 
 4. **Control**: This channel is identical to Shell, but operates on a separate
-   socket to avoid queueing behind execution requests. The control channel is 
+   socket to avoid queueing behind execution requests. The control channel is
    used for shutdown and restart messages, as well as for debugging messages.
 
    For a smoother user experience, we recommend running the control channel in
@@ -100,8 +100,10 @@ The message `header` contains information about the message,
 such as unique identifiers for the originating session and the actual message id,
 the type of message, the version of the Jupyter protocol,
 and the date the message was created.
-In addition, there is a username field, e.g. for the process that generated the message, if applicable.
-This can be useful in collaborative settings where multiple users may be interacting with the same kernel simultaneously,
+In addition, there is a username field, e.g. for the process that generated the
+message, if applicable.
+This can be useful in collaborative settings where multiple users may be
+interacting with the same kernel simultaneously,
 so that frontends can label the various messages in a meaningful way.
 
 .. sourcecode:: python
@@ -173,7 +175,8 @@ Metadata
 --------
 
 The `metadata` dict contains information about the message that is not part of the content.
-This is not often used, but can be an extra location to store information about requests and replies,
+This is not often used, but can be an extra location to store information about
+requests and replies,
 such as extensions adding information about request or execution context.
 
 Content
@@ -254,7 +257,8 @@ but does not describe the actual *implementation* at the wire level in zeromq.
 This section describes the protocol that must be implemented by Jupyter kernels and clients
 talking to each other over zeromq.
 
-The reference implementation of the message spec is our :class:`~jupyter_client.session.Session` class.
+The reference implementation of the message spec is our
+:class:`~jupyter_client.session.Session` class.
 
 .. note::
 
@@ -372,16 +376,20 @@ Request-Reply
 
 In general, the ROUTER/DEALER sockets follow a request-reply pattern:
 
-The client sends an ``<action>_request`` message (such as ``execute_request``) on its shell (DEALER) socket.
+The client sends an ``<action>_request`` message (such as ``execute_request``)
+on its shell (DEALER) socket.
 The kernel receives that request and immediately publishes a ``status: busy`` message on IOPub.
-The kernel then processes the request and sends the appropriate ``<action>_reply`` message, such as ``execute_reply``.
+The kernel then processes the request and sends the appropriate
+``<action>_reply`` message, such as ``execute_reply``.
 After processing the request and publishing associated IOPub messages, if any,
 the kernel publishes a ``status: idle`` message.
-This idle status message indicates that IOPub messages associated with a given request have all been received.
+This idle status message indicates that IOPub messages associated with a given
+request have all been received.
 
 All reply messages have a ``'status'`` field, which will have one of the following values:
 
-- ``status='ok'``: The request was processed successfully, and the remaining content of the reply is specified in the appropriate section below.
+- ``status='ok'``: The request was processed successfully, and the remaining
+  content of the reply is specified in the appropriate section below.
 - ``status='error'``: The request failed due to an error.
    When status is 'error', the usual content of a successful reply should be omitted,
    instead the following fields should be present::
@@ -1115,7 +1123,8 @@ Message type: ``debug_reply``::
 
 The ``content`` dicts of the `debug_request` and `debug_reply` messages respectively follow the specification of the `Request` and `Response` messages from the `Debug Adapter Protocol (DAP) <https://microsoft.github.io/debug-adapter-protocol/>`_ as of version 1.39 or later.
 
-Debug requests and replies are sent over the `control` channel to prevent queuing behind execution requests.
+Debug requests and replies are sent over the `control` channel to prevent
+queuing behind execution requests.
 
 Additions to the DAP
 ~~~~~~~~~~~~~~~~~~~~
@@ -1126,7 +1135,9 @@ The Jupyter debugger protocol makes several additions to the DAP:
 - the `debugInfo` request and response messages
 - the `inspectVariables` request and response messages
 
-In order to support the debugging of notebook cells and of Jupyter consoles, which are not based on source files, we need a message to submit code to the debugger to which breakpoints can be added.
+In order to support the debugging of notebook cells and of Jupyter consoles,
+which are not based on source files, we need a message to submit code to the
+debugger to which breakpoints can be added.
 
   Content of the `dumpCell` request::
 
@@ -1148,7 +1159,10 @@ In order to support the debugging of notebook cells and of Jupyter consoles, whi
           }
      }
 
-In order to support page reloading, or a client connecting at a later stage, Jupyter kernels must store the state of the debugger (such as breakpoints, whether the debugger is currently stopped). The `debugInfo` request is a DAP `Request` with no extra argument.
+In order to support page reloading, or a client connecting at a later stage,
+Jupyter kernels must store the state of the debugger (such as breakpoints,
+whether the debugger is currently stopped). The `debugInfo` request is a DAP
+`Request` with no extra argument.
 
   Content of the `debugInfo` request::
 
@@ -1176,13 +1190,15 @@ In order to support page reloading, or a client connecting at a later stage, Jup
               ],
               'stoppedThreads' : list(int),  # threads in which the debugger is currently in a stopped state
               'richRendering' : bool,  # whether the debugger supports rich rendering of variables
-              'exceptionPaths' : list(str),  # exception names used to match leaves or nodes in a tree of exception 
+              'exceptionPaths' : list(str),  # exception names used to match leaves or nodes in a tree of exception
           }
       }
 
   The `source_breakpoint` schema is specified by the Debug Adapter Protocol.
 
-The `inspectVariables` is meant to retrieve the values of all the variables that have been defined in the kernel. It is a DAP `Request` with no extra argument.
+The `inspectVariables` is meant to retrieve the values of all the variables
+that have been defined in the kernel. It is a DAP `Request` with no extra
+argument.
 
   Content of the `inspectVariables` request::
 
@@ -1208,7 +1224,8 @@ The `inspectVariables` is meant to retrieve the values of all the variables that
           }
       }
 
-The ``richInspectVariables`` request allows to get the rich representation of a variable that has been defined in the kernel.
+The ``richInspectVariables`` request allows to get the rich representation of a
+variable that has been defined in the kernel.
 
   Content of the ``richInspectVariables`` request::
 
@@ -1598,7 +1615,8 @@ Custom Messages
 
 .. versionadded:: 4.1
 
-Message spec 4.1 (IPython 2.0) added a messaging system for developers to add their own objects with Frontend
+Message spec 4.1 (IPython 2.0) added a messaging system for developers to add
+their own objects with Frontend
 and Kernel-side components, and allow them to communicate with each other.
 To do this, IPython adds a notion of a ``Comm``, which exists on both sides,
 and can communicate in either direction.
@@ -1623,7 +1641,8 @@ The code handling the message on the receiving side is responsible for maintaini
 of target_name keys to constructors.
 After a ``comm_open`` message has been sent,
 there should be a corresponding Comm instance on both sides.
-The ``data`` key is always a dict and can be any extra JSON information used in initialization of the comm.
+The ``data`` key is always a dict and can be any extra JSON information used in
+initialization of the comm.
 
 If the ``target_name`` key is not found on the receiving side,
 then it should immediately reply with a ``comm_close`` message to avoid an inconsistent state.
@@ -1635,7 +1654,8 @@ Comm Messages
 Comm messages are one-way communications to update comm state,
 used for synchronizing widget state, or simply requesting actions of a comm's counterpart.
 
-Essentially, each comm pair defines their own message specification implemented inside the ``data`` dict.
+Essentially, each comm pair defines their own message specification implemented
+inside the ``data`` dict.
 
 There are no expected replies (of course, one side can send another ``comm_msg`` in reply).
 
@@ -1740,12 +1760,14 @@ Kernel info:
 
 Execution:
 
-- ``user_variables`` is removed from ``execute_request/reply`` because it is redundant with ``user_expressions``
+- ``user_variables`` is removed from ``execute_request/reply`` because it is
+  redundant with ``user_expressions``
 - ``password`` key added to ``input_request``
 
 Output:
 
-- ``data`` key in stream messages renamed to ``text`` for consistency with the notebook format.
+- ``data`` key in stream messages renamed to ``text`` for consistency with the
+  notebook format.
 - ``application/json`` in mimebundles should be unpacked JSON data,
   not a double-serialized JSON string.
 
@@ -1758,7 +1780,8 @@ Inspection:
 
 Completion:
 
-- ``complete_request``: ``line``, ``block``, and ``text`` keys are removed in favor of a single ``code`` for context.
+- ``complete_request``: ``line``, ``block``, and ``text`` keys are removed in
+    favor of a single ``code`` for context.
     Lexing is up to the kernel.
 - ``complete_reply``:
     - ``matched_text`` is removed in favor of ``cursor_start`` and ``cursor_end``.
@@ -1769,7 +1792,8 @@ Completion:
 ---
 
 - ``comm_open/close/msg`` messages added
-- ``clear_output``: ``stdout``, ``stderr``, and ``display`` boolean keys for selective clearing are removed,
+- ``clear_output``: ``stdout``, ``stderr``, and ``display`` boolean keys for
+  selective clearing are removed,
   and ``wait`` is added.
   The selective clearing keys are ignored in v4 and the default behavior remains the same,
   so v4 ``clear_output`` messages will be safely handled by a v4.1 frontend.
@@ -1785,7 +1809,8 @@ Notes
 
 Many frontends, especially those implemented in javascript,
 reported cursor_pos as the interpreter's string index,
-which is not the same as the unicode character offset if the interpreter uses UTF-16 (e.g. javascript or Python 2 on macOS),
+which is not the same as the unicode character offset if the interpreter uses
+UTF-16 (e.g. javascript or Python 2 on macOS),
 which stores "astral-plane" characters such as ``𝐚 (U+1D41A)`` as surrogate pairs,
 taking up two indices instead of one, causing a unicode offset
 drift of one per astral-plane character.
@@ -1797,11 +1822,16 @@ for frontends that did the right thing.
 
 For this reason, in protocol versions prior to 5.2, ``cursor_pos``
 is officially ambiguous in the presence of astral plane unicode characters.
-Frontends claiming to implement protocol 5.2 **MUST** identify cursor_pos as the encoding-independent unicode character offset.
-Kernels may choose to expect the UTF-16 offset from requests implementing protocol 5.1 and earlier, in order to behave correctly with the most popular frontends.
-But they should know that doing so *introduces* the inverse bug for the frontends that do not have this bug.
+Frontends claiming to implement protocol 5.2 **MUST** identify cursor_pos as
+the encoding-independent unicode character offset.
+Kernels may choose to expect the UTF-16 offset from requests implementing
+protocol 5.1 and earlier, in order to behave correctly with the most popular
+frontends.
+But they should know that doing so *introduces* the inverse bug for the
+frontends that do not have this bug.
 
-As an example, use a python3 kernel and evaluate ``𨭎𨭎𨭎𨭎𨭎 = 10``.  Then type ``𨭎𨭎`` followed by the tab key and see if it properly completes.
+As an example, use a python3 kernel and evaluate ``𨭎𨭎𨭎𨭎𨭎 = 10``.  Then type
+``𨭎𨭎`` followed by the tab key and see if it properly completes.
 
 Known affected frontends (as of 2017-06):
 

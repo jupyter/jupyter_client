@@ -968,7 +968,7 @@ class Session(Configurable):
         else:
             msg_list = t.cast(t.List[zmq.Message], msg_list)
             failed = True
-            for idx, m in enumerate(msg_list):
+            for idx, m in enumerate(msg_list):  # noqa
                 if m.bytes == DELIM:
                     failed = False
                     break

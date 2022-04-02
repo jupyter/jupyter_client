@@ -185,7 +185,7 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
 
         NOTE: The superclass method must always be called first to ensure proper serialization.
         """
-        provisioner_info: Dict[str, Any] = dict()
+        provisioner_info: Dict[str, Any] = {}
         provisioner_info['kernel_id'] = self.kernel_id
         provisioner_info['connection_info'] = self.connection_info
         return provisioner_info
