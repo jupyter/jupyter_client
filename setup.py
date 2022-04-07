@@ -23,6 +23,7 @@ with open(os.path.join(here, 'requirements-doc.txt'), 'r') as f:
 setup(
     name='jupyter_client',
     packages=find_packages(exclude=["docs", "docs.*", "tests", "tests.*"]),
+    include_package_data=True,
     description='Jupyter protocol implementation and client libraries',
     long_description=long_description,
     long_description_content_type='text/markdown',

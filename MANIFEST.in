@@ -1,5 +1,6 @@
 include *.md
 include *.txt
+include jupyter_client/py.typed
 
 # Documentation
 graft docs
