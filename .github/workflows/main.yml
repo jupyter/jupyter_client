@@ -41,7 +41,7 @@ jobs:
           echo "or you can run by hand on staged files with"
           echo "    pre-commit run"
           echo "or after-the-fact on already committed files with"
-          echo "    pre-commit run --all-files"
+          echo "    pre-commit run --all-files --hook-stage=manual"
 
   build-n-test-n-coverage:
     name: Build, test and code coverage
