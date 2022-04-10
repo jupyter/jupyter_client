@@ -23,21 +23,21 @@ OUTPUT_TIMEOUT = 10
 # copy flags from mixin:
 flags = dict(base_flags)
 # start with mixin frontend flags:
-frontend_flags = dict(app_flags)
+frontend_flags_dict = dict(app_flags)
 # update full dict with frontend flags:
-flags.update(frontend_flags)
+flags.update(frontend_flags_dict)
 
 # copy flags from mixin
 aliases = dict(base_aliases)
 # start with mixin frontend flags
-frontend_aliases = dict(app_aliases)
+frontend_aliases_dict = dict(app_aliases)
 # load updated frontend flags into full dict
-aliases.update(frontend_aliases)
+aliases.update(frontend_aliases_dict)
 
 # get flags&aliases into sets, and remove a couple that
 # shouldn't be scrubbed from backend flags:
-frontend_aliases = set(frontend_aliases.keys())
-frontend_flags = set(frontend_flags.keys())
+frontend_aliases = set(frontend_aliases_dict.keys())
+frontend_flags = set(frontend_flags_dict.keys())
 
 
 class RunApp(JupyterApp, JupyterConsoleApp):

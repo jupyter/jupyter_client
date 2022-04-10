@@ -7,6 +7,7 @@ import socket
 import subprocess
 from subprocess import PIPE
 from subprocess import Popen
+from typing import Iterable
 from typing import List
 from warnings import warn
 
@@ -16,22 +17,27 @@ PUBLIC_IPS: List = []
 LOCALHOST = ""
 
 
-def _uniq_stable(elems):
+def _uniq_stable(elems: Iterable) -> List:
     """uniq_stable(elems) -> list
 
     Return from an iterable, a list of all the unique elements in the input,
     maintaining the order in which they first appear.
     """
     seen = set()
-    return [x for x in elems if x not in seen and not seen.add(x)]
+    value = []
+    for x in elems:
+        if x not in seen:
+            value.append(x)
+            seen.add(x)
+    return value
 
 
 def _get_output(cmd):
     """Get output of a command, raising IOError if it fails"""
     startupinfo = None
     if os.name == "nt":
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo = subprocess.STARTUPINFO()  # type:ignore[attr-defined]
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW  # type:ignore[attr-defined]
     p = Popen(cmd, stdout=PIPE, stderr=PIPE, startupinfo=startupinfo)
     stdout, stderr = p.communicate()
     if p.returncode:

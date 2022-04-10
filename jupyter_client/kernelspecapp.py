@@ -309,8 +309,8 @@ class KernelSpecApp(Application):
         }
     )
 
-    aliases = {}
-    flags = {}
+    aliases: dict[str, object] = {}
+    flags: dict[str, object] = {}
 
     def start(self):
         if self.subapp is None:

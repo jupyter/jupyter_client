@@ -15,7 +15,7 @@ from contextlib import contextmanager
 from enum import Enum
 
 import zmq
-from traitlets import Any  # type: ignore
+from traitlets import Any
 from traitlets import Bool
 from traitlets import default
 from traitlets import DottedObjectName
@@ -25,7 +25,7 @@ from traitlets import observe
 from traitlets import observe_compat
 from traitlets import Type
 from traitlets import Unicode
-from traitlets.utils.importstring import import_item  # type: ignore
+from traitlets.utils.importstring import import_item
 
 from .connect import ConnectionFileMixin
 from .managerabc import KernelManagerABC
@@ -52,12 +52,16 @@ class _ShutdownStatus(Enum):
     SigkillRequest = "SigkillRequest"
 
 
-def in_pending_state(method):
+F = t.TypeVar('F', bound=t.Callable[..., t.Any])
+
+
+def in_pending_state(method: F) -> F:
     """Sets the kernel to a pending state by
     creating a fresh Future for the KernelManager's `ready`
     attribute. Once the method is finished, set the Future's results.
     """
 
+    @t.no_type_check
     @functools.wraps(method)
     async def wrapper(self, *args, **kwargs):
         # Create a future for the decorated method
@@ -78,7 +82,7 @@ def in_pending_state(method):
             self.log.exception(self._ready.exception())
             raise e
 
-    return wrapper
+    return t.cast(F, wrapper)
 
 
 class KernelManager(ConnectionFileMixin):
@@ -86,6 +90,8 @@ class KernelManager(ConnectionFileMixin):
 
     This version starts kernels with Popen.
     """
+
+    _ready: t.Union[Future, CFuture]
 
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
@@ -103,7 +109,7 @@ class KernelManager(ConnectionFileMixin):
     # The PyZMQ Context to use for communication with the kernel.
     context: Instance = Instance(zmq.Context)
 
-    @default("context")
+    @default("context")  # type:ignore[misc]
     def _context_default(self) -> zmq.Context:
         self._created_context = True
         return zmq.Context()
@@ -114,11 +120,11 @@ class KernelManager(ConnectionFileMixin):
     )
     client_factory: Type = Type(klass="jupyter_client.KernelClient")
 
-    @default("client_factory")
+    @default("client_factory")  # type:ignore[misc]
     def _client_factory_default(self) -> Type:
         return import_item(self.client_class)
 
-    @observe("client_class")
+    @observe("client_class")  # type:ignore[misc]
     def _client_class_changed(self, change: t.Dict[str, DottedObjectName]) -> None:
         self.client_factory = import_item(str(change["new"]))
 
@@ -131,12 +137,12 @@ class KernelManager(ConnectionFileMixin):
 
     kernel_spec_manager: Instance = Instance(kernelspec.KernelSpecManager)
 
-    @default("kernel_spec_manager")
+    @default("kernel_spec_manager")  # type:ignore[misc]
     def _kernel_spec_manager_default(self) -> kernelspec.KernelSpecManager:
         return kernelspec.KernelSpecManager(data_dir=self.data_dir)
 
-    @observe("kernel_spec_manager")
-    @observe_compat
+    @observe("kernel_spec_manager")  # type:ignore[misc]
+    @observe_compat  # type:ignore[misc]
     def _kernel_spec_manager_changed(self, change: t.Dict[str, Instance]) -> None:
         self._kernel_spec = None
 
@@ -156,7 +162,7 @@ class KernelManager(ConnectionFileMixin):
 
     kernel_name: Unicode = Unicode(kernelspec.NATIVE_KERNEL_NAME)
 
-    @observe("kernel_name")
+    @observe("kernel_name")  # type:ignore[misc]
     def _kernel_name_changed(self, change: t.Dict[str, Unicode]) -> None:
         self._kernel_spec = None
         if change["new"] == "python":
@@ -174,12 +180,12 @@ class KernelManager(ConnectionFileMixin):
         help="True if the MultiKernelManager should cache ports for this KernelManager instance"
     )
 
-    @default("cache_ports")
+    @default("cache_ports")  # type:ignore[misc]
     def _default_cache_ports(self) -> bool:
         return self.transport == "tcp"
 
     @property
-    def ready(self) -> Future:
+    def ready(self) -> t.Union[CFuture, Future]:
         """A future that resolves when the kernel process has started for the first time"""
         return self._ready
 
@@ -229,7 +235,7 @@ class KernelManager(ConnectionFileMixin):
     # create a Client connected to our Kernel
     # --------------------------------------------------------------------------
 
-    def client(self, **kwargs) -> KernelClient:
+    def client(self, **kwargs: Any) -> KernelClient:
         """Create a client configured to connect to our kernel"""
         kw = {}
         kw.update(self.get_connection_info(session=True))
@@ -290,7 +296,7 @@ class KernelManager(ConnectionFileMixin):
 
         return [pat.sub(from_ns, arg) for arg in cmd]
 
-    async def _async_launch_kernel(self, kernel_cmd: t.List[str], **kw) -> None:
+    async def _async_launch_kernel(self, kernel_cmd: t.List[str], **kw: Any) -> None:
         """actually launch the kernel
 
         override in a subclass to launch kernel subprocesses differently
@@ -318,7 +324,7 @@ class KernelManager(ConnectionFileMixin):
         self._control_socket.close()
         self._control_socket = None
 
-    async def _async_pre_start_kernel(self, **kw) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
+    async def _async_pre_start_kernel(self, **kw: Any) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
         """Prepares a kernel for startup in a separate process.
 
         If random ports (port=0) are being used, this method must be called
@@ -346,7 +352,7 @@ class KernelManager(ConnectionFileMixin):
 
     pre_start_kernel = run_sync(_async_pre_start_kernel)
 
-    async def _async_post_start_kernel(self, **kw) -> None:
+    async def _async_post_start_kernel(self, **kw: Any) -> None:
         """Performs any post startup tasks relative to the kernel.
 
         Parameters
@@ -362,7 +368,7 @@ class KernelManager(ConnectionFileMixin):
     post_start_kernel = run_sync(_async_post_start_kernel)
 
     @in_pending_state
-    async def _async_start_kernel(self, **kw):
+    async def _async_start_kernel(self, **kw: Any) -> None:
         """Starts a kernel on this host in a separate process.
 
         If random ports (port=0) are being used, this method must be called
@@ -455,7 +461,7 @@ class KernelManager(ConnectionFileMixin):
     cleanup_resources = run_sync(_async_cleanup_resources)
 
     @in_pending_state
-    async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False):
+    async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False) -> None:
         """Attempts to stop the kernel process cleanly.
 
         This attempts to shutdown the kernels cleanly by:
@@ -493,7 +499,9 @@ class KernelManager(ConnectionFileMixin):
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
-    async def _async_restart_kernel(self, now: bool = False, newports: bool = False, **kw) -> None:
+    async def _async_restart_kernel(
+        self, now: bool = False, newports: bool = False, **kw: Any
+    ) -> None:
         """Restarts a kernel with the arguments that were used to launch it.
 
         Parameters
@@ -653,7 +661,7 @@ KernelManagerABC.register(KernelManager)
 
 
 def start_new_kernel(
-    startup_timeout: float = 60, kernel_name: str = "python", **kwargs
+    startup_timeout: float = 60, kernel_name: str = "python", **kwargs: Any
 ) -> t.Tuple[KernelManager, KernelClient]:
     """Start a new kernel, and return its Manager and Client"""
     km = KernelManager(kernel_name=kernel_name)
@@ -671,7 +679,7 @@ def start_new_kernel(
 
 
 async def start_new_async_kernel(
-    startup_timeout: float = 60, kernel_name: str = "python", **kwargs
+    startup_timeout: float = 60, kernel_name: str = "python", **kwargs: Any
 ) -> t.Tuple[AsyncKernelManager, KernelClient]:
     """Start a new kernel, and return its Manager and Client"""
     km = AsyncKernelManager(kernel_name=kernel_name)
@@ -689,7 +697,7 @@ async def start_new_async_kernel(
 
 
 @contextmanager
-def run_kernel(**kwargs) -> t.Iterator[KernelClient]:
+def run_kernel(**kwargs: Any) -> t.Iterator[KernelClient]:
     """Context manager to create a kernel in a subprocess.
 
     The kernel is shut down when the context exits.

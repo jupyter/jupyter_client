@@ -10,7 +10,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from traitlets.config import Instance  # type: ignore
+from traitlets.config import Instance
 from traitlets.config import LoggingConfigurable
 from traitlets.config import Unicode
 
@@ -238,7 +238,7 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
             # If set, it can bork all the things.
             env.pop('PYTHONEXECUTABLE', None)
 
-    def __apply_env_substitutions(self, substitution_values: Dict[str, str]):
+    def __apply_env_substitutions(self, substitution_values: Dict[str, str]) -> Dict[str, str]:
         """
         Walks entries in the kernelspec's env stanza and applies substitutions from current env.
 

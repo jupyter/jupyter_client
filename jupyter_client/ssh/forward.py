@@ -26,6 +26,7 @@ connection to a destination reachable from the SSH server machine.
 import logging
 import select
 import socketserver
+import typing as t
 
 logger = logging.getLogger("ssh")
 
@@ -36,6 +37,7 @@ class ForwardServer(socketserver.ThreadingTCPServer):
 
 
 class Handler(socketserver.BaseRequestHandler):
+    @t.no_type_check
     def handle(self):
         try:
             chan = self.ssh_transport.open_channel(

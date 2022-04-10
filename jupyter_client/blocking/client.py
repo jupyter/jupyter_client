@@ -4,7 +4,7 @@ Useful for test suites and blocking terminal interfaces.
 """
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-from traitlets import Type  # type: ignore
+from traitlets import Type
 
 from ..utils import run_sync
 from jupyter_client.channels import HBChannel

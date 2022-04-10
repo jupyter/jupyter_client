@@ -23,11 +23,11 @@ from typing import Set
 from typing import Tuple
 from typing import Union
 
-import zmq  # type: ignore
-from jupyter_core.paths import jupyter_data_dir  # type: ignore
+import zmq
+from jupyter_core.paths import jupyter_data_dir
 from jupyter_core.paths import jupyter_runtime_dir
 from jupyter_core.paths import secure_write
-from traitlets import Bool  # type: ignore
+from traitlets import Bool
 from traitlets import CaselessStrEnum
 from traitlets import Instance
 from traitlets import Int
@@ -35,7 +35,7 @@ from traitlets import Integer
 from traitlets import observe
 from traitlets import Type
 from traitlets import Unicode
-from traitlets.config import LoggingConfigurable  # type: ignore
+from traitlets.config import LoggingConfigurable
 from traitlets.config import SingletonConfigurable
 
 from .localinterfaces import localhost
@@ -644,7 +644,7 @@ class LocalPortCache(SingletonConfigurable):
     See: https://github.com/jupyter/jupyter_client/issues/487
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.currently_used_ports: Set[int] = set()
 

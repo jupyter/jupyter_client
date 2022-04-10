@@ -26,13 +26,15 @@ from datetime import timezone
 from hmac import (
     compare_digest,
 )  # We are using compare_digest to limit the surface of timing attacks
+from typing import Optional
+from typing import Union
 
 import zmq
-from traitlets import Any  # type: ignore
+from traitlets import Any
 from traitlets import Bool
 from traitlets import CBytes
 from traitlets import CUnicode
-from traitlets import Dict  # type: ignore
+from traitlets import Dict
 from traitlets import DottedObjectName
 from traitlets import Instance
 from traitlets import Integer
@@ -40,10 +42,10 @@ from traitlets import observe
 from traitlets import Set
 from traitlets import TraitError
 from traitlets import Unicode
-from traitlets.config.configurable import Configurable  # type: ignore
+from traitlets.config.configurable import Configurable
 from traitlets.config.configurable import LoggingConfigurable
-from traitlets.log import get_logger  # type: ignore
-from traitlets.utils.importstring import import_item  # type: ignore
+from traitlets.log import get_logger
+from traitlets.utils.importstring import import_item
 from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
@@ -182,7 +184,7 @@ session_flags = {
 }
 
 
-def default_secure(cfg) -> None:
+def default_secure(cfg: t.Any) -> None:
     """Set the default behavior for a config environment to be secure.
 
     If Session.key/keyfile have not been set, set Session.key to
@@ -213,8 +215,8 @@ class SessionFactory(LoggingConfigurable):
 
     logname = Unicode("")
 
-    @observe("logname")
-    def _logname_changed(self, change) -> None:
+    @observe("logname")  # type:ignore[misc]
+    def _logname_changed(self, change: Any) -> None:
         self.log = logging.getLogger(change["new"])
 
     # not configurable:
@@ -261,10 +263,10 @@ class Message(object):
     def __str__(self) -> str:
         return pprint.pformat(self.__dict__)
 
-    def __contains__(self, k) -> bool:
+    def __contains__(self, k: object) -> bool:
         return k in self.__dict__
 
-    def __getitem__(self, k) -> t.Any:
+    def __getitem__(self, k: str) -> t.Any:
         return self.__dict__[k]
 
 
@@ -748,7 +750,7 @@ class Session(Configurable):
 
     def send(
         self,
-        stream: zmq.sugar.socket.Socket,
+        stream: Optional[Union[zmq.sugar.socket.Socket, ZMQStream]],
         msg_or_type: t.Union[t.Dict[str, t.Any], str],
         content: t.Optional[t.Dict[str, t.Any]] = None,
         parent: t.Optional[t.Dict[str, t.Any]] = None,
@@ -844,10 +846,10 @@ class Session(Configurable):
         longest = max([len(s) for s in to_send])
         copy = longest < self.copy_threshold
 
-        if buffers and track and not copy:
+        if stream and buffers and track and not copy:
             # only really track when we are doing zero-copy buffers
             tracker = stream.send_multipart(to_send, copy=False, track=True)
-        else:
+        elif stream:
             # use dummy tracker, which will be done immediately
             tracker = DONE
             stream.send_multipart(to_send, copy=copy)
@@ -975,7 +977,7 @@ class Session(Configurable):
             if failed:
                 raise ValueError("DELIM not in msg_list")
             idents, msg_list = msg_list[:idx], msg_list[idx + 1 :]  # noqa
-            return [bytes(m.bytes) for m in idents], msg_list  # type: ignore
+            return [bytes(m.bytes) for m in idents], msg_list
 
     def _add_digest(self, signature: bytes) -> None:
         """add a digest to history to protect against replay attacks"""
@@ -1036,12 +1038,12 @@ class Session(Configurable):
         if not copy:
             # pyzmq didn't copy the first parts of the message, so we'll do it
             msg_list = t.cast(t.List[zmq.Message], msg_list)
-            msg_list_beginning = [bytes(msg.bytes) for msg in msg_list[:minlen]]  # type: ignore
+            msg_list_beginning = [bytes(msg.bytes) for msg in msg_list[:minlen]]
             msg_list = t.cast(t.List[bytes], msg_list)
             msg_list = msg_list_beginning + msg_list[minlen:]
         msg_list = t.cast(t.List[bytes], msg_list)
         if self.auth is not None:
-            signature = t.cast(bytes, msg_list[0])
+            signature = msg_list[0]
             if not signature:
                 raise ValueError("Unsigned Message")
             if signature in self.digest_history:
@@ -1068,33 +1070,16 @@ class Session(Configurable):
         if buffers and buffers[0].shape is None:
             # force copy to workaround pyzmq #646
             msg_list = t.cast(t.List[zmq.Message], msg_list)
-            buffers = [memoryview(bytes(b.bytes)) for b in msg_list[5:]]  # type: ignore
+            buffers = [memoryview(bytes(b.bytes)) for b in msg_list[5:]]
         message["buffers"] = buffers
         if self.debug:
             pprint.pprint(message)
         # adapt to the current version
         return adapt(message)
 
-    def unserialize(self, *args, **kwargs) -> t.Dict[str, t.Any]:
+    def unserialize(self, *args: Any, **kwargs: Any) -> t.Dict[str, t.Any]:
         warnings.warn(
             "Session.unserialize is deprecated. Use Session.deserialize.",
             DeprecationWarning,
         )
         return self.deserialize(*args, **kwargs)
-
-
-def test_msg2obj():
-    am = dict(x=1)
-    ao = Message(am)
-    assert ao.x == am["x"]
-
-    am["y"] = dict(z=1)
-    ao = Message(am)
-    assert ao.y.z == am["y"]["z"]
-
-    k1, k2 = "y", "z"
-    assert ao[k1][k2] == am[k1][k2]
-
-    am2 = dict(ao)
-    assert am["x"] == am2["x"]
-    assert am["y"]["z"] == am2["y"]["z"]

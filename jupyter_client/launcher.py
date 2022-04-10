@@ -5,11 +5,12 @@ import os
 import sys
 from subprocess import PIPE
 from subprocess import Popen
+from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
 
-from traitlets.log import get_logger  # type: ignore
+from traitlets.log import get_logger
 
 
 def launch_kernel(
@@ -20,7 +21,7 @@ def launch_kernel(
     env: Optional[Dict[str, str]] = None,
     independent: bool = False,
     cwd: Optional[str] = None,
-    **kw,
+    **kw: Any,
 ) -> Popen:
     """Launches a localhost kernel, binding to the specified ports.
 
@@ -108,7 +109,7 @@ def launch_kernel(
                 GetCurrentProcess,
             )
         except:  # noqa
-            from _subprocess import (  # type: ignore
+            from _subprocess import (
                 GetCurrentProcess,
                 CREATE_NEW_PROCESS_GROUP,
                 DUPLICATE_SAME_ACCESS,
@@ -170,7 +171,7 @@ def launch_kernel(
 
     if sys.platform == "win32":
         # Attach the interrupt event to the Popen objet so it can be used later.
-        proc.win32_interrupt_event = interrupt_event  # type: ignore
+        proc.win32_interrupt_event = interrupt_event
 
     # Clean up pipes created to work around Popen bug.
     if redirect_in:

@@ -49,7 +49,7 @@ class HBChannel(Thread):
 
     def __init__(
         self,
-        context: zmq.asyncio.Context = None,
+        context: t.Optional[zmq.asyncio.Context] = None,
         session: t.Optional[Session] = None,
         address: t.Union[t.Tuple[str, int], str] = "",
     ):
@@ -210,7 +210,7 @@ class ZMQSocketChannel(object):
         self.socket: t.Optional[zmq.sugar.socket.Socket] = socket
         self.session = session
 
-    async def _recv(self, **kwargs) -> t.Dict[str, t.Any]:
+    async def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:
         assert self.socket is not None
         msg = await self.socket.recv_multipart(**kwargs)
         ident, smsg = self.session.feed_identities(msg)

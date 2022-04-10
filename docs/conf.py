@@ -63,7 +63,7 @@ github_project_url = "https://github.com/jupyter/jupyter_client"
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-version_ns = {}
+version_ns: dict = {}
 here = os.path.dirname(__file__)
 version_py = os.path.join(here, os.pardir, 'jupyter_client', '_version.py')
 with open(version_py) as f:
@@ -219,7 +219,7 @@ htmlhelp_basename = 'jupyter_clientdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
-latex_elements = {
+latex_elements: dict = {
     # The paper size ('letterpaper' or 'a4paper').
     # 'papersize': 'letterpaper',
     # The font size ('10pt', '11pt' or '12pt').
@@ -312,7 +312,7 @@ intersphinx_mapping = {'ipython': ('http://ipython.readthedocs.io/en/stable/', N
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
+    import sphinx_rtd_theme  # type:ignore[import]
 
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]

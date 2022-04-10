@@ -55,3 +55,25 @@ filterwarnings= [
   # when there is a running event loop.
   "ignore:There is no current event loop:DeprecationWarning:zmq",
 ]
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+pretty = true
+show_error_context = true
+show_error_codes = true
+strict_equality = true
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+module = [
+    "traitlets.*",
+    "jupyter_core.*",
+    "ipykernel",
+    "entrypoints"
+]
+ignore_missing_imports = true

@@ -8,10 +8,10 @@ import re
 import shutil
 import warnings
 
-from jupyter_core.paths import jupyter_data_dir  # type: ignore
+from jupyter_core.paths import jupyter_data_dir
 from jupyter_core.paths import jupyter_path
 from jupyter_core.paths import SYSTEM_JUPYTER_PATH
-from traitlets import Bool  # type: ignore
+from traitlets import Bool
 from traitlets import CaselessStrEnum
 from traitlets import Dict
 from traitlets import HasTraits
@@ -20,7 +20,7 @@ from traitlets import observe
 from traitlets import Set
 from traitlets import Type
 from traitlets import Unicode
-from traitlets.config import LoggingConfigurable  # type: ignore
+from traitlets.config import LoggingConfigurable
 
 from .provisioning import KernelProvisionerFactory as KPF
 
@@ -175,7 +175,7 @@ class KernelSpecManager(LoggingConfigurable):
     def _deprecated_trait(self, change):
         """observer for deprecated traits"""
         old_attr = change.name
-        new_attr, version = self._deprecated_aliases.get(old_attr)
+        new_attr, version = self._deprecated_aliases[old_attr]
         new_value = getattr(self, new_attr)
         if new_value != change.new:
             # only warn if different

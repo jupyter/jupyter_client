@@ -4,8 +4,10 @@ The child needs to explicitly listen for this - see
 ipykernel.parentpoller.ParentPollerWindows for a Python implementation.
 """
 import ctypes
+from typing import no_type_check
 
 
+@no_type_check
 def create_interrupt_event():
     """Create an interrupt event handle.
 
@@ -35,6 +37,7 @@ def create_interrupt_event():
     )  # lpName
 
 
+@no_type_check
 def send_interrupt(interrupt_handle):
     """Sends an interrupt event using the specified handle."""
     ctypes.windll.kernel32.SetEvent(interrupt_handle)

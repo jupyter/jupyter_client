@@ -1,7 +1,7 @@
 """Implements an async kernel client"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-from traitlets import Type  # type: ignore
+from traitlets import Type
 
 from jupyter_client.channels import HBChannel
 from jupyter_client.channels import ZMQSocketChannel

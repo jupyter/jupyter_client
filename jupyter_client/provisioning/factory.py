@@ -8,11 +8,11 @@ from typing import Any
 from typing import Dict
 from typing import List
 
-from entrypoints import EntryPoint  # type: ignore
+from entrypoints import EntryPoint
 from entrypoints import get_group_all
 from entrypoints import get_single
 from entrypoints import NoSuchEntryPoint
-from traitlets.config import default  # type: ignore
+from traitlets.config import default
 from traitlets.config import SingletonConfigurable
 from traitlets.config import Unicode
 
@@ -48,7 +48,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
     def default_provisioner_name_default(self):
         return getenv(self.default_provisioner_name_env, "local-provisioner")
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
 
         for ep in KernelProvisionerFactory._get_all_provisioners():

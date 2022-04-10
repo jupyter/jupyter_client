@@ -10,7 +10,7 @@ from getpass import getpass
 from queue import Empty
 
 import zmq.asyncio
-from traitlets import Any  # type: ignore
+from traitlets import Any
 from traitlets import Bool
 from traitlets import Instance
 from traitlets import Type
@@ -120,19 +120,19 @@ class KernelClient(ConnectionFileMixin):
     # Channel proxy methods
     # --------------------------------------------------------------------------
 
-    async def _async_get_shell_msg(self, *args, **kwargs) -> t.Dict[str, t.Any]:
+    async def _async_get_shell_msg(self, *args: Any, **kwargs: Any) -> t.Dict[str, t.Any]:
         """Get a message from the shell channel"""
         return await self.shell_channel.get_msg(*args, **kwargs)
 
-    async def _async_get_iopub_msg(self, *args, **kwargs) -> t.Dict[str, t.Any]:
+    async def _async_get_iopub_msg(self, *args: Any, **kwargs: Any) -> t.Dict[str, t.Any]:
         """Get a message from the iopub channel"""
         return await self.iopub_channel.get_msg(*args, **kwargs)
 
-    async def _async_get_stdin_msg(self, *args, **kwargs) -> t.Dict[str, t.Any]:
+    async def _async_get_stdin_msg(self, *args: Any, **kwargs: Any) -> t.Dict[str, t.Any]:
         """Get a message from the stdin channel"""
         return await self.stdin_channel.get_msg(*args, **kwargs)
 
-    async def _async_get_control_msg(self, *args, **kwargs) -> t.Dict[str, t.Any]:
+    async def _async_get_control_msg(self, *args: Any, **kwargs: Any) -> t.Dict[str, t.Any]:
         """Get a message from the control channel"""
         return await self.control_channel.get_msg(*args, **kwargs)
 
@@ -253,7 +253,7 @@ class KernelClient(ConnectionFileMixin):
         self,
         session: Session,
         socket: zmq.sugar.socket.Socket,
-        parent_header,
+        parent_header: Any,
         msg: t.Dict[str, t.Any],
     ) -> None:
         """Output hook when running inside an IPython kernel
@@ -676,7 +676,7 @@ class KernelClient(ConnectionFileMixin):
         raw: bool = True,
         output: bool = False,
         hist_access_type: str = "range",
-        **kwargs,
+        **kwargs: Any,
     ) -> str:
         """Get entries from the kernel's history list.
 

@@ -19,11 +19,11 @@ from multiprocessing import Process
 try:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
-        import paramiko  # type: ignore
+        import paramiko
 
         SSHException = paramiko.ssh_exception.SSHException
 except ImportError:
-    paramiko = None  # type: ignore
+    paramiko = None  # type:ignore[assignment]
 
     class SSHException(Exception):  # type: ignore
         pass
