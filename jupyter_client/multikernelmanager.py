@@ -8,7 +8,7 @@ import typing as t
 import uuid
 
 import zmq
-from traitlets import Any  # type: ignore
+from traitlets import Any
 from traitlets import Bool
 from traitlets import default
 from traitlets import Dict
@@ -16,8 +16,8 @@ from traitlets import DottedObjectName
 from traitlets import Instance
 from traitlets import observe
 from traitlets import Unicode
-from traitlets.config.configurable import LoggingConfigurable  # type: ignore
-from traitlets.utils.importstring import import_item  # type: ignore
+from traitlets.config.configurable import LoggingConfigurable
+from traitlets.utils.importstring import import_item
 
 from .kernelspec import KernelSpecManager
 from .kernelspec import NATIVE_KERNEL_NAME
@@ -33,7 +33,9 @@ class DuplicateKernelError(Exception):
 def kernel_method(f: t.Callable) -> t.Callable:
     """decorator for proxying MKM.method(kernel_id) to individual KMs by ID"""
 
-    def wrapped(self, kernel_id: str, *args, **kwargs) -> t.Union[t.Callable, t.Awaitable]:
+    def wrapped(
+        self: Any, kernel_id: str, *args: Any, **kwargs: Any
+    ) -> t.Union[t.Callable, t.Awaitable]:
         # get the kernel
         km = self.get_kernel(kernel_id)
         method = getattr(km, f.__name__)
@@ -77,7 +79,7 @@ class MultiKernelManager(LoggingConfigurable):
     def _create_kernel_manager_factory(self) -> t.Callable:
         kernel_manager_ctor = import_item(self.kernel_manager_class)
 
-        def create_kernel_manager(*args, **kwargs) -> KernelManager:
+        def create_kernel_manager(*args: Any, **kwargs: Any) -> KernelManager:
             if self.shared_context:
                 if self.context.closed:
                     # recreate context if closed
@@ -104,7 +106,7 @@ class MultiKernelManager(LoggingConfigurable):
         """A shim for backwards compatibility."""
         return self._pending_kernels
 
-    @default("context")
+    @default("context")  # type:ignore[misc]
     def _context_default(self) -> zmq.Context:
         self._created_context = True
         return zmq.Context()
@@ -135,11 +137,11 @@ class MultiKernelManager(LoggingConfigurable):
         """Return the number of running kernels."""
         return len(self.list_kernel_ids())
 
-    def __contains__(self, kernel_id) -> bool:
+    def __contains__(self, kernel_id: str) -> bool:
         return kernel_id in self._kernels
 
     def pre_start_kernel(
-        self, kernel_name: t.Optional[str], kwargs
+        self, kernel_name: t.Optional[str], kwargs: Any
     ) -> t.Tuple[KernelManager, str, str]:
         # kwargs should be mutable, passing it as a dict argument.
         kernel_id = kwargs.pop("kernel_id", self.new_kernel_id(**kwargs))
@@ -187,7 +189,7 @@ class MultiKernelManager(LoggingConfigurable):
         """
         return getattr(self, 'use_pending_kernels', False)
 
-    async def _async_start_kernel(self, kernel_name: t.Optional[str] = None, **kwargs) -> str:
+    async def _async_start_kernel(self, kernel_name: t.Optional[str] = None, **kwargs: Any) -> str:
         """Start a new kernel.
 
         The caller can pick a kernel_id by passing one in as a keyword arg,
@@ -265,7 +267,7 @@ class MultiKernelManager(LoggingConfigurable):
             try:
                 await kernel
                 km = self.get_kernel(kernel_id)
-                await km.ready
+                await t.cast(asyncio.Future, km.ready)
             except Exception:
                 self.remove_kernel(kernel_id)
                 return
@@ -523,7 +525,7 @@ class MultiKernelManager(LoggingConfigurable):
         stream : zmq Socket or ZMQStream
         """
 
-    def new_kernel_id(self, **kwargs) -> str:
+    def new_kernel_id(self, **kwargs: Any) -> str:
         """
         Returns the id to associate with the kernel for this request. Subclasses may override
         this method to substitute other sources of kernel ids.

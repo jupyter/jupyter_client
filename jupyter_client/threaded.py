@@ -15,7 +15,7 @@ from typing import Optional
 from typing import Union
 
 import zmq
-from traitlets import Instance  # type: ignore
+from traitlets import Instance
 from traitlets import Type
 from zmq import ZMQError
 from zmq.eventloop import ioloop
@@ -107,6 +107,7 @@ class ThreadedZMQSocketChannel(object):
         """
 
         def thread_send():
+            assert self.session is not None
             self.session.send(self.stream, msg)
 
         assert self.ioloop is not None

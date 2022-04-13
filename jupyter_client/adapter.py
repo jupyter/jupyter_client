@@ -84,7 +84,7 @@ class Adapter(object):
         """
         return msg
 
-    def __call__(self, msg: Dict[str, Any]):
+    def __call__(self, msg: Dict[str, Any]) -> Dict[str, Any]:
         msg = self.update_header(msg)
         msg = self.update_metadata(msg)
         msg = self.update_msg_type(msg)

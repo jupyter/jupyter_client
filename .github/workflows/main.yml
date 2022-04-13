@@ -68,9 +68,6 @@ jobs:
           pip install -e .[test]
           pip freeze
 
-      - name: Check types
-        run: mypy jupyter_client --exclude '\/tests|kernelspecapp|ioloop|runapp' --install-types --non-interactive
-
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
         run: |

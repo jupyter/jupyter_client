@@ -3,7 +3,7 @@
 # Distributed under the terms of the Modified BSD License.
 import os
 
-from setuptools import find_packages
+from setuptools import find_packages  # type:ignore[import]
 from setuptools import setup
 
 here = os.path.abspath(os.path.dirname(__file__))

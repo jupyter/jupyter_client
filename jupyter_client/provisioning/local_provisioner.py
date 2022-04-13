@@ -125,7 +125,7 @@ class LocalProvisioner(KernelProvisionerBase):
                 LocalProvisioner._tolerate_no_process(e)
 
     @staticmethod
-    def _tolerate_no_process(os_error: OSError):
+    def _tolerate_no_process(os_error: OSError) -> None:
         # In Windows, we will get an Access Denied error if the process
         # has already terminated. Ignore it.
         if sys.platform == 'win32':
@@ -205,7 +205,7 @@ class LocalProvisioner(KernelProvisionerBase):
         pgid = None
         if hasattr(os, "getpgid"):
             try:
-                pgid = os.getpgid(self.process.pid)  # type: ignore
+                pgid = os.getpgid(self.process.pid)
             except OSError:
                 pass
 

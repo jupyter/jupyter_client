@@ -9,13 +9,13 @@ It is an incomplete base class, and must be subclassed.
 # Distributed under the terms of the Modified BSD License.
 import time
 
-from traitlets import Bool  # type: ignore
-from traitlets import default  # type: ignore
+from traitlets import Bool
+from traitlets import default
 from traitlets import Dict
 from traitlets import Float
 from traitlets import Instance
 from traitlets import Integer
-from traitlets.config.configurable import LoggingConfigurable  # type: ignore
+from traitlets.config.configurable import LoggingConfigurable
 
 
 class KernelRestarter(LoggingConfigurable):
