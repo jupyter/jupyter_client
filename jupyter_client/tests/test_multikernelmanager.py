@@ -160,8 +160,10 @@ class TestKernelManager(TestCase):
 
     def tcp_lifecycle_with_loop(self):
         # Ensure each thread has an event loop
-        asyncio.set_event_loop(asyncio.new_event_loop())
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         self.test_tcp_lifecycle()
+        loop.close()
 
     def test_start_parallel_thread_kernels(self):
         self.test_tcp_lifecycle()

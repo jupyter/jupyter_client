@@ -116,6 +116,10 @@ class KernelClient(ConnectionFileMixin):
     # flag for whether execute requests should be allowed to call raw_input:
     allow_stdin: bool = True
 
+    def __del__(self):
+        """Destroy our context when we are garbage collected."""
+        self.context.destroy()
+
     # --------------------------------------------------------------------------
     # Channel proxy methods
     # --------------------------------------------------------------------------
@@ -320,7 +324,6 @@ class KernelClient(ConnectionFileMixin):
             self.control_channel.stop()
         if self._created_context:
             self._created_context = False
-            self.context.destroy()
 
     @property
     def channels_running(self) -> bool:
