@@ -88,9 +88,11 @@ class TestKernelManager(TestCase):
         assert kid in km.list_kernel_ids()
         km.interrupt_kernel(kid)
         k = km.get_kernel(kid)
+        kc = k.client()
         assert isinstance(k, KernelManager)
         km.shutdown_kernel(kid, now=True)
         assert kid not in km, f"{kid} not in {km}"
+        kc.stop_channels()
 
     def _run_cinfo(self, km, transport, ip):
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -415,10 +417,6 @@ class TestAsyncKernelManager(AsyncTestCase):
         kernel = km.get_kernel(kid)
         assert not kernel.ready.done()
         # Try shutting down while the kernel is pending
-        with pytest.raises(RuntimeError):
-            await ensure_future(km.shutdown_kernel(kid, now=True))
-        await kernel.ready
-        # Shutdown once the kernel is ready
         await ensure_future(km.shutdown_kernel(kid, now=True))
         # Wait for the kernel to shutdown
         await kernel.ready
@@ -476,6 +474,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(self.raw_tcp_lifecycle())
+        loop.close()
 
     # static so picklable for multiprocessing on Windows
     @classmethod
@@ -491,6 +490,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(cls.raw_tcp_lifecycle(test_kid=test_kid))
+        loop.close()
 
     @gen_test
     async def test_start_parallel_thread_kernels(self):

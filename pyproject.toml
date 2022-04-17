@@ -41,10 +41,6 @@ filterwarnings= [
   # Fail on warnings
   "error",
 
-  # Workarounds for https://github.com/pytest-dev/pytest-asyncio/issues/77
-  "ignore:unclosed <socket.socket:ResourceWarning",
-  "ignore:unclosed event loop:ResourceWarning",
-
   # Workaround for https://github.com/tornadoweb/tornado/issues/3106
   # (To be fixed in Tornado 6.2)
   "ignore:There is no current event loop:DeprecationWarning:tornado",
