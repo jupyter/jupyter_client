@@ -311,7 +311,7 @@ class MultiKernelManager(LoggingConfigurable):
             for km in kms:
                 try:
                     await km.ready
-                except Exception as e:
+                except Exception:
                     # Will have been logged in _add_kernel_when_ready
                     pass
 
