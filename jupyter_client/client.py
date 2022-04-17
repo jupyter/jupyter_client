@@ -11,7 +11,6 @@ from queue import Empty
 
 import zmq.asyncio
 from traitlets import Any
-from traitlets import Bool
 from traitlets import Instance
 from traitlets import Type
 
