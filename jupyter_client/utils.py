@@ -7,8 +7,6 @@ import asyncio
 import inspect
 import os
 
-# import atexit
-
 
 def run_sync(coro):
     def wrapped(*args, **kwargs):

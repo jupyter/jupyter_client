@@ -41,7 +41,7 @@ filterwarnings= [
   # Fail on warnings
   "error",
 
-  # We're missing an event loop close somewhere.
+  # We need to handle properly closing loops as part of https://github.com/jupyter/jupyter_client/issues/755.
   "ignore:unclosed <socket.socket:ResourceWarning",
   "ignore:unclosed event loop:ResourceWarning",
 
