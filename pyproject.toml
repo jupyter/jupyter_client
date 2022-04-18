@@ -45,6 +45,9 @@ filterwarnings= [
   # (To be fixed in Tornado 6.2)
   "ignore:There is no current event loop:DeprecationWarning:tornado",
 
+  # Randomly occuring.
+  "ignore:unclosed <socket.socket:ResourceWarning",
+
   # ZMQ uses Future internally, which raises a DeprecationWarning
   # When there is no loop running.
   # We could eventually find a way to make sure these are only created
