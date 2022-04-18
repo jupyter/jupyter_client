@@ -109,7 +109,7 @@ class HBChannel(Thread):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(self._async_run())
-        # loop.close()
+        loop.close()
 
     async def _async_run(self) -> None:
         """The thread's main activity.  Call start() instead."""
