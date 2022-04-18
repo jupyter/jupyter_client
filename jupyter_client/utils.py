@@ -4,9 +4,10 @@ utils:
 - vendor functions from ipython_genutils that should be retired at some point.
 """
 import asyncio
-import atexit
 import inspect
 import os
+
+# import atexit
 
 
 def run_sync(coro):
@@ -15,7 +16,7 @@ def run_sync(coro):
             loop = asyncio.get_running_loop()
         except RuntimeError:
             loop = asyncio.new_event_loop()
-            atexit.register(loop.close)
+            # atexit.register(loop.close)
             asyncio.set_event_loop(loop)
         import nest_asyncio  # type: ignore
 
