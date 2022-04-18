@@ -2,6 +2,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
+import atexit
 import sys
 import time
 import typing as t
@@ -93,7 +94,9 @@ class KernelClient(ConnectionFileMixin):
     context = Instance(zmq.asyncio.Context)
 
     def _context_default(self) -> zmq.asyncio.Context:
-        return zmq.asyncio.Context()
+        context = zmq.asyncio.Context()
+        atexit.register(context.destroy)
+        return context
 
     # The classes to use for the various channels
     shell_channel_class = Type(ChannelABC)
@@ -111,10 +114,6 @@ class KernelClient(ConnectionFileMixin):
 
     # flag for whether execute requests should be allowed to call raw_input:
     allow_stdin: bool = True
-
-    def __del__(self):
-        """Destroy our context when we are garbage collected."""
-        self.context.destroy()
 
     # --------------------------------------------------------------------------
     # Channel proxy methods
