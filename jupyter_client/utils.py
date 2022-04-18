@@ -16,7 +16,6 @@ def run_sync(coro):
             loop = asyncio.get_running_loop()
         except RuntimeError:
             loop = asyncio.new_event_loop()
-            # atexit.register(loop.close)
             asyncio.set_event_loop(loop)
         import nest_asyncio  # type: ignore
 
