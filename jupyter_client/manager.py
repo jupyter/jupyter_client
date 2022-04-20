@@ -2,7 +2,6 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
-import functools
 import os
 import re
 import signal
@@ -31,6 +30,7 @@ from .connect import ConnectionFileMixin
 from .managerabc import KernelManagerABC
 from .provisioning import KernelProvisionerBase
 from .provisioning import KernelProvisionerFactory as KPF
+from .state_machine import KernelStateMachine
 from .utils import ensure_async
 from .utils import run_sync
 from jupyter_client import KernelClient
@@ -55,36 +55,6 @@ class _ShutdownStatus(Enum):
 F = t.TypeVar('F', bound=t.Callable[..., t.Any])
 
 
-def in_pending_state(method: F) -> F:
-    """Sets the kernel to a pending state by
-    creating a fresh Future for the KernelManager's `ready`
-    attribute. Once the method is finished, set the Future's results.
-    """
-
-    @t.no_type_check
-    @functools.wraps(method)
-    async def wrapper(self, *args, **kwargs):
-        # Create a future for the decorated method
-        try:
-            self._ready = Future()
-        except RuntimeError:
-            # No event loop running, use concurrent future
-            self._ready = CFuture()
-        try:
-            # call wrapped method, await, and set the result or exception.
-            out = await method(self, *args, **kwargs)
-            # Add a small sleep to ensure tests can capture the state before done
-            await asyncio.sleep(0.01)
-            self._ready.set_result(None)
-            return out
-        except Exception as e:
-            self._ready.set_exception(e)
-            self.log.exception(self._ready.exception())
-            raise e
-
-    return t.cast(F, wrapper)
-
-
 class KernelManager(ConnectionFileMixin):
     """Manages a single kernel in a subprocess on this host.
 
@@ -92,9 +62,11 @@ class KernelManager(ConnectionFileMixin):
     """
 
     _ready: t.Union[Future, CFuture]
+    _state_machine = Instance(KernelStateMachine)
 
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
+        self._state_machine = KernelStateMachine(self)
         self._shutdown_status = _ShutdownStatus.Unset
         # Create a place holder future.
         try:
@@ -367,7 +339,6 @@ class KernelManager(ConnectionFileMixin):
 
     post_start_kernel = run_sync(_async_post_start_kernel)
 
-    @in_pending_state
     async def _async_start_kernel(self, **kw: Any) -> None:
         """Starts a kernel on this host in a separate process.
 
@@ -460,7 +431,6 @@ class KernelManager(ConnectionFileMixin):
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
-    @in_pending_state
     async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False) -> None:
         """Attempts to stop the kernel process cleanly.
 
