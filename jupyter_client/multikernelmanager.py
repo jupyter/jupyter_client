@@ -6,6 +6,7 @@ import os
 import socket
 import typing as t
 import uuid
+import weakref
 
 import zmq
 from traitlets import Any
@@ -95,8 +96,6 @@ class MultiKernelManager(LoggingConfigurable):
         help="Share a single zmq.Context to talk to all my kernels",
     ).tag(config=True)
 
-    _created_context = Bool(False)
-
     context = Instance("zmq.Context")
 
     _pending_kernels = Dict()
@@ -108,20 +107,18 @@ class MultiKernelManager(LoggingConfigurable):
 
     @default("context")  # type:ignore[misc]
     def _context_default(self) -> zmq.Context:
-        self._created_context = True
-        return zmq.Context()
+        context = zmq.Context()
+        # Use a finalizer to destroy the context.
+        # self._finalizer = weakref.finalize(self, context.destroy)
 
-    def __del__(self):
-        if self._created_context and self.context and not self.context.closed:
-            if self.log:
-                self.log.debug("Destroying zmq context for %s", self)
-            self.context.destroy()
-        try:
-            super_del = super().__del__
-        except AttributeError:
-            pass
-        else:
-            super_del()
+        raise ValueError('Notes here')
+        """
+        The finalizer hangs because the context can't be destroyed.
+        There are two other things that are probably contributing:
+        - There is an open kernel subprocess at shutdown that is raising a warning on __del__
+        - We are not properly canceling the _add_kernel_when_ready task
+        """
+        return context
 
     connection_dir = Unicode("")
 
@@ -209,15 +206,15 @@ class MultiKernelManager(LoggingConfigurable):
         kwargs['kernel_id'] = kernel_id  # Make kernel_id available to manager and provisioner
 
         starter = ensure_async(km.start_kernel(**kwargs))
-        fut = asyncio.ensure_future(self._add_kernel_when_ready(kernel_id, km, starter))
-        self._pending_kernels[kernel_id] = fut
+        task = asyncio.create_task(self._add_kernel_when_ready(kernel_id, km, starter))
+        self._pending_kernels[kernel_id] = task
         # Handling a Pending Kernel
         if self._using_pending_kernels():
             # If using pending kernels, do not block
             # on the kernel start.
             self._kernels[kernel_id] = km
         else:
-            await fut
+            await task
             # raise an exception if one occurred during kernel startup.
             if km.ready.exception():
                 raise km.ready.exception()  # type: ignore
@@ -246,9 +243,9 @@ class MultiKernelManager(LoggingConfigurable):
         self.log.info("Kernel shutdown: %s" % kernel_id)
         # If the kernel is still starting, wait for it to be ready.
         if kernel_id in self._pending_kernels:
-            kernel = self._pending_kernels[kernel_id]
+            task = self._pending_kernels[kernel_id]
             try:
-                await kernel
+                await task
                 km = self.get_kernel(kernel_id)
                 await t.cast(asyncio.Future, km.ready)
             except Exception:
@@ -311,7 +308,9 @@ class MultiKernelManager(LoggingConfigurable):
             for km in kms:
                 try:
                     await km.ready
-                except Exception:
+                except asyncio.exceptions.CancelledError:
+                    self._pending_kernels[km.kernel_id].cancel()
+                except Exception as e:
                     # Will have been logged in _add_kernel_when_ready
                     pass
 

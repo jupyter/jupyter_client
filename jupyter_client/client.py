@@ -2,10 +2,10 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
-import atexit
 import sys
 import time
 import typing as t
+import weakref
 from functools import partial
 from getpass import getpass
 from queue import Empty
@@ -95,7 +95,8 @@ class KernelClient(ConnectionFileMixin):
 
     def _context_default(self) -> zmq.asyncio.Context:
         context = zmq.asyncio.Context()
-        atexit.register(context.destroy)
+        # Use a finalizer to destroy the context.
+        self._finalizer = weakref.finalize(self, context.destroy)
         return context
 
     # The classes to use for the various channels
