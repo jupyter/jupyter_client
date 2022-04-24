@@ -109,15 +109,7 @@ class MultiKernelManager(LoggingConfigurable):
     def _context_default(self) -> zmq.Context:
         context = zmq.Context()
         # Use a finalizer to destroy the context.
-        # self._finalizer = weakref.finalize(self, context.destroy)
-
-        raise ValueError('Notes here')
-        """
-        The finalizer hangs because the context can't be destroyed.
-        There are two other things that are probably contributing:
-        - There is an open kernel subprocess at shutdown that is raising a warning on __del__
-        - We are not properly canceling the _add_kernel_when_ready task
-        """
+        self._finalizer = weakref.finalize(self, context.destroy)
         return context
 
     connection_dir = Unicode("")
@@ -248,12 +240,14 @@ class MultiKernelManager(LoggingConfigurable):
                 await task
                 km = self.get_kernel(kernel_id)
                 await t.cast(asyncio.Future, km.ready)
+            except asyncio.exceptions.CancelledError:
+                pass
             except Exception:
                 self.remove_kernel(kernel_id)
                 return
         km = self.get_kernel(kernel_id)
         # If a pending kernel raised an exception, remove it.
-        if km.ready.exception():
+        if not km.ready.cancelled() and km.ready.exception():
             self.remove_kernel(kernel_id)
             return
         stopper = ensure_async(km.shutdown_kernel(now, restart))
@@ -310,7 +304,7 @@ class MultiKernelManager(LoggingConfigurable):
                     await km.ready
                 except asyncio.exceptions.CancelledError:
                     self._pending_kernels[km.kernel_id].cancel()
-                except Exception as e:
+                except Exception:
                     # Will have been logged in _add_kernel_when_ready
                     pass
 
