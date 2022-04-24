@@ -240,7 +240,7 @@ class MultiKernelManager(LoggingConfigurable):
                 await task
                 km = self.get_kernel(kernel_id)
                 await t.cast(asyncio.Future, km.ready)
-            except asyncio.exceptions.CancelledError:
+            except asyncio.CancelledError:
                 pass
             except Exception:
                 self.remove_kernel(kernel_id)
@@ -302,7 +302,7 @@ class MultiKernelManager(LoggingConfigurable):
             for km in kms:
                 try:
                     await km.ready
-                except asyncio.exceptions.CancelledError:
+                except asyncio.CancelledError:
                     self._pending_kernels[km.kernel_id].cancel()
                 except Exception:
                     # Will have been logged in _add_kernel_when_ready
