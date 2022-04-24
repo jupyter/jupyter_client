@@ -5,7 +5,6 @@ import asyncio
 import sys
 import time
 import typing as t
-import weakref
 from functools import partial
 from getpass import getpass
 from queue import Empty
@@ -94,10 +93,7 @@ class KernelClient(ConnectionFileMixin):
     context = Instance(zmq.asyncio.Context)
 
     def _context_default(self) -> zmq.asyncio.Context:
-        context = zmq.asyncio.Context()
-        # Use a finalizer to destroy the context.
-        self._finalizer = weakref.finalize(self, context.destroy)
-        return context
+        return zmq.asyncio.Context()
 
     # The classes to use for the various channels
     shell_channel_class = Type(ChannelABC)
@@ -115,6 +111,11 @@ class KernelClient(ConnectionFileMixin):
 
     # flag for whether execute requests should be allowed to call raw_input:
     allow_stdin: bool = True
+
+    def __del__(self):
+        """Clean up the context when garbage collected."""
+        if not self.channels_running:
+            self.context.destroy()
 
     # --------------------------------------------------------------------------
     # Channel proxy methods

@@ -6,7 +6,6 @@ import os
 import socket
 import typing as t
 import uuid
-import weakref
 
 import zmq
 from traitlets import Any
@@ -107,14 +106,15 @@ class MultiKernelManager(LoggingConfigurable):
 
     @default("context")  # type:ignore[misc]
     def _context_default(self) -> zmq.Context:
-        context = zmq.Context()
-        # Use a finalizer to destroy the context.
-        self._finalizer = weakref.finalize(self, context.destroy)
-        return context
+        return zmq.Context()
 
     connection_dir = Unicode("")
 
     _kernels = Dict()
+
+    def __del__(self):
+        """Clean up the context when garbage collected."""
+        self.context.destroy()
 
     def list_kernel_ids(self) -> t.List[str]:
         """Return a list of the kernel ids of the active kernels."""
