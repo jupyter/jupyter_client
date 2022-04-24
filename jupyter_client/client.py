@@ -117,10 +117,15 @@ class KernelClient(ConnectionFileMixin):
     allow_stdin: bool = True
 
     def __del__(self):
+        """Handle garbage collection.  Destroy context if applicable."""
         if self._created_context and self.context and not self.context.closed:
-            if self.log:
-                self.log.debug("Destroying zmq context for %s", self)
-            self.context.destroy()
+            if self.channels_running:
+                if self.log:
+                    self.log.warning("Could not destroy zmq context for %s", self)
+            else:
+                if self.log:
+                    self.log.debug("Destroying zmq context for %s", self)
+                self.context.destroy()
         try:
             super_del = super().__del__
         except AttributeError:
