@@ -11,6 +11,7 @@ from queue import Empty
 
 import zmq.asyncio
 from traitlets import Any
+from traitlets import Bool
 from traitlets import Instance
 from traitlets import Type
 
@@ -92,7 +93,10 @@ class KernelClient(ConnectionFileMixin):
     # The PyZMQ Context to use for communication with the kernel.
     context = Instance(zmq.asyncio.Context)
 
+    _created_context = Bool(False)
+
     def _context_default(self) -> zmq.asyncio.Context:
+        self._created_context = True
         return zmq.asyncio.Context()
 
     # The classes to use for the various channels
@@ -113,9 +117,16 @@ class KernelClient(ConnectionFileMixin):
     allow_stdin: bool = True
 
     def __del__(self):
-        """Clean up the context when garbage collected."""
-        if not self.channels_running:
+        if self._created_context and self.context and not self.context.closed:
+            if self.log:
+                self.log.debug("Destroying zmq context for %s", self)
             self.context.destroy()
+        try:
+            super_del = super().__del__
+        except AttributeError:
+            pass
+        else:
+            super_del()
 
     # --------------------------------------------------------------------------
     # Channel proxy methods

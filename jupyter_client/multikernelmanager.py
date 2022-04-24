@@ -97,6 +97,8 @@ class MultiKernelManager(LoggingConfigurable):
 
     context = Instance("zmq.Context")
 
+    _created_context = Bool(False)
+
     _pending_kernels = Dict()
 
     @property
@@ -106,6 +108,7 @@ class MultiKernelManager(LoggingConfigurable):
 
     @default("context")  # type:ignore[misc]
     def _context_default(self) -> zmq.Context:
+        self._created_context = True
         return zmq.Context()
 
     connection_dir = Unicode("")
@@ -113,8 +116,16 @@ class MultiKernelManager(LoggingConfigurable):
     _kernels = Dict()
 
     def __del__(self):
-        """Clean up the context when garbage collected."""
-        self.context.destroy()
+        if self._created_context and self.context and not self.context.closed:
+            if self.log:
+                self.log.debug("Destroying zmq context for %s", self)
+            self.context.destroy()
+        try:
+            super_del = super().__del__
+        except AttributeError:
+            pass
+        else:
+            super_del()
 
     def list_kernel_ids(self) -> t.List[str]:
         """Return a list of the kernel ids of the active kernels."""
