@@ -41,7 +41,7 @@ filterwarnings= [
   # Fail on warnings
   "error",
 
-  # Workarounds for https://github.com/pytest-dev/pytest-asyncio/issues/77
+  # We need to handle properly closing loops as part of https://github.com/jupyter/jupyter_client/issues/755.
   "ignore:unclosed <socket.socket:ResourceWarning",
   "ignore:unclosed event loop:ResourceWarning",
 

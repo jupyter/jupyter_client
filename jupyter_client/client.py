@@ -93,7 +93,7 @@ class KernelClient(ConnectionFileMixin):
     # The PyZMQ Context to use for communication with the kernel.
     context = Instance(zmq.asyncio.Context)
 
-    _created_context: Bool = Bool(False)
+    _created_context = Bool(False)
 
     def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True
@@ -115,6 +115,23 @@ class KernelClient(ConnectionFileMixin):
 
     # flag for whether execute requests should be allowed to call raw_input:
     allow_stdin: bool = True
+
+    def __del__(self):
+        """Handle garbage collection.  Destroy context if applicable."""
+        if self._created_context and self.context and not self.context.closed:
+            if self.channels_running:
+                if self.log:
+                    self.log.warning("Could not destroy zmq context for %s", self)
+            else:
+                if self.log:
+                    self.log.debug("Destroying zmq context for %s", self)
+                self.context.destroy()
+        try:
+            super_del = super().__del__
+        except AttributeError:
+            pass
+        else:
+            super_del()
 
     # --------------------------------------------------------------------------
     # Channel proxy methods
@@ -286,9 +303,6 @@ class KernelClient(ConnectionFileMixin):
         :meth:`start_kernel`. If the channels have been stopped and you
         call this, :class:`RuntimeError` will be raised.
         """
-        # Create the context if needed.
-        if not self._created_context:
-            self.context = self._context_default()
         if iopub:
             self.iopub_channel.start()
         if shell:
@@ -318,9 +332,6 @@ class KernelClient(ConnectionFileMixin):
             self.hb_channel.stop()
         if self.control_channel.is_alive():
             self.control_channel.stop()
-        if self._created_context:
-            self._created_context = False
-            self.context.destroy()
 
     @property
     def channels_running(self) -> bool:

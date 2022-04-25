@@ -243,6 +243,9 @@ class IOLoopThread(Thread):
         self.close()
         self.ioloop = None
 
+    def __del__(self):
+        self.close()
+
     def close(self) -> None:
         if self.ioloop is not None:
             try:

@@ -194,6 +194,7 @@ class TestKernelManagerShutDownGracefully:
 class TestKernelManager:
     def test_lifecycle(self, km):
         km.start_kernel(stdout=PIPE, stderr=PIPE)
+        kc = km.client()
         assert km.is_alive()
         is_done = km.ready.done()
         assert is_done
@@ -201,6 +202,7 @@ class TestKernelManager:
         assert km.is_alive()
         km.interrupt_kernel()
         assert isinstance(km, KernelManager)
+        kc.stop_channels()
         km.shutdown_kernel(now=True)
         assert km.context.closed
 

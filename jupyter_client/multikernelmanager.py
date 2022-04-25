@@ -95,9 +95,9 @@ class MultiKernelManager(LoggingConfigurable):
         help="Share a single zmq.Context to talk to all my kernels",
     ).tag(config=True)
 
-    _created_context = Bool(False)
-
     context = Instance("zmq.Context")
+
+    _created_context = Bool(False)
 
     _pending_kernels = Dict()
 
@@ -111,7 +111,12 @@ class MultiKernelManager(LoggingConfigurable):
         self._created_context = True
         return zmq.Context()
 
+    connection_dir = Unicode("")
+
+    _kernels = Dict()
+
     def __del__(self):
+        """Handle garbage collection.  Destroy context if applicable."""
         if self._created_context and self.context and not self.context.closed:
             if self.log:
                 self.log.debug("Destroying zmq context for %s", self)
@@ -122,10 +127,6 @@ class MultiKernelManager(LoggingConfigurable):
             pass
         else:
             super_del()
-
-    connection_dir = Unicode("")
-
-    _kernels = Dict()
 
     def list_kernel_ids(self) -> t.List[str]:
         """Return a list of the kernel ids of the active kernels."""
@@ -171,8 +172,9 @@ class MultiKernelManager(LoggingConfigurable):
         try:
             await kernel_awaitable
             self._kernels[kernel_id] = km
-        finally:
             self._pending_kernels.pop(kernel_id, None)
+        except Exception as e:
+            self.log.exception(e)
 
     async def _remove_kernel_when_ready(
         self, kernel_id: str, kernel_awaitable: t.Awaitable
@@ -180,8 +182,9 @@ class MultiKernelManager(LoggingConfigurable):
         try:
             await kernel_awaitable
             self.remove_kernel(kernel_id)
-        finally:
             self._pending_kernels.pop(kernel_id, None)
+        except Exception as e:
+            self.log.exception(e)
 
     def _using_pending_kernels(self):
         """Returns a boolean; a clearer method for determining if
@@ -207,15 +210,15 @@ class MultiKernelManager(LoggingConfigurable):
         kwargs['kernel_id'] = kernel_id  # Make kernel_id available to manager and provisioner
 
         starter = ensure_async(km.start_kernel(**kwargs))
-        fut = asyncio.ensure_future(self._add_kernel_when_ready(kernel_id, km, starter))
-        self._pending_kernels[kernel_id] = fut
+        task = asyncio.create_task(self._add_kernel_when_ready(kernel_id, km, starter))
+        self._pending_kernels[kernel_id] = task
         # Handling a Pending Kernel
         if self._using_pending_kernels():
             # If using pending kernels, do not block
             # on the kernel start.
             self._kernels[kernel_id] = km
         else:
-            await fut
+            await task
             # raise an exception if one occurred during kernel startup.
             if km.ready.exception():
                 raise km.ready.exception()  # type: ignore
@@ -223,22 +226,6 @@ class MultiKernelManager(LoggingConfigurable):
         return kernel_id
 
     start_kernel = run_sync(_async_start_kernel)
-
-    async def _shutdown_kernel_when_ready(
-        self,
-        kernel_id: str,
-        now: t.Optional[bool] = False,
-        restart: t.Optional[bool] = False,
-    ) -> None:
-        """Wait for a pending kernel to be ready
-        before shutting the kernel down.
-        """
-        # Only do this if using pending kernels
-        if self._using_pending_kernels():
-            kernel = self._kernels[kernel_id]
-            await kernel.ready
-        # Once out of a pending state, we can call shutdown.
-        await ensure_async(self.shutdown_kernel(kernel_id, now=now, restart=restart))
 
     async def _async_shutdown_kernel(
         self,
@@ -258,22 +245,21 @@ class MultiKernelManager(LoggingConfigurable):
             Will the kernel be restarted?
         """
         self.log.info("Kernel shutdown: %s" % kernel_id)
-        # If we're using pending kernels, block shutdown when a kernel is pending.
-        if self._using_pending_kernels() and kernel_id in self._pending_kernels:
-            raise RuntimeError("Kernel is in a pending state. Cannot shutdown.")
         # If the kernel is still starting, wait for it to be ready.
-        elif kernel_id in self._pending_kernels:
-            kernel = self._pending_kernels[kernel_id]
+        if kernel_id in self._pending_kernels:
+            task = self._pending_kernels[kernel_id]
             try:
-                await kernel
+                await task
                 km = self.get_kernel(kernel_id)
                 await t.cast(asyncio.Future, km.ready)
+            except asyncio.CancelledError:
+                pass
             except Exception:
                 self.remove_kernel(kernel_id)
                 return
         km = self.get_kernel(kernel_id)
         # If a pending kernel raised an exception, remove it.
-        if km.ready.exception():
+        if not km.ready.cancelled() and km.ready.exception():
             self.remove_kernel(kernel_id)
             return
         stopper = ensure_async(km.shutdown_kernel(now, restart))
@@ -320,13 +306,19 @@ class MultiKernelManager(LoggingConfigurable):
         """Shutdown all kernels."""
         kids = self.list_kernel_ids()
         kids += list(self._pending_kernels)
-        futs = [ensure_async(self._shutdown_kernel_when_ready(kid, now=now)) for kid in set(kids)]
+        kms = list(self._kernels.values())
+        futs = [ensure_async(self.shutdown_kernel(kid, now=now)) for kid in set(kids)]
         await asyncio.gather(*futs)
-        # When using "shutdown all", all pending kernels
-        # should be awaited before exiting this method.
+        # If using pending kernels, the kernels will not have been fully shut down.
         if self._using_pending_kernels():
-            for km in self._kernels.values():
-                await km.ready
+            for km in kms:
+                try:
+                    await km.ready
+                except asyncio.CancelledError:
+                    self._pending_kernels[km.kernel_id].cancel()
+                except Exception:
+                    # Will have been logged in _add_kernel_when_ready
+                    pass
 
     shutdown_all = run_sync(_async_shutdown_all)
 
