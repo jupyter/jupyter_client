@@ -2,6 +2,29 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.3.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.2.2...fa597d9cdcdc277abda2c3cab4aeee1593d3a9e2))
+
+### Bugs fixed
+
+- Fix shutdown and cleanup behavior [#772](https://github.com/jupyter/jupyter_client/pull/772) ([@blink1073](https://github.com/blink1073))
+
+### Maintenance and upkeep improvements
+
+- [pre-commit.ci] pre-commit autoupdate [#773](https://github.com/jupyter/jupyter_client/pull/773) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#770](https://github.com/jupyter/jupyter_client/pull/770) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Improve mypy config [#769](https://github.com/jupyter/jupyter_client/pull/769) ([@blink1073](https://github.com/blink1073))
+- Clean up pre-commit [#768](https://github.com/jupyter/jupyter_client/pull/768) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-04-07&to=2022-04-25&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-04-07..2022-04-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-04-07..2022-04-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.2.2
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.2.1...01b2095d96c81c56edf8f5df44e12e476b2bcd87))
@@ -17,8 +40,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-03-30&to=2022-04-07&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-03-30..2022-04-07&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-03-30..2022-04-07&type=Issues) | [@echarles](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aecharles+updated%3A2022-03-30..2022-04-07&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-03-30..2022-04-07&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.2.1
 
