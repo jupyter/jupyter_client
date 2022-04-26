@@ -101,7 +101,7 @@ def json_packer(obj):
             default=json_default,
             ensure_ascii=False,
             allow_nan=False,
-        ).encode("utf8")
+        ).encode("utf8", errors="surrogateescape")
     except (TypeError, ValueError) as e:
         # Fallback to trying to clean the json before serializing
         packed = json.dumps(
@@ -109,7 +109,7 @@ def json_packer(obj):
             default=json_default,
             ensure_ascii=False,
             allow_nan=False,
-        ).encode("utf8")
+        ).encode("utf8", errors="surrogateescape")
 
         warnings.warn(
             f"Message serialization failed with:\n{e}\n"
