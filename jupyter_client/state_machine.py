@@ -54,10 +54,10 @@ class KernelStateMachine(AsyncMachine):
     # trigger name. since we already have methods for these
     # methods, we'll wrap the methods instead.
     def _checked_assignment(self, kernel_manager, name, trigger):
-        # Check that
+        # If the trigger shares the same name as a method in the
+        # kernel manager, move the kernel_manager method to the
+        # callback list.
         if hasattr(kernel_manager, name):
             predefined_func = getattr(kernel_manager, name)
             self.events[name].add_callback("before", predefined_func)
-            setattr(kernel_manager, name, trigger)
-        else:
-            setattr(kernel_manager, name, trigger)
+        setattr(kernel_manager, name, trigger)
