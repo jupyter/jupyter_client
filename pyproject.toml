@@ -42,7 +42,7 @@ file = "README.md"
 content-type = "text/markdown"
 
 [project.license]
-text = "BSD"
+file = "COPYING.md"
 
 [project.urls]
 Homepage = "https://jupyter.org"
