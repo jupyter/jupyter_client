@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.3.1
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.0...4df8a48071649d3488a880e61293efd26b7aff1d))
+
+### Bugs fixed
+
+- Check that channels exist before asking if they are alive [#785](https://github.com/jupyter/jupyter_client/pull/785) ([@ccordoba12](https://github.com/ccordoba12))
+- Unicode error correction using Error Handler [#779](https://github.com/jupyter/jupyter_client/pull/779) ([@hxawax](https://github.com/hxawax))
+
+### Maintenance and upkeep improvements
+
+- Allow bot PRs to be automatically labeled [#784](https://github.com/jupyter/jupyter_client/pull/784) ([@blink1073](https://github.com/blink1073))
+- [pre-commit.ci] pre-commit autoupdate [#783](https://github.com/jupyter/jupyter_client/pull/783) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-04-25&to=2022-05-08&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-04-25..2022-05-08&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2022-04-25..2022-05-08&type=Issues) | [@hxawax](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahxawax+updated%3A2022-04-25..2022-05-08&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-04-25..2022-05-08&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.3.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.2.2...fa597d9cdcdc277abda2c3cab4aeee1593d3a9e2))
@@ -22,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-04-07&to=2022-04-25&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-04-07..2022-04-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-04-07..2022-04-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.2.2
 
