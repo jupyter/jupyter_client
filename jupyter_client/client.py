@@ -337,11 +337,11 @@ class KernelClient(ConnectionFileMixin):
     def channels_running(self) -> bool:
         """Are any of the channels created and running?"""
         return (
-            self.shell_channel.is_alive()
-            or self.iopub_channel.is_alive()
-            or self.stdin_channel.is_alive()
-            or self.hb_channel.is_alive()
-            or self.control_channel.is_alive()
+            (self._shell_channel and self.shell_channel.is_alive())
+            or (self._iopub_channel and self.iopub_channel.is_alive())
+            or (self._stdin_channel and self.stdin_channel.is_alive())
+            or (self._hb_channel and self.hb_channel.is_alive())
+            or (self._control_channel and self.control_channel.is_alive())
         )
 
     ioloop = None  # Overridden in subclasses that use pyzmq event loop
