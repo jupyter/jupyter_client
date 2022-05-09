@@ -1,3 +1,78 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "jupyter_client"
+description = "Jupyter protocol implementation and client libraries"
+keywords = [ "Interactive", "Interpreter", "Shell", "Web",]
+classifiers = [
+    "Framework :: Jupyter",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+     "Programming Language :: Python :: 3.10",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "entrypoints",
+    "jupyter_core>=4.9.2",
+    "nest-asyncio>=1.5.4",
+    "python-dateutil>=2.8.2",
+    "pyzmq>=22.3",
+    "tornado>=6.0",
+    "traitlets",
+]
+dynamic = [ "version",]
+
+[[project.authors]]
+name = "Jupyter Development Team"
+email = "jupyter@googlegroups.com"
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.license]
+file = "COPYING.md"
+
+[project.urls]
+Homepage = "https://jupyter.org"
+
+[project.optional-dependencies]
+test = [
+    "codecov",
+    "coverage",
+    "ipykernel>=6.5",
+    "ipython",
+    "mypy",
+    "pre-commit",
+    "pytest",
+    "pytest-asyncio>=0.18",
+    "pytest-cov",
+    "pytest-timeout",
+]
+doc = [
+    "ipykernel",
+    "myst-parser",
+    "sphinx>=1.3.6",
+    "sphinx_rtd_theme",
+    "sphinxcontrib_github_alt",
+]
+
+[project.scripts]
+jupyter-kernelspec = "jupyter_client.kernelspecapp:KernelSpecApp.launch_instance"
+jupyter-run = "jupyter_client.runapp:RunApp.launch_instance"
+jupyter-kernel = "jupyter_client.kernelapp:main"
+
 [tool.black]
 line-length = 100
 skip-string-normalization = true

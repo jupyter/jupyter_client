@@ -16,7 +16,3 @@ per-file-ignores =
     # F841 local variable 'foo' is assigned to but never used
     # B007 Loop control variable
     jupyter_client/tests/*: B011, F841, B007
-
-[metadata]
-name = jupyter_client
-version = attr: jupyter_client._version.__version__

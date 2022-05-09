@@ -4,8 +4,6 @@ sphinx:
 python:
   version: 3.7
   install:
-    # install docs requirements
-    - requirements: requirements-doc.txt
     # install jupyter-client itself
     - method: pip
-      path: .
+      path: ".[doc]"

@@ -1,5 +1,0 @@
-ipykernel
-myst-parser
-sphinx>=1.3.6
-sphinx_rtd_theme
-sphinxcontrib_github_alt
