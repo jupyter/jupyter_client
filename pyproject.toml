@@ -1,9 +1,10 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["hatchling>=0.25"]
+build-backend = "hatchling.build"
 
 [project]
 name = "jupyter_client"
+version = "7.3.1"
 description = "Jupyter protocol implementation and client libraries"
 keywords = [ "Interactive", "Interpreter", "Shell", "Web",]
 classifiers = [
@@ -31,7 +32,6 @@ dependencies = [
     "tornado>=6.0",
     "traitlets",
 ]
-dynamic = [ "version",]
 
 [[project.authors]]
 name = "Jupyter Development Team"
@@ -102,6 +102,9 @@ tag_template = "v{new_version}"
 
 [[tool.tbump.file]]
 src = "jupyter_client/_version.py"
+
+[[tool.tbump.file]]
+src = "pyproject.toml"
 
 [tool.pytest.ini_options]
 addopts = "-raXs --durations 10 --color=yes --doctest-modules"
