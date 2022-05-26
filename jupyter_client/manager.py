@@ -324,7 +324,9 @@ class KernelManager(ConnectionFileMixin):
         self._control_socket.close()
         self._control_socket = None
 
-    async def _async_pre_start_kernel(self, **kw: t.Any) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
+    async def _async_pre_start_kernel(
+        self, **kw: t.Any
+    ) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
         """Prepares a kernel for startup in a separate process.
 
         If random ports (port=0) are being used, this method must be called

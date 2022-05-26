@@ -192,7 +192,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
         return getattr(self, 'use_pending_kernels', False)
 
-    async def _async_start_kernel(self, kernel_name: t.Optional[str] = None, **kwargs: t.Any) -> str:
+    async def _async_start_kernel(
+        self, kernel_name: t.Optional[str] = None, **kwargs: t.Any
+    ) -> str:
         """Start a new kernel.
 
         The caller can pick a kernel_id by passing one in as a keyword arg,
