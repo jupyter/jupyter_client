@@ -216,7 +216,7 @@ class SessionFactory(LoggingConfigurable):
     logname = Unicode("")
 
     @observe("logname")  # type:ignore[misc]
-    def _logname_changed(self, change: Any) -> None:
+    def _logname_changed(self, change: t.Any) -> None:
         self.log = logging.getLogger(change["new"])
 
     # not configurable:
@@ -1077,7 +1077,7 @@ class Session(Configurable):
         # adapt to the current version
         return adapt(message)
 
-    def unserialize(self, *args: Any, **kwargs: Any) -> t.Dict[str, t.Any]:
+    def unserialize(self, *args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:
         warnings.warn(
             "Session.unserialize is deprecated. Use Session.deserialize.",
             DeprecationWarning,
