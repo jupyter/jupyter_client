@@ -90,6 +90,14 @@ class KernelClient(ConnectionFileMixin):
     :meth:`get_shell_msg` to fetch messages from the shell channel.
     """
 
+    get_shell_msg: t.Callable[..., t.Union[t.Coroutine[t.Any, t.Any, t.Dict[str, t.Any]], t.Dict[str, t.Any]]]
+    get_iopub_msg: t.Callable[..., t.Union[t.Coroutine[t.Any, t.Any, t.Dict[str, t.Any]], t.Dict[str, t.Any]]]
+    get_stdin_msg: t.Callable[..., t.Union[t.Coroutine[t.Any, t.Any, t.Dict[str, t.Any]], t.Dict[str, t.Any]]]
+    get_control_msg: t.Callable[..., t.Union[t.Coroutine[t.Any, t.Any, t.Dict[str, t.Any]], t.Dict[str, t.Any]]]
+    wait_for_ready: t.Callable[["KernelClient", t.Optional[float]], t.Union[t.Coroutine[t.Any, t.Any, None], None]]
+    is_alive: t.Callable[["KernelClient"], t.Union[t.Coroutine[t.Any, t.Any, bool], bool]]
+    execute_interactive: t.Callable[..., t.Union[t.Coroutine[t.Any, t.Any, t.Dict[str, t.Any]], t.Dict[str, t.Any]]]
+
     # The PyZMQ Context to use for communication with the kernel.
     context = Instance(zmq.asyncio.Context)
 
