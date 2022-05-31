@@ -235,7 +235,7 @@ class KernelManager(ConnectionFileMixin):
     # create a Client connected to our Kernel
     # --------------------------------------------------------------------------
 
-    def client(self, **kwargs: Any) -> KernelClient:
+    def client(self, **kwargs: t.Any) -> KernelClient:
         """Create a client configured to connect to our kernel"""
         kw = {}
         kw.update(self.get_connection_info(session=True))
@@ -296,7 +296,7 @@ class KernelManager(ConnectionFileMixin):
 
         return [pat.sub(from_ns, arg) for arg in cmd]
 
-    async def _async_launch_kernel(self, kernel_cmd: t.List[str], **kw: Any) -> None:
+    async def _async_launch_kernel(self, kernel_cmd: t.List[str], **kw: t.Any) -> None:
         """actually launch the kernel
 
         override in a subclass to launch kernel subprocesses differently
@@ -324,7 +324,9 @@ class KernelManager(ConnectionFileMixin):
         self._control_socket.close()
         self._control_socket = None
 
-    async def _async_pre_start_kernel(self, **kw: Any) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
+    async def _async_pre_start_kernel(
+        self, **kw: t.Any
+    ) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
         """Prepares a kernel for startup in a separate process.
 
         If random ports (port=0) are being used, this method must be called
@@ -352,7 +354,7 @@ class KernelManager(ConnectionFileMixin):
 
     pre_start_kernel = run_sync(_async_pre_start_kernel)
 
-    async def _async_post_start_kernel(self, **kw: Any) -> None:
+    async def _async_post_start_kernel(self, **kw: t.Any) -> None:
         """Performs any post startup tasks relative to the kernel.
 
         Parameters
@@ -368,7 +370,7 @@ class KernelManager(ConnectionFileMixin):
     post_start_kernel = run_sync(_async_post_start_kernel)
 
     @in_pending_state
-    async def _async_start_kernel(self, **kw: Any) -> None:
+    async def _async_start_kernel(self, **kw: t.Any) -> None:
         """Starts a kernel on this host in a separate process.
 
         If random ports (port=0) are being used, this method must be called
@@ -500,7 +502,7 @@ class KernelManager(ConnectionFileMixin):
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
     async def _async_restart_kernel(
-        self, now: bool = False, newports: bool = False, **kw: Any
+        self, now: bool = False, newports: bool = False, **kw: t.Any
     ) -> None:
         """Restarts a kernel with the arguments that were used to launch it.
 
@@ -661,7 +663,7 @@ KernelManagerABC.register(KernelManager)
 
 
 def start_new_kernel(
-    startup_timeout: float = 60, kernel_name: str = "python", **kwargs: Any
+    startup_timeout: float = 60, kernel_name: str = "python", **kwargs: t.Any
 ) -> t.Tuple[KernelManager, KernelClient]:
     """Start a new kernel, and return its Manager and Client"""
     km = KernelManager(kernel_name=kernel_name)
@@ -679,7 +681,7 @@ def start_new_kernel(
 
 
 async def start_new_async_kernel(
-    startup_timeout: float = 60, kernel_name: str = "python", **kwargs: Any
+    startup_timeout: float = 60, kernel_name: str = "python", **kwargs: t.Any
 ) -> t.Tuple[AsyncKernelManager, KernelClient]:
     """Start a new kernel, and return its Manager and Client"""
     km = AsyncKernelManager(kernel_name=kernel_name)
@@ -697,7 +699,7 @@ async def start_new_async_kernel(
 
 
 @contextmanager
-def run_kernel(**kwargs: Any) -> t.Iterator[KernelClient]:
+def run_kernel(**kwargs: t.Any) -> t.Iterator[KernelClient]:
     """Context manager to create a kernel in a subprocess.
 
     The kernel is shut down when the context exits.

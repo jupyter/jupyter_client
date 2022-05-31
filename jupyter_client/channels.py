@@ -101,6 +101,7 @@ class HBChannel(Thread):
         assert self.context is not None
         self.socket = self.context.socket(zmq.REQ)
         self.socket.linger = 1000
+        assert self.address is not None
         self.socket.connect(self.address)
 
         self.poller.register(self.socket, zmq.POLLIN)
@@ -192,9 +193,7 @@ HBChannelABC.register(HBChannel)
 class ZMQSocketChannel(object):
     """A ZMQ socket in an async API"""
 
-    def __init__(
-        self, socket: zmq.sugar.socket.Socket, session: Session, loop: t.Any = None
-    ) -> None:
+    def __init__(self, socket: zmq.asyncio.Socket, session: Session, loop: t.Any = None) -> None:
         """Create a channel.
 
         Parameters
@@ -208,7 +207,7 @@ class ZMQSocketChannel(object):
         """
         super().__init__()
 
-        self.socket: t.Optional[zmq.sugar.socket.Socket] = socket
+        self.socket: t.Optional[zmq.asyncio.Socket] = socket
         self.session = session
 
     async def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:
