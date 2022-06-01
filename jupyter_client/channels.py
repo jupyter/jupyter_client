@@ -9,7 +9,9 @@ from queue import Empty
 from threading import Event
 from threading import Thread
 
-import zmq.asyncio
+import zmq
+from zmq.asyncio import Context
+from zmq.asyncio import Socket
 
 from .channelsabc import HBChannelABC
 from .session import Session
@@ -49,7 +51,7 @@ class HBChannel(Thread):
 
     def __init__(
         self,
-        context: t.Optional[zmq.asyncio.Context] = None,
+        context: t.Optional[Context] = None,
         session: t.Optional[Session] = None,
         address: t.Union[t.Tuple[str, int], str] = "",
     ):
@@ -193,7 +195,7 @@ HBChannelABC.register(HBChannel)
 class ZMQSocketChannel(object):
     """A ZMQ socket in an async API"""
 
-    def __init__(self, socket: zmq.asyncio.Socket, session: Session, loop: t.Any = None) -> None:
+    def __init__(self, socket: Socket, session: Session, loop: t.Any = None) -> None:
         """Create a channel.
 
         Parameters
@@ -207,7 +209,7 @@ class ZMQSocketChannel(object):
         """
         super().__init__()
 
-        self.socket: t.Optional[zmq.asyncio.Socket] = socket
+        self.socket: t.Optional[Socket] = socket
         self.session = session
 
     async def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:
