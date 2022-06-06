@@ -2,6 +2,29 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.3.2
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.1...c81771416d9e09e0e92be799f3e8549d0db57e43))
+
+### Enhancements made
+
+- Correct `Any` type annotations. [#791](https://github.com/jupyter/jupyter_client/pull/791) ([@joouha](https://github.com/joouha))
+
+### Maintenance and upkeep improvements
+
+- [pre-commit.ci] pre-commit autoupdate [#792](https://github.com/jupyter/jupyter_client/pull/792) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Use hatch backend [#789](https://github.com/jupyter/jupyter_client/pull/789) ([@blink1073](https://github.com/blink1073))
+- [pre-commit.ci] pre-commit autoupdate [#788](https://github.com/jupyter/jupyter_client/pull/788) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Use flit build backend [#781](https://github.com/jupyter/jupyter_client/pull/781) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-05-08&to=2022-06-06&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-05-08..2022-06-06&type=Issues) | [@joouha](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ajoouha+updated%3A2022-05-08..2022-06-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-05-08..2022-06-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.3.1
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.0...4df8a48071649d3488a880e61293efd26b7aff1d))
@@ -21,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-04-25&to=2022-05-08&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-04-25..2022-05-08&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2022-04-25..2022-05-08&type=Issues) | [@hxawax](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahxawax+updated%3A2022-04-25..2022-05-08&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-04-25..2022-05-08&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.3.0
 
