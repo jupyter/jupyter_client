@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.3.3
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.2...37ca37d865db260e7da6fa85339be450d6fd3c3c))
+
+### Bugs fixed
+
+- Add local-provisioner entry point to pyproject.toml Fixes #800 [#801](https://github.com/jupyter/jupyter_client/pull/801) ([@utkonos](https://github.com/utkonos))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-06-06&to=2022-06-07&type=c))
+
+[@utkonos](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Autkonos+updated%3A2022-06-06..2022-06-07&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.3.2
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.1...c81771416d9e09e0e92be799f3e8549d0db57e43))
@@ -22,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-05-08&to=2022-06-06&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-05-08..2022-06-06&type=Issues) | [@joouha](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ajoouha+updated%3A2022-05-08..2022-06-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-05-08..2022-06-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.3.1
 
