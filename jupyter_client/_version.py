@@ -2,7 +2,7 @@ import re
 from typing import List
 from typing import Union
 
-__version__ = "7.3.3"
+__version__ = "7.3.4"
 
 # Build up version_info tuple for backwards compatibility
 pattern = r'(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)(?P<rest>.*)'
