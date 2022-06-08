@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.3.4
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.3...ca4cb2d6a4b95a6925de85a47b323d2235032c74))
+
+### Bugs fixed
+
+- Revert latest changes to `ThreadedZMQSocketChannel` because they break Qtconsole [#803](https://github.com/jupyter/jupyter_client/pull/803) ([@ccordoba12](https://github.com/ccordoba12))
+
+### Maintenance and upkeep improvements
+
+- Fix sphinx 5.0 support [#804](https://github.com/jupyter/jupyter_client/pull/804) ([@blink1073](https://github.com/blink1073))
+- [pre-commit.ci] pre-commit autoupdate [#799](https://github.com/jupyter/jupyter_client/pull/799) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-06-07&to=2022-06-08&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-06-07..2022-06-08&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2022-06-07..2022-06-08&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-06-07..2022-06-08&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.3.3
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.2...37ca37d865db260e7da6fa85339be450d6fd3c3c))
@@ -15,8 +36,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-06-06&to=2022-06-07&type=c))
 
 [@utkonos](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Autkonos+updated%3A2022-06-06..2022-06-07&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.3.2
 
