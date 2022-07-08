@@ -2,6 +2,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
+import inspect
 import sys
 import time
 import typing as t
@@ -232,7 +233,7 @@ class KernelClient(ConnectionFileMixin):
                 continue
             return reply
 
-    def _stdin_hook_default(self, msg: t.Dict[str, t.Any]) -> None:
+    async def _stdin_hook_default(self, msg: t.Dict[str, t.Any]) -> None:
         """Handle an input request"""
         content = msg["content"]
         if content.get("password", False):
@@ -251,7 +252,7 @@ class KernelClient(ConnectionFileMixin):
 
         # only send stdin reply if there *was not* another request
         # or execution finished while we were reading.
-        if not (self.stdin_channel.msg_ready() or self.shell_channel.msg_ready()):
+        if not (await self.stdin_channel.msg_ready() or await self.shell_channel.msg_ready()):
             self.input(raw_data)
 
     def _output_hook_default(self, msg: t.Dict[str, t.Any]) -> None:
@@ -469,7 +470,7 @@ class KernelClient(ConnectionFileMixin):
             If not specified, output will be redisplayed.
 
         stdin_hook: callable(msg)
-            Function to be called with stdin_request messages.
+            Function or awaitable to be called with stdin_request messages.
             If not specified, input/getpass will be called.
 
         Returns
@@ -536,7 +537,9 @@ class KernelClient(ConnectionFileMixin):
                 raise TimeoutError("Timeout waiting for output")
             if stdin_socket in events:
                 req = await self.stdin_channel.get_msg(timeout=0)
-                stdin_hook(req)
+                res = stdin_hook(req)
+                if inspect.isawaitable(res):
+                    await res
                 continue
             if iopub_socket not in events:
                 continue
