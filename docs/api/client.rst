@@ -37,7 +37,7 @@ client - communicating with kernels
    .. automethod:: execute_interactive
 
 .. autoclass:: AsyncKernelClient
-   
+
    .. automethod:: get_shell_msg
 
    .. automethod:: get_iopub_msg
@@ -49,4 +49,3 @@ client - communicating with kernels
    .. automethod:: wait_for_ready
 
    .. automethod:: is_alive
-
