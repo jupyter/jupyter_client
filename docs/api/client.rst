@@ -35,3 +35,18 @@ client - communicating with kernels
 .. autoclass:: BlockingKernelClient
 
    .. automethod:: execute_interactive
+
+.. autoclass:: AsyncKernelClient
+   
+   .. automethod:: get_shell_msg
+
+   .. automethod:: get_iopub_msg
+
+   .. automethod:: get_stdin_msg
+
+   .. automethod:: get_control_msg
+
+   .. automethod:: wait_for_ready
+
+   .. automethod:: is_alive
+
