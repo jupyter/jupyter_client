@@ -50,4 +50,4 @@ client - communicating with kernels
 
 .. autoclass:: AsyncKernelClient
 
-   The available class methods are identical with :class:`BlockingKernelClient` but async.
+   :class:`AsyncKernelClient` is identical to :class:`BlockingKernelClient` but the methods described above are async.
