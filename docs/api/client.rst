@@ -36,8 +36,6 @@ client - communicating with kernels
 
    .. automethod:: execute_interactive
 
-.. autoclass:: AsyncKernelClient
-   
    .. automethod:: get_shell_msg
 
    .. automethod:: get_iopub_msg
@@ -50,3 +48,6 @@ client - communicating with kernels
 
    .. automethod:: is_alive
 
+.. autoclass:: AsyncKernelClient
+
+   The available class methods are identical with :class:`BlockingKernelClient` but async.
