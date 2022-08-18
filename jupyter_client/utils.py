@@ -29,7 +29,7 @@ def uses_run_sync(__cls=None, *, enable=True):
                 except RuntimeError:
                     loop = None
                 if loop:
-                    import nest_asyncio
+                    import nest_asyncio  # type: ignore
 
                     nest_asyncio.apply(loop)
             return orig_init(self, *args, **kwargs)
