@@ -17,8 +17,10 @@ def uses_run_sync(__cls=None, *, enable=True):
     If an inheriting class becomes async again, it can call with
     `enable=False` to prevent the nest_asyncio patching.
     """
+
     def perform_wrap(cls):
         orig_init = cls.__init__
+
         @functools.wraps(orig_init)
         def __init__(self, *args, **kwargs):
             if cls._uses_run_sync:
@@ -28,6 +30,7 @@ def uses_run_sync(__cls=None, *, enable=True):
                     loop = None
                 if loop:
                     import nest_asyncio
+
                     nest_asyncio.apply(loop)
             return orig_init(self, *args, **kwargs)
 

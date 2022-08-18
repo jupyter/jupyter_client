@@ -23,7 +23,8 @@ from .kernelspec import KernelSpecManager
 from .kernelspec import NATIVE_KERNEL_NAME
 from .manager import KernelManager
 from .utils import ensure_async
-from .utils import run_sync, uses_run_sync
+from .utils import run_sync
+from .utils import uses_run_sync
 
 
 class DuplicateKernelError(Exception):

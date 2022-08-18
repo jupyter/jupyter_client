@@ -32,7 +32,8 @@ from .managerabc import KernelManagerABC
 from .provisioning import KernelProvisionerBase
 from .provisioning import KernelProvisionerFactory as KPF
 from .utils import ensure_async
-from .utils import run_sync, uses_run_sync
+from .utils import run_sync
+from .utils import uses_run_sync
 from jupyter_client import KernelClient
 from jupyter_client import kernelspec
 

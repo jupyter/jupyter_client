@@ -6,7 +6,8 @@ Useful for test suites and blocking terminal interfaces.
 # Distributed under the terms of the Modified BSD License.
 from traitlets import Type
 
-from ..utils import run_sync, uses_run_sync
+from ..utils import run_sync
+from ..utils import uses_run_sync
 from jupyter_client.channels import HBChannel
 from jupyter_client.channels import ZMQSocketChannel
 from jupyter_client.client import KernelClient
