@@ -34,12 +34,10 @@ class IOLoopKernelRestarter(KernelRestarter):
     def start(self):
         """Start the polling of the kernel."""
         if self._pcallback is None:
-            if asyncio.iscoroutinefunction(self.poll):
-                cb = run_sync(self.poll)
-            else:
-                cb = self.poll
-            self._pcallback = ioloop.PeriodicCallback(
-                cb,
+            from tornado.ioloop import PeriodicCallback
+
+            self._pcallback = PeriodicCallback(
+                self.poll,
                 1000 * self.time_to_dead,
             )
             self._pcallback.start()
