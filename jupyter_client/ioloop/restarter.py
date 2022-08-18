@@ -5,14 +5,12 @@ restarts the kernel if it dies.
 """
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import asyncio
 import time
 import warnings
 
 from traitlets import Instance
 
 from jupyter_client.restarter import KernelRestarter
-from jupyter_client.utils import run_sync
 
 
 class IOLoopKernelRestarter(KernelRestarter):
