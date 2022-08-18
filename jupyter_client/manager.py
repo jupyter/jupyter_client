@@ -32,7 +32,7 @@ from .managerabc import KernelManagerABC
 from .provisioning import KernelProvisionerBase
 from .provisioning import KernelProvisionerFactory as KPF
 from .utils import ensure_async
-from .utils import run_sync
+from .utils import run_sync, uses_run_sync
 from jupyter_client import KernelClient
 from jupyter_client import kernelspec
 
@@ -85,6 +85,7 @@ def in_pending_state(method: F) -> F:
     return t.cast(F, wrapper)
 
 
+@uses_run_sync
 class KernelManager(ConnectionFileMixin):
     """Manages a single kernel in a subprocess on this host.
 
@@ -636,6 +637,7 @@ class KernelManager(ConnectionFileMixin):
             await asyncio.sleep(pollinterval)
 
 
+@uses_run_sync(enable=False)
 class AsyncKernelManager(KernelManager):
     # the class to create with our `client` method
     client_class: DottedObjectName = DottedObjectName(

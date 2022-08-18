@@ -4,8 +4,43 @@ utils:
 - vendor functions from ipython_genutils that should be retired at some point.
 """
 import asyncio
+import functools
 import inspect
 import os
+
+
+def uses_run_sync(__cls=None, *, enable=True):
+    """decorator for classes that uses `run_sync` to wrap methods
+
+    This will ensure that nest_asyncio is applied in a timely manner.
+
+    If an inheriting class becomes async again, it can call with
+    `enable=False` to prevent the nest_asyncio patching.
+    """
+    def perform_wrap(cls):
+        orig_init = cls.__init__
+        @functools.wraps(orig_init)
+        def __init__(self, *args, **kwargs):
+            if cls._uses_run_sync:
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    loop = None
+                if loop:
+                    import nest_asyncio
+                    nest_asyncio.apply(loop)
+            return orig_init(self, *args, **kwargs)
+
+        cls._uses_run_sync = uses_sync
+        cls.__init__ = __init__
+        return cls
+
+    if __cls:
+        uses_sync = True
+        return perform_wrap(__cls)
+    else:
+        uses_sync = enable
+        return perform_wrap
 
 
 def run_sync(coro):

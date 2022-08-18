@@ -23,7 +23,7 @@ from .kernelspec import KernelSpecManager
 from .kernelspec import NATIVE_KERNEL_NAME
 from .manager import KernelManager
 from .utils import ensure_async
-from .utils import run_sync
+from .utils import run_sync, uses_run_sync
 
 
 class DuplicateKernelError(Exception):
@@ -50,6 +50,7 @@ def kernel_method(f: t.Callable) -> t.Callable:
     return wrapped
 
 
+@uses_run_sync
 class MultiKernelManager(LoggingConfigurable):
     """A class for managing multiple kernels."""
 
@@ -529,6 +530,7 @@ class MultiKernelManager(LoggingConfigurable):
         return str(uuid.uuid4())
 
 
+@uses_run_sync(enable=False)
 class AsyncMultiKernelManager(MultiKernelManager):
 
     kernel_manager_class = DottedObjectName(
