@@ -27,6 +27,7 @@ class IOLoopKernelRestarter(KernelRestarter):
             stacklevel=4,
         )
         from zmq.eventloop import ioloop
+
         return ioloop.IOLoop.current()
 
     _pcallback = None
