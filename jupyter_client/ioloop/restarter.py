@@ -10,7 +10,6 @@ import time
 import warnings
 
 from traitlets import Instance
-from zmq.eventloop import ioloop
 
 from jupyter_client.restarter import KernelRestarter
 from jupyter_client.utils import run_sync
@@ -27,6 +26,7 @@ class IOLoopKernelRestarter(KernelRestarter):
             DeprecationWarning,
             stacklevel=4,
         )
+        from zmq.eventloop import ioloop
         return ioloop.IOLoop.current()
 
     _pcallback = None
