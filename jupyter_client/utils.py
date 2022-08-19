@@ -57,7 +57,7 @@ def run_sync(coro):
             except RuntimeError:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-        import nest_asyncio  # type: ignore
+        import nest_asyncio
 
         nest_asyncio.apply(loop)
         future = asyncio.ensure_future(coro(*args, **kwargs), loop=loop)
