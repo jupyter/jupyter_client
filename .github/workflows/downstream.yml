@@ -76,7 +76,6 @@ jobs:
           git clone https://github.com/jupyter/jupyter_kernel_test.git
           cd jupyter_kernel_test
           conda env update --name jupyter_kernel_test --file environment.yml
-          conda install -c conda-forge xeus-cling
           pip install -e ".[test]"
           python -m unittest -v
 
