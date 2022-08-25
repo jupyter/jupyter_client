@@ -13,7 +13,7 @@
 ### Bugs fixed
 
 - Use tornado 6.2's PeriodicCallback in restarter [#822](https://github.com/jupyter/jupyter_client/pull/822) ([@vidartf](https://github.com/vidartf))
-- Make _stdin_hook_default async [#814](https://github.com/jupyter/jupyter_client/pull/814) ([@davidbrochart](https://github.com/davidbrochart))
+- Make \_stdin_hook_default async [#814](https://github.com/jupyter/jupyter_client/pull/814) ([@davidbrochart](https://github.com/davidbrochart))
 
 ### Maintenance and upkeep improvements
 
