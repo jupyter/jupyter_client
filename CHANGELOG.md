@@ -2,6 +2,40 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.3.5
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.4...bc5ded5439ca55bd6740885eb3a44ca6bc3e2243))
+
+### Enhancements made
+
+- add `AsyncKernelClient` to `doc/api/client.rst` [#819](https://github.com/jupyter/jupyter_client/pull/819) ([@helioz11](https://github.com/helioz11))
+
+### Bugs fixed
+
+- Use tornado 6.2's PeriodicCallback in restarter [#822](https://github.com/jupyter/jupyter_client/pull/822) ([@vidartf](https://github.com/vidartf))
+- Make \_stdin_hook_default async [#814](https://github.com/jupyter/jupyter_client/pull/814) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Maintenance and upkeep improvements
+
+- [pre-commit.ci] pre-commit autoupdate [#824](https://github.com/jupyter/jupyter_client/pull/824) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#821](https://github.com/jupyter/jupyter_client/pull/821) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#820](https://github.com/jupyter/jupyter_client/pull/820) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#818](https://github.com/jupyter/jupyter_client/pull/818) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#816](https://github.com/jupyter/jupyter_client/pull/816) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#815](https://github.com/jupyter/jupyter_client/pull/815) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#812](https://github.com/jupyter/jupyter_client/pull/812) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#810](https://github.com/jupyter/jupyter_client/pull/810) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#809](https://github.com/jupyter/jupyter_client/pull/809) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#807](https://github.com/jupyter/jupyter_client/pull/807) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-06-08&to=2022-08-25&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-06-08..2022-08-25&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-06-08..2022-08-25&type=Issues) | [@helioz11](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahelioz11+updated%3A2022-06-08..2022-08-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-06-08..2022-08-25&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Avidartf+updated%3A2022-06-08..2022-08-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.3.4
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.3...ca4cb2d6a4b95a6925de85a47b323d2235032c74))
@@ -20,8 +54,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-06-07&to=2022-06-08&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-06-07..2022-06-08&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2022-06-07..2022-06-08&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-06-07..2022-06-08&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.3.3
 
