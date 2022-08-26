@@ -11,6 +11,7 @@ import time
 from subprocess import PIPE
 
 import pytest
+import pytest_asyncio
 from jupyter_core import paths
 from traitlets.config.loader import Config
 
@@ -123,7 +124,7 @@ def async_km_subclass(config):
     return km
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def start_async_kernel():
     km, kc = await start_new_async_kernel(kernel_name="signaltest")
     yield km, kc
