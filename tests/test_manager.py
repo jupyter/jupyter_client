@@ -32,3 +32,13 @@ def test_connection_file_real_path():
         km._launch_args = {}
         cmds = km.format_kernel_cmd()
         assert cmds[4] == "foobar"
+
+
+def test_kernel_manager_event_logger(jp_event_handler, jp_read_emitted_event):
+    action = "start"
+    km = KernelManager()
+    km.event_logger.register_handler(jp_event_handler)
+    km._emit(action=action)
+    output = jp_read_emitted_event()
+    assert "kernel_id" in output and output["kernel_id"] == None
+    assert "action" in output and output["action"] == action

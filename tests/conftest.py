@@ -16,6 +16,9 @@ except ImportError:
 pjoin = os.path.join
 
 
+pytest_plugins = ["jupyter_events.pytest_plugin"]
+
+
 # Handle resource limit
 # Ensure a minimal soft limit of DEFAULT_SOFT if the current hard limit is at least that much.
 if resource is not None:
