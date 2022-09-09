@@ -9,9 +9,7 @@ from threading import Thread
 from typing import Any
 from typing import Awaitable
 from typing import Dict
-from typing import List
 from typing import Optional
-from typing import Union
 
 import zmq
 from traitlets import Instance
@@ -19,6 +17,7 @@ from traitlets import Type
 from zmq import ZMQError
 from zmq.eventloop import ioloop
 from zmq.eventloop import zmqstream
+from zmq.eventloop import future
 
 from .session import Session
 from jupyter_client import KernelClient
@@ -109,7 +108,7 @@ class ThreadedZMQSocketChannel(object):
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)
 
-    def _handle_recv(self, future_msg: Awaitable) -> None:
+    def _handle_recv(self, future_msg: Awaitable[future.Future]) -> None:
         """Callback for stream.on_recv.
 
         Unpacks message, and calls handlers with it.
