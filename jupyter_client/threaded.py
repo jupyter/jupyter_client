@@ -1,7 +1,6 @@
 """ Defines a KernelClient that provides thread-safe sockets with async callbacks on message
 replies.
 """
-import asyncio
 import atexit
 import errno
 import time
@@ -28,10 +27,6 @@ from jupyter_client.channels import HBChannel
 # Local imports
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
 # during garbage collection of threads at exit
-
-
-async def get_msg(msg: Awaitable) -> Union[List[bytes], List[zmq.Message]]:
-    return await msg
 
 
 class ThreadedZMQSocketChannel(object):
@@ -119,8 +114,8 @@ class ThreadedZMQSocketChannel(object):
 
         Unpacks message, and calls handlers with it.
         """
-        assert self.ioloop is not None
-        msg_list = self.ioloop._asyncio_event_loop.run_until_complete(get_msg(future_msg))
+        assert future_msg.done()
+        msg_list = future_msg.result()
         assert self.session is not None
         ident, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)
@@ -209,10 +204,7 @@ class IOLoopThread(Thread):
 
     def run(self) -> None:
         """Run my loop, ignoring EINTR events in the poller"""
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
         self.ioloop = ioloop.IOLoop()
-        self.ioloop._asyncio_event_loop = loop
         # signal that self.ioloop is defined
         self._start_event.set()
         while True:
