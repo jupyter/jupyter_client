@@ -1,17 +1,15 @@
 """ Defines a KernelClient that provides thread-safe sockets with async callbacks on message
 replies.
 """
+import asyncio
 import atexit
 import errno
 import time
 from threading import Event
 from threading import Thread
 from typing import Any
-from typing import Awaitable
 from typing import Dict
-from typing import List
 from typing import Optional
-from typing import Union
 
 import zmq
 from traitlets import Instance
@@ -109,7 +107,7 @@ class ThreadedZMQSocketChannel(object):
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)
 
-    def _handle_recv(self, future_msg: Awaitable) -> None:
+    def _handle_recv(self, future_msg: asyncio.Future) -> None:
         """Callback for stream.on_recv.
 
         Unpacks message, and calls handlers with it.
