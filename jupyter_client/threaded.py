@@ -1,7 +1,6 @@
 """ Defines a KernelClient that provides thread-safe sockets with async callbacks on message
 replies.
 """
-import asyncio
 import atexit
 import errno
 import time
@@ -9,6 +8,7 @@ from threading import Event
 from threading import Thread
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 
 import zmq
@@ -63,7 +63,7 @@ class ThreadedZMQSocketChannel(object):
         def setup_stream():
             assert self.socket is not None
             self.stream = zmqstream.ZMQStream(self.socket, self.ioloop)
-            self.stream.on_recv(self._handle_recv)  # type:ignore[arg-type]
+            self.stream.on_recv(self._handle_recv)
             evt.set()
 
         assert self.ioloop is not None
@@ -107,13 +107,11 @@ class ThreadedZMQSocketChannel(object):
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)
 
-    def _handle_recv(self, future_msg: asyncio.Future) -> None:
+    def _handle_recv(self, msg_list: List[bytes]) -> None:
         """Callback for stream.on_recv.
 
         Unpacks message, and calls handlers with it.
         """
-        assert future_msg.done()
-        msg_list = future_msg.result()
         assert self.session is not None
         ident, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)
