@@ -7,11 +7,11 @@ from unittest import TestCase
 import pytest
 from IPython.utils.capture import capture_output
 
-from jupyter_client.manager import start_new_kernel
 from .utils import test_env
 from jupyter_client.kernelspec import KernelSpecManager
 from jupyter_client.kernelspec import NATIVE_KERNEL_NAME
 from jupyter_client.kernelspec import NoSuchKernel
+from jupyter_client.manager import start_new_kernel
 
 TIMEOUT = 30
 

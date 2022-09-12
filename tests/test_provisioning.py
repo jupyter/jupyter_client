@@ -217,9 +217,7 @@ def mock_get_all_provisioners() -> List[EntryPoint]:
 
 def mock_get_provisioner(factory, name) -> EntryPoint:
     if name == 'new-test-provisioner':
-        return EntryPoint(
-            'new-test-provisioner', 'tests.test_provisioning', 'NewTestProvisioner'
-        )
+        return EntryPoint('new-test-provisioner', 'tests.test_provisioning', 'NewTestProvisioner')
 
     if name in initial_provisioner_map:
         return EntryPoint(name, initial_provisioner_map[name][0], initial_provisioner_map[name][1])
