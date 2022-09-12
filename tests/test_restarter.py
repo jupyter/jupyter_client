@@ -29,7 +29,7 @@ def _install_kernel(name="problemtest", extra_env=None):
                     "argv": [
                         sys.executable,
                         "-m",
-                        "jupyter_client.tests.problemkernel",
+                        "tests.problemkernel",
                         "-f",
                         "{connection_file}",
                     ],

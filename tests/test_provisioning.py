@@ -19,14 +19,14 @@ from jupyter_core import paths
 from traitlets import Int
 from traitlets import Unicode
 
-from ..connect import KernelConnectionInfo
-from ..kernelspec import KernelSpecManager
-from ..kernelspec import NoSuchKernel
-from ..launcher import launch_kernel
-from ..manager import AsyncKernelManager
-from ..provisioning import KernelProvisionerBase
-from ..provisioning import KernelProvisionerFactory
-from ..provisioning import LocalProvisioner
+from jupyter_client.connect import KernelConnectionInfo
+from jupyter_client.kernelspec import KernelSpecManager
+from jupyter_client.kernelspec import NoSuchKernel
+from jupyter_client.launcher import launch_kernel
+from jupyter_client.manager import AsyncKernelManager
+from jupyter_client.provisioning import KernelProvisionerBase
+from jupyter_client.provisioning import KernelProvisionerFactory
+from jupyter_client.provisioning import LocalProvisioner
 
 pjoin = os.path.join
 
@@ -201,10 +201,10 @@ def akm(request, all_provisioners):
 initial_provisioner_map = {
     'local-provisioner': ('jupyter_client.provisioning', 'LocalProvisioner'),
     'subclassed-test-provisioner': (
-        'jupyter_client.tests.test_provisioning',
+        'tests.test_provisioning',
         'SubclassedTestProvisioner',
     ),
-    'custom-test-provisioner': ('jupyter_client.tests.test_provisioning', 'CustomTestProvisioner'),
+    'custom-test-provisioner': ('tests.test_provisioning', 'CustomTestProvisioner'),
 }
 
 
@@ -218,7 +218,7 @@ def mock_get_all_provisioners() -> List[EntryPoint]:
 def mock_get_provisioner(factory, name) -> EntryPoint:
     if name == 'new-test-provisioner':
         return EntryPoint(
-            'new-test-provisioner', 'jupyter_client.tests.test_provisioning', 'NewTestProvisioner'
+            'new-test-provisioner', 'tests.test_provisioning', 'NewTestProvisioner'
         )
 
     if name in initial_provisioner_map:

@@ -14,7 +14,7 @@ from tornado.testing import AsyncTestCase
 from tornado.testing import gen_test
 from traitlets.config.loader import Config
 
-from ..localinterfaces import localhost
+from jupyter_client.localinterfaces import localhost
 from .utils import AsyncKMSubclass
 from .utils import AsyncMKMSubclass
 from .utils import install_kernel
