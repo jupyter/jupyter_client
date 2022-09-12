@@ -24,5 +24,13 @@ properties:
       - request_shutdown
       - finish_shutdown
       - cleanup_resources
+      - restart_started
+      - restart_finished
+      - shutdown_started
+      - shutdown_finished
     description: |
       Action performed by the KernelManager API.
+  caller:
+    type: string
+    enum:
+      - kernel_manager
