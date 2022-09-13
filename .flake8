@@ -15,4 +15,4 @@ per-file-ignores =
     # B011: Do not call assert False since python -O removes these calls
     # F841 local variable 'foo' is assigned to but never used
     # B007 Loop control variable
-    jupyter_client/tests/*: B011, F841, B007
+    tests/*: B011, F841, B007

@@ -197,7 +197,7 @@ class AsyncKMSubclass(KMSubclass, AsyncKernelManager):
 
 class MKMSubclass(RecordCallMixin):
     def _kernel_manager_class_default(self):
-        return "jupyter_client.tests.utils.SyncKMSubclass"
+        return "tests.utils.SyncKMSubclass"
 
     @subclass_recorder
     def get_kernel(self, kernel_id):
@@ -245,7 +245,7 @@ class SyncMKMSubclass(MKMSubclass, MultiKernelManager):
     _superclass = MultiKernelManager
 
     def _kernel_manager_class_default(self):
-        return "jupyter_client.tests.utils.SyncKMSubclass"
+        return "tests.utils.SyncKMSubclass"
 
 
 class AsyncMKMSubclass(MKMSubclass, AsyncMultiKernelManager):
@@ -253,4 +253,4 @@ class AsyncMKMSubclass(MKMSubclass, AsyncMultiKernelManager):
     _superclass = AsyncMultiKernelManager
 
     def _kernel_manager_class_default(self):
-        return "jupyter_client.tests.utils.AsyncKMSubclass"
+        return "tests.utils.AsyncKMSubclass"

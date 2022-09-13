@@ -110,7 +110,7 @@ jobs:
       - name: Install miniumum versions
         uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
       - name: Run the unit tests
-        run: pytest -vv -W default jupyter_client || pytest -vv -W default jupyter_client --lf
+        run: pytest -vv -W default || pytest -vv -W default --lf
 
   test_prereleases:
     name: Test Prereleases
@@ -130,7 +130,7 @@ jobs:
           pip check
       - name: Run the tests
         run: |
-          pytest -vv jupyter_client || pytest -vv jupyter_client --lf
+          pytest -vv || pytest -vv --lf
 
   make_sdist:
     name: Make SDist

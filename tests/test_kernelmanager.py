@@ -15,13 +15,13 @@ import pytest_asyncio
 from jupyter_core import paths
 from traitlets.config.loader import Config
 
-from ..manager import _ShutdownStatus
-from ..manager import start_new_async_kernel
-from ..manager import start_new_kernel
 from .utils import AsyncKMSubclass
 from .utils import SyncKMSubclass
 from jupyter_client import AsyncKernelManager
 from jupyter_client import KernelManager
+from jupyter_client.manager import _ShutdownStatus
+from jupyter_client.manager import start_new_async_kernel
+from jupyter_client.manager import start_new_kernel
 
 pjoin = os.path.join
 
@@ -56,7 +56,7 @@ def _install_kernel(name="signaltest", extra_env=None):
                     "argv": [
                         sys.executable,
                         "-m",
-                        "jupyter_client.tests.signalkernel",
+                        "tests.signalkernel",
                         "-f",
                         "{connection_file}",
                     ],

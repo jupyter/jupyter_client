@@ -14,7 +14,6 @@ from tornado.testing import AsyncTestCase
 from tornado.testing import gen_test
 from traitlets.config.loader import Config
 
-from ..localinterfaces import localhost
 from .utils import AsyncKMSubclass
 from .utils import AsyncMKMSubclass
 from .utils import install_kernel
@@ -24,6 +23,7 @@ from .utils import SyncMKMSubclass
 from .utils import test_env
 from jupyter_client import AsyncKernelManager
 from jupyter_client import KernelManager
+from jupyter_client.localinterfaces import localhost
 from jupyter_client.multikernelmanager import AsyncMultiKernelManager
 from jupyter_client.multikernelmanager import MultiKernelManager
 
