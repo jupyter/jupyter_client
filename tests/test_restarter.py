@@ -5,7 +5,6 @@ import asyncio
 import json
 import os
 import sys
-from pathlib import Path
 
 import pytest
 from jupyter_core import paths
@@ -68,15 +67,11 @@ def transport(request):
 
 @pytest.fixture
 def config(transport):
-    parent = Path(__file__).absolute().parent
-    orig_path = os.environ['PATH']
-    os.environ['PATH'] = f'{parent}{os.path.pathsep}{orig_path}'
     c = Config()
     c.KernelManager.transport = transport
     if transport == "ipc":
         c.KernelManager.ip = "test"
-    yield c
-    os.environ['PATH'] = orig_path
+    return c
 
 
 @pytest.fixture

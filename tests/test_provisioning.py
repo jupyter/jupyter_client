@@ -6,7 +6,6 @@ import json
 import os
 import signal
 import sys
-from pathlib import Path
 from subprocess import PIPE
 from typing import Any
 from typing import Dict
@@ -78,7 +77,7 @@ class CustomTestProvisioner(KernelProvisionerBase):
     async def send_signal(self, signum: int) -> None:
         if self.process:
             if signum == signal.SIGINT and sys.platform == 'win32':
-                from ..win_interrupt import send_interrupt
+                from jupyter_client.win_interrupt import send_interrupt
 
                 send_interrupt(self.process.win32_interrupt_event)
                 return
@@ -229,16 +228,12 @@ def mock_get_provisioner(factory, name) -> EntryPoint:
 @pytest.fixture
 def kpf(monkeypatch):
     """Setup the Kernel Provisioner Factory, mocking the entrypoint fetch calls."""
-    parent = Path(__file__).absolute().parent
-    orig_path = os.environ['PATH']
-    os.environ['PATH'] = f'{parent}{os.path.pathsep}{orig_path}'
     monkeypatch.setattr(
         KernelProvisionerFactory, '_get_all_provisioners', mock_get_all_provisioners
     )
     monkeypatch.setattr(KernelProvisionerFactory, '_get_provisioner', mock_get_provisioner)
     factory = KernelProvisionerFactory.instance()
-    yield factory
-    os.environ['PATH'] = orig_path
+    return factory
 
 
 class TestDiscovery:
