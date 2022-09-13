@@ -15,7 +15,7 @@ from contextlib import contextmanager
 from enum import Enum
 
 import zmq
-from jupyter_events import EventLogger
+from jupyter_events import EventLogger  # type: ignore[import]
 from traitlets import Any
 from traitlets import Bool
 from traitlets import default
@@ -108,7 +108,7 @@ class KernelManager(ConnectionFileMixin):
             logger.register_event_schema(schema_path)
             return logger
 
-    def _emit(self, *, action: str):
+    def _emit(self, *, action: str) -> None:
         """Emit event using the core event schema from Jupyter Server's Contents Manager."""
         self.event_logger.emit(
             schema_id=self.event_schema_id,

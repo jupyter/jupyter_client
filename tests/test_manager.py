@@ -40,5 +40,5 @@ def test_kernel_manager_event_logger(jp_event_handler, jp_read_emitted_events):
     km.event_logger.register_handler(jp_event_handler)
     km._emit(action=action)
     output = jp_read_emitted_events()[0]
-    assert "kernel_id" in output and output["kernel_id"] == None
+    assert "kernel_id" in output and output["kernel_id"] is None
     assert "action" in output and output["action"] == action
