@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from enum import Enum
 
 import zmq
+from jupyter_events import EventLogger  # type: ignore[import]
 from traitlets import Any
 from traitlets import Bool
 from traitlets import default
@@ -33,6 +34,8 @@ from .provisioning import KernelProvisionerBase
 from .provisioning import KernelProvisionerFactory as KPF
 from .utils import ensure_async
 from .utils import run_sync
+from jupyter_client import DEFAULT_EVENTS_SCHEMA_PATH
+from jupyter_client import JUPYTER_CLIENT_EVENTS_URI
 from jupyter_client import KernelClient
 from jupyter_client import kernelspec
 
@@ -90,6 +93,27 @@ class KernelManager(ConnectionFileMixin):
 
     This version starts kernels with Popen.
     """
+
+    event_schema_id = JUPYTER_CLIENT_EVENTS_URI + "/kernel_manager/v1"
+    event_logger = Instance(EventLogger).tag(config=True)
+
+    @default("event_logger")
+    def _default_event_logger(self):
+        if self.parent and hasattr(self.parent, "event_logger"):
+            return self.parent.event_logger
+        else:
+            # If parent does not have an event logger, create one.
+            logger = EventLogger()
+            schema_path = DEFAULT_EVENTS_SCHEMA_PATH / "kernel_manager" / "v1.yaml"
+            logger.register_event_schema(schema_path)
+            return logger
+
+    def _emit(self, *, action: str) -> None:
+        """Emit event using the core event schema from Jupyter Server's Contents Manager."""
+        self.event_logger.emit(
+            schema_id=self.event_schema_id,
+            data={"action": action, "kernel_id": self.kernel_id, "caller": "kernel_manager"},
+        )
 
     _ready: t.Union[Future, CFuture]
 
@@ -308,6 +332,7 @@ class KernelManager(ConnectionFileMixin):
         assert self.provisioner.has_process
         # Provisioner provides the connection information.  Load into kernel manager and write file.
         self._force_connection_info(connection_info)
+        self._emit(action="launch")
 
     _launch_kernel = run_sync(_async_launch_kernel)
 
@@ -350,6 +375,7 @@ class KernelManager(ConnectionFileMixin):
             )
         kw = await self.provisioner.pre_launch(**kw)
         kernel_cmd = kw.pop('cmd')
+        self._emit(action="pre_start")
         return kernel_cmd, kw
 
     pre_start_kernel = run_sync(_async_pre_start_kernel)
@@ -366,6 +392,7 @@ class KernelManager(ConnectionFileMixin):
         self._connect_control_socket()
         assert self.provisioner is not None
         await self.provisioner.post_launch(**kw)
+        self._emit(action="post_start")
 
     post_start_kernel = run_sync(_async_post_start_kernel)
 
@@ -401,6 +428,7 @@ class KernelManager(ConnectionFileMixin):
         assert self.provisioner is not None
         await self.provisioner.shutdown_requested(restart=restart)
         self._shutdown_status = _ShutdownStatus.ShutdownRequest
+        self._emit(action="request_shutdown")
 
     request_shutdown = run_sync(_async_request_shutdown)
 
@@ -442,6 +470,7 @@ class KernelManager(ConnectionFileMixin):
             if self.has_kernel:
                 assert self.provisioner is not None
                 await self.provisioner.wait()
+        self._emit(action="finish_shutdown")
 
     finish_shutdown = run_sync(_async_finish_shutdown)
 
@@ -459,6 +488,7 @@ class KernelManager(ConnectionFileMixin):
 
         if self.provisioner:
             await self.provisioner.cleanup(restart=restart)
+        self._emit(action="cleanup_resources")
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
@@ -481,6 +511,7 @@ class KernelManager(ConnectionFileMixin):
             Will this kernel be restarted after it is shutdown. When this
             is True, connection files will not be cleaned up.
         """
+        self._emit(action="shutdown_started")
         self.shutting_down = True  # Used by restarter to prevent race condition
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
@@ -498,6 +529,7 @@ class KernelManager(ConnectionFileMixin):
             await ensure_async(self.finish_shutdown(restart=restart))
 
         await ensure_async(self.cleanup_resources(restart=restart))
+        self._emit(action="shutdown_finished")
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
@@ -528,6 +560,7 @@ class KernelManager(ConnectionFileMixin):
             Any options specified here will overwrite those used to launch the
             kernel.
         """
+        self._emit(action="restart_started")
         if self._launch_args is None:
             raise RuntimeError("Cannot restart the kernel. No previous call to 'start_kernel'.")
 
@@ -540,6 +573,7 @@ class KernelManager(ConnectionFileMixin):
         # Start new kernel.
         self._launch_args.update(kw)
         await ensure_async(self.start_kernel(**self._launch_args))
+        self._emit(action="restart_finished")
 
     restart_kernel = run_sync(_async_restart_kernel)
 
@@ -576,6 +610,7 @@ class KernelManager(ConnectionFileMixin):
                 # Process is no longer alive, wait and clear
                 if self.has_kernel:
                     await self.provisioner.wait()
+            self._emit(action="kill")
 
     _kill_kernel = run_sync(_async_kill_kernel)
 
@@ -597,6 +632,7 @@ class KernelManager(ConnectionFileMixin):
                 self.session.send(self._control_socket, msg)
         else:
             raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
+        self._emit(action="interrupt")
 
     interrupt_kernel = run_sync(_async_interrupt_kernel)
 

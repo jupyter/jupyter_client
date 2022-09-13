@@ -18,6 +18,7 @@ from traitlets.config.loader import Config
 from .utils import AsyncKMSubclass
 from .utils import SyncKMSubclass
 from jupyter_client import AsyncKernelManager
+from jupyter_client import DEFAULT_EVENTS_SCHEMA_PATH
 from jupyter_client import KernelManager
 from jupyter_client.manager import _ShutdownStatus
 from jupyter_client.manager import start_new_async_kernel
@@ -92,14 +93,14 @@ def start_kernel():
 
 
 @pytest.fixture
-def km(config):
-    km = KernelManager(config=config)
+def km(config, jp_event_logger):
+    km = KernelManager(config=config, event_logger=jp_event_logger)
     return km
 
 
 @pytest.fixture
-def km_subclass(config):
-    km = SyncKMSubclass(config=config)
+def km_subclass(config, jp_event_logger):
+    km = SyncKMSubclass(config=config, event_logger=jp_event_logger)
     return km
 
 
@@ -112,15 +113,36 @@ def zmq_context():
     ctx.term()
 
 
+@pytest.fixture
+def jp_event_schemas():
+    return [DEFAULT_EVENTS_SCHEMA_PATH / "kernel_manager" / "v1.yaml"]
+
+
+@pytest.fixture
+def check_emitted_events(jp_read_emitted_events):
+    """Check the given events where emitted"""
+
+    def _(*expected_list):
+        read_events = jp_read_emitted_events()
+        events = [e for e in read_events if e["caller"] == "kernel_manager"]
+        # Ensure that the number of read events match the expected events.
+        assert len(events) == len(expected_list)
+        # Loop through the events and make sure they are in order of expected.
+        for i, action in enumerate(expected_list):
+            assert "action" in events[i] and action == events[i]["action"]
+
+    return _
+
+
 @pytest.fixture(params=[AsyncKernelManager, AsyncKMSubclass])
-def async_km(request, config):
-    km = request.param(config=config)
+def async_km(request, config, jp_event_logger):
+    km = request.param(config=config, event_logger=jp_event_logger)
     return km
 
 
 @pytest.fixture
-def async_km_subclass(config):
-    km = AsyncKMSubclass(config=config)
+def async_km_subclass(config, jp_event_logger):
+    km = AsyncKMSubclass(config=config, event_logger=jp_event_logger)
     return km
 
 
@@ -193,18 +215,35 @@ class TestKernelManagerShutDownGracefully:
 
 
 class TestKernelManager:
-    def test_lifecycle(self, km):
+    def test_lifecycle(self, km, jp_read_emitted_events, check_emitted_events):
         km.start_kernel(stdout=PIPE, stderr=PIPE)
+        check_emitted_events("pre_start", "launch", "post_start")
         kc = km.client()
         assert km.is_alive()
         is_done = km.ready.done()
         assert is_done
         km.restart_kernel(now=True)
+        check_emitted_events(
+            "restart_started",
+            "shutdown_started",
+            "interrupt",
+            "kill",
+            "cleanup_resources",
+            "shutdown_finished",
+            "pre_start",
+            "launch",
+            "post_start",
+            "restart_finished",
+        )
         assert km.is_alive()
         km.interrupt_kernel()
+        check_emitted_events("interrupt")
         assert isinstance(km, KernelManager)
         kc.stop_channels()
         km.shutdown_kernel(now=True)
+        check_emitted_events(
+            "shutdown_started", "interrupt", "kill", "cleanup_resources", "shutdown_finished"
+        )
         assert km.context.closed
 
     def test_get_connect_info(self, km):
@@ -448,7 +487,10 @@ class TestParallel:
 
 @pytest.mark.asyncio
 class TestAsyncKernelManager:
-    async def test_lifecycle(self, async_km):
+    async def test_lifecycle(
+        self,
+        async_km,
+    ):
         await async_km.start_kernel(stdout=PIPE, stderr=PIPE)
         is_alive = await async_km.is_alive()
         assert is_alive
