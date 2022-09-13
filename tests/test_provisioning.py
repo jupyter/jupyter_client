@@ -6,6 +6,7 @@ import json
 import os
 import signal
 import sys
+from pathlib import Path
 from subprocess import PIPE
 from typing import Any
 from typing import Dict
@@ -144,7 +145,7 @@ def build_kernelspec(name: str, provisioner: Optional[str] = None) -> None:
         'argv': [
             sys.executable,
             '-m',
-            'jupyter_client.tests.signalkernel',
+            'tests.signalkernel',
             '-f',
             '{connection_file}',
         ],
@@ -228,12 +229,16 @@ def mock_get_provisioner(factory, name) -> EntryPoint:
 @pytest.fixture
 def kpf(monkeypatch):
     """Setup the Kernel Provisioner Factory, mocking the entrypoint fetch calls."""
+    parent = Path(__file__).absolute().parent
+    orig_path = os.environ['PATH']
+    os.environ['PATH'] = f'{parent}{os.path.pathsep}{orig_path}'
     monkeypatch.setattr(
         KernelProvisionerFactory, '_get_all_provisioners', mock_get_all_provisioners
     )
     monkeypatch.setattr(KernelProvisionerFactory, '_get_provisioner', mock_get_provisioner)
     factory = KernelProvisionerFactory.instance()
-    return factory
+    yield factory
+    os.environ['PATH'] = orig_path
 
 
 class TestDiscovery:
