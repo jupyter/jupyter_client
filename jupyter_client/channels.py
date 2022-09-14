@@ -14,7 +14,6 @@ import zmq.asyncio
 from .channelsabc import HBChannelABC
 from .session import Session
 from jupyter_client import protocol_version_info
-from jupyter_client.utils import run_sync
 
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
 # during garbage collection of threads at exit
@@ -95,7 +94,6 @@ class HBChannel(Thread):
             HBChannel._exiting = True
 
     def run(self) -> None:
-        print('hi in running')
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(self._async_run())

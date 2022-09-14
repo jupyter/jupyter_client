@@ -39,35 +39,21 @@ class _TaskRunner:
                 self.__io_loop = asyncio.new_event_loop()
                 self.__runner_thread = threading.Thread(target=self._runner, daemon=True)
                 self.__runner_thread.start()
-        print('running', coro.__name__, self.__io_loop.is_running(), id(self))
         fut = asyncio.run_coroutine_threadsafe(coro, self.__io_loop)
         return fut.result(None)
 
 
-class _TaskRunnerPool:
-    def __init__(self, size):
-        self._runners = [_TaskRunner() for _ in range(size)]
-        self._sem = threading.Semaphore(size)
-
-    def acquire(self):
-        self._sem.acquire()
-        return self._runners.pop()
-
-    def release(self, runner):
-        self._runners.append(runner)
-        self._sem.release()
-
-
-_pool = _TaskRunnerPool(5)
+_runner_map = {}
 
 
 def run_sync(coro):
     def wrapped(self, *args, **kwargs):
-        runner = _pool.acquire()
+        name = threading.current_thread().name
+        if name not in _runner_map:
+            _runner_map[name] = _TaskRunner()
+        runner = _runner_map[name]
         inner = coro(self, *args, **kwargs)
         value = runner.run(inner)
-        _pool.release(runner)
-        print('released', coro.__name__)
         return value
 
     wrapped.__doc__ = coro.__doc__
