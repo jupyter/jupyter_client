@@ -24,14 +24,11 @@ from zmq.eventloop import zmqstream
 from .session import Session
 from jupyter_client import KernelClient
 from jupyter_client.channels import HBChannel
+from jupyter_client.utils import run_sync
 
 # Local imports
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
 # during garbage collection of threads at exit
-
-
-async def get_msg(msg: Awaitable) -> Union[List[bytes], List[zmq.Message]]:
-    return await msg
 
 
 class ThreadedZMQSocketChannel(object):
@@ -114,13 +111,18 @@ class ThreadedZMQSocketChannel(object):
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)
 
+    async def __get_msg(self, msg: Awaitable) -> Union[List[bytes], List[zmq.Message]]:
+        return await msg
+
+    _get_msg = run_sync(__get_msg)
+
     def _handle_recv(self, future_msg: Awaitable) -> None:
         """Callback for stream.on_recv.
 
         Unpacks message, and calls handlers with it.
         """
         assert self.ioloop is not None
-        msg_list = self.ioloop._asyncio_event_loop.run_until_complete(get_msg(future_msg))
+        msg_list = self._get_msg(future_msg)
         assert self.session is not None
         ident, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)
