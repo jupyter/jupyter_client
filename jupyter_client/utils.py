@@ -4,28 +4,54 @@ utils:
 - vendor functions from ipython_genutils that should be retired at some point.
 """
 import asyncio
+import atexit
 import inspect
 import os
+import threading
+from concurrent.futures import wait
+from typing import Optional
+
+
+class TaskRunner:
+    """A task runner that runs an asyncio event loop on a background thread."""
+
+    def __init__(self):
+        self.__io_loop: Optional[asyncio.AbstractEventLoop] = None
+        self.__runner_thread: Optional[threading.Thread] = None
+        self.__lock = threading.Lock()
+        atexit.register(self._close)
+
+    def _close(self):
+        if self.__io_loop:
+            self.__io_loop.stop()
+
+    def _runner(self):
+        loop = self.__io_loop
+        assert loop is not None
+        try:
+            loop.run_forever()
+        finally:
+            loop.close()
+
+    def run(self, coro):
+        """Synchronously run a coroutine on a background thread."""
+        with self.__lock:
+            if self.__io_loop is None:
+                self.__io_loop = asyncio.new_event_loop()
+                self.__runner_thread = threading.Thread(target=self._runner, daemon=True)
+                self.__runner_thread.start()
+        fut = asyncio.run_coroutine_threadsafe(coro, self.__io_loop)
+        wait([fut])
+        return fut.result()
 
 
 def run_sync(coro):
-    def wrapped(*args, **kwargs):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            # Workaround for bugs.python.org/issue39529.
-            try:
-                loop = asyncio.get_event_loop_policy().get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-
-        future = asyncio.ensure_future(coro(*args, **kwargs), loop=loop)
-        try:
-            return loop.run_until_complete(future)
-        except BaseException as e:
-            future.cancel()
-            raise e
+    def wrapped(self, *args, **kwargs):
+        if not hasattr(self, '_task_runner'):
+            self._task_runner = TaskRunner()
+        runner = self._task_runner
+        inner = coro(self, *args, **kwargs)
+        return runner.run(inner)
 
     wrapped.__doc__ = coro.__doc__
     return wrapped
