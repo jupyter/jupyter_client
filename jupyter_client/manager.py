@@ -435,7 +435,7 @@ class KernelManager(ConnectionFileMixin):
         self,
         waittime: t.Optional[float] = None,
         pollinterval: float = 0.1,
-        restart: t.Optional[bool] = False,
+        restart: bool = False,
     ) -> None:
         """Wait for kernel shutdown, then kill process if it doesn't shutdown.
 
