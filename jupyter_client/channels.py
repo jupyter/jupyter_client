@@ -1,7 +1,6 @@
 """Base classes to manage a Client's interaction with a running kernel"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import asyncio
 import atexit
 import time
 import typing as t

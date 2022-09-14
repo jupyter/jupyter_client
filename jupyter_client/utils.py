@@ -8,7 +8,6 @@ import atexit
 import inspect
 import os
 import threading
-from concurrent.futures import wait
 from typing import Optional
 
 
@@ -41,12 +40,16 @@ class TaskRunner:
                 self.__runner_thread = threading.Thread(target=self._runner, daemon=True)
                 self.__runner_thread.start()
         fut = asyncio.run_coroutine_threadsafe(coro, self.__io_loop)
-        wait([fut])
-        return fut.result()
+        return fut.result(None)
 
 
 def run_sync(coro):
     def wrapped(self, *args, **kwargs):
+        try:
+            asyncio.get_event_loop()
+        except RuntimeError:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+
         if not hasattr(self, '_task_runner'):
             self._task_runner = TaskRunner()
         runner = self._task_runner
