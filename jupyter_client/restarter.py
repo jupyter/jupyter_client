@@ -119,6 +119,7 @@ class KernelRestarter(LoggingConfigurable):
             return
         now = time.time()
         if not self.kernel_manager.is_alive():
+            print('kernel was dead')
             self._last_dead = now
             if self._restarting:
                 self._restart_count += 1
@@ -143,6 +144,7 @@ class KernelRestarter(LoggingConfigurable):
                 self.kernel_manager.restart_kernel(now=True, newports=newports)
                 self._restarting = True
         else:
+            print('kernel was not dead')
             # Since `is_alive` only tests that the kernel process is alive, it does not
             # indicate that the kernel has successfully completed startup. To solve this
             # correctly, we would need to wait for a kernel info reply, but it is not

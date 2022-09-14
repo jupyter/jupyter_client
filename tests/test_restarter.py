@@ -93,10 +93,12 @@ async def test_restart_check(config, install_kernel, debug_logging):
 
     def cb():
         nonlocal cbs
+        print('yo, kernel restarted!')
         if cbs >= N_restarts:
             raise RuntimeError("Kernel restarted more than %d times!" % N_restarts)
         restarts[cbs].set_result(True)
         cbs += 1
+        print('yo, kernel restarted!', cbs)
 
     try:
         km.start_kernel()
@@ -108,6 +110,7 @@ async def test_restart_check(config, install_kernel, debug_logging):
 
     try:
         for i in range(N_restarts + 1):
+            print('round', i)
             kc = km.client()
             kc.start_channels()
             kc.wait_for_ready(timeout=60)
@@ -115,7 +118,10 @@ async def test_restart_check(config, install_kernel, debug_logging):
             if i < N_restarts:
                 # Kill without cleanup to simulate crash:
                 await km.provisioner.kill()
-                await restarts[i]
+                while True:
+                    if restarts[i].done():
+                        break
+                    await asyncio.sleep(0.1)
                 # Wait for kill + restart
                 max_wait = 10.0
                 waited = 0.0
@@ -170,9 +176,17 @@ async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
 
     try:
         for i in range(N_restarts):
-            await restarts[i]
+            while True:
+                if restarts[i].done():
+                    break
+                await asyncio.sleep(0.1)
 
-        assert await died
+        while True:
+            if died.done():
+                break
+            await asyncio.sleep(0.1)
+
+        assert died.result()
         assert cbs == N_restarts
 
     finally:
@@ -217,7 +231,10 @@ async def test_async_restart_check(config, install_kernel, debug_logging):
             if i < N_restarts:
                 # Kill without cleanup to simulate crash:
                 await km.provisioner.kill()
-                await restarts[i]
+                while True:
+                    if restarts[i].done():
+                        break
+                    await asyncio.sleep(0.1)
                 # Wait for kill + restart
                 max_wait = 10.0
                 waited = 0.0
@@ -272,9 +289,18 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_
         raise
 
     try:
-        await asyncio.gather(*restarts)
+        for i in range(len(restarts)):
+            while True:
+                if restarts[i].done():
+                    break
+                await asyncio.sleep(0.1)
 
-        assert await died
+        while True:
+            if died.done():
+                break
+            await asyncio.sleep(0.1)
+
+        assert died.result()
         assert cbs == N_restarts
 
     finally:
