@@ -19,9 +19,7 @@ def run_sync(coro):
             except RuntimeError:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-        import nest_asyncio  # type: ignore
 
-        nest_asyncio.apply(loop)
         future = asyncio.ensure_future(coro(*args, **kwargs), loop=loop)
         try:
             return loop.run_until_complete(future)
@@ -34,6 +32,11 @@ def run_sync(coro):
 
 
 async def ensure_async(obj):
+    """Ensure a returned object is asynchronous.
+
+    NOTE: This should only be used on methods of external classes,
+    not on a `self` method.
+    """
     if inspect.isawaitable(obj):
         return await obj
     return obj

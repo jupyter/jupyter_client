@@ -21,7 +21,6 @@ from .channelsabc import HBChannelABC
 from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
 from .session import Session
-from .utils import ensure_async
 from jupyter_client.channels import major_protocol_version
 
 # some utilities to validate message structure, these might get moved elsewhere
@@ -173,7 +172,7 @@ class KernelClient(ConnectionFileMixin):
             # This Client was not created by a KernelManager,
             # so wait for kernel to become responsive to heartbeats
             # before checking for kernel_info reply
-            while not await ensure_async(self.is_alive()):
+            while not await self._async_is_alive():
                 if time.time() > abs_timeout:
                     raise RuntimeError(
                         "Kernel didn't respond to heartbeats in %d seconds and timed out" % timeout
@@ -198,7 +197,7 @@ class KernelClient(ConnectionFileMixin):
                         self._handle_kernel_info_reply(msg)
                         break
 
-            if not await ensure_async(self.is_alive()):
+            if not await self._async_is_alive():
                 raise RuntimeError("Kernel died before replying to kernel_info")
 
             # Check if current time is ready check time plus timeout
@@ -403,7 +402,7 @@ class KernelClient(ConnectionFileMixin):
         if isinstance(self.parent, KernelManager):
             # This KernelClient was created by a KernelManager,
             # we can ask the parent KernelManager:
-            return await ensure_async(self.parent.is_alive())
+            return await self.parent._async_is_alive()
         if self._hb_channel is not None:
             # We don't have access to the KernelManager,
             # so we use the heartbeat.

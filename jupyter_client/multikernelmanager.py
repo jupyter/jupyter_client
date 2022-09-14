@@ -309,7 +309,7 @@ class MultiKernelManager(LoggingConfigurable):
         kids = self.list_kernel_ids()
         kids += list(self._pending_kernels)
         kms = list(self._kernels.values())
-        futs = [ensure_async(self.shutdown_kernel(kid, now=now)) for kid in set(kids)]
+        futs = [self._async_shutdown_kernel(kid, now=now) for kid in set(kids)]
         await asyncio.gather(*futs)
         # If using pending kernels, the kernels will not have been fully shut down.
         if self._using_pending_kernels():
