@@ -14,6 +14,7 @@ import zmq.asyncio
 from .channelsabc import HBChannelABC
 from .session import Session
 from jupyter_client import protocol_version_info
+from jupyter_client.utils import run_sync
 
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
 # during garbage collection of threads at exit
@@ -106,12 +107,6 @@ class HBChannel(Thread):
 
         self.poller.register(self.socket, zmq.POLLIN)
 
-    def run(self) -> None:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(self._async_run())
-        loop.close()
-
     async def _async_run(self) -> None:
         """The thread's main activity.  Call start() instead."""
         self._create_socket()
@@ -145,6 +140,8 @@ class HBChannel(Thread):
                 # and close/reopen the socket, because the REQ/REP cycle has been broken
                 self._create_socket()
                 continue
+
+    run = run_sync(_async_run)
 
     def pause(self) -> None:
         """Pause the heartbeat."""
