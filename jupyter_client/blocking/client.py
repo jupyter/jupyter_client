@@ -20,7 +20,7 @@ def wrapped(meth, channel):
         msg_id = meth(self, *args, **kwargs)
         if not reply:
             return msg_id
-        return run_sync(self._async_recv_reply)(msg_id, timeout=timeout, channel=channel)
+        return self._recv_reply(msg_id, timeout=timeout, channel=channel)
 
     return _
 
