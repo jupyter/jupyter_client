@@ -45,11 +45,6 @@ class TaskRunner:
 
 def run_sync(coro):
     def wrapped(self, *args, **kwargs):
-        try:
-            asyncio.get_event_loop()
-        except RuntimeError:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-
         if not hasattr(self, '_task_runner'):
             self._task_runner = TaskRunner()
         runner = self._task_runner
