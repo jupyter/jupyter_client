@@ -192,7 +192,7 @@ async def test_async_restart_check(config, install_kernel, debug_logging):
     km = AsyncIOLoopKernelManager(kernel_name=install_kernel, config=config)
 
     cbs = 0
-    restarts = [Future() for i in range(N_restarts)]
+    restarts = [asyncio.futures.Future() for i in range(N_restarts)]
 
     def cb():
         nonlocal cbs
@@ -218,7 +218,7 @@ async def test_async_restart_check(config, install_kernel, debug_logging):
             if i < N_restarts:
                 # Kill without cleanup to simulate crash:
                 await km.provisioner.kill()
-                restarts[i].result()
+                await restarts[i]
                 # Wait for kill + restart
                 max_wait = 10.0
                 waited = 0.0
@@ -249,7 +249,7 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_
     km = AsyncIOLoopKernelManager(kernel_name=install_slow_fail_kernel, config=config)
 
     cbs = 0
-    restarts = [Future() for i in range(N_restarts)]
+    restarts = [asyncio.futures.Future() for i in range(N_restarts)]
 
     def cb():
         nonlocal cbs
@@ -258,7 +258,7 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_
         restarts[cbs].set_result(True)
         cbs += 1
 
-    died = Future()
+    died = asyncio.futures.Future()
 
     def on_death():
         died.set_result(True)
@@ -273,10 +273,9 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_
         raise
 
     try:
-        for fut in restarts:
-            fut.result()
+        await asyncio.gather(*restarts)
 
-        assert died.result()
+        assert await died
         assert cbs == N_restarts
 
     finally:
