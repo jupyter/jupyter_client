@@ -55,7 +55,8 @@ from jupyter_client.jsonutil import extract_dates
 from jupyter_client.jsonutil import json_clean
 from jupyter_client.jsonutil import json_default
 from jupyter_client.jsonutil import squash_dates
-
+from jupyter_client.utils import ensure_async
+from jupyter_client.utils import run_sync
 
 PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
 
@@ -748,7 +749,7 @@ class Session(Configurable):
 
         return to_send
 
-    def send(
+    async def _async_send(
         self,
         stream: Optional[Union[zmq.sugar.socket.Socket, ZMQStream]],
         msg_or_type: t.Union[t.Dict[str, t.Any], str],
@@ -848,11 +849,11 @@ class Session(Configurable):
 
         if stream and buffers and track and not copy:
             # only really track when we are doing zero-copy buffers
-            tracker = stream.send_multipart(to_send, copy=False, track=True)
+            tracker = await ensure_async(stream.send_multipart(to_send, copy=False, track=True))
         elif stream:
             # use dummy tracker, which will be done immediately
             tracker = DONE
-            stream.send_multipart(to_send, copy=copy)
+            await ensure_async(stream.send_multipart(to_send, copy=copy))
 
         if self.debug:
             pprint.pprint(msg)
@@ -863,7 +864,9 @@ class Session(Configurable):
 
         return msg
 
-    def send_raw(
+    send = run_sync(_async_send)
+
+    async def _async_send_raw(
         self,
         stream: zmq.sugar.socket.Socket,
         msg_list: t.List,
@@ -896,9 +899,11 @@ class Session(Configurable):
         # Don't include buffers in signature (per spec).
         to_send.append(self.sign(msg_list[0:4]))
         to_send.extend(msg_list)
-        stream.send_multipart(to_send, flags, copy=copy)
+        await ensure_async(stream.send_multipart(to_send, flags, copy=copy))
 
-    def recv(
+    send_raw = run_sync(_async_send_raw)
+
+    def _async_recv(
         self,
         socket: zmq.sugar.socket.Socket,
         mode: int = zmq.NOBLOCK,
@@ -921,7 +926,7 @@ class Session(Configurable):
         if isinstance(socket, ZMQStream):
             socket = socket.socket
         try:
-            msg_list = socket.recv_multipart(mode, copy=copy)
+            msg_list = await ensure_async(socket.recv_multipart(mode, copy=copy))
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
                 # We can convert EAGAIN to None as we know in this case
@@ -937,6 +942,8 @@ class Session(Configurable):
         except Exception as e:
             # TODO: handle it
             raise e
+
+    recv = run_sync(_async_recv)
 
     def feed_identities(
         self, msg_list: t.Union[t.List[bytes], t.List[zmq.Message]], copy: bool = True
