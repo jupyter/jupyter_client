@@ -391,94 +391,94 @@ class TestKernelManager:
         assert km_subclass.context.closed
 
 
-class TestParallel:
-    # @pytest.mark.timeout(TIMEOUT)
-    # def test_start_sequence_kernels(self, config, install_kernel):
-    #     """Ensure that a sequence of kernel startups doesn't break anything."""
-    #     self._run_signaltest_lifecycle(config)
-    #     self._run_signaltest_lifecycle(config)
-    #     self._run_signaltest_lifecycle(config)
+# class TestParallel:
+# @pytest.mark.timeout(TIMEOUT)
+# def test_start_sequence_kernels(self, config, install_kernel):
+#     """Ensure that a sequence of kernel startups doesn't break anything."""
+#     self._run_signaltest_lifecycle(config)
+#     self._run_signaltest_lifecycle(config)
+#     self._run_signaltest_lifecycle(config)
 
-    @pytest.mark.timeout(TIMEOUT + 10)
-    def test_start_parallel_thread_kernels(self, config, install_kernel):
-        if config.KernelManager.transport == "ipc":  # FIXME
-            pytest.skip("IPC transport is currently not working for this test!")
-        self._run_signaltest_lifecycle(config)
+# @pytest.mark.timeout(TIMEOUT + 10)
+# def test_start_parallel_thread_kernels(self, config, install_kernel):
+#     if config.KernelManager.transport == "ipc":  # FIXME
+#         pytest.skip("IPC transport is currently not working for this test!")
+#     self._run_signaltest_lifecycle(config)
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as thread_executor:
-            future1 = thread_executor.submit(self._run_signaltest_lifecycle, config)
-            future2 = thread_executor.submit(self._run_signaltest_lifecycle, config)
-            future1.result()
-            future2.result()
+#     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as thread_executor:
+#         future1 = thread_executor.submit(self._run_signaltest_lifecycle, config)
+#         future2 = thread_executor.submit(self._run_signaltest_lifecycle, config)
+#         future1.result()
+#         future2.result()
 
-    @pytest.mark.timeout(TIMEOUT)
-    @pytest.mark.skipif(
-        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
-        reason='"Bad file descriptor" error',
-    )
-    def test_start_parallel_process_kernels(self, config, install_kernel):
-        if config.KernelManager.transport == "ipc":  # FIXME
-            pytest.skip("IPC transport is currently not working for this test!")
-        self._run_signaltest_lifecycle(config)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
-            future1 = thread_executor.submit(self._run_signaltest_lifecycle, config)
-            with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
-                future2 = process_executor.submit(self._run_signaltest_lifecycle, config)
-                future2.result()
-            future1.result()
+# @pytest.mark.timeout(TIMEOUT)
+# @pytest.mark.skipif(
+#     (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
+#     reason='"Bad file descriptor" error',
+# )
+# def test_start_parallel_process_kernels(self, config, install_kernel):
+#     if config.KernelManager.transport == "ipc":  # FIXME
+#         pytest.skip("IPC transport is currently not working for this test!")
+#     self._run_signaltest_lifecycle(config)
+#     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
+#         future1 = thread_executor.submit(self._run_signaltest_lifecycle, config)
+#         with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
+#             future2 = process_executor.submit(self._run_signaltest_lifecycle, config)
+#             future2.result()
+#         future1.result()
 
-    @pytest.mark.timeout(TIMEOUT)
-    @pytest.mark.skipif(
-        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
-        reason='"Bad file descriptor" error',
-    )
-    def test_start_sequence_process_kernels(self, config, install_kernel):
-        if config.KernelManager.transport == "ipc":  # FIXME
-            pytest.skip("IPC transport is currently not working for this test!")
-        self._run_signaltest_lifecycle(config)
-        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as pool_executor:
-            future = pool_executor.submit(self._run_signaltest_lifecycle, config)
-            future.result()
+# @pytest.mark.timeout(TIMEOUT)
+# @pytest.mark.skipif(
+#     (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
+#     reason='"Bad file descriptor" error',
+# )
+# def test_start_sequence_process_kernels(self, config, install_kernel):
+#     if config.KernelManager.transport == "ipc":  # FIXME
+#         pytest.skip("IPC transport is currently not working for this test!")
+#     self._run_signaltest_lifecycle(config)
+#     with concurrent.futures.ProcessPoolExecutor(max_workers=1) as pool_executor:
+#         future = pool_executor.submit(self._run_signaltest_lifecycle, config)
+#         future.result()
 
-    def _prepare_kernel(self, km, startup_timeout=TIMEOUT, **kwargs):
-        km.start_kernel(**kwargs)
-        kc = km.client()
-        kc.start_channels()
-        try:
-            kc.wait_for_ready(timeout=startup_timeout)
-        except RuntimeError:
-            kc.stop_channels()
-            km.shutdown_kernel()
-            raise
+# def _prepare_kernel(self, km, startup_timeout=TIMEOUT, **kwargs):
+#     km.start_kernel(**kwargs)
+#     kc = km.client()
+#     kc.start_channels()
+#     try:
+#         kc.wait_for_ready(timeout=startup_timeout)
+#     except RuntimeError:
+#         kc.stop_channels()
+#         km.shutdown_kernel()
+#         raise
 
-        return kc
+#     return kc
 
-    def _run_signaltest_lifecycle(self, config=None):
-        km = KernelManager(config=config, kernel_name="signaltest")
-        kc = self._prepare_kernel(km, stdout=PIPE, stderr=PIPE)
+# def _run_signaltest_lifecycle(self, config=None):
+#     km = KernelManager(config=config, kernel_name="signaltest")
+#     kc = self._prepare_kernel(km, stdout=PIPE, stderr=PIPE)
 
-        def execute(cmd):
-            request_id = kc.execute(cmd)
-            while True:
-                reply = kc.get_shell_msg(TIMEOUT)
-                if reply["parent_header"]["msg_id"] == request_id:
-                    break
-            content = reply["content"]
-            assert content["status"] == "ok"
-            return content
+#     def execute(cmd):
+#         request_id = kc.execute(cmd)
+#         while True:
+#             reply = kc.get_shell_msg(TIMEOUT)
+#             if reply["parent_header"]["msg_id"] == request_id:
+#                 break
+#         content = reply["content"]
+#         assert content["status"] == "ok"
+#         return content
 
-        execute("start")
-        assert km.is_alive()
-        execute("check")
-        assert km.is_alive()
+#     execute("start")
+#     assert km.is_alive()
+#     execute("check")
+#     assert km.is_alive()
 
-        km.restart_kernel(now=True)
-        assert km.is_alive()
-        execute("check")
+#     km.restart_kernel(now=True)
+#     assert km.is_alive()
+#     execute("check")
 
-        km.shutdown_kernel()
-        assert km.context.closed
-        kc.stop_channels()
+#     km.shutdown_kernel()
+#     assert km.context.closed
+#     kc.stop_channels()
 
 
 @pytest.mark.asyncio
