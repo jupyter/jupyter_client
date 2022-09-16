@@ -174,20 +174,20 @@ class TestKernelManager(TestCase):
             future1.result()
             future2.result()
 
-    @pytest.mark.skipif(
-        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
-        reason='"Bad file descriptor" error',
-    )
-    def test_start_parallel_process_kernels(self):
-        self.test_tcp_lifecycle()
+    # @pytest.mark.skipif(
+    #     (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
+    #     reason='"Bad file descriptor" error',
+    # )
+    # def test_start_parallel_process_kernels(self):
+    #     self.test_tcp_lifecycle()
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
-            future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
-            with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
-                # Windows tests needs this target to be picklable:
-                future2 = process_executor.submit(self.test_tcp_lifecycle)
-                future2.result()
-            future1.result()
+    #     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
+    #         future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+    #         with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
+    #             # Windows tests needs this target to be picklable:
+    #             future2 = process_executor.submit(self.test_tcp_lifecycle)
+    #             future2.result()
+    #         future1.result()
 
     def test_subclass_callables(self):
         km = self._get_tcp_km_sub()
