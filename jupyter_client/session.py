@@ -749,7 +749,7 @@ class Session(Configurable):
 
         return to_send
 
-    async def _async_send(
+    def send(
         self,
         stream: Optional[Union[zmq.sugar.socket.Socket, ZMQStream]],
         msg_or_type: t.Union[t.Dict[str, t.Any], str],
@@ -849,11 +849,11 @@ class Session(Configurable):
 
         if stream and buffers and track and not copy:
             # only really track when we are doing zero-copy buffers
-            tracker = await ensure_async(stream.send_multipart(to_send, copy=False, track=True))
+            tracker = stream.send_multipart(to_send, copy=False, track=True)
         elif stream:
             # use dummy tracker, which will be done immediately
             tracker = DONE
-            await ensure_async(stream.send_multipart(to_send, copy=copy))
+            stream.send_multipart(to_send, copy=copy)
 
         if self.debug:
             pprint.pprint(msg)
@@ -864,7 +864,7 @@ class Session(Configurable):
 
         return msg
 
-    send = run_sync(_async_send)
+    # send = run_sync(_async_send)
 
     async def _async_send_raw(
         self,

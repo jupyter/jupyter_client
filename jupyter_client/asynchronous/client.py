@@ -1,6 +1,7 @@
 """Implements an async kernel client"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import zmq.asyncio
 from traitlets import Type
 
 from jupyter_client.channels import HBChannel
@@ -27,6 +28,10 @@ class AsyncKernelClient(KernelClient):
     ``get_[channel]_msg()`` methods wait for and return messages on channels,
     raising :exc:`queue.Empty` if no message arrives within ``timeout`` seconds.
     """
+
+    def _context_default(self) -> zmq.asyncio.Context:
+        self._created_context = True
+        return zmq.asyncio.Context()
 
     # --------------------------------------------------------------------------
     # Channel proxy methods

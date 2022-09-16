@@ -14,6 +14,7 @@ import zmq.asyncio
 from .channelsabc import HBChannelABC
 from .session import Session
 from jupyter_client import protocol_version_info
+from jupyter_client.utils import ensure_async
 
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
 # during garbage collection of threads at exit
@@ -127,8 +128,8 @@ class HBChannel(Thread):
 
             since_last_heartbeat = 0.0
             # no need to catch EFSM here, because the previous event was
-            # either a recv or connect, which cannot be followed by EFSM
-            await self.socket.send(b"ping")
+            # either a recv or connect, which cannot be followed by EFSM)
+            await ensure_async(self.socket.send(b"ping"))
             request_time = time.time()
             # Wait until timeout
             self._exit.wait(self.time_to_dead)
@@ -136,7 +137,7 @@ class HBChannel(Thread):
             self._beating = bool(self.poller.poll(0))
             if self._beating:
                 # the poll above guarantees we have something to recv
-                await self.socket.recv()
+                await ensure_async(self.socket.recv())
                 continue
             elif self._running:
                 # nothing was received within the time limit, signal heart failure
@@ -212,7 +213,7 @@ class ZMQSocketChannel(object):
 
     async def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:
         assert self.socket is not None
-        msg = await self.socket.recv_multipart(**kwargs)
+        msg = await ensure_async(self.socket.recv_multipart(**kwargs))
         ident, smsg = self.session.feed_identities(msg)
         return self.session.deserialize(smsg)
 
@@ -221,7 +222,7 @@ class ZMQSocketChannel(object):
         assert self.socket is not None
         if timeout is not None:
             timeout *= 1000  # seconds to ms
-        ready = await self.socket.poll(timeout)
+        ready = await ensure_async(self.socket.poll(timeout))
 
         if ready:
             res = await self._recv()

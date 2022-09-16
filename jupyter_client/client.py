@@ -92,13 +92,13 @@ class KernelClient(ConnectionFileMixin):
     """
 
     # The PyZMQ Context to use for communication with the kernel.
-    context = Instance(zmq.asyncio.Context)
+    context = Instance(zmq.Context)
 
     _created_context = Bool(False)
 
-    def _context_default(self) -> zmq.asyncio.Context:
+    def _context_default(self) -> zmq.Context:
         self._created_context = True
-        return zmq.asyncio.Context()
+        return zmq.Context()
 
     # The classes to use for the various channels
     shell_channel_class = Type(ChannelABC)
