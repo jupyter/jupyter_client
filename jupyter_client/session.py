@@ -903,7 +903,7 @@ class Session(Configurable):
 
     send_raw = run_sync(_async_send_raw)
 
-    def _async_recv(
+    async def _async_recv(
         self,
         socket: zmq.sugar.socket.Socket,
         mode: int = zmq.NOBLOCK,
