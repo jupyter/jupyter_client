@@ -22,6 +22,7 @@ from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
 from .session import Session
 from jupyter_client.channels import major_protocol_version
+from jupyter_client.utils import run_sync
 
 # some utilities to validate message structure, these might get moved elsewhere
 # if they prove to have more generic utility
@@ -279,7 +280,7 @@ class KernelClient(ConnectionFileMixin):
         """
         msg_type = msg["header"]["msg_type"]
         if msg_type in ("display_data", "execute_result", "error"):
-            session.send(socket, msg_type, msg["content"], parent=parent_header)
+            run_sync(session.send(socket, msg_type, msg["content"], parent=parent_header))
         else:
             self._output_hook_default(msg)
 

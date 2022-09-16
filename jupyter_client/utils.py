@@ -37,7 +37,8 @@ class _TaskRunner:
         with self.__lock:
             if self.__io_loop is None:
                 self.__io_loop = asyncio.new_event_loop()
-                self.__runner_thread = threading.Thread(target=self._runner, daemon=True)
+                name = f"{threading.current_thread().name} - runner"
+                self.__runner_thread = threading.Thread(target=self._runner, daemon=True, name=name)
                 self.__runner_thread.start()
         fut = asyncio.run_coroutine_threadsafe(coro, self.__io_loop)
         return fut.result(None)
@@ -61,7 +62,7 @@ def run_sync(coro):
 
 
 async def ensure_async(obj):
-    """Ensure a returned object is asynchronous.
+    """Ensure a returned object is asynchronous.L
 
     NOTE: This should only be used on methods of external classes,
     not on a `self` method.

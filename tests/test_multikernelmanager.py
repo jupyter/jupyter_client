@@ -197,7 +197,7 @@ class TestKernelManager(TestCase):
         assert km.call_count("start_kernel") == 1
         assert isinstance(km.get_kernel(kid), SyncKMSubclass)
         assert km.get_kernel(kid).call_count("start_kernel") == 1
-        assert km.get_kernel(kid).call_count("_launch_kernel") == 1
+        assert km.get_kernel(kid).call_count("_async_launch_kernel") == 1
 
         assert km.is_alive(kid)
         assert kid in km
@@ -210,12 +210,11 @@ class TestKernelManager(TestCase):
         assert km.call_count("restart_kernel") == 1
         assert km.call_count("get_kernel") == 1
         assert km.get_kernel(kid).call_count("restart_kernel") == 1
-        assert km.get_kernel(kid).call_count("shutdown_kernel") == 1
-        assert km.get_kernel(kid).call_count("interrupt_kernel") == 1
-        assert km.get_kernel(kid).call_count("_kill_kernel") == 1
-        assert km.get_kernel(kid).call_count("cleanup_resources") == 1
-        assert km.get_kernel(kid).call_count("start_kernel") == 1
-        assert km.get_kernel(kid).call_count("_launch_kernel") == 1
+        assert km.get_kernel(kid).call_count("_async_shutdown_kernel") == 1
+        assert km.get_kernel(kid).call_count("_async_interrupt_kernel") == 1
+        assert km.get_kernel(kid).call_count("_async_kill_kernel") == 1
+        assert km.get_kernel(kid).call_count("_async_cleanup_resources") == 1
+        assert km.get_kernel(kid).call_count("_async_launch_kernel") == 1
 
         assert km.is_alive(kid)
         assert kid in km.list_kernel_ids()
@@ -236,7 +235,6 @@ class TestKernelManager(TestCase):
         km.get_kernel(kid).reset_counts()
         km.reset_counts()
         km.shutdown_all(now=True)
-        assert km.call_count("shutdown_kernel") == 1
         assert km.call_count("remove_kernel") == 1
         assert km.call_count("request_shutdown") == 0
         assert km.call_count("finish_shutdown") == 0
@@ -525,7 +523,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert mkm.call_count("start_kernel") == 1
         assert isinstance(mkm.get_kernel(kid), AsyncKMSubclass)
         assert mkm.get_kernel(kid).call_count("start_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("_launch_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_async_launch_kernel") == 1
 
         assert await mkm.is_alive(kid)
         assert kid in mkm
@@ -538,12 +536,10 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert mkm.call_count("restart_kernel") == 1
         assert mkm.call_count("get_kernel") == 1
         assert mkm.get_kernel(kid).call_count("restart_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("shutdown_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("interrupt_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("_kill_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("cleanup_resources") == 1
-        assert mkm.get_kernel(kid).call_count("start_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("_launch_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_async_interrupt_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_async_kill_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_async_cleanup_resources") == 1
+        assert mkm.get_kernel(kid).call_count("_async_launch_kernel") == 1
 
         assert await mkm.is_alive(kid)
         assert kid in mkm.list_kernel_ids()
@@ -564,11 +560,10 @@ class TestAsyncKernelManager(AsyncTestCase):
         mkm.get_kernel(kid).reset_counts()
         mkm.reset_counts()
         await mkm.shutdown_all(now=True)
-        assert mkm.call_count("shutdown_kernel") == 1
         assert mkm.call_count("remove_kernel") == 1
-        assert mkm.call_count("request_shutdown") == 0
-        assert mkm.call_count("finish_shutdown") == 0
-        assert mkm.call_count("cleanup_resources") == 0
+        assert mkm.call_count("_async_request_shutdown") == 0
+        assert mkm.call_count("_async_finish_shutdown") == 0
+        assert mkm.call_count("_async_cleanup_resources") == 0
 
         assert kid not in mkm, f"{kid} not in {mkm}"
 

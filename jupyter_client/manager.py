@@ -32,6 +32,7 @@ from .connect import ConnectionFileMixin
 from .managerabc import KernelManagerABC
 from .provisioning import KernelProvisionerBase
 from .provisioning import KernelProvisionerFactory as KPF
+from .utils import ensure_async
 from .utils import run_sync
 from jupyter_client import DEFAULT_EVENTS_SCHEMA_PATH
 from jupyter_client import JUPYTER_CLIENT_EVENTS_URI
@@ -423,7 +424,7 @@ class KernelManager(ConnectionFileMixin):
         msg = self.session.msg("shutdown_request", content=content)
         # ensure control socket is connected
         self._connect_control_socket()
-        self.session.send(self._control_socket, msg)
+        await ensure_async(self.session.send(self._control_socket, msg))
         assert self.provisioner is not None
         await self.provisioner.shutdown_requested(restart=restart)
         self._shutdown_status = _ShutdownStatus.ShutdownRequest
@@ -628,7 +629,7 @@ class KernelManager(ConnectionFileMixin):
             elif interrupt_mode == "message":
                 msg = self.session.msg("interrupt_request", content={})
                 self._connect_control_socket()
-                self.session.send(self._control_socket, msg)
+                await ensure_async(self.session.send(self._control_socket, msg))
         else:
             raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
         self._emit(action="interrupt")
