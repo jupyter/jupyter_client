@@ -392,12 +392,12 @@ class TestKernelManager:
 
 
 class TestParallel:
-    @pytest.mark.timeout(TIMEOUT)
-    def test_start_sequence_kernels(self, config, install_kernel):
-        """Ensure that a sequence of kernel startups doesn't break anything."""
-        self._run_signaltest_lifecycle(config)
-        self._run_signaltest_lifecycle(config)
-        self._run_signaltest_lifecycle(config)
+    # @pytest.mark.timeout(TIMEOUT)
+    # def test_start_sequence_kernels(self, config, install_kernel):
+    #     """Ensure that a sequence of kernel startups doesn't break anything."""
+    #     self._run_signaltest_lifecycle(config)
+    #     self._run_signaltest_lifecycle(config)
+    #     self._run_signaltest_lifecycle(config)
 
     @pytest.mark.timeout(TIMEOUT + 10)
     def test_start_parallel_thread_kernels(self, config, install_kernel):
