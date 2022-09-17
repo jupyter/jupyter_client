@@ -749,7 +749,7 @@ class Session(Configurable):
 
         return to_send
 
-    def send(
+    async def send(
         self,
         stream: Optional[Union[zmq.sugar.socket.Socket, ZMQStream]],
         msg_or_type: t.Union[t.Dict[str, t.Any], str],
@@ -849,11 +849,11 @@ class Session(Configurable):
 
         if stream and buffers and track and not copy:
             # only really track when we are doing zero-copy buffers
-            tracker = stream.send_multipart(to_send, copy=False, track=True)
+            tracker = await ensure_async(stream.send_multipart(to_send, copy=False, track=True))
         elif stream:
             # use dummy tracker, which will be done immediately
             tracker = DONE
-            stream.send_multipart(to_send, copy=copy)
+            await ensure_async(stream.send_multipart(to_send, copy=copy))
 
         if self.debug:
             pprint.pprint(msg)
@@ -864,9 +864,7 @@ class Session(Configurable):
 
         return msg
 
-    # send = run_sync(_async_send)
-
-    async def _async_send_raw(
+    async def send_raw(
         self,
         stream: zmq.sugar.socket.Socket,
         msg_list: t.List,
@@ -901,9 +899,7 @@ class Session(Configurable):
         to_send.extend(msg_list)
         await ensure_async(stream.send_multipart(to_send, flags, copy=copy))
 
-    send_raw = run_sync(_async_send_raw)
-
-    async def _async_recv(
+    async def recv(
         self,
         socket: zmq.sugar.socket.Socket,
         mode: int = zmq.NOBLOCK,
@@ -942,8 +938,6 @@ class Session(Configurable):
         except Exception as e:
             # TODO: handle it
             raise e
-
-    recv = run_sync(_async_recv)
 
     def feed_identities(
         self, msg_list: t.Union[t.List[bytes], t.List[zmq.Message]], copy: bool = True

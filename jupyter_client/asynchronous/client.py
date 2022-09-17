@@ -54,15 +54,17 @@ class AsyncKernelClient(KernelClient):
     _recv_reply = KernelClient._async_recv_reply
 
     # replies come on the shell channel
-    execute = reqrep(wrapped, KernelClient.execute)
-    history = reqrep(wrapped, KernelClient.history)
-    complete = reqrep(wrapped, KernelClient.complete)
-    inspect = reqrep(wrapped, KernelClient.inspect)
-    kernel_info = reqrep(wrapped, KernelClient.kernel_info)
-    comm_info = reqrep(wrapped, KernelClient.comm_info)
+    execute = KernelClient._async_execute
+    history = KernelClient._async_history
+    complete = KernelClient._async_complete
+    is_complete = KernelClient._async_is_complete
+    inspect = KernelClient._async_inspect
+    kernel_info = KernelClient._async_kernel_info
+    comm_info = KernelClient._async_comm_info
 
+    input = KernelClient._async_input
     is_alive = KernelClient._async_is_alive
     execute_interactive = KernelClient._async_execute_interactive
 
     # replies come on the control channel
-    shutdown = reqrep(wrapped, KernelClient.shutdown, channel="control")
+    shutdown = reqrep(wrapped, KernelClient._async_shutdown, channel="control")

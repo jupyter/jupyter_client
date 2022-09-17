@@ -106,7 +106,7 @@ class ThreadedZMQSocketChannel(object):
 
         def thread_send():
             assert self.session is not None
-            self.session.send(self.stream, msg)
+            run_sync(self.session.send(self.stream, msg))
 
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)

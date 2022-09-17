@@ -258,10 +258,10 @@ class ZMQSocketChannel(object):
     def is_alive(self) -> bool:
         return self.socket is not None
 
-    def send(self, msg: t.Dict[str, t.Any]) -> None:
+    async def send(self, msg: t.Dict[str, t.Any]) -> None:
         """Pass a message to the ZMQ socket to send"""
         assert self.socket is not None
-        self.session.send(self.socket, msg)
+        await ensure_async(self.session.send(self.socket, msg))
 
     def start(self) -> None:
         pass
