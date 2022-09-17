@@ -92,13 +92,13 @@ class KernelClient(ConnectionFileMixin):
     """
 
     # The PyZMQ Context to use for communication with the kernel.
-    context = Instance(zmq.Context)
+    context = Instance(zmq.asyncio.Context)
 
     _created_context = Bool(False)
 
-    def _context_default(self) -> zmq.Context:
+    def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True
-        return zmq.Context()
+        return zmq.asyncio.Context()
 
     # The classes to use for the various channels
     shell_channel_class = Type(ChannelABC)
@@ -267,7 +267,7 @@ class KernelClient(ConnectionFileMixin):
         elif msg_type == "error":
             print("\n".join(content["traceback"]), file=sys.stderr)
 
-    def _output_hook_kernel(
+    async def _output_hook_kernel(
         self,
         session: Session,
         socket: zmq.sugar.socket.Socket,
@@ -280,7 +280,7 @@ class KernelClient(ConnectionFileMixin):
         """
         msg_type = msg["header"]["msg_type"]
         if msg_type in ("display_data", "execute_result", "error"):
-            run_sync(session.send(socket, msg_type, msg["content"], parent=parent_header))
+            await session.send(socket, msg_type, msg["content"], parent=parent_header)
         else:
             self._output_hook_default(msg)
 
@@ -549,7 +549,7 @@ class KernelClient(ConnectionFileMixin):
             if msg["parent_header"].get("msg_id") != msg_id:
                 # not from my request
                 continue
-            output_hook(msg)
+            await ensure_async(output_hook(msg))
 
             # stop on idle
             if (

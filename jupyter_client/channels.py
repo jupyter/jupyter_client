@@ -94,12 +94,6 @@ class HBChannel(Thread):
         if HBChannel is not None:
             HBChannel._exiting = True
 
-    def run(self) -> None:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(self._async_run())
-        loop.close()
-
     def _create_socket(self) -> None:
         if self.socket is not None:
             # close previous socket, before opening a new one
@@ -146,6 +140,12 @@ class HBChannel(Thread):
                 # and close/reopen the socket, because the REQ/REP cycle has been broken
                 self._create_socket()
                 continue
+
+    def run(self) -> None:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self._async_run())
+        loop.close()
 
     def pause(self) -> None:
         """Pause the heartbeat."""

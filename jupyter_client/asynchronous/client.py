@@ -29,10 +29,6 @@ class AsyncKernelClient(KernelClient):
     raising :exc:`queue.Empty` if no message arrives within ``timeout`` seconds.
     """
 
-    def _context_default(self) -> zmq.asyncio.Context:
-        self._created_context = True
-        return zmq.asyncio.Context()
-
     # --------------------------------------------------------------------------
     # Channel proxy methods
     # --------------------------------------------------------------------------
@@ -54,13 +50,13 @@ class AsyncKernelClient(KernelClient):
     _recv_reply = KernelClient._async_recv_reply
 
     # replies come on the shell channel
-    execute = KernelClient._async_execute
-    history = KernelClient._async_history
-    complete = KernelClient._async_complete
-    is_complete = KernelClient._async_is_complete
-    inspect = KernelClient._async_inspect
-    kernel_info = KernelClient._async_kernel_info
-    comm_info = KernelClient._async_comm_info
+    execute = reqrep(wrapped, KernelClient._async_execute)
+    history = reqrep(wrapped, KernelClient._async_history)
+    complete = reqrep(wrapped, KernelClient._async_complete)
+    is_complete = reqrep(wrapped, KernelClient._async_is_complete)
+    inspect = reqrep(wrapped, KernelClient._async_inspect)
+    kernel_info = reqrep(wrapped, KernelClient._async_kernel_info)
+    comm_info = reqrep(wrapped, KernelClient._async_comm_info)
 
     input = KernelClient._async_input
     is_alive = KernelClient._async_is_alive
