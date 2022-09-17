@@ -221,10 +221,10 @@ class SessionFactory(LoggingConfigurable):
         self.log = logging.getLogger(change["new"])
 
     # not configurable:
-    context = Instance("zmq.Context")
+    context = Instance("zmq.asyncio.Context")
 
-    def _context_default(self) -> zmq.Context:
-        return zmq.Context()
+    def _context_default(self) -> zmq.asyncio.Context:
+        return zmq.asyncio.Context()
 
     session = Instance("jupyter_client.session.Session", allow_none=True)
 

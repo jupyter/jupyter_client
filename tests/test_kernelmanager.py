@@ -108,7 +108,7 @@ def km_subclass(config, jp_event_logger):
 def zmq_context():
     import zmq
 
-    ctx = zmq.Context()
+    ctx = zmq.asyncio.Context()
     yield ctx
     ctx.term()
 

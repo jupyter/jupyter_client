@@ -95,7 +95,7 @@ class MultiKernelManager(LoggingConfigurable):
         help="Share a single zmq.Context to talk to all my kernels",
     ).tag(config=True)
 
-    context = Instance("zmq.Context")
+    context = Instance("zmq.asyncio.Context")
 
     _created_context = Bool(False)
 
@@ -107,9 +107,9 @@ class MultiKernelManager(LoggingConfigurable):
         return self._pending_kernels
 
     @default("context")  # type:ignore[misc]
-    def _context_default(self) -> zmq.Context:
+    def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True
-        return zmq.Context()
+        return zmq.asyncio.Context()
 
     connection_dir = Unicode("")
 

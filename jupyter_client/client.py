@@ -782,7 +782,12 @@ class KernelClient(ConnectionFileMixin):
             self.session.adapt_version = adapt_version
 
     async def _async_is_complete(self, code: str) -> str:
-        """Ask the kernel whether some code is complete and ready to execute."""
+        """Ask the kernel whether some code is complete and ready to execute.
+
+        Returns
+        -------
+        The ID of the message sent.
+        """
         msg = self.session.msg("is_complete_request", {"code": code})
         await self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
@@ -794,6 +799,10 @@ class KernelClient(ConnectionFileMixin):
 
         This should only be called in response to the kernel sending an
         ``input_request`` message on the stdin channel.
+
+        Returns
+        -------
+        The ID of the message sent.
         """
         content = dict(value=string)
         msg = self.session.msg("input_reply", content)

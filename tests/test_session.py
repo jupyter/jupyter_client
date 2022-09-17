@@ -26,12 +26,6 @@ def _bad_unpacker(bytes):
     raise TypeError("I don't work either")
 
 
-class SessionTestCase(BaseZMQTestCase):
-    def setUp(self):
-        BaseZMQTestCase.setUp(self)
-        self.session = ss.Session()
-
-
 @pytest.fixture
 def no_copy_threshold():
     """Disable zero-copy optimizations in pyzmq >= 17"""
@@ -39,11 +33,22 @@ def no_copy_threshold():
         yield
 
 
+@pytest.fixture()
+def session():
+    return ss.Session()
+
+
 @pytest.mark.usefixtures("no_copy_threshold")
-class TestSession(SessionTestCase):
-    def test_msg(self):
+class TestSession:
+    def assertEqual(self, a, b):
+        assert a == b, (a, b)
+
+    def assertTrue(self, a):
+        assert a, a
+
+    def test_msg(self, session):
         """message format"""
-        msg = self.session.msg("execute")
+        msg = session.msg("execute")
         thekeys = set("header parent_header metadata content msg_type msg_id".split())
         s = set(msg.keys())
         self.assertEqual(s, thekeys)
@@ -56,11 +61,11 @@ class TestSession(SessionTestCase):
         self.assertEqual(msg["header"]["msg_type"], "execute")
         self.assertEqual(msg["msg_type"], "execute")
 
-    def test_serialize(self):
-        msg = self.session.msg("execute", content=dict(a=10, b=1.1))
-        msg_list = self.session.serialize(msg, ident=b"foo")
-        ident, msg_list = self.session.feed_identities(msg_list)
-        new_msg = self.session.deserialize(msg_list)
+    def test_serialize(self, session):
+        msg = session.msg("execute", content=dict(a=10, b=1.1))
+        msg_list = session.serialize(msg, ident=b"foo")
+        ident, msg_list = session.feed_identities(msg_list)
+        new_msg = session.deserialize(msg_list)
         self.assertEqual(ident[0], b"foo")
         self.assertEqual(new_msg["msg_id"], msg["msg_id"])
         self.assertEqual(new_msg["msg_type"], msg["msg_type"])
@@ -71,22 +76,22 @@ class TestSession(SessionTestCase):
         # ensure floats don't come out as Decimal:
         self.assertEqual(type(new_msg["content"]["b"]), type(new_msg["content"]["b"]))
 
-    def test_default_secure(self):
-        self.assertIsInstance(self.session.key, bytes)
-        self.assertIsInstance(self.session.auth, hmac.HMAC)
+    def test_default_secure(self, session):
+        assert isinstance(session.key, bytes)
+        assert isinstance(session.auth, hmac.HMAC)
 
-    async def test_send(self):
-        ctx = zmq.Context()
+    async def test_send(self, session):
+        ctx = zmq.asyncio.Context()
         A = ctx.socket(zmq.PAIR)
         B = ctx.socket(zmq.PAIR)
         A.bind("inproc://test")
         B.connect("inproc://test")
 
-        msg = self.session.msg("execute", content=dict(a=10))
-        await self.session.send(A, msg, ident=b"foo", buffers=[b"bar"])
+        msg = session.msg("execute", content=dict(a=10))
+        await session.send(A, msg, ident=b"foo", buffers=[b"bar"])
 
-        ident, msg_list = self.session.feed_identities(B.recv_multipart())
-        new_msg = self.session.deserialize(msg_list)
+        ident, msg_list = session.feed_identities(await B.recv_multipart())
+        new_msg = session.deserialize(msg_list)
         self.assertEqual(ident[0], b"foo")
         self.assertEqual(new_msg["msg_id"], msg["msg_id"])
         self.assertEqual(new_msg["msg_type"], msg["msg_type"])
@@ -98,11 +103,11 @@ class TestSession(SessionTestCase):
 
         content = msg["content"]
         header = msg["header"]
-        header["msg_id"] = self.session.msg_id
+        header["msg_id"] = session.msg_id
         parent = msg["parent_header"]
         metadata = msg["metadata"]
         header["msg_type"]
-        await self.session.send(
+        await session.send(
             A,
             None,
             content=content,
@@ -112,8 +117,8 @@ class TestSession(SessionTestCase):
             ident=b"foo",
             buffers=[b"bar"],
         )
-        ident, msg_list = self.session.feed_identities(B.recv_multipart())
-        new_msg = self.session.deserialize(msg_list)
+        ident, msg_list = session.feed_identities(await B.recv_multipart())
+        new_msg = session.deserialize(msg_list)
         self.assertEqual(ident[0], b"foo")
         self.assertEqual(new_msg["msg_id"], header["msg_id"])
         self.assertEqual(new_msg["msg_type"], msg["msg_type"])
@@ -123,10 +128,10 @@ class TestSession(SessionTestCase):
         self.assertEqual(new_msg["parent_header"], msg["parent_header"])
         self.assertEqual(new_msg["buffers"], [b"bar"])
 
-        header["msg_id"] = self.session.msg_id
+        header["msg_id"] = session.msg_id
 
-        await self.session.send(A, msg, ident=b"foo", buffers=[b"bar"])
-        ident, new_msg = await self.session.recv(B)
+        await session.send(A, msg, ident=b"foo", buffers=[b"bar"])
+        ident, new_msg = await session.recv(B)
         self.assertEqual(ident[0], b"foo")
         self.assertEqual(new_msg["msg_id"], header["msg_id"])
         self.assertEqual(new_msg["msg_type"], msg["msg_type"])
@@ -137,21 +142,21 @@ class TestSession(SessionTestCase):
         self.assertEqual(new_msg["buffers"], [b"bar"])
 
         # buffers must support the buffer protocol
-        with self.assertRaises(TypeError):
-            await self.session.send(A, msg, ident=b"foo", buffers=[1])
+        with pytest.raises(TypeError):
+            await session.send(A, msg, ident=b"foo", buffers=[1])
 
         # buffers must be contiguous
         buf = memoryview(os.urandom(16))
-        with self.assertRaises(ValueError):
-            await self.session.send(A, msg, ident=b"foo", buffers=[buf[::2]])
+        with pytest.raises(ValueError):
+            await session.send(A, msg, ident=b"foo", buffers=[buf[::2]])
 
         A.close()
         B.close()
         ctx.term()
 
-    def test_args(self):
+    def test_args(self, session):
         """initialization arguments for Session"""
-        s = self.session
+        s = session
         self.assertTrue(s.pack is ss.default_packer)
         self.assertTrue(s.unpack is ss.default_unpacker)
         self.assertEqual(s.username, os.environ.get("USER", "username"))
@@ -159,18 +164,24 @@ class TestSession(SessionTestCase):
         s = ss.Session()
         self.assertEqual(s.username, os.environ.get("USER", "username"))
 
-        self.assertRaises(TypeError, ss.Session, pack="hi")
-        self.assertRaises(TypeError, ss.Session, unpack="hi")
+        with pytest.raises(TypeError):
+            ss.Session(pack="hi")
+        with pytest.raises(TypeError):
+            ss.Session(unpack="hi")
         u = str(uuid.uuid4())
         s = ss.Session(username="carrot", session=u)
         self.assertEqual(s.session, u)
         self.assertEqual(s.username, "carrot")
 
     @pytest.mark.skipif(platform.python_implementation() == 'PyPy', reason='Test fails on PyPy')
-    async def test_tracking(self):
+    async def test_tracking(self, session):
         """test tracking messages"""
-        a, b = self.create_bound_pair(zmq.PAIR, zmq.PAIR)
-        s = self.session
+        ctx = zmq.asyncio.Context()
+        a = ctx.socket(zmq.PAIR)
+        b = ctx.socket(zmq.PAIR)
+        a.bind("inproc://test")
+        b.connect("inproc://test")
+        s = session
         s.copy_threshold = 1
         loop = ioloop.IOLoop(make_current=False)
         ZMQStream(a, io_loop=loop)
@@ -182,23 +193,28 @@ class TestSession(SessionTestCase):
         msg = await s.send(a, "hello", buffers=[M], track=True)
         t = msg["tracker"]
         self.assertTrue(isinstance(t, zmq.MessageTracker))
-        self.assertRaises(zmq.NotDone, t.wait, 0.1)
+        with pytest.raises(zmq.NotDone):
+            t.wait(0.1)
         del M
-        t.wait(1)  # this will raise
+        with pytest.raises(zmq.NotDone):
+            t.wait(1)  # this will raise
+        a.close()
+        b.close()
+        ctx.term()
 
-    def test_unique_msg_ids(self):
+    def test_unique_msg_ids(self, session):
         """test that messages receive unique ids"""
         ids = set()
         for i in range(2**12):
-            h = self.session.msg_header("test")
+            h = session.msg_header("test")
             msg_id = h["msg_id"]
             self.assertTrue(msg_id not in ids)
             ids.add(msg_id)
 
-    def test_feed_identities(self):
+    def test_feed_identities(self, session):
         """scrub the front for zmq IDENTITIES"""
         content = dict(code="whoda", stuff=object())
-        self.session.msg("execute", content=content)
+        session.msg("execute", content=content)
 
     def test_session_id(self):
         session = ss.Session()
@@ -240,6 +256,9 @@ class TestSession(SessionTestCase):
         session._add_digest(uuid.uuid4().bytes)
         self.assertTrue(len(session.digest_history) == 91)
 
+    def assertIn(self, a, b):
+        assert a in b
+
     def test_bad_pack(self):
         try:
             ss.Session(pack=_bad_packer)
@@ -247,7 +266,7 @@ class TestSession(SessionTestCase):
             self.assertIn("could not serialize", str(e))
             self.assertIn("don't work", str(e))
         else:
-            self.fail("Should have raised ValueError")
+            raise ValueError("Should have raised ValueError")
 
     def test_bad_unpack(self):
         try:
@@ -256,7 +275,7 @@ class TestSession(SessionTestCase):
             self.assertIn("could not handle output", str(e))
             self.assertIn("don't work either", str(e))
         else:
-            self.fail("Should have raised ValueError")
+            raise ValueError("Should have raised ValueError")
 
     def test_bad_packer(self):
         try:
@@ -265,7 +284,7 @@ class TestSession(SessionTestCase):
             self.assertIn("could not serialize", str(e))
             self.assertIn("don't work", str(e))
         else:
-            self.fail("Should have raised ValueError")
+            raise ValueError("Should have raised ValueError")
 
     def test_bad_unpacker(self):
         try:
@@ -274,10 +293,10 @@ class TestSession(SessionTestCase):
             self.assertIn("could not handle output", str(e))
             self.assertIn("don't work either", str(e))
         else:
-            self.fail("Should have raised ValueError")
+            raise ValueError("Should have raised ValueError")
 
     def test_bad_roundtrip(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             ss.Session(unpack=lambda b: 5)
 
     def _datetime_test(self, session):
@@ -298,8 +317,8 @@ class TestSession(SessionTestCase):
         self.assertEqual(msg["content"], jsonutil.extract_dates(msg2["content"]))
         self.assertEqual(msg["content"], jsonutil.extract_dates(msg2["content"]))
 
-    def test_datetimes(self):
-        self._datetime_test(self.session)
+    def test_datetimes(self, session):
+        self._datetime_test(session)
 
     def test_datetimes_pickle(self):
         session = ss.Session(packer="pickle")
@@ -314,22 +333,21 @@ class TestSession(SessionTestCase):
         )
         self._datetime_test(session)
 
-    async def test_send_raw(self):
+    async def test_send_raw(self, session):
         ctx = zmq.Context()
         A = ctx.socket(zmq.PAIR)
         B = ctx.socket(zmq.PAIR)
         A.bind("inproc://test")
         B.connect("inproc://test")
 
-        msg = self.session.msg("execute", content=dict(a=10))
+        msg = session.msg("execute", content=dict(a=10))
         msg_list = [
-            self.session.pack(msg[part])
-            for part in ["header", "parent_header", "metadata", "content"]
+            session.pack(msg[part]) for part in ["header", "parent_header", "metadata", "content"]
         ]
-        await self.session.send_raw(A, msg_list, ident=b"foo")
+        await session.send_raw(A, msg_list, ident=b"foo")
 
-        ident, new_msg_list = self.session.feed_identities(B.recv_multipart())
-        new_msg = self.session.deserialize(new_msg_list)
+        ident, new_msg_list = session.feed_identities(B.recv_multipart())
+        new_msg = session.deserialize(new_msg_list)
         self.assertEqual(ident[0], b"foo")
         self.assertEqual(new_msg["msg_type"], msg["msg_type"])
         self.assertEqual(new_msg["header"], msg["header"])
@@ -341,8 +359,8 @@ class TestSession(SessionTestCase):
         B.close()
         ctx.term()
 
-    def test_clone(self):
-        s = self.session
+    def test_clone(self, session):
+        s = session
         s._add_digest("initial")
         s2 = s.clone()
         assert s2.session == s.session

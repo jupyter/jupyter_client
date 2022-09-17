@@ -131,12 +131,12 @@ class KernelManager(ConnectionFileMixin):
     _created_context: Bool = Bool(False)
 
     # The PyZMQ Context to use for communication with the kernel.
-    context: Instance = Instance(zmq.Context)
+    context: Instance = Instance(zmq.asyncio.Context)
 
     @default("context")  # type:ignore[misc]
-    def _context_default(self) -> zmq.Context:
+    def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True
-        return zmq.Context()
+        return zmq.asyncio.Context()
 
     # the class to create with our `client` method
     client_class: DottedObjectName = DottedObjectName(
