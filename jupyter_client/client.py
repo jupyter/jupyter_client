@@ -22,6 +22,7 @@ from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
 from .session import Session
 from jupyter_client.channels import major_protocol_version
+from jupyter_client.utils import ensure_async
 from jupyter_client.utils import run_sync
 
 # some utilities to validate message structure, these might get moved elsewhere
@@ -182,7 +183,7 @@ class KernelClient(ConnectionFileMixin):
 
         # Wait for kernel info reply on shell channel
         while True:
-            self.kernel_info()
+            await self._async_kernel_info()
             try:
                 msg = await self.shell_channel.get_msg(timeout=1)
             except Empty:
@@ -688,7 +689,7 @@ class KernelClient(ConnectionFileMixin):
             detail_level=detail_level,
         )
         msg = self.session.msg("inspect_request", content)
-        self.shell_channel.send(msg)
+        await self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
 
     inspect = run_sync(_async_inspect)

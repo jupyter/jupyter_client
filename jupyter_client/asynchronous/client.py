@@ -2,6 +2,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import zmq.asyncio
+from traitlets import Instance
 from traitlets import Type
 
 from jupyter_client.channels import HBChannel
@@ -28,6 +29,14 @@ class AsyncKernelClient(KernelClient):
     ``get_[channel]_msg()`` methods wait for and return messages on channels,
     raising :exc:`queue.Empty` if no message arrives within ``timeout`` seconds.
     """
+
+    # The Session to use for communication with the kernel.
+    session = Instance("jupyter_client.session.AsyncSession")
+
+    def _session_default(self):
+        from jupyter_client.session import AsyncSession
+
+        return AsyncSession(parent=self)
 
     # --------------------------------------------------------------------------
     # Channel proxy methods

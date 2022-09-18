@@ -223,7 +223,6 @@ class ZMQSocketChannel(object):
         if timeout is not None:
             timeout *= 1000  # seconds to ms
         ready = await ensure_async(self.socket.poll(timeout))
-
         if ready:
             res = await self._recv()
             return res

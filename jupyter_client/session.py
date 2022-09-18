@@ -749,7 +749,7 @@ class Session(Configurable):
 
         return to_send
 
-    async def send(
+    async def _async_send(
         self,
         stream: Optional[Union[zmq.sugar.socket.Socket, ZMQStream]],
         msg_or_type: t.Union[t.Dict[str, t.Any], str],
@@ -864,7 +864,9 @@ class Session(Configurable):
 
         return msg
 
-    async def send_raw(
+    send = run_sync(_async_send)
+
+    async def _async_send_raw(
         self,
         stream: zmq.sugar.socket.Socket,
         msg_list: t.List,
@@ -899,7 +901,9 @@ class Session(Configurable):
         to_send.extend(msg_list)
         await ensure_async(stream.send_multipart(to_send, flags, copy=copy))
 
-    async def recv(
+    send_raw = run_sync(_async_send_raw)
+
+    async def _async_recv(
         self,
         socket: zmq.sugar.socket.Socket,
         mode: int = zmq.NOBLOCK,
@@ -938,6 +942,8 @@ class Session(Configurable):
         except Exception as e:
             # TODO: handle it
             raise e
+
+    recv = run_sync(_async_recv)
 
     def feed_identities(
         self, msg_list: t.Union[t.List[bytes], t.List[zmq.Message]], copy: bool = True
@@ -1084,3 +1090,9 @@ class Session(Configurable):
             DeprecationWarning,
         )
         return self.deserialize(*args, **kwargs)
+
+
+class AsyncSession(Session):
+    send = Session._async_send
+    send_raw = Session._async_send_raw
+    recv = Session._async_recv

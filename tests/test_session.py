@@ -38,6 +38,11 @@ def session():
     return ss.Session()
 
 
+@pytest.fixture()
+def async_session():
+    return ss.AsyncSession()
+
+
 @pytest.mark.usefixtures("no_copy_threshold")
 class TestSession:
     def assertEqual(self, a, b):
@@ -80,7 +85,82 @@ class TestSession:
         assert isinstance(session.key, bytes)
         assert isinstance(session.auth, hmac.HMAC)
 
-    async def test_send(self, session):
+    def test_send_sync(self, session):
+        ctx = zmq.Context()
+        A = ctx.socket(zmq.PAIR)
+        B = ctx.socket(zmq.PAIR)
+        A.bind("inproc://test")
+        B.connect("inproc://test")
+
+        msg = session.msg("execute", content=dict(a=10))
+        session.send(A, msg, ident=b"foo", buffers=[b"bar"])
+
+        ident, msg_list = session.feed_identities(B.recv_multipart())
+        new_msg = session.deserialize(msg_list)
+        self.assertEqual(ident[0], b"foo")
+        self.assertEqual(new_msg["msg_id"], msg["msg_id"])
+        self.assertEqual(new_msg["msg_type"], msg["msg_type"])
+        self.assertEqual(new_msg["header"], msg["header"])
+        self.assertEqual(new_msg["content"], msg["content"])
+        self.assertEqual(new_msg["parent_header"], msg["parent_header"])
+        self.assertEqual(new_msg["metadata"], msg["metadata"])
+        self.assertEqual(new_msg["buffers"], [b"bar"])
+
+        content = msg["content"]
+        header = msg["header"]
+        header["msg_id"] = session.msg_id
+        parent = msg["parent_header"]
+        metadata = msg["metadata"]
+        header["msg_type"]
+        session.send(
+            A,
+            None,
+            content=content,
+            parent=parent,
+            header=header,
+            metadata=metadata,
+            ident=b"foo",
+            buffers=[b"bar"],
+        )
+        ident, msg_list = session.feed_identities(B.recv_multipart())
+        new_msg = session.deserialize(msg_list)
+        self.assertEqual(ident[0], b"foo")
+        self.assertEqual(new_msg["msg_id"], header["msg_id"])
+        self.assertEqual(new_msg["msg_type"], msg["msg_type"])
+        self.assertEqual(new_msg["header"], msg["header"])
+        self.assertEqual(new_msg["content"], msg["content"])
+        self.assertEqual(new_msg["metadata"], msg["metadata"])
+        self.assertEqual(new_msg["parent_header"], msg["parent_header"])
+        self.assertEqual(new_msg["buffers"], [b"bar"])
+
+        header["msg_id"] = session.msg_id
+
+        session.send(A, msg, ident=b"foo", buffers=[b"bar"])
+        ident, new_msg = session.recv(B)
+        self.assertEqual(ident[0], b"foo")
+        self.assertEqual(new_msg["msg_id"], header["msg_id"])
+        self.assertEqual(new_msg["msg_type"], msg["msg_type"])
+        self.assertEqual(new_msg["header"], msg["header"])
+        self.assertEqual(new_msg["content"], msg["content"])
+        self.assertEqual(new_msg["metadata"], msg["metadata"])
+        self.assertEqual(new_msg["parent_header"], msg["parent_header"])
+        self.assertEqual(new_msg["buffers"], [b"bar"])
+
+        # buffers must support the buffer protocol
+        with pytest.raises(TypeError):
+            session.send(A, msg, ident=b"foo", buffers=[1])
+
+        # buffers must be contiguous
+        buf = memoryview(os.urandom(16))
+        with pytest.raises(ValueError):
+            session.send(A, msg, ident=b"foo", buffers=[buf[::2]])
+
+        A.close()
+        B.close()
+        ctx.term()
+
+    async def test_send(self, async_session):
+        session = async_session
         ctx = zmq.asyncio.Context()
         A = ctx.socket(zmq.PAIR)
         B = ctx.socket(zmq.PAIR)
@@ -174,8 +254,38 @@ class TestSession:
         self.assertEqual(s.username, "carrot")
 
     @pytest.mark.skipif(platform.python_implementation() == 'PyPy', reason='Test fails on PyPy')
-    async def test_tracking(self, session):
+    def test_tracking_sync(self, session):
         """test tracking messages"""
+        ctx = zmq.Context()
+        a = ctx.socket(zmq.PAIR)
+        b = ctx.socket(zmq.PAIR)
+        a.bind("inproc://test")
+        b.connect("inproc://test")
+        s = session
+        s.copy_threshold = 1
+        loop = ioloop.IOLoop(make_current=False)
+        ZMQStream(a, io_loop=loop)
+        msg = s.send(a, "hello", track=False)
+        self.assertTrue(msg["tracker"] is ss.DONE)
+        msg = s.send(a, "hello", track=True)
+        self.assertTrue(isinstance(msg["tracker"], zmq.MessageTracker))
+        M = zmq.Message(b"hi there", track=True)
+        msg = s.send(a, "hello", buffers=[M], track=True)
+        t = msg["tracker"]
+        self.assertTrue(isinstance(t, zmq.MessageTracker))
+        with pytest.raises(zmq.NotDone):
+            t.wait(0.1)
+        del M
+        with pytest.raises(zmq.NotDone):
+            t.wait(1)  # this will raise
+        a.close()
+        b.close()
+        ctx.term()
+
+    @pytest.mark.skipif(platform.python_implementation() == 'PyPy', reason='Test fails on PyPy')
+    async def test_tracking(self, async_session):
+        """test tracking messages"""
+        session = async_session
         ctx = zmq.asyncio.Context()
         a = ctx.socket(zmq.PAIR)
         b = ctx.socket(zmq.PAIR)
@@ -333,7 +443,34 @@ class TestSession:
         )
         self._datetime_test(session)
 
-    async def test_send_raw(self, session):
+    def test_send_raw_sync(self, session):
+        ctx = zmq.Context()
+        A = ctx.socket(zmq.PAIR)
+        B = ctx.socket(zmq.PAIR)
+        A.bind("inproc://test")
+        B.connect("inproc://test")
+
+        msg = session.msg("execute", content=dict(a=10))
+        msg_list = [
+            session.pack(msg[part]) for part in ["header", "parent_header", "metadata", "content"]
+        ]
+        session.send_raw(A, msg_list, ident=b"foo")
+
+        ident, new_msg_list = session.feed_identities(B.recv_multipart())
+        new_msg = session.deserialize(new_msg_list)
+        self.assertEqual(ident[0], b"foo")
+        self.assertEqual(new_msg["msg_type"], msg["msg_type"])
+        self.assertEqual(new_msg["header"], msg["header"])
+        self.assertEqual(new_msg["parent_header"], msg["parent_header"])
+        self.assertEqual(new_msg["content"], msg["content"])
+        self.assertEqual(new_msg["metadata"], msg["metadata"])
+
+        A.close()
+        B.close()
+        ctx.term()
+
+    async def test_send_raw(self, async_session):
+        session = async_session
         ctx = zmq.Context()
         A = ctx.socket(zmq.PAIR)
         B = ctx.socket(zmq.PAIR)
