@@ -11,6 +11,7 @@ from .utils import test_env
 from jupyter_client.kernelspec import KernelSpecManager
 from jupyter_client.kernelspec import NATIVE_KERNEL_NAME
 from jupyter_client.kernelspec import NoSuchKernel
+from jupyter_client.manager import start_new_async_kernel
 from jupyter_client.manager import start_new_kernel
 
 TIMEOUT = 30
@@ -92,3 +93,69 @@ class TestKernelClient(TestCase):
         kc = self.kc
         msg_id = kc.shutdown()
         self.assertIsInstance(msg_id, str)
+
+
+@pytest.fixture
+async def kc():
+    env_patch = test_env()
+    env_patch.start()
+    try:
+        KernelSpecManager().get_kernel_spec(NATIVE_KERNEL_NAME)
+    except NoSuchKernel:
+        pytest.skip()
+    km, kc = await start_new_async_kernel(kernel_name=NATIVE_KERNEL_NAME)
+    yield kc
+    env_patch.stop()
+    await km.shutdown_kernel()
+    kc.stop_channels()
+
+
+class TestAsyncKernelClient:
+    async def test_execute_interactive(self, kc):
+        with capture_output() as io:
+            reply = await kc.execute_interactive("print('hello')", timeout=TIMEOUT)
+        assert "hello" in io.stdout
+        assert reply["content"]["status"] == "ok"
+
+    def _check_reply(self, reply_type, reply):
+        assert isinstance(reply, dict)
+        assert reply["header"]["msg_type"] == reply_type + "_reply"
+        assert reply["parent_header"]["msg_type"] == reply_type + "_request"
+
+    async def test_history(self, kc):
+        msg_id = await kc.history(session=0)
+        assert isinstance(msg_id, str)
+        reply = await kc.history(session=0, reply=True, timeout=TIMEOUT)
+        self._check_reply("history", reply)
+
+    async def test_inspect(self, kc):
+        msg_id = await kc.inspect("who cares")
+        assert isinstance(msg_id, str)
+        reply = await kc.inspect("code", reply=True, timeout=TIMEOUT)
+        self._check_reply("inspect", reply)
+
+    async def test_complete(self, kc):
+        msg_id = await kc.complete("who cares")
+        assert isinstance(msg_id, str)
+        reply = await kc.complete("code", reply=True, timeout=TIMEOUT)
+        self._check_reply("complete", reply)
+
+    async def test_kernel_info(self, kc):
+        msg_id = await kc.kernel_info()
+        assert isinstance(msg_id, str)
+        reply = await kc.kernel_info(reply=True, timeout=TIMEOUT)
+        self._check_reply("kernel_info", reply)
+
+    async def test_comm_info(self, kc):
+        msg_id = await kc.comm_info()
+        assert isinstance(msg_id, str)
+        reply = await kc.comm_info(reply=True, timeout=TIMEOUT)
+        self._check_reply("comm_info", reply)
+
+    async def test_shutdown(self, kc):
+        reply = await kc.shutdown(reply=True, timeout=TIMEOUT)
+        self._check_reply("shutdown", reply)
+
+    async def test_shutdown_id(self, kc):
+        msg_id = await kc.shutdown()
+        assert isinstance(msg_id, str)

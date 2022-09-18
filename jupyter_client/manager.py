@@ -673,6 +673,15 @@ class KernelManager(ConnectionFileMixin):
 
 
 class AsyncKernelManager(KernelManager):
+
+    # The Session to use for communication with the kernel.
+    session = Instance("jupyter_client.session.AsyncSession")
+
+    def _session_default(self):
+        from jupyter_client.session import AsyncSession
+
+        return AsyncSession(parent=self)
+
     # the class to create with our `client` method
     client_class: DottedObjectName = DottedObjectName(
         "jupyter_client.asynchronous.AsyncKernelClient"
