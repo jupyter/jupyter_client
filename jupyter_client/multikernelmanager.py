@@ -95,7 +95,7 @@ class MultiKernelManager(LoggingConfigurable):
         help="Share a single zmq.Context to talk to all my kernels",
     ).tag(config=True)
 
-    context = Instance("zmq.asyncio.Context")
+    context = Instance("zmq.Context")
 
     _created_context = Bool(False)
 
@@ -107,9 +107,9 @@ class MultiKernelManager(LoggingConfigurable):
         return self._pending_kernels
 
     @default("context")  # type:ignore[misc]
-    def _context_default(self) -> zmq.asyncio.Context:
+    def _context_default(self) -> zmq.Context:
         self._created_context = True
-        return zmq.asyncio.Context()
+        return zmq.Context()
 
     connection_dir = Unicode("")
 
@@ -544,6 +544,13 @@ class AsyncMultiKernelManager(MultiKernelManager):
         help="""Whether to make kernels available before the process has started.  The
         kernel has a `.ready` future which can be awaited before connecting""",
     ).tag(config=True)
+
+    context = Instance("zmq.asyncio.Context")
+
+    @default("context")  # type:ignore[misc]
+    def _context_default(self) -> zmq.asyncio.Context:
+        self._created_context = True
+        return zmq.asyncio.Context()
 
     start_kernel = MultiKernelManager._async_start_kernel
     restart_kernel = MultiKernelManager._async_restart_kernel

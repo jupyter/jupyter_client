@@ -12,6 +12,7 @@ from threading import Thread
 import zmq.asyncio
 
 from .channelsabc import HBChannelABC
+from .session import AsyncSession
 from .session import Session
 from jupyter_client import protocol_version_info
 from jupyter_client.utils import ensure_async
@@ -50,7 +51,7 @@ class HBChannel(Thread):
 
     def __init__(
         self,
-        context: t.Optional[zmq.asyncio.Context] = None,
+        context: t.Optional[zmq.Context] = None,
         session: t.Optional[Session] = None,
         address: t.Union[t.Tuple[str, int], str] = "",
     ):
@@ -58,7 +59,7 @@ class HBChannel(Thread):
 
         Parameters
         ----------
-        context : :class:`zmq.asyncio.Context`
+        context : :class:`zmq.Context`
             The ZMQ context to use.
         session : :class:`session.Session`
             The session to use.
@@ -192,16 +193,93 @@ HBChannelABC.register(HBChannel)
 
 
 class ZMQSocketChannel(object):
+    """A ZMQ socket wrapper"""
+
+    def __init__(self, socket: zmq.Socket, session: Session, loop: t.Any = None) -> None:
+        """Create a channel.
+
+        Parameters
+        ----------
+        socket : :class:`zmq.Socket`
+            The ZMQ socket to use.
+        session : :class:`session.Session`
+            The session to use.
+        loop
+            Unused here, for other implementations
+        """
+        super().__init__()
+
+        self.socket: t.Optional[zmq.Socket] = socket
+        self.session = session
+
+    def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:
+        assert self.socket is not None
+        msg = self.socket.recv_multipart(**kwargs)
+        ident, smsg = self.session.feed_identities(msg)
+        return self.session.deserialize(smsg)
+
+    def get_msg(self, timeout: t.Optional[float] = None) -> t.Dict[str, t.Any]:
+        """Gets a message if there is one that is ready."""
+        assert self.socket is not None
+        if timeout is not None:
+            timeout *= 1000  # seconds to ms
+        ready = self.socket.poll(timeout)
+        if ready:
+            res = self._recv()
+            return res
+        else:
+            raise Empty
+
+    def get_msgs(self) -> t.List[t.Dict[str, t.Any]]:
+        """Get all messages that are currently ready."""
+        msgs = []
+        while True:
+            try:
+                msgs.append(self.get_msg())
+            except Empty:
+                break
+        return msgs
+
+    def msg_ready(self) -> bool:
+        """Is there a message that has been received?"""
+        assert self.socket is not None
+        return bool(self.socket.poll(timeout=0))
+
+    def close(self) -> None:
+        if self.socket is not None:
+            try:
+                self.socket.close(linger=0)
+            except Exception:
+                pass
+            self.socket = None
+
+    stop = close
+
+    def is_alive(self) -> bool:
+        return self.socket is not None
+
+    def send(self, msg: t.Dict[str, t.Any]) -> None:
+        """Pass a message to the ZMQ socket to send"""
+        assert self.socket is not None
+        self.session.send(self.socket, msg)
+
+    def start(self) -> None:
+        pass
+
+
+class AsyncZMQSocketChannel(object):
     """A ZMQ socket in an async API"""
 
-    def __init__(self, socket: zmq.asyncio.Socket, session: Session, loop: t.Any = None) -> None:
+    def __init__(
+        self, socket: zmq.asyncio.Socket, session: AsyncSession, loop: t.Any = None
+    ) -> None:
         """Create a channel.
 
         Parameters
         ----------
         socket : :class:`zmq.asyncio.Socket`
             The ZMQ socket to use.
-        session : :class:`session.Session`
+        session : :class:`session.ASyncSession`
             The session to use.
         loop
             Unused here, for other implementations

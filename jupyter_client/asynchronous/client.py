@@ -5,8 +5,8 @@ import zmq.asyncio
 from traitlets import Instance
 from traitlets import Type
 
+from jupyter_client.channels import AsyncZMQSocketChannel
 from jupyter_client.channels import HBChannel
-from jupyter_client.channels import ZMQSocketChannel
 from jupyter_client.client import KernelClient
 from jupyter_client.client import reqrep
 
@@ -38,6 +38,12 @@ class AsyncKernelClient(KernelClient):
 
         return AsyncSession(parent=self)
 
+    context = Instance(zmq.asyncio.Context)
+
+    def _context_default(self) -> zmq.asyncio.Context:
+        self._created_context = True
+        return zmq.asyncio.Context()
+
     # --------------------------------------------------------------------------
     # Channel proxy methods
     # --------------------------------------------------------------------------
@@ -50,11 +56,11 @@ class AsyncKernelClient(KernelClient):
     wait_for_ready = KernelClient._async_wait_for_ready
 
     # The classes to use for the various channels
-    shell_channel_class = Type(ZMQSocketChannel)
-    iopub_channel_class = Type(ZMQSocketChannel)
-    stdin_channel_class = Type(ZMQSocketChannel)
+    shell_channel_class = Type(AsyncZMQSocketChannel)
+    iopub_channel_class = Type(AsyncZMQSocketChannel)
+    stdin_channel_class = Type(AsyncZMQSocketChannel)
     hb_channel_class = Type(HBChannel)
-    control_channel_class = Type(ZMQSocketChannel)
+    control_channel_class = Type(AsyncZMQSocketChannel)
 
     _recv_reply = KernelClient._async_recv_reply
 

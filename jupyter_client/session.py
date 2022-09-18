@@ -749,7 +749,64 @@ class Session(Configurable):
 
         return to_send
 
-    async def _async_send(
+    def _pre_send(
+        self,
+        stream: Optional[Union[zmq.sugar.socket.Socket, ZMQStream]],
+        msg_or_type: t.Union[t.Dict[str, t.Any], str],
+        content: t.Optional[t.Dict[str, t.Any]] = None,
+        parent: t.Optional[t.Dict[str, t.Any]] = None,
+        ident: t.Optional[t.Union[bytes, t.List[bytes]]] = None,
+        buffers: t.Optional[t.List[bytes]] = None,
+        track: bool = False,
+        header: t.Optional[t.Dict[str, t.Any]] = None,
+        metadata: t.Optional[t.Dict[str, t.Any]] = None,
+    ):
+        if not isinstance(stream, zmq.Socket):
+            # ZMQStreams and dummy sockets do not support tracking.
+            track = False
+
+        if isinstance(msg_or_type, (Message, dict)):
+            # We got a Message or message dict, not a msg_type so don't
+            # build a new Message.
+            msg = msg_or_type
+            buffers = buffers or msg.get("buffers", [])
+        else:
+            msg = self.msg(
+                msg_or_type,
+                content=content,
+                parent=parent,
+                header=header,
+                metadata=metadata,
+            )
+        if self.check_pid and not os.getpid() == self.pid:
+            get_logger().warning("WARNING: attempted to send message from fork\n%s", msg)
+            return None
+        buffers = [] if buffers is None else buffers
+        for idx, buf in enumerate(buffers):
+            if isinstance(buf, memoryview):
+                view = buf
+            else:
+                try:
+                    # check to see if buf supports the buffer protocol.
+                    view = memoryview(buf)
+                except TypeError as e:
+                    raise TypeError("Buffer objects must support the buffer protocol.") from e
+            # memoryview.contiguous is new in 3.3,
+            # just skip the check on Python 2
+            if hasattr(view, "contiguous") and not view.contiguous:
+                # zmq requires memoryviews to be contiguous
+                raise ValueError("Buffer %i (%r) is not contiguous" % (idx, buf))
+
+        if self.adapt_version:
+            msg = adapt(msg, self.adapt_version)
+        to_send = self.serialize(msg, ident)
+        to_send.extend(buffers)
+        longest = max([len(s) for s in to_send])
+        copy = longest < self.copy_threshold
+        should_track = stream and buffers and track and not copy
+        return should_track, to_send, msg, copy, buffers
+
+    def send(
         self,
         stream: Optional[Union[zmq.sugar.socket.Socket, ZMQStream]],
         msg_or_type: t.Union[t.Dict[str, t.Any], str],
@@ -804,56 +861,17 @@ class Session(Configurable):
         msg : dict
             The constructed message.
         """
-        if not isinstance(stream, zmq.Socket):
-            # ZMQStreams and dummy sockets do not support tracking.
-            track = False
+        should_track, to_send, msg, copy, buffers = self._pre_send(
+            stream, msg_or_type, content, parent, ident, buffers, track, header, metadata
+        )
 
-        if isinstance(msg_or_type, (Message, dict)):
-            # We got a Message or message dict, not a msg_type so don't
-            # build a new Message.
-            msg = msg_or_type
-            buffers = buffers or msg.get("buffers", [])
-        else:
-            msg = self.msg(
-                msg_or_type,
-                content=content,
-                parent=parent,
-                header=header,
-                metadata=metadata,
-            )
-        if self.check_pid and not os.getpid() == self.pid:
-            get_logger().warning("WARNING: attempted to send message from fork\n%s", msg)
-            return None
-        buffers = [] if buffers is None else buffers
-        for idx, buf in enumerate(buffers):
-            if isinstance(buf, memoryview):
-                view = buf
-            else:
-                try:
-                    # check to see if buf supports the buffer protocol.
-                    view = memoryview(buf)
-                except TypeError as e:
-                    raise TypeError("Buffer objects must support the buffer protocol.") from e
-            # memoryview.contiguous is new in 3.3,
-            # just skip the check on Python 2
-            if hasattr(view, "contiguous") and not view.contiguous:
-                # zmq requires memoryviews to be contiguous
-                raise ValueError("Buffer %i (%r) is not contiguous" % (idx, buf))
-
-        if self.adapt_version:
-            msg = adapt(msg, self.adapt_version)
-        to_send = self.serialize(msg, ident)
-        to_send.extend(buffers)
-        longest = max([len(s) for s in to_send])
-        copy = longest < self.copy_threshold
-
-        if stream and buffers and track and not copy:
+        if should_track:
             # only really track when we are doing zero-copy buffers
-            tracker = await ensure_async(stream.send_multipart(to_send, copy=False, track=True))
+            tracker = stream.send_multipart(to_send, copy=False, track=True)
         elif stream:
             # use dummy tracker, which will be done immediately
             tracker = DONE
-            await ensure_async(stream.send_multipart(to_send, copy=copy))
+            stream.send_multipart(to_send, copy=copy)
 
         if self.debug:
             pprint.pprint(msg)
@@ -864,9 +882,7 @@ class Session(Configurable):
 
         return msg
 
-    send = run_sync(_async_send)
-
-    async def _async_send_raw(
+    def send_raw(
         self,
         stream: zmq.sugar.socket.Socket,
         msg_list: t.List,
@@ -899,11 +915,9 @@ class Session(Configurable):
         # Don't include buffers in signature (per spec).
         to_send.append(self.sign(msg_list[0:4]))
         to_send.extend(msg_list)
-        await ensure_async(stream.send_multipart(to_send, flags, copy=copy))
+        stream.send_multipart(to_send, flags, copy=copy)
 
-    send_raw = run_sync(_async_send_raw)
-
-    async def _async_recv(
+    def recv(
         self,
         socket: zmq.sugar.socket.Socket,
         mode: int = zmq.NOBLOCK,
@@ -926,7 +940,7 @@ class Session(Configurable):
         if isinstance(socket, ZMQStream):
             socket = socket.socket
         try:
-            msg_list = await ensure_async(socket.recv_multipart(mode, copy=copy))
+            msg_list = socket.recv_multipart(mode, copy=copy)
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
                 # We can convert EAGAIN to None as we know in this case
@@ -942,8 +956,6 @@ class Session(Configurable):
         except Exception as e:
             # TODO: handle it
             raise e
-
-    recv = run_sync(_async_recv)
 
     def feed_identities(
         self, msg_list: t.Union[t.List[bytes], t.List[zmq.Message]], copy: bool = True
@@ -1093,6 +1105,88 @@ class Session(Configurable):
 
 
 class AsyncSession(Session):
-    send = Session._async_send
-    send_raw = Session._async_send_raw
-    recv = Session._async_recv
+    async def send(
+        self,
+        stream: Optional[Union[zmq.sugar.socket.Socket, ZMQStream]],
+        msg_or_type: t.Union[t.Dict[str, t.Any], str],
+        content: t.Optional[t.Dict[str, t.Any]] = None,
+        parent: t.Optional[t.Dict[str, t.Any]] = None,
+        ident: t.Optional[t.Union[bytes, t.List[bytes]]] = None,
+        buffers: t.Optional[t.List[bytes]] = None,
+        track: bool = False,
+        header: t.Optional[t.Dict[str, t.Any]] = None,
+        metadata: t.Optional[t.Dict[str, t.Any]] = None,
+    ) -> t.Optional[t.Dict[str, t.Any]]:
+        should_track, to_send, msg, copy, buffers = self._pre_send(
+            stream, msg_or_type, content, parent, ident, buffers, track, header, metadata
+        )
+
+        if should_track:
+            # only really track when we are doing zero-copy buffers
+            tracker = await ensure_async(stream.send_multipart(to_send, copy=False, track=True))
+        elif stream:
+            # use dummy tracker, which will be done immediately
+            tracker = DONE
+            await ensure_async(stream.send_multipart(to_send, copy=copy))
+
+        if self.debug:
+            pprint.pprint(msg)
+            pprint.pprint(to_send)
+            pprint.pprint(buffers)
+
+        msg["tracker"] = tracker
+
+        return msg
+
+    send.__doc__ = Session.send.__doc__
+
+    async def send_raw(
+        self,
+        stream: zmq.sugar.socket.Socket,
+        msg_list: t.List,
+        flags: int = 0,
+        copy: bool = True,
+        ident: t.Optional[t.Union[bytes, t.List[bytes]]] = None,
+    ) -> None:
+        to_send = []
+        if isinstance(ident, bytes):
+            ident = [ident]
+        if ident is not None:
+            to_send.extend(ident)
+
+        to_send.append(DELIM)
+        # Don't include buffers in signature (per spec).
+        to_send.append(self.sign(msg_list[0:4]))
+        to_send.extend(msg_list)
+        await ensure_async(stream.send_multipart(to_send, flags, copy=copy))
+
+    send_raw.__doc__ = Session.send_raw.__doc__
+
+    async def recv(
+        self,
+        socket: zmq.sugar.socket.Socket,
+        mode: int = zmq.NOBLOCK,
+        content: bool = True,
+        copy: bool = True,
+    ) -> t.Tuple[t.Optional[t.List[bytes]], t.Optional[t.Dict[str, t.Any]]]:
+        if isinstance(socket, ZMQStream):
+            socket = socket.socket
+        try:
+            msg_list = await ensure_async(socket.recv_multipart(mode, copy=copy))
+        except zmq.ZMQError as e:
+            if e.errno == zmq.EAGAIN:
+                # We can convert EAGAIN to None as we know in this case
+                # recv_multipart won't return None.
+                return None, None
+            else:
+                raise
+        # split multipart message into identity list and message dict
+        # invalid large messages can cause very expensive string comparisons
+        idents, msg_list = self.feed_identities(msg_list, copy)
+        try:
+            return idents, self.deserialize(msg_list, content=content, copy=copy)
+        except Exception as e:
+            # TODO: handle it
+            raise e
+
+    recv.__doc__ = Session.recv.__doc__
