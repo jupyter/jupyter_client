@@ -117,8 +117,11 @@ class ThreadedZMQSocketChannel(object):
         Unpacks message, and calls handlers with it.
         """
         assert self.ioloop is not None
-        assert future_msg.done()
-        msg_list = future_msg.result()
+        if isinstance(future_msg, asyncio.Future):
+            assert future_msg.done()
+            msg_list = future_msg.result()
+        else:
+            msg_list = future_msg
         assert self.session is not None
         ident, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)

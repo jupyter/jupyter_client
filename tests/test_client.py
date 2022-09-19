@@ -264,8 +264,8 @@ class TestThreadedKernelClient(TestKernelClient):
     def test_shutdown(self):
         kc = self.kc
         kc.shutdown()
-        kc.shell_channel.msg_recv.wait()
-        reply = kc.shell_channel.last_msg
+        kc.control_channel.msg_recv.wait()
+        reply = kc.control_channel.last_msg
         self._check_reply("shutdown", reply)
 
     def test_shutdown_id(self):
