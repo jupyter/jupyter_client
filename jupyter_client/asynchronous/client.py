@@ -12,13 +12,13 @@ from jupyter_client.client import reqrep
 
 
 def wrapped(meth, channel):
-    def _(self, *args, **kwargs):
+    async def _(self, *args, **kwargs):
         reply = kwargs.pop("reply", False)
         timeout = kwargs.pop("timeout", None)
-        msg_id = meth(self, *args, **kwargs)
+        msg_id = await meth(self, *args, **kwargs)
         if not reply:
             return msg_id
-        return self._async_recv_reply(msg_id, timeout=timeout, channel=channel)
+        return await self._async_recv_reply(msg_id, timeout=timeout, channel=channel)
 
     return _
 

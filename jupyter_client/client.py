@@ -485,7 +485,7 @@ class KernelClient(ConnectionFileMixin):
             allow_stdin = self.allow_stdin
         if allow_stdin and not self.stdin_channel.is_alive():
             raise RuntimeError("stdin channel must be running to allow input")
-        msg_id = self.execute(
+        msg_id = await self._async_execute(
             code,
             silent=silent,
             store_history=store_history,
@@ -829,7 +829,7 @@ class KernelClient(ConnectionFileMixin):
         # Send quit message to kernel. Once we implement kernel-side setattr,
         # this should probably be done that way, but for now this will do.
         msg = self.session.msg("shutdown_request", {"restart": restart})
-        self.control_channel.send(msg)
+        await self.control_channel.send(msg)
         return msg["header"]["msg_id"]
 
     shutdown = run_sync(_async_shutdown)
