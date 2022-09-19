@@ -36,7 +36,6 @@ class _TaskRunner:
         """Synchronously run a coroutine on a background thread."""
         with self.__lock:
             name = f"{threading.current_thread().name} - runner"
-            print('hi', name, coro.__name__)
             if self.__io_loop is None:
                 self.__io_loop = asyncio.new_event_loop()
                 self.__runner_thread = threading.Thread(target=self._runner, daemon=True, name=name)
@@ -46,34 +45,28 @@ class _TaskRunner:
 
 
 _runner_map = {}
-_is_running = {}
 _loop_map = {}
 
 
 def run_sync(coro):
     def wrapped(self, *args, **kwargs):
         name = threading.current_thread().name
-        if name not in _is_running:
-            _is_running[name] = False
-        if _is_running[name] == False:
-            _is_running[name] = True
-            if not name in _loop_map:
-                _loop_map[name] = asyncio.new_event_loop()
-            loop = _loop_map[name]
-            try:
-                result = loop.run_until_complete(coro(self, *args, **kwargs))
-            except Exception as e:
-                raise e
-            finally:
-                _is_running[name] = False
-            return result
-
-        if name not in _runner_map:
-            _runner_map[name] = _TaskRunner()
-        runner = _runner_map[name]
         inner = coro(self, *args, **kwargs)
-        value = runner.run(inner)
-        return value
+        try:
+            # If a loop is currently running in this thread,
+            # use a task runner.
+            asyncio.get_running_loop()
+            if name not in _runner_map:
+                _runner_map[name] = _TaskRunner()
+            return _runner_map[name].run(inner)
+        except RuntimeError:
+            pass
+
+        # Run the loop for this thread.
+        if not name in _loop_map:
+            _loop_map[name] = asyncio.new_event_loop()
+        loop = _loop_map[name]
+        return loop.run_until_complete(inner)
 
     wrapped.__doc__ = coro.__doc__
     return wrapped

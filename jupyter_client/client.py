@@ -485,7 +485,7 @@ class KernelClient(ConnectionFileMixin):
             allow_stdin = self.allow_stdin
         if allow_stdin and not self.stdin_channel.is_alive():
             raise RuntimeError("stdin channel must be running to allow input")
-        msg_id = self.execute(
+        msg_id = await self._async_execute(
             code,
             silent=silent,
             store_history=store_history,
