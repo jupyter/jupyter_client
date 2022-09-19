@@ -63,7 +63,7 @@ def run_sync(coro):
             pass
 
         # Run the loop for this thread.
-        if not name in _loop_map:
+        if name not in _loop_map:
             _loop_map[name] = asyncio.new_event_loop()
         loop = _loop_map[name]
         return loop.run_until_complete(inner)

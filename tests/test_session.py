@@ -12,7 +12,6 @@ import pytest
 import zmq
 from tornado import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
-from zmq.tests import BaseZMQTestCase
 
 from jupyter_client import jsonutil
 from jupyter_client import session as ss

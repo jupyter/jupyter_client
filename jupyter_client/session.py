@@ -56,7 +56,6 @@ from jupyter_client.jsonutil import json_clean
 from jupyter_client.jsonutil import json_default
 from jupyter_client.jsonutil import squash_dates
 from jupyter_client.utils import ensure_async
-from jupyter_client.utils import run_sync
 
 PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
 
@@ -760,7 +759,7 @@ class Session(Configurable):
         track: bool = False,
         header: t.Optional[t.Dict[str, t.Any]] = None,
         metadata: t.Optional[t.Dict[str, t.Any]] = None,
-    ):
+    ) -> t.Tuple:
         if not isinstance(stream, zmq.Socket):
             # ZMQStreams and dummy sockets do not support tracking.
             track = False
@@ -780,7 +779,7 @@ class Session(Configurable):
             )
         if self.check_pid and not os.getpid() == self.pid:
             get_logger().warning("WARNING: attempted to send message from fork\n%s", msg)
-            return None
+            return None, None, None, None, None
         buffers = [] if buffers is None else buffers
         for idx, buf in enumerate(buffers):
             if isinstance(buf, memoryview):
@@ -864,8 +863,10 @@ class Session(Configurable):
         should_track, to_send, msg, copy, buffers = self._pre_send(
             stream, msg_or_type, content, parent, ident, buffers, track, header, metadata
         )
+        if should_track is None:
+            return None
 
-        if should_track:
+        if should_track and stream:
             # only really track when we are doing zero-copy buffers
             tracker = stream.send_multipart(to_send, copy=False, track=True)
         elif stream:
@@ -1105,7 +1106,7 @@ class Session(Configurable):
 
 
 class AsyncSession(Session):
-    async def send(
+    async def send(  # type:ignore[override]
         self,
         stream: Optional[Union[zmq.sugar.socket.Socket, ZMQStream]],
         msg_or_type: t.Union[t.Dict[str, t.Any], str],
@@ -1120,8 +1121,10 @@ class AsyncSession(Session):
         should_track, to_send, msg, copy, buffers = self._pre_send(
             stream, msg_or_type, content, parent, ident, buffers, track, header, metadata
         )
+        if should_track is None:
+            return None
 
-        if should_track:
+        if should_track and stream:
             # only really track when we are doing zero-copy buffers
             tracker = await ensure_async(stream.send_multipart(to_send, copy=False, track=True))
         elif stream:
@@ -1140,7 +1143,7 @@ class AsyncSession(Session):
 
     send.__doc__ = Session.send.__doc__
 
-    async def send_raw(
+    async def send_raw(  # type:ignore[override]
         self,
         stream: zmq.sugar.socket.Socket,
         msg_list: t.List,
@@ -1162,7 +1165,7 @@ class AsyncSession(Session):
 
     send_raw.__doc__ = Session.send_raw.__doc__
 
-    async def recv(
+    async def recv(  # type:ignore[override]
         self,
         socket: zmq.sugar.socket.Socket,
         mode: int = zmq.NOBLOCK,

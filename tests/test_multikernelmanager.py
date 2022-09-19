@@ -2,7 +2,6 @@
 import asyncio
 import concurrent.futures
 import os
-import sys
 import uuid
 from asyncio import ensure_future
 from subprocess import PIPE

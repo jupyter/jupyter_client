@@ -3,22 +3,17 @@ replies.
 """
 import asyncio
 import atexit
-import errno
 import time
 from threading import Event
 from threading import Thread
 from typing import Any
-from typing import Awaitable
 from typing import Dict
-from typing import List
 from typing import Optional
-from typing import Union
 
 import zmq
 from tornado.ioloop import IOLoop
 from traitlets import Instance
 from traitlets import Type
-from zmq import ZMQError
 from zmq.eventloop import zmqstream
 
 from .session import Session
