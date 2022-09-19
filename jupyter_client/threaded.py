@@ -15,10 +15,10 @@ from typing import Optional
 from typing import Union
 
 import zmq
+from tornado.ioloop import IOLoop
 from traitlets import Instance
 from traitlets import Type
 from zmq import ZMQError
-from zmq.eventloop import ioloop
 from zmq.eventloop import zmqstream
 
 from .session import Session
@@ -44,7 +44,7 @@ class ThreadedZMQSocketChannel(object):
         self,
         socket: Optional[zmq.Socket],
         session: Optional[Session],
-        loop: Optional[zmq.eventloop.ioloop.ZMQIOLoop],
+        loop: Optional[IOLoop],
     ) -> None:
         """Create a channel.
 
@@ -111,18 +111,14 @@ class ThreadedZMQSocketChannel(object):
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)
 
-    async def __get_msg(self, msg: Awaitable) -> Union[List[bytes], List[zmq.Message]]:
-        return await msg
-
-    _get_msg = run_sync(__get_msg)
-
-    def _handle_recv(self, future_msg: Awaitable) -> None:
+    def _handle_recv(self, future_msg: asyncio.Future) -> None:
         """Callback for stream.on_recv.
 
         Unpacks message, and calls handlers with it.
         """
         assert self.ioloop is not None
-        msg_list = self._get_msg(future_msg)
+        assert future_msg.done()
+        msg_list = future_msg.result()
         assert self.session is not None
         ident, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)
@@ -213,24 +209,15 @@ class IOLoopThread(Thread):
         """Run my loop, ignoring EINTR events in the poller"""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        self.ioloop = ioloop.IOLoop()
-        self.ioloop._asyncio_event_loop = loop
+        loop.run_until_complete(self._async_run())
+
+    async def _async_run(self):
+        self.ioloop = IOLoop.current()
         # signal that self.ioloop is defined
         self._start_event.set()
         while True:
-            try:
-                self.ioloop.start()
-            except ZMQError as e:
-                if e.errno == errno.EINTR:
-                    continue
-                else:
-                    raise
-            except Exception:
-                if self._exiting:
-                    break
-                else:
-                    raise
-            else:
+            await asyncio.sleep(1)
+            if self._exiting:
                 break
 
     def stop(self) -> None:
@@ -240,8 +227,7 @@ class IOLoopThread(Thread):
         terminates. :class:`RuntimeError` will be raised if
         :meth:`~threading.Thread.start` is called again.
         """
-        if self.ioloop is not None:
-            self.ioloop.add_callback(self.ioloop.stop)
+        self._exiting = True
         self.join()
         self.close()
         self.ioloop = None

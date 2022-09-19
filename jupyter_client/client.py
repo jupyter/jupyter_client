@@ -281,7 +281,7 @@ class KernelClient(ConnectionFileMixin):
         """
         msg_type = msg["header"]["msg_type"]
         if msg_type in ("display_data", "execute_result", "error"):
-            await session.send(socket, msg_type, msg["content"], parent=parent_header)
+            await ensure_async(session.send(socket, msg_type, msg["content"], parent=parent_header))
         else:
             self._output_hook_default(msg)
 
@@ -629,7 +629,7 @@ class KernelClient(ConnectionFileMixin):
             stop_on_error=stop_on_error,
         )
         msg = self.session.msg("execute_request", content)
-        await self.shell_channel.send(msg)
+        await ensure_async(self.shell_channel.send(msg))
         return msg["header"]["msg_id"]
 
     execute = run_sync(_async_execute)
@@ -654,7 +654,7 @@ class KernelClient(ConnectionFileMixin):
             cursor_pos = len(code)
         content = dict(code=code, cursor_pos=cursor_pos)
         msg = self.session.msg("complete_request", content)
-        await self.shell_channel.send(msg)
+        await ensure_async(self.shell_channel.send(msg))
         return msg["header"]["msg_id"]
 
     complete = run_sync(_async_complete)
@@ -689,7 +689,7 @@ class KernelClient(ConnectionFileMixin):
             detail_level=detail_level,
         )
         msg = self.session.msg("inspect_request", content)
-        await self.shell_channel.send(msg)
+        await ensure_async(self.shell_channel.send(msg))
         return msg["header"]["msg_id"]
 
     inspect = run_sync(_async_inspect)
@@ -737,7 +737,7 @@ class KernelClient(ConnectionFileMixin):
             kwargs.setdefault("start", 0)
         content = dict(raw=raw, output=output, hist_access_type=hist_access_type, **kwargs)
         msg = self.session.msg("history_request", content)
-        await self.shell_channel.send(msg)
+        await ensure_async(self.shell_channel.send(msg))
         return msg["header"]["msg_id"]
 
     history = run_sync(_async_history)
@@ -750,7 +750,7 @@ class KernelClient(ConnectionFileMixin):
         The msg_id of the message sent
         """
         msg = self.session.msg("kernel_info_request")
-        await self.shell_channel.send(msg)
+        await ensure_async(self.shell_channel.send(msg))
         return msg["header"]["msg_id"]
 
     kernel_info = run_sync(_async_kernel_info)
@@ -767,7 +767,7 @@ class KernelClient(ConnectionFileMixin):
         else:
             content = dict(target_name=target_name)
         msg = self.session.msg("comm_info_request", content)
-        await self.shell_channel.send(msg)
+        await ensure_async(self.shell_channel.send(msg))
         return msg["header"]["msg_id"]
 
     comm_info = run_sync(_async_comm_info)
@@ -790,7 +790,7 @@ class KernelClient(ConnectionFileMixin):
         The ID of the message sent.
         """
         msg = self.session.msg("is_complete_request", {"code": code})
-        await self.shell_channel.send(msg)
+        await ensure_async(self.shell_channel.send(msg))
         return msg["header"]["msg_id"]
 
     is_complete = run_sync(_async_is_complete)
@@ -807,7 +807,7 @@ class KernelClient(ConnectionFileMixin):
         """
         content = dict(value=string)
         msg = self.session.msg("input_reply", content)
-        await self.stdin_channel.send(msg)
+        await ensure_async(self.stdin_channel.send(msg))
 
     input = run_sync(_async_input)
 
@@ -829,7 +829,7 @@ class KernelClient(ConnectionFileMixin):
         # Send quit message to kernel. Once we implement kernel-side setattr,
         # this should probably be done that way, but for now this will do.
         msg = self.session.msg("shutdown_request", {"restart": restart})
-        await self.control_channel.send(msg)
+        await ensure_async(self.control_channel.send(msg))
         return msg["header"]["msg_id"]
 
     shutdown = run_sync(_async_shutdown)
