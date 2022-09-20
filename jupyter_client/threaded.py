@@ -8,6 +8,7 @@ from threading import Event
 from threading import Thread
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 
 import zmq
@@ -106,17 +107,12 @@ class ThreadedZMQSocketChannel(object):
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)
 
-    def _handle_recv(self, future_msg: asyncio.Future) -> None:
+    def _handle_recv(self, msg_list: List) -> None:
         """Callback for stream.on_recv.
 
         Unpacks message, and calls handlers with it.
         """
         assert self.ioloop is not None
-        if isinstance(future_msg, asyncio.Future):
-            assert future_msg.done()
-            msg_list = future_msg.result()
-        else:
-            msg_list = future_msg
         assert self.session is not None
         ident, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)
