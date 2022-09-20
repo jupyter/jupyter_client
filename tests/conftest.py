@@ -1,6 +1,7 @@
 import asyncio
 import os
 import sys
+import warnings
 
 import pytest
 from jupyter_core import paths
@@ -36,6 +37,11 @@ if resource is not None:
 
 if os.name == "nt" and sys.version_info >= (3, 7):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
+if os.name == "nt":
+    # Ignore unclosed sockets on Windows.
+    warnings.filterwarnings("ignore", "ResourceWarning")
 
 
 @pytest.fixture

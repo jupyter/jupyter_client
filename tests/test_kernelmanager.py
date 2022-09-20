@@ -26,7 +26,7 @@ from jupyter_client.manager import start_new_kernel
 
 pjoin = os.path.join
 
-TIMEOUT = 30
+TIMEOUT = 60
 
 
 @pytest.fixture(params=["tcp", "ipc"])
