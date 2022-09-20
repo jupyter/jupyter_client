@@ -2,6 +2,7 @@
 import asyncio
 import concurrent.futures
 import os
+import sys
 import uuid
 from asyncio import ensure_future
 from subprocess import PIPE
@@ -173,20 +174,20 @@ class TestKernelManager(TestCase):
             future1.result()
             future2.result()
 
-    # @pytest.mark.skipif(
-    #     (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
-    #     reason='"Bad file descriptor" error',
-    # )
-    # def test_start_parallel_process_kernels(self):
-    #     self.test_tcp_lifecycle()
+    @pytest.mark.skipif(
+        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
+        reason='"Bad file descriptor" error',
+    )
+    def test_start_parallel_process_kernels(self):
+        self.test_tcp_lifecycle()
 
-    #     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
-    #         future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
-    #         with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
-    #             # Windows tests needs this target to be picklable:
-    #             future2 = process_executor.submit(self.test_tcp_lifecycle)
-    #             future2.result()
-    #         future1.result()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
+            future1 = thread_executor.submit(self.tcp_lifecycle_with_loop)
+            with concurrent.futures.ProcessPoolExecutor(max_workers=1) as process_executor:
+                # Windows tests needs this target to be picklable:
+                future2 = process_executor.submit(self.test_tcp_lifecycle)
+                future2.result()
+            future1.result()
 
     def test_subclass_callables(self):
         km = self._get_tcp_km_sub()
@@ -240,6 +241,38 @@ class TestKernelManager(TestCase):
         assert km.call_count("cleanup_resources") == 0
 
         assert kid not in km, f"{kid} not in {km}"
+
+    def test_stream_on_recv(self):
+        mkm = self._get_tcp_km()
+        kid = mkm.start_kernel(stdout=PIPE, stderr=PIPE)
+        stream = mkm.connect_iopub(kid)
+
+        km = mkm.get_kernel(kid)
+        client = km.client()
+        session = km.session
+        called = False
+
+        def record_activity(msg_list):
+            nonlocal called
+            """Record an IOPub message arriving from a kernel"""
+            idents, fed_msg_list = session.feed_identities(msg_list)
+            msg = session.deserialize(fed_msg_list, content=False)
+
+            msg_type = msg["header"]["msg_type"]
+            stream.send(msg)
+            called = True
+
+        stream.on_recv(record_activity)
+        while True:
+            client.kernel_info()
+            import time
+
+            time.sleep(0.1)
+            if called:
+                break
+
+        client.stop_channels()
+        km.shutdown_kernel(now=True)
 
 
 class TestAsyncKernelManager(AsyncTestCase):
@@ -593,3 +626,34 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert kernel_id in km.list_kernel_ids()
         await ensure_future(km.shutdown_kernel(kernel_id))
         assert kernel_id not in km.list_kernel_ids()
+
+    @gen_test
+    async def test_stream_on_recv(self):
+        mkm = self._get_tcp_km()
+        kid = await mkm.start_kernel(stdout=PIPE, stderr=PIPE)
+        stream = mkm.connect_iopub(kid)
+
+        km = mkm.get_kernel(kid)
+        client = km.client()
+        session = km.session
+        called = False
+
+        def record_activity(msg_list):
+            nonlocal called
+            """Record an IOPub message arriving from a kernel"""
+            idents, fed_msg_list = session.feed_identities(msg_list)
+            msg = session.deserialize(fed_msg_list, content=False)
+
+            msg_type = msg["header"]["msg_type"]
+            stream.send(msg)
+            called = True
+
+        stream.on_recv(record_activity)
+        while True:
+            await client.kernel_info()
+            if called:
+                break
+            await asyncio.sleep(0.1)
+
+        client.stop_channels()
+        await km.shutdown_kernel(now=True)
