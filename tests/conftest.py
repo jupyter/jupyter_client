@@ -41,7 +41,7 @@ if os.name == "nt" and sys.version_info >= (3, 7):
 
 if os.name == "nt":
     # Ignore unclosed sockets on Windows.
-    warnings.filterwarnings("ignore", "ResourceWarning")
+    warnings.filterwarnings("ignore", category=ResourceWarning)
 
 
 @pytest.fixture
