@@ -266,7 +266,7 @@ class ZMQSocketChannel(object):
         pass
 
 
-class AsyncZMQSocketChannel(object):
+class AsyncZMQSocketChannel(ZMQSocketChannel):
     """A ZMQ socket in an async API"""
 
     def __init__(self, socket: zmq.asyncio.Socket, session: Session, loop: t.Any = None) -> None:
@@ -281,15 +281,14 @@ class AsyncZMQSocketChannel(object):
         loop
             Unused here, for other implementations
         """
-        super().__init__()
-
-        self.socket: t.Optional[zmq.asyncio.Socket] = socket
-        self.session = session
+        if not isinstance(socket, zmq.asyncio.Socket):
+            raise ValueError('Socket must be asyncio')
+        super().__init__(socket, session)
 
     async def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:
         assert self.socket is not None
-        msg = await ensure_async(self.socket.recv_multipart(**kwargs))
-        ident, smsg = self.session.feed_identities(msg)
+        msg = await self.socket.recv_multipart(**kwargs)
+        _, smsg = self.session.feed_identities(msg)
         return self.session.deserialize(smsg)
 
     async def get_msg(self, timeout: t.Optional[float] = None) -> t.Dict[str, t.Any]:
@@ -297,7 +296,7 @@ class AsyncZMQSocketChannel(object):
         assert self.socket is not None
         if timeout is not None:
             timeout *= 1000  # seconds to ms
-        ready = await ensure_async(self.socket.poll(timeout))
+        ready = await self.socket.poll(timeout)
         if ready:
             res = await self._recv()
             return res
@@ -318,26 +317,3 @@ class AsyncZMQSocketChannel(object):
         """Is there a message that has been received?"""
         assert self.socket is not None
         return bool(await self.socket.poll(timeout=0))
-
-    def close(self) -> None:
-        if self.socket is not None:
-            try:
-                self.socket.close(linger=0)
-            except Exception:
-                pass
-            self.socket = None
-
-    stop = close
-
-    def is_alive(self) -> bool:
-        return self.socket is not None
-
-    async def send(self, msg: t.Dict[str, t.Any]) -> None:
-        """Pass a message to the ZMQ socket to send"""
-        assert self.socket is not None
-        print('\n\nstart send2')
-        await ensure_async(self.session.send(self.socket, msg))
-        print('end send2\n\n')
-
-    def start(self) -> None:
-        pass

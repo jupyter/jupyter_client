@@ -289,12 +289,12 @@ class TestSession:
         ZMQStream(a, io_loop=loop)
         from jupyter_client.utils import ensure_async
 
-        msg = await ensure_async(s.send(a, "hello", track=False))
+        msg = s.send(a, "hello", track=False)
         self.assertTrue(msg["tracker"] is ss.DONE)
-        msg = await ensure_async(s.send(a, "hello", track=True))
+        msg = s.send(a, "hello", track=True)
         self.assertTrue(isinstance(msg["tracker"], zmq.MessageTracker))
         M = zmq.Message(b"hi there", track=True)
-        msg = await ensure_async(s.send(a, "hello", buffers=[M], track=True))
+        msg = s.send(a, "hello", buffers=[M], track=True)
         t = msg["tracker"]
         self.assertTrue(isinstance(t, zmq.MessageTracker))
         with pytest.raises(zmq.NotDone):

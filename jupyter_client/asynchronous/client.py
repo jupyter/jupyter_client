@@ -1,6 +1,8 @@
 """Implements an async kernel client"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import asyncio
+
 import zmq.asyncio
 from traitlets import Instance
 from traitlets import Type
@@ -12,13 +14,15 @@ from jupyter_client.client import reqrep
 
 
 def wrapped(meth, channel):
-    async def _(self, *args, **kwargs):
+    def _(self, *args, **kwargs):
         reply = kwargs.pop("reply", False)
         timeout = kwargs.pop("timeout", None)
-        msg_id = await meth(self, *args, **kwargs)
+        msg_id = meth(self, *args, **kwargs)
+        fut = asyncio.Future()
+        fut.set_result(msg_id)
         if not reply:
-            return msg_id
-        return await self._async_recv_reply(msg_id, timeout=timeout, channel=channel)
+            return fut
+        return self._recv_reply(msg_id, timeout=timeout, channel=channel)
 
     return _
 
@@ -57,17 +61,16 @@ class AsyncKernelClient(KernelClient):
     _recv_reply = KernelClient._async_recv_reply
 
     # replies come on the shell channel
-    execute = reqrep(wrapped, KernelClient._async_execute)
-    history = reqrep(wrapped, KernelClient._async_history)
-    complete = reqrep(wrapped, KernelClient._async_complete)
-    is_complete = reqrep(wrapped, KernelClient._async_is_complete)
-    inspect = reqrep(wrapped, KernelClient._async_inspect)
-    kernel_info = reqrep(wrapped, KernelClient._async_kernel_info)
-    comm_info = reqrep(wrapped, KernelClient._async_comm_info)
+    execute = reqrep(wrapped, KernelClient.execute)
+    history = reqrep(wrapped, KernelClient.history)
+    complete = reqrep(wrapped, KernelClient.complete)
+    is_complete = reqrep(wrapped, KernelClient.is_complete)
+    inspect = reqrep(wrapped, KernelClient.inspect)
+    kernel_info = reqrep(wrapped, KernelClient.kernel_info)
+    comm_info = reqrep(wrapped, KernelClient.comm_info)
 
-    input = KernelClient._async_input
     is_alive = KernelClient._async_is_alive
     execute_interactive = KernelClient._async_execute_interactive
 
     # replies come on the control channel
-    shutdown = reqrep(wrapped, KernelClient._async_shutdown, channel="control")
+    shutdown = reqrep(wrapped, KernelClient.shutdown, channel="control")

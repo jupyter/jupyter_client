@@ -424,7 +424,7 @@ class KernelManager(ConnectionFileMixin):
         msg = self.session.msg("shutdown_request", content=content)
         # ensure control socket is connected
         self._connect_control_socket()
-        await ensure_async(self.session.send(self._control_socket, msg))
+        self.session.send(self._control_socket, msg)
         assert self.provisioner is not None
         await self.provisioner.shutdown_requested(restart=restart)
         self._shutdown_status = _ShutdownStatus.ShutdownRequest
@@ -629,7 +629,7 @@ class KernelManager(ConnectionFileMixin):
             elif interrupt_mode == "message":
                 msg = self.session.msg("interrupt_request", content={})
                 self._connect_control_socket()
-                await ensure_async(self.session.send(self._control_socket, msg))
+                self.session.send(self._control_socket, msg)
         else:
             raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
         self._emit(action="interrupt")
