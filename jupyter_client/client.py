@@ -23,7 +23,6 @@ from .connect import ConnectionFileMixin
 from .session import Session
 from jupyter_client.channels import major_protocol_version
 from jupyter_client.utils import ensure_async
-from jupyter_client.utils import run_sync
 
 # some utilities to validate message structure, these might get moved elsewhere
 # if they prove to have more generic utility
@@ -485,13 +484,15 @@ class KernelClient(ConnectionFileMixin):
             allow_stdin = self.allow_stdin
         if allow_stdin and not self.stdin_channel.is_alive():
             raise RuntimeError("stdin channel must be running to allow input")
-        msg_id = self.execute(
-            code,
-            silent=silent,
-            store_history=store_history,
-            user_expressions=user_expressions,
-            allow_stdin=allow_stdin,
-            stop_on_error=stop_on_error,
+        msg_id = await ensure_async(
+            self.execute(
+                code,
+                silent=silent,
+                store_history=store_history,
+                user_expressions=user_expressions,
+                allow_stdin=allow_stdin,
+                stop_on_error=stop_on_error,
+            )
         )
         if stdin_hook is None:
             stdin_hook = self._stdin_hook_default

@@ -18,7 +18,7 @@ def wrapped(meth, channel):
         reply = kwargs.pop("reply", False)
         timeout = kwargs.pop("timeout", None)
         msg_id = meth(self, *args, **kwargs)
-        fut = asyncio.Future()
+        fut: asyncio.Future = asyncio.Future()
         fut.set_result(msg_id)
         if not reply:
             return fut

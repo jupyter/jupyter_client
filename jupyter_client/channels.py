@@ -269,6 +269,8 @@ class ZMQSocketChannel(object):
 class AsyncZMQSocketChannel(ZMQSocketChannel):
     """A ZMQ socket in an async API"""
 
+    socket: zmq.asyncio.Socket
+
     def __init__(self, socket: zmq.asyncio.Socket, session: Session, loop: t.Any = None) -> None:
         """Create a channel.
 
@@ -285,13 +287,15 @@ class AsyncZMQSocketChannel(ZMQSocketChannel):
             raise ValueError('Socket must be asyncio')
         super().__init__(socket, session)
 
-    async def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:
+    async def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:  # type:ignore[override]
         assert self.socket is not None
         msg = await self.socket.recv_multipart(**kwargs)
         _, smsg = self.session.feed_identities(msg)
         return self.session.deserialize(smsg)
 
-    async def get_msg(self, timeout: t.Optional[float] = None) -> t.Dict[str, t.Any]:
+    async def get_msg(  # type:ignore[override]
+        self, timeout: t.Optional[float] = None
+    ) -> t.Dict[str, t.Any]:
         """Gets a message if there is one that is ready."""
         assert self.socket is not None
         if timeout is not None:
@@ -303,7 +307,7 @@ class AsyncZMQSocketChannel(ZMQSocketChannel):
         else:
             raise Empty
 
-    async def get_msgs(self) -> t.List[t.Dict[str, t.Any]]:
+    async def get_msgs(self) -> t.List[t.Dict[str, t.Any]]:  # type:ignore[override]
         """Get all messages that are currently ready."""
         msgs = []
         while True:
@@ -313,7 +317,7 @@ class AsyncZMQSocketChannel(ZMQSocketChannel):
                 break
         return msgs
 
-    async def msg_ready(self) -> bool:
+    async def msg_ready(self) -> bool:  # type:ignore[override]
         """Is there a message that has been received?"""
         assert self.socket is not None
         return bool(await self.socket.poll(timeout=0))

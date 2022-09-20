@@ -32,7 +32,6 @@ from .connect import ConnectionFileMixin
 from .managerabc import KernelManagerABC
 from .provisioning import KernelProvisionerBase
 from .provisioning import KernelProvisionerFactory as KPF
-from .utils import ensure_async
 from .utils import run_sync
 from jupyter_client import DEFAULT_EVENTS_SCHEMA_PATH
 from jupyter_client import JUPYTER_CLIENT_EVENTS_URI

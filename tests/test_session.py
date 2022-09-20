@@ -287,7 +287,6 @@ class TestSession:
         s.copy_threshold = 1
         loop = ioloop.IOLoop(make_current=False)
         ZMQStream(a, io_loop=loop)
-        from jupyter_client.utils import ensure_async
 
         msg = s.send(a, "hello", track=False)
         self.assertTrue(msg["tracker"] is ss.DONE)
