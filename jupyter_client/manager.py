@@ -629,7 +629,7 @@ class KernelManager(ConnectionFileMixin):
             elif interrupt_mode == "message":
                 msg = self.session.msg("interrupt_request", content={})
                 self._connect_control_socket()
-                await self.session.send(self._control_socket, msg)
+                await ensure_async(self.session.send(self._control_socket, msg))
         else:
             raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
         self._emit(action="interrupt")
@@ -673,14 +673,6 @@ class KernelManager(ConnectionFileMixin):
 
 
 class AsyncKernelManager(KernelManager):
-
-    # The Session to use for communication with the kernel.
-    session = Instance("jupyter_client.session.AsyncSession")
-
-    def _session_default(self):
-        from jupyter_client.session import AsyncSession
-
-        return AsyncSession(parent=self)
 
     # the class to create with our `client` method
     client_class: DottedObjectName = DottedObjectName(

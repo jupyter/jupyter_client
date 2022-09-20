@@ -30,14 +30,6 @@ class AsyncKernelClient(KernelClient):
     raising :exc:`queue.Empty` if no message arrives within ``timeout`` seconds.
     """
 
-    # The Session to use for communication with the kernel.
-    session = Instance("jupyter_client.session.AsyncSession")
-
-    def _session_default(self):
-        from jupyter_client.session import AsyncSession
-
-        return AsyncSession(parent=self)
-
     context = Instance(zmq.asyncio.Context)
 
     def _context_default(self) -> zmq.asyncio.Context:

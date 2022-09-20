@@ -7,6 +7,7 @@ import zmq
 from tornado import ioloop
 from traitlets import Instance
 from traitlets import Type
+from zmq.eventloop.zmqstream import gen_log
 from zmq.eventloop.zmqstream import ZMQStream
 
 from .restarter import AsyncIOLoopKernelRestarter
@@ -15,13 +16,15 @@ from jupyter_client.manager import AsyncKernelManager
 from jupyter_client.manager import KernelManager
 
 
-class AsyncZMQStream(ZMQStream):
+class _ZMQStream(ZMQStream):
     def _handle_recv(self):
         """Handle a recv event."""
         if self._flushed:
             return
         try:
             msg = self.socket.recv_multipart(zmq.NOBLOCK, copy=self._recv_copy)
+            if isinstance(msg, asyncio.Future):
+                msg = msg.result()
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
                 # state changed since poll event
@@ -30,24 +33,34 @@ class AsyncZMQStream(ZMQStream):
                 raise
         else:
             if self._recv_callback:
-                if isinstance(msg, asyncio.Future):
-                    msg = msg.result()
                 callback = self._recv_callback
                 self._run_callback(callback, msg)
+
+    def _handle_send(self):
+        """Handle a send event."""
+        if self._flushed:
+            return
+        if not self.sending():
+            gen_log.error("Shouldn't have handled a send event")
+            return
+
+        msg, kwargs = self._send_queue.get()
+        try:
+            status = self.socket.send_multipart(msg, **kwargs)
+            if isinstance(status, asyncio.Future):
+                status = status.result()
+        except zmq.ZMQError as e:
+            gen_log.error("SEND Error: %s", e)
+            status = e
+        if self._send_callback:
+            callback = self._send_callback
+            self._run_callback(callback, msg, status)
 
 
 def as_zmqstream(f):
     def wrapped(self, *args, **kwargs):
         socket = f(self, *args, **kwargs)
-        return ZMQStream(socket, self.loop)
-
-    return wrapped
-
-
-def as_async_zmqstream(f):
-    def wrapped(self, *args, **kwargs):
-        socket = f(self, *args, **kwargs)
-        return AsyncZMQStream(socket, self.loop)
+        return _ZMQStream(socket, self.loop)
 
     return wrapped
 
@@ -123,8 +136,8 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
             if self._restarter is not None:
                 self._restarter.stop()
 
-    connect_shell = as_async_zmqstream(AsyncKernelManager.connect_shell)
-    connect_control = as_async_zmqstream(AsyncKernelManager.connect_control)
-    connect_iopub = as_async_zmqstream(AsyncKernelManager.connect_iopub)
-    connect_stdin = as_async_zmqstream(AsyncKernelManager.connect_stdin)
-    connect_hb = as_async_zmqstream(AsyncKernelManager.connect_hb)
+    connect_shell = as_zmqstream(AsyncKernelManager.connect_shell)
+    connect_control = as_zmqstream(AsyncKernelManager.connect_control)
+    connect_iopub = as_zmqstream(AsyncKernelManager.connect_iopub)
+    connect_stdin = as_zmqstream(AsyncKernelManager.connect_stdin)
+    connect_hb = as_zmqstream(AsyncKernelManager.connect_hb)

@@ -37,11 +37,6 @@ def session():
     return ss.Session()
 
 
-@pytest.fixture()
-def async_session():
-    return ss.AsyncSession()
-
-
 @pytest.mark.usefixtures("no_copy_threshold")
 class TestSession:
     def assertEqual(self, a, b):
@@ -158,8 +153,7 @@ class TestSession:
         B.close()
         ctx.term()
 
-    async def test_send(self, async_session):
-        session = async_session
+    async def test_send(self, session):
         ctx = zmq.asyncio.Context()
         A = ctx.socket(zmq.PAIR)
         B = ctx.socket(zmq.PAIR)
@@ -167,7 +161,7 @@ class TestSession:
         B.connect("inproc://test")
 
         msg = session.msg("execute", content=dict(a=10))
-        await session.send(A, msg, ident=b"foo", buffers=[b"bar"])
+        session.send(A, msg, ident=b"foo", buffers=[b"bar"])
 
         ident, msg_list = session.feed_identities(await B.recv_multipart())
         new_msg = session.deserialize(msg_list)
@@ -186,7 +180,7 @@ class TestSession:
         parent = msg["parent_header"]
         metadata = msg["metadata"]
         header["msg_type"]
-        await session.send(
+        session.send(
             A,
             None,
             content=content,
@@ -209,8 +203,8 @@ class TestSession:
 
         header["msg_id"] = session.msg_id
 
-        await session.send(A, msg, ident=b"foo", buffers=[b"bar"])
-        ident, new_msg = await session.recv(B)
+        session.send(A, msg, ident=b"foo", buffers=[b"bar"])
+        ident, new_msg = session.recv(B)
         self.assertEqual(ident[0], b"foo")
         self.assertEqual(new_msg["msg_id"], header["msg_id"])
         self.assertEqual(new_msg["msg_type"], msg["msg_type"])
@@ -222,12 +216,12 @@ class TestSession:
 
         # buffers must support the buffer protocol
         with pytest.raises(TypeError):
-            await session.send(A, msg, ident=b"foo", buffers=[1])
+            session.send(A, msg, ident=b"foo", buffers=[1])
 
         # buffers must be contiguous
         buf = memoryview(os.urandom(16))
         with pytest.raises(ValueError):
-            await session.send(A, msg, ident=b"foo", buffers=[buf[::2]])
+            session.send(A, msg, ident=b"foo", buffers=[buf[::2]])
 
         A.close()
         B.close()
@@ -282,9 +276,8 @@ class TestSession:
         ctx.term()
 
     @pytest.mark.skipif(platform.python_implementation() == 'PyPy', reason='Test fails on PyPy')
-    async def test_tracking(self, async_session):
+    async def test_tracking(self, session):
         """test tracking messages"""
-        session = async_session
         ctx = zmq.asyncio.Context()
         a = ctx.socket(zmq.PAIR)
         b = ctx.socket(zmq.PAIR)
@@ -294,12 +287,14 @@ class TestSession:
         s.copy_threshold = 1
         loop = ioloop.IOLoop(make_current=False)
         ZMQStream(a, io_loop=loop)
-        msg = await s.send(a, "hello", track=False)
+        from jupyter_client.utils import ensure_async
+
+        msg = await ensure_async(s.send(a, "hello", track=False))
         self.assertTrue(msg["tracker"] is ss.DONE)
-        msg = await s.send(a, "hello", track=True)
+        msg = await ensure_async(s.send(a, "hello", track=True))
         self.assertTrue(isinstance(msg["tracker"], zmq.MessageTracker))
         M = zmq.Message(b"hi there", track=True)
-        msg = await s.send(a, "hello", buffers=[M], track=True)
+        msg = await ensure_async(s.send(a, "hello", buffers=[M], track=True))
         t = msg["tracker"]
         self.assertTrue(isinstance(t, zmq.MessageTracker))
         with pytest.raises(zmq.NotDone):
@@ -468,9 +463,8 @@ class TestSession:
         B.close()
         ctx.term()
 
-    async def test_send_raw(self, async_session):
-        session = async_session
-        ctx = zmq.Context()
+    async def test_send_raw(self, session):
+        ctx = zmq.asyncio.Context()
         A = ctx.socket(zmq.PAIR)
         B = ctx.socket(zmq.PAIR)
         A.bind("inproc://test")
@@ -480,9 +474,9 @@ class TestSession:
         msg_list = [
             session.pack(msg[part]) for part in ["header", "parent_header", "metadata", "content"]
         ]
-        await session.send_raw(A, msg_list, ident=b"foo")
+        session.send_raw(A, msg_list, ident=b"foo")
 
-        ident, new_msg_list = session.feed_identities(B.recv_multipart())
+        ident, new_msg_list = session.feed_identities(B.recv_multipart().result())
         new_msg = session.deserialize(new_msg_list)
         self.assertEqual(ident[0], b"foo")
         self.assertEqual(new_msg["msg_type"], msg["msg_type"])

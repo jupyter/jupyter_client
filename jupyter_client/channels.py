@@ -12,7 +12,6 @@ from threading import Thread
 import zmq.asyncio
 
 from .channelsabc import HBChannelABC
-from .session import AsyncSession
 from .session import Session
 from jupyter_client import protocol_version_info
 from jupyter_client.utils import ensure_async
@@ -270,16 +269,14 @@ class ZMQSocketChannel(object):
 class AsyncZMQSocketChannel(object):
     """A ZMQ socket in an async API"""
 
-    def __init__(
-        self, socket: zmq.asyncio.Socket, session: AsyncSession, loop: t.Any = None
-    ) -> None:
+    def __init__(self, socket: zmq.asyncio.Socket, session: Session, loop: t.Any = None) -> None:
         """Create a channel.
 
         Parameters
         ----------
         socket : :class:`zmq.asyncio.Socket`
             The ZMQ socket to use.
-        session : :class:`session.ASyncSession`
+        session : :class:`session.Session`
             The session to use.
         loop
             Unused here, for other implementations
@@ -338,7 +335,9 @@ class AsyncZMQSocketChannel(object):
     async def send(self, msg: t.Dict[str, t.Any]) -> None:
         """Pass a message to the ZMQ socket to send"""
         assert self.socket is not None
+        print('\n\nstart send2')
         await ensure_async(self.session.send(self.socket, msg))
+        print('end send2\n\n')
 
     def start(self) -> None:
         pass
