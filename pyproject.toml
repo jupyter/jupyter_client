@@ -123,8 +123,6 @@ asyncio_mode = "auto"
 filterwarnings= [
   # Fail on warnings
   "error",
-  # This is still causing issues on Windows
-  "ignore:unclosed <socket.socket:ResourceWarning",
 ]
 
 [tool.mypy]

@@ -76,7 +76,8 @@ jobs:
       - name: Run the tests on pypy and windows
         if: ${{ startsWith(matrix.python-version, 'pypy') || startsWith(matrix.os, 'windows') }}
         run: |
-          python -m pytest -vv || python -m pytest -vv --lf
+          # Ignore warnings on Windows and PyPI
+          python -m pytest -vv -W ignore || python -m pytest -vv -W ignore --lf
 
       - name: Code coverage
         run: codecov

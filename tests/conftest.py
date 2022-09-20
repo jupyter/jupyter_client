@@ -1,7 +1,6 @@
 import asyncio
 import os
 import sys
-import warnings
 
 import pytest
 from jupyter_core import paths
