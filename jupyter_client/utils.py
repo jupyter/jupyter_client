@@ -49,9 +49,9 @@ _loop_map = {}
 
 
 def run_sync(coro):
-    def wrapped(self, *args, **kwargs):
+    def wrapped(*args, **kwargs):
         name = threading.current_thread().name
-        inner = coro(self, *args, **kwargs)
+        inner = coro(*args, **kwargs)
         try:
             # If a loop is currently running in this thread,
             # use a task runner.
