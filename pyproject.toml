@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling>=0.25"]
+requires = ["hatchling>=1.5"]
 build-backend = "hatchling.build"
 
 [project]
 name = "jupyter_client"
-version = "7.3.5"
+dyanmic = ["version"]
 description = "Jupyter protocol implementation and client libraries"
 keywords = [ "Interactive", "Interpreter", "Shell", "Web",]
 classifiers = [
@@ -78,6 +78,9 @@ jupyter-kernel = "jupyter_client.kernelapp:main"
 [project.entry-points."jupyter_client.kernel_provisioners"]
 local-provisioner = "jupyter_client.provisioning:LocalProvisioner"
 
+[tool.hatch.version]
+path = "jupyter_client/_version.py"
+
 [tool.black]
 line-length = 100
 skip-string-normalization = true
@@ -90,26 +93,6 @@ target_version = [
 
 [tool.jupyter-releaser]
 skip = ["check-links"]
-
-[tool.check-manifest]
-ignore = [".mailmap", "*.yml", "*.yaml"]
-
-[tool.tbump.version]
-current = "7.3.5"
-regex = '''
-  (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)
-  ((?P<channel>a|b|rc|.dev)(?P<release>\d+))?
-'''
-
-[tool.tbump.git]
-message_template = "Bump to {new_version}"
-tag_template = "v{new_version}"
-
-[[tool.tbump.file]]
-src = "jupyter_client/_version.py"
-
-[[tool.tbump.file]]
-src = "pyproject.toml"
 
 [tool.pytest.ini_options]
 addopts = "-raXs --durations 10 --color=yes --doctest-modules"
