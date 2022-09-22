@@ -1,60 +1,16 @@
 """A kernel manager with a tornado IOLoop"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import asyncio
-
 import zmq
 from tornado import ioloop
 from traitlets import Instance
 from traitlets import Type
-from zmq.eventloop.zmqstream import gen_log
 from zmq.eventloop.zmqstream import ZMQStream
 
 from .restarter import AsyncIOLoopKernelRestarter
 from .restarter import IOLoopKernelRestarter
 from jupyter_client.manager import AsyncKernelManager
 from jupyter_client.manager import KernelManager
-
-
-class _ZMQStream(ZMQStream):
-    def _handle_recv(self):
-        """Handle a recv event."""
-        if self._flushed:
-            return
-        try:
-            msg = self.socket.recv_multipart(zmq.NOBLOCK, copy=self._recv_copy)
-            if isinstance(msg, asyncio.Future):
-                msg = msg.result()
-        except zmq.ZMQError as e:
-            if e.errno == zmq.EAGAIN:
-                # state changed since poll event
-                pass
-            else:
-                raise
-        else:
-            if self._recv_callback:
-                callback = self._recv_callback
-                self._run_callback(callback, msg)
-
-    def _handle_send(self):
-        """Handle a send event."""
-        if self._flushed:
-            return
-        if not self.sending():
-            gen_log.error("Shouldn't have handled a send event")
-            return
-
-        msg, kwargs = self._send_queue.get()
-        try:
-            status = self.socket.send_multipart(msg, **kwargs)
-            if isinstance(status, asyncio.Future):
-                status = status.result()
-        except zmq.ZMQError as e:
-            gen_log.error("SEND Error: %s", e)
-            status = e
-        if self._send_callback:
-            callback = self._send_callback
-            self._run_callback(callback, msg, status)
 
 
 def as_zmqstream(f):

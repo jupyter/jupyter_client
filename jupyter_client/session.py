@@ -30,7 +30,7 @@ from hmac import (
 from typing import Optional
 from typing import Union
 
-import zmq
+import zmq.asyncio
 from traitlets import Any
 from traitlets import Bool
 from traitlets import CBytes
@@ -808,6 +808,10 @@ class Session(Configurable):
             # ZMQStreams and dummy sockets do not support tracking.
             track = False
 
+        if isinstance(stream, zmq.asyncio.Socket):
+            assert stream is not None
+            stream = zmq.Socket.shadow(stream.underlying)
+
         if isinstance(msg_or_type, (Message, dict)):
             # We got a Message or message dict, not a msg_type so don't
             # build a new Message.
@@ -850,14 +854,10 @@ class Session(Configurable):
         if stream and buffers and track and not copy:
             # only really track when we are doing zero-copy buffers
             tracker = stream.send_multipart(to_send, copy=False, track=True)
-            if isinstance(tracker, asyncio.Future):
-                tracker = tracker.result()
         elif stream:
             # use dummy tracker, which will be done immediately
             tracker = DONE
-            val = stream.send_multipart(to_send, copy=copy)
-            if isinstance(val, asyncio.Future):
-                val.result()
+            stream.send_multipart(to_send, copy=copy)
 
         if self.debug:
             pprint.pprint(msg)
@@ -901,9 +901,9 @@ class Session(Configurable):
         # Don't include buffers in signature (per spec).
         to_send.append(self.sign(msg_list[0:4]))
         to_send.extend(msg_list)
-        val = stream.send_multipart(to_send, flags, copy=copy)
-        if isinstance(val, asyncio.Future):
-            val = val.result()
+        if isinstance(stream, zmq.asyncio.Socket):
+            stream = zmq.Socket.shadow(stream.underlying)
+        stream.send_multipart(to_send, flags, copy=copy)
 
     def recv(
         self,
@@ -927,10 +927,11 @@ class Session(Configurable):
         """
         if isinstance(socket, ZMQStream):
             socket = socket.socket
+        if isinstance(socket, zmq.asyncio.Socket):
+            socket = zmq.Socket.shadow(socket.underlying)
+
         try:
             msg_list = socket.recv_multipart(mode, copy=copy)
-            if isinstance(msg_list, asyncio.Future):
-                msg_list = msg_list.result()
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
                 # We can convert EAGAIN to None as we know in this case
