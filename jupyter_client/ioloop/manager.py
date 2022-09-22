@@ -60,7 +60,17 @@ class _ZMQStream(ZMQStream):
 def as_zmqstream(f):
     def wrapped(self, *args, **kwargs):
         socket = f(self, *args, **kwargs)
-        return _ZMQStream(socket, self.loop)
+        save_socket_type = None
+        # zmqstreams only support sync sockets
+        if self.context._socket_type is not zmq.Socket:
+            save_socket_type = self.context._socket_type
+            self.context._socket_type = zmq.Socket
+        try:
+            return ZMQStream(socket, self.loop)
+        finally:
+            if save_socket_type:
+                # restore default socket type
+                self.context._socket_type = save_socket_type
 
     return wrapped
 
