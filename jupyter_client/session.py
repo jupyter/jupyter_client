@@ -10,7 +10,6 @@ Sessions.
 """
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import asyncio
 import hashlib
 import hmac
 import json
