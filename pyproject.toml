@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jupyter_client"
-dyanmic = ["version"]
+dynamic = ["version"]
 description = "Jupyter protocol implementation and client libraries"
 keywords = [ "Interactive", "Interpreter", "Shell", "Web",]
 classifiers = [
