@@ -22,7 +22,9 @@ def as_zmqstream(f):
             save_socket_class = self.context._socket_class
             self.context._socket_class = zmq.Socket
         try:
+            orig_socket = socket
             socket = f(self, *args, **kwargs)
+            orig_socket.close()
         finally:
             if save_socket_class:
                 # restore default socket class
