@@ -20,7 +20,6 @@ from zmq.eventloop import zmqstream
 from .session import Session
 from jupyter_client import KernelClient
 from jupyter_client.channels import HBChannel
-from jupyter_client.utils import run_sync
 
 # Local imports
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
@@ -102,7 +101,7 @@ class ThreadedZMQSocketChannel(object):
 
         def thread_send():
             assert self.session is not None
-            run_sync(self.session.send(self.stream, msg))
+            self.session.send(self.stream, msg)
 
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)
