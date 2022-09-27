@@ -178,6 +178,10 @@ class TestKernelManager(TestCase):
         (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
         reason='"Bad file descriptor" error',
     )
+    @pytest.mark.skipif(
+        sys.platform == "linux",
+        reason='Kernel refuses to start in process pool',
+    )
     def test_start_parallel_process_kernels(self):
         self.test_tcp_lifecycle()
 
