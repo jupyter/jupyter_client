@@ -15,16 +15,13 @@ from jupyter_client.manager import KernelManager
 
 def as_zmqstream(f):
     def wrapped(self, *args, **kwargs):
-        socket = f(self, *args, **kwargs)
         save_socket_class = None
         # zmqstreams only support sync sockets
         if self.context._socket_class is not zmq.Socket:
             save_socket_class = self.context._socket_class
             self.context._socket_class = zmq.Socket
         try:
-            orig_socket = socket
             socket = f(self, *args, **kwargs)
-            orig_socket.close()
         finally:
             if save_socket_class:
                 # restore default socket class
