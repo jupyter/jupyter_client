@@ -192,7 +192,7 @@ async def test_async_restart_check(config, install_kernel, debug_logging):
     km = AsyncIOLoopKernelManager(kernel_name=install_kernel, config=config)
 
     cbs = 0
-    restarts = [asyncio.futures.Future() for i in range(N_restarts)]
+    restarts = [asyncio.Future() for i in range(N_restarts)]
 
     def cb():
         nonlocal cbs
@@ -249,7 +249,7 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_
     km = AsyncIOLoopKernelManager(kernel_name=install_slow_fail_kernel, config=config)
 
     cbs = 0
-    restarts = [asyncio.futures.Future() for i in range(N_restarts)]
+    restarts = [asyncio.Future() for i in range(N_restarts)]
 
     def cb():
         nonlocal cbs
@@ -258,7 +258,7 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_
         restarts[cbs].set_result(True)
         cbs += 1
 
-    died = asyncio.futures.Future()
+    died = asyncio.Future()
 
     def on_death():
         died.set_result(True)
