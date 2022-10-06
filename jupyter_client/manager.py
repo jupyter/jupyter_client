@@ -57,7 +57,7 @@ class _ShutdownStatus(Enum):
 F = t.TypeVar('F', bound=t.Callable[..., t.Any])
 
 
-def in_pending_state(prefix=''):
+def in_pending_state(prefix: str = '') -> t.Callable[[F], F]:
     def decorator(method: F) -> F:
         """Sets the kernel to a pending state by
         creating a fresh Future for the KernelManager's `ready`
@@ -117,8 +117,8 @@ class KernelManager(ConnectionFileMixin):
             data={"action": action, "kernel_id": self.kernel_id, "caller": "kernel_manager"},
         )
 
-    _ready: CFuture
-    _shutdown_ready: CFuture
+    _ready: t.Optional[CFuture]
+    _shutdown_ready: t.Optional[CFuture]
 
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
@@ -142,7 +142,7 @@ class KernelManager(ConnectionFileMixin):
     )
     client_factory: Type = Type(klass="jupyter_client.KernelClient")
 
-    _future_factory = Future
+    _future_factory: t.Type[CFuture] = CFuture
 
     @default("client_factory")  # type:ignore[misc]
     def _client_factory_default(self) -> Type:
@@ -213,6 +213,7 @@ class KernelManager(ConnectionFileMixin):
         """A future that resolves when the kernel process has started."""
         if not self._ready:
             self._ready = self._future_factory()
+        assert self._ready is not None
         return self._ready
 
     @property
@@ -220,6 +221,7 @@ class KernelManager(ConnectionFileMixin):
         """A future that resolves when the kernel process has shut down."""
         if not self._shutdown_ready:
             self._shutdown_ready = self._future_factory()
+        assert self._shutdown_ready is not None
         return self._shutdown_ready
 
     @property
@@ -694,7 +696,7 @@ class AsyncKernelManager(KernelManager):
     # The PyZMQ Context to use for communication with the kernel.
     context: Instance = Instance(zmq.asyncio.Context)
 
-    _future_factory = Future
+    _future_factory: t.Type[Future] = Future  # type:ignore[assignment]
 
     @default("context")  # type:ignore[misc]
     def _context_default(self) -> zmq.asyncio.Context:
