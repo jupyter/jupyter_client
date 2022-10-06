@@ -5,6 +5,7 @@ import asyncio
 import json
 import os
 import sys
+from concurrent.futures import Future
 
 import pytest
 from jupyter_core import paths
@@ -89,7 +90,7 @@ async def test_restart_check(config, install_kernel, debug_logging):
     km = IOLoopKernelManager(kernel_name=install_kernel, config=config)
 
     cbs = 0
-    restarts = [asyncio.Future() for i in range(N_restarts)]
+    restarts = [Future() for i in range(N_restarts)]
 
     def cb():
         nonlocal cbs
@@ -115,7 +116,7 @@ async def test_restart_check(config, install_kernel, debug_logging):
             if i < N_restarts:
                 # Kill without cleanup to simulate crash:
                 await km.provisioner.kill()
-                await restarts[i]
+                restarts[i].result()
                 # Wait for kill + restart
                 max_wait = 10.0
                 waited = 0.0
@@ -145,7 +146,7 @@ async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
     km = IOLoopKernelManager(kernel_name=install_fail_kernel, config=config)
 
     cbs = 0
-    restarts = [asyncio.Future() for i in range(N_restarts)]
+    restarts = [Future() for i in range(N_restarts)]
 
     def cb():
         nonlocal cbs
@@ -154,7 +155,7 @@ async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
         restarts[cbs].set_result(True)
         cbs += 1
 
-    died = asyncio.Future()
+    died = Future()
 
     def on_death():
         died.set_result(True)
@@ -170,9 +171,9 @@ async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
 
     try:
         for i in range(N_restarts):
-            await restarts[i]
+            restarts[i].result()
 
-        assert await died
+        assert died.result()
         assert cbs == N_restarts
 
     finally:

@@ -309,7 +309,7 @@ class MultiKernelManager(LoggingConfigurable):
         kids = self.list_kernel_ids()
         kids += list(self._pending_kernels)
         kms = list(self._kernels.values())
-        futs = [ensure_async(self.shutdown_kernel(kid, now=now)) for kid in set(kids)]
+        futs = [self._async_shutdown_kernel(kid, now=now) for kid in set(kids)]
         await asyncio.gather(*futs)
         # If using pending kernels, the kernels will not have been fully shut down.
         if self._using_pending_kernels():
@@ -544,6 +544,13 @@ class AsyncMultiKernelManager(MultiKernelManager):
         help="""Whether to make kernels available before the process has started.  The
         kernel has a `.ready` future which can be awaited before connecting""",
     ).tag(config=True)
+
+    context = Instance("zmq.asyncio.Context")
+
+    @default("context")  # type:ignore[misc]
+    def _context_default(self) -> zmq.asyncio.Context:
+        self._created_context = True
+        return zmq.asyncio.Context()
 
     start_kernel = MultiKernelManager._async_start_kernel
     restart_kernel = MultiKernelManager._async_restart_kernel

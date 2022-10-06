@@ -21,8 +21,8 @@ from .channelsabc import HBChannelABC
 from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
 from .session import Session
-from .utils import ensure_async
 from jupyter_client.channels import major_protocol_version
+from jupyter_client.utils import ensure_async
 
 # some utilities to validate message structure, these might get moved elsewhere
 # if they prove to have more generic utility
@@ -92,13 +92,13 @@ class KernelClient(ConnectionFileMixin):
     """
 
     # The PyZMQ Context to use for communication with the kernel.
-    context = Instance(zmq.asyncio.Context)
+    context = Instance(zmq.Context)
 
     _created_context = Bool(False)
 
-    def _context_default(self) -> zmq.asyncio.Context:
+    def _context_default(self) -> zmq.Context:
         self._created_context = True
-        return zmq.asyncio.Context()
+        return zmq.Context()
 
     # The classes to use for the various channels
     shell_channel_class = Type(ChannelABC)
@@ -140,19 +140,19 @@ class KernelClient(ConnectionFileMixin):
 
     async def _async_get_shell_msg(self, *args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:
         """Get a message from the shell channel"""
-        return await self.shell_channel.get_msg(*args, **kwargs)
+        return await ensure_async(self.shell_channel.get_msg(*args, **kwargs))
 
     async def _async_get_iopub_msg(self, *args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:
         """Get a message from the iopub channel"""
-        return await self.iopub_channel.get_msg(*args, **kwargs)
+        return await ensure_async(self.iopub_channel.get_msg(*args, **kwargs))
 
     async def _async_get_stdin_msg(self, *args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:
         """Get a message from the stdin channel"""
-        return await self.stdin_channel.get_msg(*args, **kwargs)
+        return await ensure_async(self.stdin_channel.get_msg(*args, **kwargs))
 
     async def _async_get_control_msg(self, *args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:
         """Get a message from the control channel"""
-        return await self.control_channel.get_msg(*args, **kwargs)
+        return await ensure_async(self.control_channel.get_msg(*args, **kwargs))
 
     async def _async_wait_for_ready(self, timeout: t.Optional[float] = None) -> None:
         """Waits for a response when a client is blocked
@@ -173,7 +173,7 @@ class KernelClient(ConnectionFileMixin):
             # This Client was not created by a KernelManager,
             # so wait for kernel to become responsive to heartbeats
             # before checking for kernel_info reply
-            while not await ensure_async(self.is_alive()):
+            while not await self._async_is_alive():
                 if time.time() > abs_timeout:
                     raise RuntimeError(
                         "Kernel didn't respond to heartbeats in %d seconds and timed out" % timeout
@@ -184,21 +184,21 @@ class KernelClient(ConnectionFileMixin):
         while True:
             self.kernel_info()
             try:
-                msg = await self.shell_channel.get_msg(timeout=1)
+                msg = await ensure_async(self.shell_channel.get_msg(timeout=1))
             except Empty:
                 pass
             else:
                 if msg["msg_type"] == "kernel_info_reply":
                     # Checking that IOPub is connected. If it is not connected, start over.
                     try:
-                        await self.iopub_channel.get_msg(timeout=0.2)
+                        await ensure_async(self.iopub_channel.get_msg(timeout=0.2))
                     except Empty:
                         pass
                     else:
                         self._handle_kernel_info_reply(msg)
                         break
 
-            if not await ensure_async(self.is_alive()):
+            if not await self._async_is_alive():
                 raise RuntimeError("Kernel died before replying to kernel_info")
 
             # Check if current time is ready check time plus timeout
@@ -208,7 +208,7 @@ class KernelClient(ConnectionFileMixin):
         # Flush IOPub channel
         while True:
             try:
-                msg = await self.iopub_channel.get_msg(timeout=0.2)
+                msg = await ensure_async(self.iopub_channel.get_msg(timeout=0.2))
             except Empty:
                 break
 
@@ -403,7 +403,7 @@ class KernelClient(ConnectionFileMixin):
         if isinstance(self.parent, KernelManager):
             # This KernelClient was created by a KernelManager,
             # we can ask the parent KernelManager:
-            return await ensure_async(self.parent.is_alive())
+            return await self.parent._async_is_alive()
         if self._hb_channel is not None:
             # We don't have access to the KernelManager,
             # so we use the heartbeat.
@@ -484,13 +484,15 @@ class KernelClient(ConnectionFileMixin):
             allow_stdin = self.allow_stdin
         if allow_stdin and not self.stdin_channel.is_alive():
             raise RuntimeError("stdin channel must be running to allow input")
-        msg_id = self.execute(
-            code,
-            silent=silent,
-            store_history=store_history,
-            user_expressions=user_expressions,
-            allow_stdin=allow_stdin,
-            stop_on_error=stop_on_error,
+        msg_id = await ensure_async(
+            self.execute(
+                code,
+                silent=silent,
+                store_history=store_history,
+                user_expressions=user_expressions,
+                allow_stdin=allow_stdin,
+                stop_on_error=stop_on_error,
+            )
         )
         if stdin_hook is None:
             stdin_hook = self._stdin_hook_default
@@ -536,7 +538,7 @@ class KernelClient(ConnectionFileMixin):
             if not events:
                 raise TimeoutError("Timeout waiting for output")
             if stdin_socket in events:
-                req = await self.stdin_channel.get_msg(timeout=0)
+                req = await ensure_async(self.stdin_channel.get_msg(timeout=0))
                 res = stdin_hook(req)
                 if inspect.isawaitable(res):
                     await res
@@ -544,7 +546,7 @@ class KernelClient(ConnectionFileMixin):
             if iopub_socket not in events:
                 continue
 
-            msg = await self.iopub_channel.get_msg(timeout=0)
+            msg = await ensure_async(self.iopub_channel.get_msg(timeout=0))
 
             if msg["parent_header"].get("msg_id") != msg_id:
                 # not from my request
@@ -768,7 +770,12 @@ class KernelClient(ConnectionFileMixin):
             self.session.adapt_version = adapt_version
 
     def is_complete(self, code: str) -> str:
-        """Ask the kernel whether some code is complete and ready to execute."""
+        """Ask the kernel whether some code is complete and ready to execute.
+
+        Returns
+        -------
+        The ID of the message sent.
+        """
         msg = self.session.msg("is_complete_request", {"code": code})
         self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
@@ -778,6 +785,10 @@ class KernelClient(ConnectionFileMixin):
 
         This should only be called in response to the kernel sending an
         ``input_request`` message on the stdin channel.
+
+        Returns
+        -------
+        The ID of the message sent.
         """
         content = dict(value=string)
         msg = self.session.msg("input_reply", content)

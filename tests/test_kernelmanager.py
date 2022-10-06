@@ -26,7 +26,7 @@ from jupyter_client.manager import start_new_kernel
 
 pjoin = os.path.join
 
-TIMEOUT = 30
+TIMEOUT = 60
 
 
 @pytest.fixture(params=["tcp", "ipc"])
@@ -108,7 +108,7 @@ def km_subclass(config, jp_event_logger):
 def zmq_context():
     import zmq
 
-    ctx = zmq.Context()
+    ctx = zmq.asyncio.Context()
     yield ctx
     ctx.term()
 
@@ -194,7 +194,6 @@ class TestKernelManagerShutDownGracefully:
 
         assert km._shutdown_status in expected
 
-    @pytest.mark.asyncio
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     @pytest.mark.parametrize(*parameters)
     async def test_async_signal_kernel_subprocesses(self, name, install, expected):
@@ -352,7 +351,7 @@ class TestKernelManager:
 
         km_subclass.start_kernel(stdout=PIPE, stderr=PIPE)
         assert km_subclass.call_count("start_kernel") == 1
-        assert km_subclass.call_count("_launch_kernel") == 1
+        assert km_subclass.call_count("_async_launch_kernel") == 1
 
         is_alive = km_subclass.is_alive()
         assert is_alive
@@ -360,13 +359,12 @@ class TestKernelManager:
 
         km_subclass.restart_kernel(now=True)
         assert km_subclass.call_count("restart_kernel") == 1
-        assert km_subclass.call_count("shutdown_kernel") == 1
-        assert km_subclass.call_count("interrupt_kernel") == 1
-        assert km_subclass.call_count("_kill_kernel") == 1
-        assert km_subclass.call_count("cleanup_resources") == 1
-        assert km_subclass.call_count("start_kernel") == 1
-        assert km_subclass.call_count("_launch_kernel") == 1
-        assert km_subclass.call_count("signal_kernel") == 1
+        assert km_subclass.call_count("_async_shutdown_kernel") == 1
+        assert km_subclass.call_count("_async_interrupt_kernel") == 1
+        assert km_subclass.call_count("_async_kill_kernel") == 1
+        assert km_subclass.call_count("_async_cleanup_resources") == 1
+        assert km_subclass.call_count("_async_launch_kernel") == 1
+        assert km_subclass.call_count("_async_signal_kernel") == 1
 
         is_alive = km_subclass.is_alive()
         assert is_alive
@@ -374,24 +372,21 @@ class TestKernelManager:
         km_subclass.reset_counts()
 
         km_subclass.interrupt_kernel()
-        assert km_subclass.call_count("interrupt_kernel") == 1
-        assert km_subclass.call_count("signal_kernel") == 1
+        assert km_subclass.call_count("_async_signal_kernel") == 1
 
         assert isinstance(km_subclass, KernelManager)
         km_subclass.reset_counts()
 
         km_subclass.shutdown_kernel(now=False)
         assert km_subclass.call_count("shutdown_kernel") == 1
-        assert km_subclass.call_count("interrupt_kernel") == 1
-        assert km_subclass.call_count("request_shutdown") == 1
-        assert km_subclass.call_count("finish_shutdown") == 1
-        assert km_subclass.call_count("cleanup_resources") == 1
-        assert km_subclass.call_count("signal_kernel") == 1
-        assert km_subclass.call_count("is_alive") >= 1
+        assert km_subclass.call_count("_async_interrupt_kernel") == 1
+        assert km_subclass.call_count("_async_cleanup_resources") == 1
+        assert km_subclass.call_count("_async_signal_kernel") == 1
+        assert km_subclass.call_count("_async_is_alive") >= 1
 
         is_alive = km_subclass.is_alive()
         assert is_alive is False
-        assert km_subclass.call_count("is_alive") >= 1
+        assert km_subclass.call_count("_async_is_alive") >= 1
         assert km_subclass.context.closed
 
 
@@ -531,7 +526,7 @@ class TestAsyncKernelManager:
         km, kc = start_async_kernel
 
         async def execute(cmd):
-            request_id = kc.execute(cmd)
+            request_id = await kc.execute(cmd)
             while True:
                 reply = await kc.get_shell_msg(TIMEOUT)
                 if reply["parent_header"]["msg_id"] == request_id:
@@ -551,7 +546,7 @@ class TestAsyncKernelManager:
         assert reply["user_expressions"]["poll"] == [None] * N
 
         # start a job on the kernel to be interrupted
-        request_id = kc.execute("sleep")
+        request_id = await kc.execute("sleep")
         await asyncio.sleep(1)  # ensure sleep message has been handled before we interrupt
         await km.interrupt_kernel()
         while True:
@@ -584,7 +579,7 @@ class TestAsyncKernelManager:
 
         await async_km_subclass.start_kernel(stdout=PIPE, stderr=PIPE)
         assert async_km_subclass.call_count("start_kernel") == 1
-        assert async_km_subclass.call_count("_launch_kernel") == 1
+        assert async_km_subclass.call_count("_async_launch_kernel") == 1
 
         is_alive = await async_km_subclass.is_alive()
         assert is_alive
@@ -593,13 +588,12 @@ class TestAsyncKernelManager:
 
         await async_km_subclass.restart_kernel(now=True)
         assert async_km_subclass.call_count("restart_kernel") == 1
-        assert async_km_subclass.call_count("shutdown_kernel") == 1
-        assert async_km_subclass.call_count("interrupt_kernel") == 1
-        assert async_km_subclass.call_count("_kill_kernel") == 1
-        assert async_km_subclass.call_count("cleanup_resources") == 1
-        assert async_km_subclass.call_count("start_kernel") == 1
-        assert async_km_subclass.call_count("_launch_kernel") == 1
-        assert async_km_subclass.call_count("signal_kernel") == 1
+        assert async_km_subclass.call_count("_async_shutdown_kernel") == 1
+        assert async_km_subclass.call_count("_async_interrupt_kernel") == 1
+        assert async_km_subclass.call_count("_async_kill_kernel") == 1
+        assert async_km_subclass.call_count("_async_cleanup_resources") == 1
+        assert async_km_subclass.call_count("_async_launch_kernel") == 1
+        assert async_km_subclass.call_count("_async_signal_kernel") == 1
 
         is_alive = await async_km_subclass.is_alive()
         assert is_alive
@@ -608,21 +602,19 @@ class TestAsyncKernelManager:
 
         await async_km_subclass.interrupt_kernel()
         assert async_km_subclass.call_count("interrupt_kernel") == 1
-        assert async_km_subclass.call_count("signal_kernel") == 1
+        assert async_km_subclass.call_count("_async_signal_kernel") == 1
 
         assert isinstance(async_km_subclass, AsyncKernelManager)
         async_km_subclass.reset_counts()
 
         await async_km_subclass.shutdown_kernel(now=False)
         assert async_km_subclass.call_count("shutdown_kernel") == 1
-        assert async_km_subclass.call_count("interrupt_kernel") == 1
-        assert async_km_subclass.call_count("request_shutdown") == 1
-        assert async_km_subclass.call_count("finish_shutdown") == 1
-        assert async_km_subclass.call_count("cleanup_resources") == 1
-        assert async_km_subclass.call_count("signal_kernel") == 1
-        assert async_km_subclass.call_count("is_alive") >= 1
+        assert async_km_subclass.call_count("_async_interrupt_kernel") == 1
+        assert async_km_subclass.call_count("_async_cleanup_resources") == 1
+        assert async_km_subclass.call_count("_async_signal_kernel") == 1
+        assert async_km_subclass.call_count("_async_is_alive") >= 1
 
         is_alive = await async_km_subclass.is_alive()
         assert is_alive is False
-        assert async_km_subclass.call_count("is_alive") >= 1
+        assert async_km_subclass.call_count("_async_is_alive") >= 1
         assert async_km_subclass.context.closed

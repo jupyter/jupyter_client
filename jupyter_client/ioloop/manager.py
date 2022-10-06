@@ -1,6 +1,7 @@
 """A kernel manager with a tornado IOLoop"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import zmq
 from tornado import ioloop
 from traitlets import Instance
 from traitlets import Type
@@ -14,7 +15,17 @@ from jupyter_client.manager import KernelManager
 
 def as_zmqstream(f):
     def wrapped(self, *args, **kwargs):
-        socket = f(self, *args, **kwargs)
+        save_socket_class = None
+        # zmqstreams only support sync sockets
+        if self.context._socket_class is not zmq.Socket:
+            save_socket_class = self.context._socket_class
+            self.context._socket_class = zmq.Socket
+        try:
+            socket = f(self, *args, **kwargs)
+        finally:
+            if save_socket_class:
+                # restore default socket class
+                self.context._socket_class = save_socket_class
         return ZMQStream(socket, self.loop)
 
     return wrapped

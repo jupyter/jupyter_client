@@ -26,7 +26,6 @@ requires-python = ">=3.7"
 dependencies = [
     "entrypoints",
     "jupyter_core>=4.9.2",
-    "nest-asyncio>=1.5.4",
     "python-dateutil>=2.8.2",
     "pyzmq>=23.0",
     "tornado>=6.2",
@@ -100,27 +99,13 @@ testpaths = [
     "jupyter_client",
     "tests/"
 ]
-timeout = 300
+timeout = 100
 # Restore this setting to debug failures
-# timeout_method = "thread"
+timeout_method = "thread"
 asyncio_mode = "auto"
 filterwarnings= [
   # Fail on warnings
   "error",
-
-  # We need to handle properly closing loops as part of https://github.com/jupyter/jupyter_client/issues/755.
-  "ignore:unclosed <socket.socket:ResourceWarning",
-  "ignore:unclosed event loop:ResourceWarning",
-
-  # Workaround for https://github.com/tornadoweb/tornado/issues/3106
-  # (To be fixed in Tornado 6.2)
-  "ignore:There is no current event loop:DeprecationWarning:tornado",
-
-  # ZMQ uses Future internally, which raises a DeprecationWarning
-  # When there is no loop running.
-  # We could eventually find a way to make sure these are only created
-  # when there is a running event loop.
-  "ignore:There is no current event loop:DeprecationWarning:zmq",
 ]
 
 [tool.mypy]

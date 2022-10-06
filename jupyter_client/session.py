@@ -29,7 +29,7 @@ from hmac import (
 from typing import Optional
 from typing import Union
 
-import zmq
+import zmq.asyncio
 from traitlets import Any
 from traitlets import Bool
 from traitlets import CBytes
@@ -807,6 +807,10 @@ class Session(Configurable):
             # ZMQStreams and dummy sockets do not support tracking.
             track = False
 
+        if isinstance(stream, zmq.asyncio.Socket):
+            assert stream is not None
+            stream = zmq.Socket.shadow(stream.underlying)
+
         if isinstance(msg_or_type, (Message, dict)):
             # We got a Message or message dict, not a msg_type so don't
             # build a new Message.
@@ -896,6 +900,8 @@ class Session(Configurable):
         # Don't include buffers in signature (per spec).
         to_send.append(self.sign(msg_list[0:4]))
         to_send.extend(msg_list)
+        if isinstance(stream, zmq.asyncio.Socket):
+            stream = zmq.Socket.shadow(stream.underlying)
         stream.send_multipart(to_send, flags, copy=copy)
 
     def recv(
@@ -920,6 +926,9 @@ class Session(Configurable):
         """
         if isinstance(socket, ZMQStream):
             socket = socket.socket
+        if isinstance(socket, zmq.asyncio.Socket):
+            socket = zmq.Socket.shadow(socket.underlying)
+
         try:
             msg_list = socket.recv_multipart(mode, copy=copy)
         except zmq.ZMQError as e:

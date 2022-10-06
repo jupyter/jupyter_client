@@ -178,6 +178,10 @@ class TestKernelManager(TestCase):
         (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
         reason='"Bad file descriptor" error',
     )
+    @pytest.mark.skipif(
+        sys.platform == "linux",
+        reason='Kernel refuses to start in process pool',
+    )
     def test_start_parallel_process_kernels(self):
         self.test_tcp_lifecycle()
 
@@ -197,7 +201,7 @@ class TestKernelManager(TestCase):
         assert km.call_count("start_kernel") == 1
         assert isinstance(km.get_kernel(kid), SyncKMSubclass)
         assert km.get_kernel(kid).call_count("start_kernel") == 1
-        assert km.get_kernel(kid).call_count("_launch_kernel") == 1
+        assert km.get_kernel(kid).call_count("_async_launch_kernel") == 1
 
         assert km.is_alive(kid)
         assert kid in km
@@ -210,12 +214,11 @@ class TestKernelManager(TestCase):
         assert km.call_count("restart_kernel") == 1
         assert km.call_count("get_kernel") == 1
         assert km.get_kernel(kid).call_count("restart_kernel") == 1
-        assert km.get_kernel(kid).call_count("shutdown_kernel") == 1
-        assert km.get_kernel(kid).call_count("interrupt_kernel") == 1
-        assert km.get_kernel(kid).call_count("_kill_kernel") == 1
-        assert km.get_kernel(kid).call_count("cleanup_resources") == 1
-        assert km.get_kernel(kid).call_count("start_kernel") == 1
-        assert km.get_kernel(kid).call_count("_launch_kernel") == 1
+        assert km.get_kernel(kid).call_count("_async_shutdown_kernel") == 1
+        assert km.get_kernel(kid).call_count("_async_interrupt_kernel") == 1
+        assert km.get_kernel(kid).call_count("_async_kill_kernel") == 1
+        assert km.get_kernel(kid).call_count("_async_cleanup_resources") == 1
+        assert km.get_kernel(kid).call_count("_async_launch_kernel") == 1
 
         assert km.is_alive(kid)
         assert kid in km.list_kernel_ids()
@@ -236,13 +239,44 @@ class TestKernelManager(TestCase):
         km.get_kernel(kid).reset_counts()
         km.reset_counts()
         km.shutdown_all(now=True)
-        assert km.call_count("shutdown_kernel") == 1
         assert km.call_count("remove_kernel") == 1
         assert km.call_count("request_shutdown") == 0
         assert km.call_count("finish_shutdown") == 0
         assert km.call_count("cleanup_resources") == 0
 
         assert kid not in km, f"{kid} not in {km}"
+
+    def test_stream_on_recv(self):
+        mkm = self._get_tcp_km()
+        kid = mkm.start_kernel(stdout=PIPE, stderr=PIPE)
+        stream = mkm.connect_iopub(kid)
+
+        km = mkm.get_kernel(kid)
+        client = km.client()
+        session = km.session
+        called = False
+
+        def record_activity(msg_list):
+            nonlocal called
+            """Record an IOPub message arriving from a kernel"""
+            idents, fed_msg_list = session.feed_identities(msg_list)
+            msg = session.deserialize(fed_msg_list, content=False)
+
+            msg_type = msg["header"]["msg_type"]
+            stream.send(msg)
+            called = True
+
+        stream.on_recv(record_activity)
+        while True:
+            client.kernel_info()
+            import time
+
+            time.sleep(0.1)
+            if called:
+                break
+
+        client.stop_channels()
+        km.shutdown_kernel(now=True)
 
 
 class TestAsyncKernelManager(AsyncTestCase):
@@ -525,7 +559,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert mkm.call_count("start_kernel") == 1
         assert isinstance(mkm.get_kernel(kid), AsyncKMSubclass)
         assert mkm.get_kernel(kid).call_count("start_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("_launch_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_async_launch_kernel") == 1
 
         assert await mkm.is_alive(kid)
         assert kid in mkm
@@ -538,12 +572,10 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert mkm.call_count("restart_kernel") == 1
         assert mkm.call_count("get_kernel") == 1
         assert mkm.get_kernel(kid).call_count("restart_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("shutdown_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("interrupt_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("_kill_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("cleanup_resources") == 1
-        assert mkm.get_kernel(kid).call_count("start_kernel") == 1
-        assert mkm.get_kernel(kid).call_count("_launch_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_async_interrupt_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_async_kill_kernel") == 1
+        assert mkm.get_kernel(kid).call_count("_async_cleanup_resources") == 1
+        assert mkm.get_kernel(kid).call_count("_async_launch_kernel") == 1
 
         assert await mkm.is_alive(kid)
         assert kid in mkm.list_kernel_ids()
@@ -564,11 +596,10 @@ class TestAsyncKernelManager(AsyncTestCase):
         mkm.get_kernel(kid).reset_counts()
         mkm.reset_counts()
         await mkm.shutdown_all(now=True)
-        assert mkm.call_count("shutdown_kernel") == 1
         assert mkm.call_count("remove_kernel") == 1
-        assert mkm.call_count("request_shutdown") == 0
-        assert mkm.call_count("finish_shutdown") == 0
-        assert mkm.call_count("cleanup_resources") == 0
+        assert mkm.call_count("_async_request_shutdown") == 0
+        assert mkm.call_count("_async_finish_shutdown") == 0
+        assert mkm.call_count("_async_cleanup_resources") == 0
 
         assert kid not in mkm, f"{kid} not in {mkm}"
 
@@ -599,3 +630,34 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert kernel_id in km.list_kernel_ids()
         await ensure_future(km.shutdown_kernel(kernel_id))
         assert kernel_id not in km.list_kernel_ids()
+
+    @gen_test
+    async def test_stream_on_recv(self):
+        mkm = self._get_tcp_km()
+        kid = await mkm.start_kernel(stdout=PIPE, stderr=PIPE)
+        stream = mkm.connect_iopub(kid)
+
+        km = mkm.get_kernel(kid)
+        client = km.client()
+        session = km.session
+        called = False
+
+        def record_activity(msg_list):
+            nonlocal called
+            """Record an IOPub message arriving from a kernel"""
+            idents, fed_msg_list = session.feed_identities(msg_list)
+            msg = session.deserialize(fed_msg_list, content=False)
+
+            msg_type = msg["header"]["msg_type"]
+            stream.send(msg)
+            called = True
+
+        stream.on_recv(record_activity)
+        while True:
+            await client.kernel_info()
+            if called:
+                break
+            await asyncio.sleep(0.1)
+
+        client.stop_channels()
+        await km.shutdown_kernel(now=True)

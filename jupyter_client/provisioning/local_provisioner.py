@@ -42,7 +42,6 @@ class LocalProvisioner(KernelProvisionerBase):
         return self.process is not None
 
     async def poll(self) -> Optional[int]:
-
         ret = 0
         if self.process:
             ret = self.process.poll()
