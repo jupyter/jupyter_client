@@ -482,7 +482,6 @@ class KernelManager(ConnectionFileMixin):
             Will this kernel be restarted after it is shutdown. When this
             is True, connection files will not be cleaned up.
         """
-        self._emit(action="shutdown_started")
         self.shutting_down = True  # Used by restarter to prevent race condition
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
@@ -500,7 +499,6 @@ class KernelManager(ConnectionFileMixin):
             await self._async_finish_shutdown(restart=restart)
 
         await self._async_cleanup_resources(restart=restart)
-        self._emit(action="shutdown_finished")
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
