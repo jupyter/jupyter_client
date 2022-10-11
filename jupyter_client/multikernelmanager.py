@@ -261,7 +261,7 @@ class MultiKernelManager(LoggingConfigurable):
         # If a pending kernel raised an exception, remove it.
         try:
             await asyncio.wrap_future(km.ready)
-        except Exception:
+        except (Exception, asyncio.CancelledError):
             self.remove_kernel(kernel_id)
             return
         stopper = ensure_async(km.shutdown_kernel(now, restart))
