@@ -124,12 +124,8 @@ def check_emitted_events(jp_read_emitted_events):
 
     def _(*expected_list):
         read_events = jp_read_emitted_events()
-        events = [e for e in read_events if e["caller"] == "kernel_manager"]
-        # Ensure that the number of read events match the expected events.
-        assert len(events) == len(expected_list)
-        # Loop through the events and make sure they are in order of expected.
         for i, action in enumerate(expected_list):
-            assert "action" in events[i] and action == events[i]["action"]
+            assert "action" in read_events[i] and action == read_events[i]["action"]
 
     return _
 
@@ -223,16 +219,7 @@ class TestKernelManager:
         assert is_done
         km.restart_kernel(now=True)
         check_emitted_events(
-            "restart_started",
-            "shutdown_started",
-            "interrupt",
-            "kill",
-            "cleanup_resources",
-            "shutdown_finished",
-            "pre_start",
-            "launch",
-            "post_start",
-            "restart_finished",
+            "interrupt", "kill", "cleanup_resources", "pre_start", "launch", "post_start", "restart"
         )
         assert km.is_alive()
         km.interrupt_kernel()
@@ -240,9 +227,7 @@ class TestKernelManager:
         assert isinstance(km, KernelManager)
         kc.stop_channels()
         km.shutdown_kernel(now=True)
-        check_emitted_events(
-            "shutdown_started", "interrupt", "kill", "cleanup_resources", "shutdown_finished"
-        )
+        check_emitted_events("interrupt", "kill")
         assert km.context.closed
 
     def test_get_connect_info(self, km):

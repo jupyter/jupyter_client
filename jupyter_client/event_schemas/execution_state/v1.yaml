@@ -1,0 +1,22 @@
+"$id": https://events.jupyter.org/jupyter_client/execution_state/v1
+version: 1
+title: Execution States
+description: |
+  Emit changes in a kernel's (with kernel_id) execution state.
+type: object
+required:
+  - kernel_id
+  - execution_state
+properties:
+  kernel_id:
+    oneOf:
+      - type: string
+      - type: "null"
+    description: The kernel's unique ID.
+  state:
+    enum:
+      - idle
+      - busy
+      - starting
+    description: |
+      The execution state of kernel with `kernel_id`.

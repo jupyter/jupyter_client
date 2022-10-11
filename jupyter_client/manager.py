@@ -111,8 +111,7 @@ class KernelManager(ConnectionFileMixin):
     def _emit(self, *, action: str) -> None:
         """Emit event using the core event schema from Jupyter Server's Contents Manager."""
         self.event_logger.emit(
-            schema_id=self.event_schema_id,
-            data={"action": action, "kernel_id": self.kernel_id, "caller": "kernel_manager"},
+            schema_id=self.event_schema_id, data={"action": action, "kernel_id": self.kernel_id}
         )
 
     _ready: t.Union[Future, CFuture]
@@ -530,7 +529,7 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             await self._async_finish_shutdown(restart=restart)
 
-        await self._async_cleanup_resources(restart=restart)
+        await ensure_async(self.cleanup_resources(restart=restart))
         self._emit(action="shutdown_finished")
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
@@ -562,7 +561,6 @@ class KernelManager(ConnectionFileMixin):
             Any options specified here will overwrite those used to launch the
             kernel.
         """
-        self._emit(action="restart_started")
         if self._launch_args is None:
             raise RuntimeError("Cannot restart the kernel. No previous call to 'start_kernel'.")
 
@@ -574,7 +572,7 @@ class KernelManager(ConnectionFileMixin):
 
         # Start new kernel.
         self._launch_args.update(kw)
-        await self._async_start_kernel(**self._launch_args)
+        await ensure_async(self.start_kernel(**self._launch_args))
         self._emit(action="restart_finished")
 
     restart_kernel = run_sync(_async_restart_kernel)
