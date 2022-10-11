@@ -95,26 +95,6 @@ class KernelManager(ConnectionFileMixin):
     """
 
     _ready: t.Union[Future, CFuture]
-
-    @default("event_logger")
-    def _default_event_logger(self):
-        if self.parent and hasattr(self.parent, "event_logger"):
-            return self.parent.event_logger
-        else:
-            # If parent does not have an event logger, create one.
-            logger = EventLogger()
-            schema_path = DEFAULT_EVENTS_SCHEMA_PATH / "kernel_manager" / "v1.yaml"
-            logger.register_event_schema(schema_path)
-            return logger
-
-    def _emit(self, *, action: str) -> None:
-        """Emit event using the core event schema from Jupyter Server's Contents Manager."""
-        self.event_logger.emit(
-            schema_id=self.event_schema_id,
-            data={"action": action, "kernel_id": self.kernel_id, "caller": "kernel_manager"},
-        )
-
-    _ready: t.Optional[CFuture]
     _shutdown_ready: t.Optional[CFuture]
 
     def __init__(self, *args, **kwargs):
@@ -676,9 +656,6 @@ class AsyncKernelManager(KernelManager):
         "jupyter_client.asynchronous.AsyncKernelClient"
     )
     client_factory: Type = Type(klass="jupyter_client.asynchronous.AsyncKernelClient")
-
-    # The PyZMQ Context to use for communication with the kernel.
-    context: Instance = Instance(zmq.asyncio.Context)
 
     _future_factory: t.Type[Future] = Future  # type:ignore[assignment]
     _launch_kernel = KernelManager._async_launch_kernel
