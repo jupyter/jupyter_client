@@ -221,7 +221,9 @@ class MultiKernelManager(LoggingConfigurable):
             self._kernels[kernel_id] = km
         else:
             await task
-            await asyncio.wrap_future(km.ready)
+            # raise an exception if one occurred during kernel startup.
+            if km.ready.exception():
+                raise km.ready.exception()  # type: ignore
 
         return kernel_id
 
@@ -251,7 +253,7 @@ class MultiKernelManager(LoggingConfigurable):
             try:
                 await task
                 km = self.get_kernel(kernel_id)
-                await asyncio.wrap_future(km.ready)
+                await t.cast(asyncio.Future, km.ready)
             except asyncio.CancelledError:
                 pass
             except Exception:
@@ -259,9 +261,7 @@ class MultiKernelManager(LoggingConfigurable):
                 return
         km = self.get_kernel(kernel_id)
         # If a pending kernel raised an exception, remove it.
-        try:
-            await asyncio.wrap_future(km.ready)
-        except Exception:
+        if not km.ready.cancelled() and km.ready.exception():
             self.remove_kernel(kernel_id)
             return
         stopper = ensure_async(km.shutdown_kernel(now, restart))
@@ -270,7 +270,9 @@ class MultiKernelManager(LoggingConfigurable):
         # Await the kernel if not using pending kernels.
         if not self._using_pending_kernels():
             await fut
-            await asyncio.wrap_future(km.shutdown_ready)
+            # raise an exception if one occurred during kernel shutdown.
+            if km.ready.exception():
+                raise km.ready.exception()  # type: ignore
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
@@ -313,7 +315,7 @@ class MultiKernelManager(LoggingConfigurable):
         if self._using_pending_kernels():
             for km in kms:
                 try:
-                    await km.shutdown_ready
+                    await km.ready
                 except asyncio.CancelledError:
                     self._pending_kernels[km.kernel_id].cancel()
                 except Exception:
