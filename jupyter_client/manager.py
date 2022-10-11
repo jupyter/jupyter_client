@@ -90,6 +90,7 @@ class KernelManager(ConnectionFileMixin):
 
     This version starts kernels with Popen.
     """
+
     _ready: t.Union[Future, CFuture]
 
     def __init__(self, *args, **kwargs):
