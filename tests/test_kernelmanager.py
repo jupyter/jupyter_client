@@ -135,13 +135,13 @@ def check_emitted_events(jp_read_emitted_events):
 
 
 @pytest.fixture(params=[AsyncKernelManager, AsyncKMSubclass])
-async def async_km(request, config, jp_event_logger):
+def async_km(request, config, jp_event_logger):
     km = request.param(config=config, event_logger=jp_event_logger)
     return km
 
 
 @pytest.fixture
-async def async_km_subclass(config, jp_event_logger):
+def async_km_subclass(config, jp_event_logger):
     km = AsyncKMSubclass(config=config, event_logger=jp_event_logger)
     return km
 
@@ -489,11 +489,11 @@ class TestAsyncKernelManager:
         await async_km.start_kernel(stdout=PIPE, stderr=PIPE)
         is_alive = await async_km.is_alive()
         assert is_alive
-        await async_km.ready
+        is_ready = async_km.ready.done()
+        assert is_ready
         await async_km.restart_kernel(now=True)
         is_alive = await async_km.is_alive()
         assert is_alive
-        await async_km.ready
         await async_km.interrupt_kernel()
         assert isinstance(async_km, AsyncKernelManager)
         await async_km.shutdown_kernel(now=True)
