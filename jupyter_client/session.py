@@ -29,7 +29,7 @@ from hmac import (
 from typing import Optional
 from typing import Union
 
-import zmq
+import zmq.asyncio
 from traitlets import Any
 from traitlets import Bool
 from traitlets import CBytes
@@ -806,6 +806,10 @@ class Session(Configurable):
         if not isinstance(stream, zmq.Socket):
             # ZMQStreams and dummy sockets do not support tracking.
             track = False
+
+        if isinstance(stream, zmq.asyncio.Socket):
+            assert stream is not None
+            stream = zmq.Socket.shadow(stream.underlying)
 
         if isinstance(msg_or_type, (Message, dict)):
             # We got a Message or message dict, not a msg_type so don't
