@@ -499,7 +499,7 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             await self._async_finish_shutdown(restart=restart)
 
-        await ensure_async(self._async_cleanup_resources(restart=restart))
+        await self._async_cleanup_resources(restart=restart)
         self._emit(action="shutdown_finished")
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
@@ -542,7 +542,7 @@ class KernelManager(ConnectionFileMixin):
 
         # Start new kernel.
         self._launch_args.update(kw)
-        await ensure_async(self._async_start_kernel(**self._launch_args))
+        await self._async_start_kernel(**self._launch_args)
 
     restart_kernel = run_sync(_async_restart_kernel)
 
