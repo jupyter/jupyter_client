@@ -130,7 +130,7 @@ jobs:
           pip check
       - name: Run the tests
         run: |
-          pytest -vv -W default jupyter_client || pytest -vv -W default jupyter_client --lf
+          pytest -vv jupyter_client || pytest -vv jupyter_client --lf
 
   make_sdist:
     name: Make SDist
