@@ -55,37 +55,34 @@ class _ShutdownStatus(Enum):
 F = t.TypeVar('F', bound=t.Callable[..., t.Any])
 
 
-def in_pending_state(prefix: str = '') -> t.Callable[[F], F]:
-    def decorator(method: F) -> F:
-        """Sets the kernel to a pending state by
-        creating a fresh Future for the KernelManager's `ready`
-        attribute. Once the method is finished, set the Future's results.
-        """
+def in_pending_state(method: F) -> F:
+    """Sets the kernel to a pending state by
+    creating a fresh Future for the KernelManager's `ready`
+    attribute. Once the method is finished, set the Future's results.
+    """
 
-        @t.no_type_check
-        @functools.wraps(method)
-        async def wrapper(self, *args, **kwargs):
-            # Create a future for the decorated method
-            name = f"{prefix}_ready"
-            future = getattr(self, name)
-            if not future or future.done():
-                future = self._future_factory()
-                setattr(self, name, future)
-            try:
-                # call wrapped method, await, and set the result or exception.
-                out = await method(self, *args, **kwargs)
-                # Add a small sleep to ensure tests can capture the state before done
-                await asyncio.sleep(0.01)
-                future.set_result(None)
-                return out
-            except Exception as e:
-                future.set_exception(e)
-                self.log.exception(future.exception())
-                raise e
+    @t.no_type_check
+    @functools.wraps(method)
+    async def wrapper(self, *args, **kwargs):
+        # Create a future for the decorated method
+        try:
+            self._ready = Future()
+        except RuntimeError:
+            # No event loop running, use concurrent future
+            self._ready = CFuture()
+        try:
+            # call wrapped method, await, and set the result or exception.
+            out = await method(self, *args, **kwargs)
+            # Add a small sleep to ensure tests can capture the state before done
+            await asyncio.sleep(0.01)
+            self._ready.set_result(None)
+            return out
+        except Exception as e:
+            self._ready.set_exception(e)
+            self.log.exception(self._ready.exception())
+            raise e
 
-        return t.cast(F, wrapper)
-
-    return decorator
+    return t.cast(F, wrapper)
 
 
 class KernelManager(ConnectionFileMixin):
@@ -94,14 +91,18 @@ class KernelManager(ConnectionFileMixin):
     This version starts kernels with Popen.
     """
 
-    _ready: t.Optional[t.Union[Future, CFuture]]
-    _shutdown_ready: t.Optional[CFuture]
+    _ready: t.Union[Future, CFuture]
 
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
-        self._ready = None
-        self._shutdown_ready = None
+        # Create a place holder future.
+        try:
+            asyncio.get_running_loop()
+            self._ready = Future()
+        except RuntimeError:
+            # No event loop running, use concurrent future
+            self._ready = CFuture()
 
     _created_context: Bool = Bool(False)
 
@@ -118,8 +119,6 @@ class KernelManager(ConnectionFileMixin):
         "jupyter_client.blocking.BlockingKernelClient"
     )
     client_factory: Type = Type(klass="jupyter_client.KernelClient")
-
-    _future_factory: t.Type[CFuture] = CFuture
 
     @default("client_factory")  # type:ignore[misc]
     def _client_factory_default(self) -> Type:
@@ -186,20 +185,9 @@ class KernelManager(ConnectionFileMixin):
         return self.transport == "tcp"
 
     @property
-    def ready(self) -> CFuture:
-        """A future that resolves when the kernel process has started."""
-        if not self._ready:
-            self._ready = self._future_factory()
-        assert self._ready is not None
-        return self._ready  # type:ignore[return-value]
-
-    @property
-    def shutdown_ready(self) -> CFuture:
-        """A future that resolves when the kernel process has shut down."""
-        if not self._shutdown_ready:
-            self._shutdown_ready = self._future_factory()
-        assert self._shutdown_ready is not None
-        return self._shutdown_ready
+    def ready(self) -> t.Union[CFuture, Future]:
+        """A future that resolves when the kernel process has started for the first time"""
+        return self._ready
 
     @property
     def ipykernel(self) -> bool:
@@ -381,7 +369,7 @@ class KernelManager(ConnectionFileMixin):
 
     post_start_kernel = run_sync(_async_post_start_kernel)
 
-    @in_pending_state()
+    @in_pending_state
     async def _async_start_kernel(self, **kw: t.Any) -> None:
         """Starts a kernel on this host in a separate process.
 
@@ -474,7 +462,7 @@ class KernelManager(ConnectionFileMixin):
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
-    @in_pending_state('_shutdown')
+    @in_pending_state
     async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False) -> None:
         """Attempts to stop the kernel process cleanly.
 
@@ -493,8 +481,6 @@ class KernelManager(ConnectionFileMixin):
             Will this kernel be restarted after it is shutdown. When this
             is True, connection files will not be cleaned up.
         """
-        # Reset the start ready future.
-        self._ready = self._future_factory()
         self.shutting_down = True  # Used by restarter to prevent race condition
         # Stop monitoring for restarting while we shutdown.
         self.stop_restarter()
@@ -657,7 +643,6 @@ class AsyncKernelManager(KernelManager):
     )
     client_factory: Type = Type(klass="jupyter_client.asynchronous.AsyncKernelClient")
 
-    _future_factory: t.Type[Future] = Future  # type:ignore[assignment]
     _launch_kernel = KernelManager._async_launch_kernel
     start_kernel = KernelManager._async_start_kernel
     pre_start_kernel = KernelManager._async_pre_start_kernel
