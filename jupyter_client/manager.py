@@ -94,7 +94,7 @@ class KernelManager(ConnectionFileMixin):
     This version starts kernels with Popen.
     """
 
-    _ready: t.Union[Future, CFuture]
+    _ready: t.Optional[t.Union[Future, CFuture]]
     _shutdown_ready: t.Optional[CFuture]
 
     def __init__(self, *args, **kwargs):
@@ -191,7 +191,7 @@ class KernelManager(ConnectionFileMixin):
         if not self._ready:
             self._ready = self._future_factory()
         assert self._ready is not None
-        return self._ready
+        return self._ready  # type:ignore[return-value]
 
     @property
     def shutdown_ready(self) -> CFuture:
