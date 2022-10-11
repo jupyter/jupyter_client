@@ -395,7 +395,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert isinstance(k, AsyncKernelManager)
         await ensure_future(km.shutdown_kernel(kid, now=True))
         # Wait for the kernel to shutdown
-        await kernel.ready
+        await kernel.shutdown_ready
         assert kid not in km, f"{kid} not in {km}"
 
     @gen_test
@@ -409,7 +409,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         await kernel.ready
         await ensure_future(km.shutdown_kernel(kid, now=True))
         # Wait for the kernel to shutdown
-        await kernel.ready
+        await kernel.shutdown_ready
         assert kid not in km, f"{kid} not in {km}"
 
     @gen_test
@@ -421,7 +421,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         # Try shutting down while the kernel is pending
         await ensure_future(km.shutdown_kernel(kid, now=True))
         # Wait for the kernel to shutdown
-        await kernel.ready
+        await kernel.shutdown_ready
         assert kid not in km, f"{kid} not in {km}"
 
     @gen_test
@@ -436,7 +436,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         await kernel.ready
         await ensure_future(km.shutdown_kernel(kid, now=True))
         # Wait for the kernel to shutdown
-        await kernel.ready
+        await kernel.shutdown_ready
         assert kid not in km, f"{kid} not in {km}"
 
     @gen_test

@@ -112,13 +112,13 @@ def zmq_context():
 
 
 @pytest.fixture(params=[AsyncKernelManager, AsyncKMSubclass])
-def async_km(request, config):
+async def async_km(request, config):
     km = request.param(config=config)
     return km
 
 
 @pytest.fixture
-def async_km_subclass(config):
+async def async_km_subclass(config):
     km = AsyncKMSubclass(config=config)
     return km
 
@@ -451,11 +451,11 @@ class TestAsyncKernelManager:
         await async_km.start_kernel(stdout=PIPE, stderr=PIPE)
         is_alive = await async_km.is_alive()
         assert is_alive
-        is_ready = async_km.ready.done()
-        assert is_ready
+        await async_km.ready
         await async_km.restart_kernel(now=True)
         is_alive = await async_km.is_alive()
         assert is_alive
+        await async_km.ready
         await async_km.interrupt_kernel()
         assert isinstance(async_km, AsyncKernelManager)
         await async_km.shutdown_kernel(now=True)
