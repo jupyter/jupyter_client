@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.4.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.5...3c0107f72e65363e8dfc99d7801a7de048e5f071))
+
+### Bugs fixed
+
+- Backport PR #845: Fix pending kernels again [#848](https://github.com/jupyter/jupyter_client/pull/848) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-08-25&to=2022-10-11&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-08-25..2022-10-11&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2022-08-25..2022-10-11&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-08-25..2022-10-11&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2022-08-25..2022-10-11&type=Issues) | [@Zsailer](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AZsailer+updated%3A2022-08-25..2022-10-11&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.3.5
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.4...bc5ded5439ca55bd6740885eb3a44ca6bc3e2243))
@@ -33,8 +49,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-06-08&to=2022-08-25&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-06-08..2022-08-25&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-06-08..2022-08-25&type=Issues) | [@helioz11](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahelioz11+updated%3A2022-06-08..2022-08-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-06-08..2022-08-25&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Avidartf+updated%3A2022-06-08..2022-08-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.3.4
 
