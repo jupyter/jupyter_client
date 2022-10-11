@@ -67,11 +67,12 @@ def in_pending_state(method: F) -> F:
     @functools.wraps(method)
     async def wrapper(self, *args, **kwargs):
         # Create a future for the decorated method
-        try:
-            self._ready = Future()
-        except RuntimeError:
-            # No event loop running, use concurrent future
-            self._ready = CFuture()
+        if self._attempted_start:
+            try:
+                self._ready = Future()
+            except RuntimeError:
+                # No event loop running, use concurrent future
+                self._ready = CFuture()
         try:
             # call wrapped method, await, and set the result or exception.
             out = await method(self, *args, **kwargs)
@@ -119,6 +120,7 @@ class KernelManager(ConnectionFileMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
+        self._attempted_start = False
         # Create a place holder future.
         try:
             asyncio.get_running_loop()
@@ -408,6 +410,7 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
+        self._attempted_start = True
         kernel_cmd, kw = await self._async_pre_start_kernel(**kw)
 
         # launch the kernel subprocess
