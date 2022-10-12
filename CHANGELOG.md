@@ -2,6 +2,38 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.0.0a0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.5...06e9cb3fb29a895a3a14e6e39ab524a13bec85ec))
+
+### Enhancements made
+
+- Remove nest-asyncio dependency [#835](https://github.com/jupyter/jupyter_client/pull/835) ([@blink1073](https://github.com/blink1073))
+
+### Bugs fixed
+
+- Fix handling of initial ready promise [#854](https://github.com/jupyter/jupyter_client/pull/854) ([@blink1073](https://github.com/blink1073))
+- Use pytest_asyncio fixture [#826](https://github.com/jupyter/jupyter_client/pull/826) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Maintenance and upkeep improvements
+
+- Ignore warnings in prereleases test [#844](https://github.com/jupyter/jupyter_client/pull/844) ([@blink1073](https://github.com/blink1073))
+- Use hatch for version [#837](https://github.com/jupyter/jupyter_client/pull/837) ([@blink1073](https://github.com/blink1073))
+- Move tests to top level [#834](https://github.com/jupyter/jupyter_client/pull/834) ([@blink1073](https://github.com/blink1073))
+- Fix nbconvert downstream test [#827](https://github.com/jupyter/jupyter_client/pull/827) ([@blink1073](https://github.com/blink1073))
+
+### Documentation improvements
+
+- Switch to pydata sphinx theme [#840](https://github.com/jupyter/jupyter_client/pull/840) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-08-25&to=2022-10-12&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-08-25..2022-10-12&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2022-08-25..2022-10-12&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-08-25..2022-10-12&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2022-08-25..2022-10-12&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-08-25..2022-10-12&type=Issues) | [@Zsailer](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AZsailer+updated%3A2022-08-25..2022-10-12&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.3.5
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.4...bc5ded5439ca55bd6740885eb3a44ca6bc3e2243))
@@ -33,8 +65,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-06-08&to=2022-08-25&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-06-08..2022-08-25&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-06-08..2022-08-25&type=Issues) | [@helioz11](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahelioz11+updated%3A2022-06-08..2022-08-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-06-08..2022-08-25&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Avidartf+updated%3A2022-06-08..2022-08-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.3.4
 
