@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   check_release:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
