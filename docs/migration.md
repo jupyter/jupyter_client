@@ -11,9 +11,13 @@ All of the API changes for `KernelManager` and `AsyncKernelManager` in the 7.0 r
 The following internal methods had signature changes:
 
 - `def pre_start_kernel(self, **kwargs) -> Tuple[List[str], Dict[str, Any]]:`
+
   - `pre_start_kernel` now returns a tuple consisting of the formatted kernel startup list and an updated set of keyword arguments.
+
 - `def _launch_kernel(self, kernel_cmd: List[str], **kw) -> None:`
+
   - `_launch_kernel` now returns `None` instead of the `Popen` instance
+
 - These methods now take the keyword argument `restart` indicating the shutdown was on behalf of a kernel restart (when `True`).
 
   - `def finish_shutdown(self, restart: bool = False):`

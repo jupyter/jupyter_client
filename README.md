@@ -3,13 +3,11 @@
 [![Build Status](https://github.com/jupyter/jupyter_client/workflows/CI/badge.svg)](https://github.com/jupyter/jupyter_client/actions)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-`jupyter_client` contains the reference implementation of the [Jupyter protocol][].
+`jupyter_client` contains the reference implementation of the [Jupyter protocol].
 It also provides client and kernel management APIs for working with kernels.
 
 It also provides the `jupyter kernelspec` entrypoint
 for installing kernelspecs for use with Jupyter frontends.
-
-[jupyter protocol]: https://jupyter-client.readthedocs.io/en/latest/messaging.html
 
 ## Development Setup
 
@@ -79,3 +77,5 @@ yourself after that.
 
 Some of the hooks only run on CI by default, but you can invoke them by
 running with the `--hook-stage manual` argument.
+
+[jupyter protocol]: https://jupyter-client.readthedocs.io/en/latest/messaging.html
