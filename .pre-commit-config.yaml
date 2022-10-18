@@ -16,7 +16,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.8.4
+    rev: v3.8.5
     hooks:
       - id: reorder-python-imports
 
@@ -27,7 +27,7 @@ repos:
         args: ["--line-length", "100"]
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0-alpha.1
+    rev: v3.0.0-alpha.2
     hooks:
       - id: prettier
 
