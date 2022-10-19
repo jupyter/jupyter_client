@@ -51,7 +51,7 @@ Homepage = "https://jupyter.org"
 test = [
     "codecov",
     "coverage",
-    "ipykernel>=6.5",
+    "ipykernel>=6.12",
     "ipython",
     "mypy",
     "pre-commit",
