@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.4.3
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.2...aa549b27d3622b1c381275777785f84dd3d5253d))
+
+### Bugs fixed
+
+- Defer creation of ready future [#858](https://github.com/jupyter/jupyter_client/pull/858) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-10-11&to=2022-10-19&type=c))
+
+[@meeseeksmachine](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ameeseeksmachine+updated%3A2022-10-11..2022-10-19&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.4.2
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.1...0a45cc41e4ce73911e4367eddc1f0001a8431fc0))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-10-11&to=2022-10-11&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-10-11..2022-10-11&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.4.1
 
