@@ -73,7 +73,7 @@ class TestSession:
         self.assertEqual(new_msg["parent_header"], msg["parent_header"])
         self.assertEqual(new_msg["metadata"], msg["metadata"])
         # ensure floats don't come out as Decimal:
-        self.assertEqual(type(new_msg["content"]["b"]), type(new_msg["content"]["b"]))
+        self.assertEqual(type(new_msg["content"]["b"]), type(msg["content"]["b"]))
 
     def test_default_secure(self, session):
         assert isinstance(session.key, bytes)
