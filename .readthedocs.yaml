@@ -6,4 +6,4 @@ python:
   install:
     # install jupyter-client itself
     - method: pip
-      path: ".[doc]"
+      path: ".[docs]"
