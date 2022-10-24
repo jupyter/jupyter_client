@@ -108,12 +108,18 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         pass
 
     @abstractmethod
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
+    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> None:
         """
-        Launch the kernel process and return its connection information.
+        Launch the kernel process.
 
         This method is called from `KernelManager.launch_kernel()` during the
         kernel manager's start kernel sequence.
+
+        The provisioner is responsible for writing the connection file
+        and updating the ``parent`` object's ``connection_info`` either in
+        this method or in :meth:`pre_launch`.
+
+        See ``LocalProvisioner.pre_launch()`` for an example.
         """
         pass
 

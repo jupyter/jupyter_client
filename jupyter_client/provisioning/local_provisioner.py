@@ -210,7 +210,6 @@ class LocalProvisioner(KernelProvisionerBase):
 
         self.pid = self.process.pid
         self.pgid = pgid
-        return self.connection_info
 
     @staticmethod
     def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:

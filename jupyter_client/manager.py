@@ -307,10 +307,8 @@ class KernelManager(ConnectionFileMixin):
         and
         """
         assert self.provisioner is not None
-        connection_info = await self.provisioner.launch_kernel(kernel_cmd, **kw)
+        await self.provisioner.launch_kernel(kernel_cmd, **kw)
         assert self.provisioner.has_process
-        # Provisioner provides the connection information.  Load into kernel manager and write file.
-        self._force_connection_info(connection_info)
 
     _launch_kernel = run_sync(_async_launch_kernel)
 
