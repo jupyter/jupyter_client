@@ -158,6 +158,18 @@ def write_connection_file(
     cfg["signature_scheme"] = signature_scheme
     cfg["kernel_name"] = kernel_name
 
+    # Prevent over-writing a file that has already been written with the same
+    # info.  This is to prevent a race condition where the process has
+    # already been launched but has not yet read the connection file.
+    if os.path.exists(fname):
+        with open(fname) as f:
+            try:
+                data = json.load(f)
+                if data == cfg:
+                    return fname, cfg
+            except Exception:
+                pass
+
     # Only ever write this file as user read/writeable
     # This would otherwise introduce a vulnerability as a file has secrets
     # which would let others execute arbitrarily code as you
