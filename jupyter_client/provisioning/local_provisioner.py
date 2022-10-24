@@ -10,7 +10,6 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from ..connect import KernelConnectionInfo
 from ..connect import LocalPortCache
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip
