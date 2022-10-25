@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.4.4
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.3...4029f6cad9223b1287980a1f0e966ff66557386e))
+
+### Bugs fixed
+
+- Workaround for launch bug [#861](https://github.com/jupyter/jupyter_client/pull/861) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-10-19&to=2022-10-25&type=c))
+
+[@meeseeksmachine](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ameeseeksmachine+updated%3A2022-10-19..2022-10-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.4.3
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.2...aa549b27d3622b1c381275777785f84dd3d5253d))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-10-11&to=2022-10-19&type=c))
 
 [@meeseeksmachine](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ameeseeksmachine+updated%3A2022-10-11..2022-10-19&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.4.2
 
