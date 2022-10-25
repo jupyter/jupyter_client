@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["7.x"]
   pull_request:
 
 concurrency:
@@ -50,6 +50,8 @@ jobs:
             python-version: "3.9"
           - os: ubuntu-latest
             python-version: "pypy-3.8"
+          - os: ubuntu-latest
+            python-version: "3.11"
           - os: macos-latest
             python-version: "3.8"
 

@@ -1,7 +1,7 @@
 name: Check Release
 on:
   push:
-    branches: ["main"]
+    branches: ["7.x"]
   pull_request:
 
 concurrency:
