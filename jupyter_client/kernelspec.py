@@ -1,7 +1,6 @@
 """Tools for managing kernel specs"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import io
 import json
 import os
 import re
