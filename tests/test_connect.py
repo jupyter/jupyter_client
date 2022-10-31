@@ -77,7 +77,7 @@ def test_write_connection_file():
         cf = os.path.join(d, "kernel.json")
         connect.write_connection_file(cf, **sample_info)
         assert os.path.exists(cf)
-        with open(cf, "r") as f:
+        with open(cf) as f:
             info = json.load(f)
     info["key"] = info["key"].encode()
     assert info == sample_info
@@ -129,7 +129,7 @@ def test_app_load_connection_file():
         if attr in ("key", "signature_scheme"):
             continue
         value = getattr(app, attr)
-        assert value == expected, "app.%s = %s != %s" % (attr, value, expected)
+        assert value == expected, f"app.{attr} = {value} != {expected}"
 
 
 def test_load_connection_info():

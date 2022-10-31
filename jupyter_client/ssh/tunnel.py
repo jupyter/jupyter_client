@@ -54,7 +54,7 @@ def select_random_ports(n):
 # -----------------------------------------------------------------------------
 # Check for passwordless login
 # -----------------------------------------------------------------------------
-_password_pat = re.compile((r"pass(word|phrase):".encode("utf8")), re.IGNORECASE)
+_password_pat = re.compile((br"pass(word|phrase):"), re.IGNORECASE)
 
 
 def try_passwordless_ssh(server, keyfile, paramiko=None):
@@ -227,7 +227,7 @@ def openssh_tunnel(
         server, port = server.split(":")
         ssh += " -p %s" % port
 
-    cmd = "%s -O check %s" % (ssh, server)
+    cmd = f"{ssh} -O check {server}"
     (output, exitstatus) = pexpect.run(cmd, withexitstatus=True)
     if not exitstatus:
         pid = int(output[output.find(b"(pid=") + 5 : output.find(b")")])  # noqa

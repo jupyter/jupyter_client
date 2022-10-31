@@ -39,7 +39,7 @@ def test_kernelapp_lifecycle():
                 break
             time.sleep(1 / POLL_FREQ)
         else:
-            raise AssertionError("No started file created in {} seconds".format(WAIT_TIME))
+            raise AssertionError(f"No started file created in {WAIT_TIME} seconds")
 
         # Connection file should be there by now
         for _ in range(WAIT_TIME * POLL_FREQ):
@@ -48,7 +48,7 @@ def test_kernelapp_lifecycle():
                 break
             time.sleep(1 / POLL_FREQ)
         else:
-            raise AssertionError("No connection file created in {} seconds".format(WAIT_TIME))
+            raise AssertionError(f"No connection file created in {WAIT_TIME} seconds")
         assert len(files) == 1
         cf = files[0]
         assert cf.startswith("kernel")

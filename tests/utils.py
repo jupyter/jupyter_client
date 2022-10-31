@@ -40,7 +40,7 @@ def install_kernel(kernels_dir, argv=None, name="test", display_name=None):
     return kernel_dir
 
 
-class test_env(object):
+class test_env:
     """Set Jupyter path variables to a temporary directory
 
     Useful as a context manager or with explicit start/stop

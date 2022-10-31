@@ -15,7 +15,7 @@ import abc
 # -----------------------------------------------------------------------------
 
 
-class KernelClientABC(object, metaclass=abc.ABCMeta):
+class KernelClientABC(metaclass=abc.ABCMeta):
     """KernelManager ABC.
 
     The docstrings for this class can be found in the base implementation:

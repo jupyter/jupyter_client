@@ -56,7 +56,7 @@ def extract_oname_v4(code: str, cursor_pos: int) -> str:
         return ""
 
 
-class Adapter(object):
+class Adapter:
     """Base class for adapting messages
 
     Override message_type(msg) methods to create adapters.

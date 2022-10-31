@@ -191,7 +191,7 @@ class HBChannel(Thread):
 HBChannelABC.register(HBChannel)
 
 
-class ZMQSocketChannel(object):
+class ZMQSocketChannel:
     """A ZMQ socket wrapper"""
 
     def __init__(self, socket: zmq.Socket, session: Session, loop: t.Any = None) -> None:

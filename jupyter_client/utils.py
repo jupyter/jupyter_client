@@ -134,9 +134,7 @@ def _filefind(filename, path_dirs=None):
         if os.path.isfile(testname):
             return os.path.abspath(testname)
 
-    raise IOError(
-        "File {!r} does not exist in any of the search paths: {!r}".format(filename, path_dirs)
-    )
+    raise OSError(f"File {filename!r} does not exist in any of the search paths: {path_dirs!r}")
 
 
 def _expand_path(s):

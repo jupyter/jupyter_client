@@ -26,7 +26,7 @@ from jupyter_client.channels import HBChannel
 # during garbage collection of threads at exit
 
 
-class ThreadedZMQSocketChannel(object):
+class ThreadedZMQSocketChannel:
     """A ZMQ socket invoking a callback in the ioloop"""
 
     session = None

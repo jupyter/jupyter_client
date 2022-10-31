@@ -4,7 +4,7 @@
 import abc
 
 
-class KernelManagerABC(object, metaclass=abc.ABCMeta):
+class KernelManagerABC(metaclass=abc.ABCMeta):
     """KernelManager ABC.
 
     The docstrings for this class can be found in the base implementation:

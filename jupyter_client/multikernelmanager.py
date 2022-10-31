@@ -353,7 +353,7 @@ class MultiKernelManager(LoggingConfigurable):
         signum : int
             Signal number to send kernel.
         """
-        self.log.info("Signaled Kernel %s with %s" % (kernel_id, signum))
+        self.log.info(f"Signaled Kernel {kernel_id} with {signum}")
 
     async def _async_restart_kernel(self, kernel_id: str, now: bool = False) -> None:
         """Restart a kernel by its uuid, keeping the same ports.
