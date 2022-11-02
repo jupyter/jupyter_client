@@ -1,7 +1,6 @@
 """Tools for managing kernel specs"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import io
 import json
 import os
 import re
@@ -47,7 +46,7 @@ class KernelSpec(HasTraits):
         Pass the path to the *directory* containing kernel.json.
         """
         kernel_file = pjoin(resource_dir, "kernel.json")
-        with io.open(kernel_file, "r", encoding="utf-8") as f:
+        with open(kernel_file, encoding="utf-8") as f:
             kernel_dict = json.load(f)
         return cls(resource_dir=resource_dir, **kernel_dict)
 
@@ -106,7 +105,7 @@ def _list_kernels_in(dir):
         key = f.lower()
         if not _is_valid_kernel_name(key):
             warnings.warn(
-                "Invalid kernelspec directory name (%s): %s" % (_kernel_name_description, path),
+                f"Invalid kernelspec directory name ({_kernel_name_description}): {path}",
                 stacklevel=3,
             )
         kernels[key] = path
@@ -118,7 +117,7 @@ class NoSuchKernel(KeyError):
         self.name = name
 
     def __str__(self):
-        return "No such kernel named {}".format(self.name)
+        return f"No such kernel named {self.name}"
 
 
 class KernelSpecManager(LoggingConfigurable):
@@ -375,9 +374,7 @@ class KernelSpecManager(LoggingConfigurable):
             kernel_name = os.path.basename(source_dir)
         kernel_name = kernel_name.lower()
         if not _is_valid_kernel_name(kernel_name):
-            raise ValueError(
-                "Invalid kernel name %r.  %s" % (kernel_name, _kernel_name_description)
-            )
+            raise ValueError(f"Invalid kernel name {kernel_name!r}.  {_kernel_name_description}")
 
         if user and prefix:
             raise ValueError("Can't specify both user and prefix. Please choose one or the other.")

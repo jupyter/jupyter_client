@@ -240,7 +240,7 @@ class SessionFactory(LoggingConfigurable):
             self.session = Session(**kwargs)
 
 
-class Message(object):
+class Message:
     """A simple message object that maps dict keys to attributes.
 
     A Message can be created from a dict and a dict from a Message instance

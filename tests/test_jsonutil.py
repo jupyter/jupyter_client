@@ -17,7 +17,7 @@ from jupyter_client.session import utcnow
 REFERENCE_DATETIME = datetime.datetime(2013, 7, 3, 16, 34, 52, 249482, tzlocal())
 
 
-class MyInt(object):
+class MyInt:
     def __int__(self):
         return 389
 
@@ -25,7 +25,7 @@ class MyInt(object):
 numbers.Integral.register(MyInt)
 
 
-class MyFloat(object):
+class MyFloat:
     def __float__(self):
         return 3.14
 
@@ -113,7 +113,7 @@ def test_json_default():
         # Containers
         ([1, 2], None),
         ((1, 2), [1, 2]),
-        (set([1, 2]), [1, 2]),
+        ({1, 2}, [1, 2]),
         (dict(x=1), None),
         ({'x': 1, 'y': [1, 2, 3], '1': 'int'}, None),
         # More exotic objects

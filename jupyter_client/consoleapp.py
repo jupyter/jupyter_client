@@ -202,7 +202,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
                 self.connection_file = cf
         try:
             self.connection_file = _filefind(self.connection_file, [".", self.runtime_dir])
-        except IOError:
+        except OSError:
             self.log.debug("Connection File not found: %s", self.connection_file)
             return
 
@@ -247,7 +247,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
             control_port=self.control_port,
         )
 
-        self.log.info("Forwarding connections to %s via %s" % (ip, self.sshserver))
+        self.log.info(f"Forwarding connections to {ip} via {self.sshserver}")
 
         # tunnels return a new set of ports, which will be on localhost:
         self.ip = localhost()

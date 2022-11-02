@@ -130,7 +130,7 @@ def write_connection_file(
     else:
         N = 1
         for _ in range(ports_needed):
-            while os.path.exists("%s-%s" % (ip, str(N))):
+            while os.path.exists(f"{ip}-{str(N)}"):
                 N += 1
             ports.append(N)
             N += 1
@@ -229,7 +229,7 @@ def find_connection_file(
     try:
         # first, try explicit name
         return _filefind(filename, path)
-    except IOError:
+    except OSError:
         pass
 
     # not found by full name
@@ -247,7 +247,7 @@ def find_connection_file(
 
     matches = [os.path.abspath(m) for m in matches]
     if not matches:
-        raise IOError("Could not find %r in %r" % (filename, path))
+        raise OSError(f"Could not find {filename!r} in {path!r}")
     elif len(matches) == 1:
         return matches[0]
     else:
@@ -605,7 +605,7 @@ class ConnectionFileMixin(LoggingConfigurable):
         if transport == "tcp":
             return "tcp://%s:%i" % (ip, port)
         else:
-            return "%s://%s-%s" % (transport, ip, port)
+            return f"{transport}://{ip}-{port}"
 
     def _create_connected_socket(
         self, channel: str, identity: Optional[bytes] = None

@@ -4,7 +4,7 @@
 import abc
 
 
-class ChannelABC(object, metaclass=abc.ABCMeta):
+class ChannelABC(metaclass=abc.ABCMeta):
     """A base class for all channel ABCs."""
 
     @abc.abstractmethod

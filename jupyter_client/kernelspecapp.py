@@ -63,7 +63,7 @@ class ListKernelSpecs(JupyterApp):
 
             print("Available kernels:")
             for kernelname, path in sorted(paths.items(), key=path_key):
-                print("  %s    %s" % (kernelname.ljust(name_len), path))
+                print(f"  {kernelname.ljust(name_len)}    {path}")
         else:
             print(json.dumps({"kernelspecs": specs}, indent=2))
 
@@ -205,7 +205,7 @@ class RemoveKernelSpec(JupyterApp):
         if not (self.force or self.answer_yes):
             print("Kernel specs to remove:")
             for name in self.spec_names:
-                print("  %s\t%s" % (name.ljust(20), spec_paths[name]))
+                print(f"  {name.ljust(20)}\t{spec_paths[name]}")
             answer = input("Remove %i kernel specs [y/N]: " % len(self.spec_names))
             if not answer.lower().startswith("y"):
                 return
