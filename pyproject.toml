@@ -24,7 +24,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "entrypoints",
+    "importlib_metadata>=4.8.3;python_version<\"3.10\"",
     "jupyter_core>=4.9.2",
     "python-dateutil>=2.8.2",
     "pyzmq>=23.0",
@@ -138,15 +138,6 @@ warn_unused_configs = true
 warn_redundant_casts = true
 warn_return_any = false
 warn_unused_ignores = true
-
-[[tool.mypy.overrides]]
-module = [
-    "traitlets.*",
-    "jupyter_core.*",
-    "ipykernel",
-    "entrypoints"
-]
-ignore_missing_imports = true
 
 [tool.flake8]
 ignore = "E501, W503, E402"

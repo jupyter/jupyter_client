@@ -30,7 +30,6 @@ from jupyter_core.paths import secure_write
 from traitlets import Bool
 from traitlets import CaselessStrEnum
 from traitlets import Instance
-from traitlets import Int
 from traitlets import Integer
 from traitlets import observe
 from traitlets import Type
@@ -47,11 +46,11 @@ KernelConnectionInfo = Dict[str, Union[int, str, bytes]]
 
 def write_connection_file(
     fname: Optional[str] = None,
-    shell_port: Union[Integer, Int, int] = 0,
-    iopub_port: Union[Integer, Int, int] = 0,
-    stdin_port: Union[Integer, Int, int] = 0,
-    hb_port: Union[Integer, Int, int] = 0,
-    control_port: Union[Integer, Int, int] = 0,
+    shell_port: int = 0,
+    iopub_port: int = 0,
+    stdin_port: int = 0,
+    hb_port: int = 0,
+    control_port: int = 0,
     ip: str = "",
     key: bytes = b"",
     transport: str = "tcp",
@@ -334,7 +333,7 @@ port_names = ["%s_port" % channel for channel in ("shell", "stdin", "iopub", "hb
 class ConnectionFileMixin(LoggingConfigurable):
     """Mixin for configurable classes that work with connection files"""
 
-    data_dir = Unicode()
+    data_dir: Union[str, Unicode] = Unicode()
 
     def _data_dir_default(self):
         return jupyter_data_dir()
@@ -353,7 +352,9 @@ class ConnectionFileMixin(LoggingConfigurable):
     _connection_file_written = Bool(False)
 
     transport = CaselessStrEnum(["tcp", "ipc"], default_value="tcp", config=True)
-    kernel_name = Unicode()
+    kernel_name: Union[str, Unicode] = Unicode()
+
+    context = Instance(zmq.Context)
 
     ip = Unicode(
         config=True,

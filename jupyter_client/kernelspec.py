@@ -221,7 +221,7 @@ class KernelSpecManager(LoggingConfigurable):
 
         if self.ensure_native_kernel and NATIVE_KERNEL_NAME not in d:
             try:
-                from ipykernel.kernelspec import RESOURCES  # type: ignore
+                from ipykernel.kernelspec import RESOURCES
 
                 self.log.debug(
                     "Native kernel (%s) available from %s",

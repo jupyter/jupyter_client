@@ -65,7 +65,7 @@ repos:
       - id: mypy
         exclude: tests
         args: ["--config-file", "pyproject.toml"]
-        additional_dependencies: [pyzmq, tornado, types-paramiko]
+        additional_dependencies: [pyzmq, tornado, types-paramiko, traitlets, "jupyter_core>=5.0", ipykernel]
         stages: [manual]
 
   - repo: https://github.com/PyCQA/doc8
