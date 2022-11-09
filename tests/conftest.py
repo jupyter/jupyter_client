@@ -15,6 +15,8 @@ except ImportError:
 
 pjoin = os.path.join
 
+os.environ['JUPYTER_PLATFORM_DIRS'] = '1'
+
 
 # Handle resource limit
 # Ensure a minimal soft limit of DEFAULT_SOFT if the current hard limit is at least that much.
