@@ -3,6 +3,10 @@ import os
 import sys
 
 import pytest
+
+# Must be set before importing from `jupyter_core`.
+os.environ['JUPYTER_PLATFORM_DIRS'] = '1'
+
 from jupyter_core import paths
 
 from .utils import test_env
