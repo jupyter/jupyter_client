@@ -10,9 +10,9 @@ import atexit
 import os
 import signal
 import sys
+import typing as t
 import uuid
 import warnings
-from typing import cast
 
 from jupyter_core.application import base_aliases
 from jupyter_core.application import base_flags
@@ -94,7 +94,7 @@ aliases.update(app_aliases)
 # Classes
 # -----------------------------------------------------------------------------
 
-classes = [KernelManager, KernelRestarter, Session]
+classes: t.List[t.Type[t.Any]] = [KernelManager, KernelRestarter, Session]
 
 
 class JupyterConsoleApp(ConnectionFileMixin):
@@ -160,7 +160,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
 
         Override in subclasses if any args should be passed to the kernel
         """
-        self.kernel_argv = self.extra_args
+        self.kernel_argv = self.extra_args  # type:ignore[attr-defined]
 
     def init_connection_file(self) -> None:
         """find the connection file, and load the info if found.
@@ -177,31 +177,32 @@ class JupyterConsoleApp(ConnectionFileMixin):
         After this method is called, self.connection_file contains the *full path*
         to the connection file, never just its name.
         """
+        runtime_dir = self.runtime_dir  # type:ignore[attr-defined]
         if self.existing:
             try:
-                cf = find_connection_file(self.existing, [".", self.runtime_dir])
+                cf = find_connection_file(self.existing, [".", runtime_dir])
             except Exception:
                 self.log.critical(
                     "Could not find existing kernel connection file %s", self.existing
                 )
-                self.exit(1)
+                self.exit(1)  # type:ignore[attr-defined]
             self.log.debug("Connecting to existing kernel: %s" % cf)
             self.connection_file = cf
         else:
             # not existing, check if we are going to write the file
             # and ensure that self.connection_file is a full path, not just the shortname
             try:
-                cf = find_connection_file(self.connection_file, [self.runtime_dir])
+                cf = find_connection_file(self.connection_file, [runtime_dir])
             except Exception:
                 # file might not exist
                 if self.connection_file == os.path.basename(self.connection_file):
                     # just shortname, put it in security dir
-                    cf = os.path.join(self.runtime_dir, self.connection_file)
+                    cf = os.path.join(runtime_dir, self.connection_file)
                 else:
                     cf = self.connection_file
                 self.connection_file = cf
         try:
-            self.connection_file = _filefind(self.connection_file, [".", self.runtime_dir])
+            self.connection_file = _filefind(self.connection_file, [".", runtime_dir])
         except OSError:
             self.log.debug("Connection File not found: %s", self.connection_file)
             return
@@ -217,7 +218,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
                 self.connection_file,
                 exc_info=True,
             )
-            self.exit(1)
+            self.exit(1)  # type:ignore[attr-defined]
 
     def init_ssh(self) -> None:
         """set up ssh tunnels, if needed."""
@@ -256,7 +257,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         except:  # noqa
             # even catch KeyboardInterrupt
             self.log.error("Could not setup tunnels", exc_info=True)
-            self.exit(1)
+            self.exit(1)  # type:ignore[attr-defined]
 
         (
             self.shell_port,
@@ -280,7 +281,8 @@ class JupyterConsoleApp(ConnectionFileMixin):
             # 48b node segment (12 hex chars).  Users running more than 32k simultaneous
             # kernels can subclass.
             ident = str(uuid.uuid4()).split("-")[-1]
-            cf = os.path.join(self.runtime_dir, "kernel-%s.json" % ident)
+            runtime_dir = self.runtime_dir  # type:ignore[attr-defined]
+            cf = os.path.join(runtime_dir, "kernel-%s.json" % ident)
             # only keep if it's actually new.  Protect against unlikely collision
             # in 48b random search space
             cf = cf if not os.path.exists(cf) else ""
@@ -311,9 +313,9 @@ class JupyterConsoleApp(ConnectionFileMixin):
             )
         except NoSuchKernel:
             self.log.critical("Could not find kernel %s", self.kernel_name)
-            self.exit(1)
+            self.exit(1)  # type:ignore[attr-defined]
 
-        self.kernel_manager = cast(KernelManager, self.kernel_manager)
+        self.kernel_manager = t.cast(KernelManager, self.kernel_manager)
         self.kernel_manager.client_factory = self.kernel_client_class
         kwargs = {}
         kwargs["extra_arguments"] = self.kernel_argv
@@ -359,7 +361,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         Classes which mix this class in should call:
                JupyterConsoleApp.initialize(self,argv)
         """
-        if self._dispatching:
+        if self._dispatching:  # type:ignore[attr-defined]
             return
         self.init_connection_file()
         self.init_ssh()

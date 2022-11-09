@@ -1,6 +1,8 @@
 """A kernel manager with a tornado IOLoop"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import typing as t
+
 import zmq
 from tornado import ioloop
 from traitlets import Instance
@@ -48,7 +50,7 @@ class IOLoopKernelManager(KernelManager):
         ),
         config=True,
     )
-    _restarter = Instance("jupyter_client.ioloop.IOLoopKernelRestarter", allow_none=True)
+    _restarter: t.Any = Instance("jupyter_client.ioloop.IOLoopKernelRestarter", allow_none=True)
 
     def start_restarter(self):
         if self.autorestart and self.has_kernel:
@@ -87,7 +89,9 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
         ),
         config=True,
     )
-    _restarter = Instance("jupyter_client.ioloop.AsyncIOLoopKernelRestarter", allow_none=True)
+    _restarter: t.Any = Instance(
+        "jupyter_client.ioloop.AsyncIOLoopKernelRestarter", allow_none=True
+    )
 
     def start_restarter(self):
         if self.autorestart and self.has_kernel:

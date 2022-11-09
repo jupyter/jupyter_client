@@ -129,7 +129,7 @@ class KernelManager(ConnectionFileMixin):
     def _client_class_changed(self, change: t.Dict[str, DottedObjectName]) -> None:
         self.client_factory = import_item(str(change["new"]))
 
-    kernel_id: str = Unicode(None, allow_none=True)
+    kernel_id: t.Union[str, Unicode] = Unicode(None, allow_none=True)
 
     # The kernel provisioner with which this KernelManager is communicating.
     # This will generally be a LocalProvisioner instance unless the kernelspec
@@ -161,10 +161,10 @@ class KernelManager(ConnectionFileMixin):
         "vary by provisioned environment.",
     )
 
-    kernel_name: Unicode = Unicode(kernelspec.NATIVE_KERNEL_NAME)
+    kernel_name: t.Union[str, Unicode] = Unicode(kernelspec.NATIVE_KERNEL_NAME)
 
     @observe("kernel_name")  # type:ignore[misc]
-    def _kernel_name_changed(self, change: t.Dict[str, Unicode]) -> None:
+    def _kernel_name_changed(self, change: t.Dict[str, str]) -> None:
         self._kernel_spec = None
         if change["new"] == "python":
             self.kernel_name = kernelspec.NATIVE_KERNEL_NAME
@@ -240,7 +240,7 @@ class KernelManager(ConnectionFileMixin):
 
     def client(self, **kwargs: t.Any) -> KernelClient:
         """Create a client configured to connect to our kernel"""
-        kw = {}
+        kw: dict = {}
         kw.update(self.get_connection_info(session=True))
         kw.update(
             dict(
@@ -684,7 +684,7 @@ def start_new_kernel(
     kc = km.client()
     kc.start_channels()
     try:
-        kc.wait_for_ready(timeout=startup_timeout)
+        kc.wait_for_ready(timeout=startup_timeout)  # type:ignore[attr-defined]
     except RuntimeError:
         kc.stop_channels()
         km.shutdown_kernel()
@@ -702,7 +702,7 @@ async def start_new_async_kernel(
     kc = km.client()
     kc.start_channels()
     try:
-        await kc.wait_for_ready(timeout=startup_timeout)
+        await kc.wait_for_ready(timeout=startup_timeout)  # type:ignore[attr-defined]
     except RuntimeError:
         kc.stop_channels()
         await km.shutdown_kernel()

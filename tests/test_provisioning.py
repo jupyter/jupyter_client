@@ -13,8 +13,6 @@ from typing import List
 from typing import Optional
 
 import pytest
-from entrypoints import EntryPoint
-from entrypoints import NoSuchEntryPoint
 from jupyter_core import paths
 from traitlets import Int
 from traitlets import Unicode
@@ -27,6 +25,7 @@ from jupyter_client.manager import AsyncKernelManager
 from jupyter_client.provisioning import KernelProvisionerBase
 from jupyter_client.provisioning import KernelProvisionerFactory
 from jupyter_client.provisioning import LocalProvisioner
+from jupyter_client.provisioning.factory import EntryPoint
 
 pjoin = os.path.join
 
@@ -199,30 +198,31 @@ def akm(request, all_provisioners):
 
 
 initial_provisioner_map = {
-    'local-provisioner': ('jupyter_client.provisioning', 'LocalProvisioner'),
-    'subclassed-test-provisioner': (
-        'tests.test_provisioning',
-        'SubclassedTestProvisioner',
-    ),
-    'custom-test-provisioner': ('tests.test_provisioning', 'CustomTestProvisioner'),
+    'local-provisioner': 'jupyter_client.provisioning:LocalProvisioner',
+    'subclassed-test-provisioner': 'tests.test_provisioning:SubclassedTestProvisioner',
+    'custom-test-provisioner': 'tests.test_provisioning:CustomTestProvisioner',
 }
 
 
 def mock_get_all_provisioners() -> List[EntryPoint]:
     result = []
     for name, epstr in initial_provisioner_map.items():
-        result.append(EntryPoint(name, epstr[0], epstr[1]))
+        result.append(EntryPoint(name, epstr, KernelProvisionerFactory.GROUP_NAME))
     return result
 
 
 def mock_get_provisioner(factory, name) -> EntryPoint:
     if name == 'new-test-provisioner':
-        return EntryPoint('new-test-provisioner', 'tests.test_provisioning', 'NewTestProvisioner')
+        return EntryPoint(
+            'new-test-provisioner',
+            'tests.test_provisioning:NewTestProvisioner',
+            KernelProvisionerFactory.GROUP_NAME,
+        )
 
     if name in initial_provisioner_map:
-        return EntryPoint(name, initial_provisioner_map[name][0], initial_provisioner_map[name][1])
+        return EntryPoint(name, initial_provisioner_map[name], KernelProvisionerFactory.GROUP_NAME)
 
-    raise NoSuchEntryPoint(KernelProvisionerFactory.GROUP_NAME, name)
+    raise ValueError('No such entry point')
 
 
 @pytest.fixture
