@@ -3,6 +3,9 @@ import os
 import sys
 
 import pytest
+
+os.environ['JUPYTER_PLATFORM_DIRS'] = '1'
+
 from jupyter_core import paths
 
 from .utils import test_env
@@ -14,8 +17,6 @@ except ImportError:
     resource = None
 
 pjoin = os.path.join
-
-os.environ['JUPYTER_PLATFORM_DIRS'] = '1'
 
 
 # Handle resource limit
