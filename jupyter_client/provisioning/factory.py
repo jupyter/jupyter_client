@@ -170,7 +170,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
 
     @staticmethod
     def _get_all_provisioners() -> List[EntryPoint]:
-        """Wrapper around entrypoints.get_group_all() - primarily to facilitate testing."""
+        """Wrapper around entry_points (to fetch the set of provisioners) - primarily to facilitate testing."""
         return entry_points(group=KernelProvisionerFactory.GROUP_NAME)
 
     def _get_provisioner(self, name: str) -> EntryPoint:
