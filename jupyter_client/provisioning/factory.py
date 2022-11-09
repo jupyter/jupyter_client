@@ -174,7 +174,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         return entry_points(group=KernelProvisionerFactory.GROUP_NAME)
 
     def _get_provisioner(self, name: str) -> EntryPoint:
-        """Wrapper around entrypoints.get_single() - primarily to facilitate testing."""
+        """Wrapper around entry_points (to fetch a single provisioner) - primarily to facilitate testing."""
         eps = entry_points(group=KernelProvisionerFactory.GROUP_NAME, name=name)
         if eps:
             return eps[0]
