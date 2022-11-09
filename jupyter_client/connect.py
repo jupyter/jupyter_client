@@ -30,7 +30,6 @@ from jupyter_core.paths import secure_write
 from traitlets import Bool
 from traitlets import CaselessStrEnum
 from traitlets import Instance
-from traitlets import Int
 from traitlets import Integer
 from traitlets import observe
 from traitlets import Type
