@@ -22,9 +22,9 @@ class KernelProvisionerMeta(ABCMeta, type(LoggingConfigurable)):  # type: ignore
     pass
 
 
-class KernelProvisionerBase(
+class KernelProvisionerBase(  # type:ignore[misc]
     ABC, LoggingConfigurable, metaclass=KernelProvisionerMeta
-):  # type:ignore[misc]
+):
     """
     Abstract base class defining methods for KernelProvisioner classes.
 
