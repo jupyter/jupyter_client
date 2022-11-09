@@ -182,7 +182,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         # Check if the entrypoint name is 'local-provisioner'.  Although this should never
         # happen, we have seen cases where the previous distribution of jupyter_client has
         # remained which doesn't include kernel-provisioner entrypoints (so 'local-provisioner'
-        # is deemed not found even though its definition is in THIS package).  In such cass,
+        # is deemed not found even though its definition is in THIS package).  In such cases,
         # the entrypoints package uses what it first finds - which is the older distribution
         # resulting in a violation of a supposed invariant condition.  To address this scenario,
         # we will log a warning message indicating this situation, then build the entrypoint
