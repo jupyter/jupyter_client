@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.4.5
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.4...d27c8a497c6cbb1a232fbbe75cb1fd0f53faa9b0))
+
+### Maintenance and upkeep improvements
+
+- \[7.x\] Handle Jupyter Core Warning [#875](https://github.com/jupyter/jupyter_client/pull/875) ([@blink1073](https://github.com/blink1073))
+- Clean up 7.x workflows [#865](https://github.com/jupyter/jupyter_client/pull/865) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-10-25&to=2022-11-10&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-10-25..2022-11-10&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.4.4
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.3...4029f6cad9223b1287980a1f0e966ff66557386e))
@@ -15,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-10-19&to=2022-10-25&type=c))
 
 [@meeseeksmachine](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ameeseeksmachine+updated%3A2022-10-19..2022-10-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.4.3
 
