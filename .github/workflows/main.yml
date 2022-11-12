@@ -57,7 +57,7 @@ jobs:
       - shell: bash
         run: |
           mkdir ~/.ssh
-          ssh-agent
+          eval `ssh-agent -s`
           ssh-keygen -t rsa -f test_key -N ""
           ssh-add ./test_key
       - name: Run the tests
