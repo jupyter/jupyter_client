@@ -65,8 +65,10 @@ jobs:
           pip install -e ".[test]"
           python -m pytest -vv -W ignore || python -m pytest -vv -W ignore --lf
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Code coverage
+        run: |
+          pip install codecov
+          codecov
 
   docs:
     runs-on: ubuntu-latest
