@@ -12,6 +12,7 @@ import os
 import socket
 import stat
 import tempfile
+import time
 import warnings
 from getpass import getpass
 from typing import Any
@@ -310,7 +311,13 @@ def tunnel_to_kernel(
         password = getpass("SSH Password for %s: " % sshserver)
 
     for lp, rp in zip(lports, rports):
-        tunnel.ssh_tunnel(lp, rp, sshserver, remote_ip, sshkey, password)
+        for i in range(3):
+            try:
+                tunnel.ssh_tunnel(lp, rp, sshserver, remote_ip, sshkey, password)
+                continue
+            except RuntimeError:
+                time.sleep(0.1)
+                pass
 
     return tuple(lports)
 

@@ -135,6 +135,9 @@ exclude_lines = [
   "class .*\bProtocol\\):",
 "@(abc\\.)?abstractmethod",
 ]
+omit = [
+    "jupyter_client/ssh/forward.py"
+]
 
 [tool.mypy]
 check_untyped_defs = true

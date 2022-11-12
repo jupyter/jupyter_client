@@ -361,7 +361,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         Classes which mix this class in should call:
                JupyterConsoleApp.initialize(self,argv)
         """
-        if self._dispatching:  # type:ignore[attr-defined]
+        if getattr(self, "_dispatching", False):
             return
         self.init_connection_file()
         self.init_ssh()
