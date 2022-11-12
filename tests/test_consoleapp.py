@@ -16,6 +16,7 @@ def sshkey(tmp_path):
     os.chdir(tmp_path)
     name = "test_consoleapp"
     subprocess.run(["ssh-keygen", "-f", name, "-N", ""])
+    subprocess.run(["ssh-add", name])
     yield name
 
 
