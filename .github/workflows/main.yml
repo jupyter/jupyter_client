@@ -57,7 +57,8 @@ jobs:
       - shell: bash
         run: |
           ssh-keygen -f test_consoleapp -N ""
-          ssh-add ./test_consoleapp
+          ssh-agent /bin/sh
+          #ssh-add ./test_consoleapp
           ssh -v -f 127.0.0.1 -i test_consoleapp -o StrictHostKeyChecking=no exit
           exit 1
       - name: Run the tests
