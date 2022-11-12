@@ -54,7 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - shell: bash
-        run: cat ~/.ssh/config
+        run: ls -ltr ~/.ssh
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
