@@ -54,13 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - shell: bash
-        run: |
-          ssh-keygen -f test_consoleapp -N ""
-          ssh-agent /bin/sh
-          ssh-add ./test_consoleapp
-          ssh -v -f 127.0.0.1 -i test_consoleapp -o StrictHostKeyChecking=no exit
-          exit 1
+      - uses: webfactory/ssh-agent@v0.6.0
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
         run: |
