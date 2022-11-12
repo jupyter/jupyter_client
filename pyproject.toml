@@ -122,6 +122,20 @@ filterwarnings= [
   "error",
 ]
 
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "if self.debug:",
+  "if settings.DEBUG",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if 0:",
+  "if __name__ == .__main__.:",
+  "class .*\bProtocol\\):",
+"@(abc\\.)?abstractmethod",
+]
+
 [tool.mypy]
 check_untyped_defs = true
 disallow_any_generics = false
