@@ -56,10 +56,9 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - shell: bash
         run: |
-          mkdir ~/.ssh
+          mkdir -p ~/.ssh
           eval `ssh-agent -s`
-          ssh-keygen -t rsa -f test_key -N ""
-          ssh-add ./test_key
+          hatch run test:test -k test_console_app_ssh
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
         run: |
