@@ -53,9 +53,6 @@ jobs:
             python-version: "3.8"
     steps:
       - uses: actions/checkout@v3
-      - shell: bash
-        run: |
-          ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
