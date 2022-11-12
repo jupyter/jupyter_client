@@ -57,14 +57,16 @@ jobs:
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:test || hatch run test:test --lf
-      - name: Run the tests on pypy and windows
-        if: ${{ startsWith(matrix.python-version, 'pypy') || startsWith(matrix.os, 'windows') }}
+          hatch run cov:test --cov-fail-under 70 || hatch run test:test --lf
+      - name: Run the tests on pypy
+        if: ${{ startsWith(matrix.python-version, 'pypy') }}
         run: |
-          # Ignore warnings on Windows and PyPI
-          pip install -e ".[test]"
-          python -m pytest -vv -W ignore || python -m pytest -vv -W ignore --lf
-
+          # Ignore warnings on pypy
+          hatch run test:test -W default
+      - name: Run the tests on Windows
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        run: |
+           hatch run cov:test || hatch run test:test --lf
       - name: Code coverage
         run: |
           pip install codecov

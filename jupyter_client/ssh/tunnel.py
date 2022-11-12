@@ -95,6 +95,8 @@ def _try_passwordless_openssh(server, keyfile):
             i = p.expect([ssh_newkey, _password_pat], timeout=0.1)
             if i == 0:
                 raise SSHException("The authenticity of the host can't be established.")
+            elif i == 1:
+                raise RuntimeError("Asked for a password")
         except pexpect.TIMEOUT:
             continue
         except pexpect.EOF:

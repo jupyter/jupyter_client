@@ -52,6 +52,7 @@ test = [
     "coverage",
     "ipykernel>=6.11",
     "mypy",
+    "paramiko; sys_platform == 'win32'",
     "pre-commit",
     "pytest",
     "pytest-asyncio>=0.19",
@@ -95,7 +96,7 @@ dependencies = ["coverage", "pytest-cov"]
 [tool.hatch.envs.cov.env-vars]
 ARGS = "-vv --cov jupyter_client --cov-branch --cov-report term-missing:skip-covered"
 [tool.hatch.envs.cov.scripts]
-test = "python -m pytest $ARGS --cov-fail-under 70 {args}"
+test = "python -m pytest $ARGS {args}"
 
 [tool.black]
 line-length = 100
