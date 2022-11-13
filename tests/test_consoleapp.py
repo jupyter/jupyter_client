@@ -2,9 +2,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
-import subprocess
 
-import pytest
 from jupyter_core.application import JupyterApp
 
 from jupyter_client.consoleapp import JupyterConsoleApp
