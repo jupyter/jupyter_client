@@ -310,7 +310,6 @@ def tunnel_to_kernel(
         password = getpass("SSH Password for %s: " % sshserver)
 
     for lp, rp in zip(lports, rports):
-        print('what?')
         tunnel.ssh_tunnel(lp, rp, sshserver, remote_ip, sshkey, password)
 
     return tuple(lports)

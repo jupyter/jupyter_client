@@ -260,7 +260,7 @@ def openssh_tunnel(
     failed = False
     while True:
         try:
-            i = tunnel.expect([ssh_newkey, _password_pat], timeout=1)
+            i = tunnel.expect([ssh_newkey, _password_pat], timeout=0.1)
             if i == 0:
                 raise SSHException("The authenticity of the host can't be established.")
         except pexpect.TIMEOUT:
