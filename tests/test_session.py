@@ -491,8 +491,8 @@ class TestSession:
 
     def test_set_packer(self, session):
         s = session
-        s.packer = ss.json_packer
-        s.unpacker = ss.json_unpacker
+        s.packer = "json"
+        s.unpacker = "json"
 
     def test_clone(self, session):
         s = session
