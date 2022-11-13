@@ -56,8 +56,6 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - shell: bash
         run: |
-          mkdir -p ~/.ssh
-          eval `ssh-agent -s`
           hatch run test:test -k test_console_app_ssh
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
