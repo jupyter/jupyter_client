@@ -255,7 +255,7 @@ class Message:
 
     # Having this iterator lets dict(msg_obj) work out of the box.
     def __iter__(self) -> t.ItemsView[str, t.Any]:
-        return iter(self.__dict__.items())
+        return iter(self.__dict__.items())  # type:ignore[return-value]
 
     def __repr__(self) -> str:
         return repr(self.__dict__)

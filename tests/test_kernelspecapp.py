@@ -44,4 +44,4 @@ def test_kernelspec_app():
 
 def test_list_provisioners_app():
     app = ListProvisioners()
-    app.launch_instance()
+    app.launch_instance([])

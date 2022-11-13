@@ -1,7 +1,6 @@
 """test building messages with Session"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import datetime
 import hmac
 import os
 import platform
@@ -518,7 +517,7 @@ def test_json_packer():
     ss.json_packer(dict(a=1))
     with pytest.raises(ValueError):
         ss.json_packer(dict(a=ss.Session()))
-    ss.json_packer(dict(a=datetime.datetime(2021, 4, 1, 12, tzinfo=tzlocal())))
+    ss.json_packer(dict(a=datetime(2021, 4, 1, 12, tzinfo=tzlocal())))
 
 
 def test_message_cls():
