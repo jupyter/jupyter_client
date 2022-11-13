@@ -1,6 +1,7 @@
 """test building messages with Session"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import datetime
 import hmac
 import os
 import platform
@@ -10,6 +11,7 @@ from unittest import mock
 
 import pytest
 import zmq
+from dateutil.tz import tzlocal
 from tornado import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
@@ -488,6 +490,11 @@ class TestSession:
         B.close()
         ctx.term()
 
+    def test_set_packer(self, session):
+        s = session
+        s.packer = ss.json_packer
+        s.unpacker = ss.json_unpacker
+
     def test_clone(self, session):
         s = session
         s._add_digest("initial")
@@ -499,3 +506,23 @@ class TestSession:
         s._add_digest(digest)
         assert digest in s.digest_history
         assert digest not in s2.digest_history
+
+
+def test_squash_unicode():
+    assert ss.squash_unicode(dict(a='1')) == {b'a': b'1'}
+    assert ss.squash_unicode(['a', 1]) == [b'a', 1]
+    assert ss.squash_unicode('hi') == b'hi'
+
+
+def test_json_packer():
+    ss.json_packer(dict(a=1))
+    with pytest.raises(ValueError):
+        ss.json_packer(dict(a=ss.Session()))
+    ss.json_packer(dict(a=datetime.datetime(2021, 4, 1, 12, tzinfo=tzlocal())))
+
+
+def test_message_cls():
+    m = ss.Message(dict(a=1))
+    foo = dict(m)
+    assert foo['a'] == 1
+    assert m['a'] == 1, m['a']
