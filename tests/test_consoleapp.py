@@ -35,7 +35,6 @@ def test_console_app_ssh(tmp_path):
     app = MockConsoleApp(
         connection_file=cf, existing=cf, sshserver="does_not_exist", sshkey="test_console_app"
     )
-
     with pytest.raises(SystemExit):
         app.initialize([])
     kc.stop_channels()
