@@ -12,7 +12,6 @@ import os
 import socket
 import stat
 import tempfile
-import time
 import warnings
 from getpass import getpass
 from typing import Any
