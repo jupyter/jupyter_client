@@ -54,27 +54,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - shell: bash
-        run: |
-          hatch run test:test -k test_console_app_ssh
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:test --cov-fail-under 70 || hatch run test:test --lf
-      - name: Run the tests on pypy
-        if: ${{ startsWith(matrix.python-version, 'pypy') }}
+          hatch run cov:test || hatch run test:test --lf
+      - name: Run the tests on pypy and windows
+        if: ${{ startsWith(matrix.python-version, 'pypy') || startsWith(matrix.os, 'windows') }}
         run: |
-          # Ignore warnings on pypy
-          hatch run test:test -W default
-      - name: Run the tests on Windows
-        if: ${{ startsWith(matrix.os, 'windows') }}
-        run: |
-           hatch run cov:test || hatch run test:test --lf
+          # Ignore warnings on Windows and PyPI
+          pip install -e ".[test]"
+          python -m pytest -vv -W ignore || python -m pytest -vv -W ignore --lf
       - name: Code coverage
         run: |
           pip install codecov
           codecov
-
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -116,7 +109,6 @@ jobs:
       - name: Run the tests
         run: |
           pytest -vv -W default || pytest -vv -W default --lf
-
   make_sdist:
     name: Make SDist
     runs-on: ubuntu-latest

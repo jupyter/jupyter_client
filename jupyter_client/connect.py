@@ -311,13 +311,7 @@ def tunnel_to_kernel(
         password = getpass("SSH Password for %s: " % sshserver)
 
     for lp, rp in zip(lports, rports):
-        for _ in range(3):
-            try:
-                tunnel.ssh_tunnel(lp, rp, sshserver, remote_ip, sshkey, password)
-                continue
-            except RuntimeError:
-                time.sleep(0.1)
-                pass
+        tunnel.ssh_tunnel(lp, rp, sshserver, remote_ip, sshkey, password)
 
     return tuple(lports)
 

@@ -11,15 +11,6 @@ from jupyter_client.consoleapp import JupyterConsoleApp
 from jupyter_client.manager import start_new_kernel
 
 
-@pytest.fixture
-def sshkey(tmp_path):
-    os.chdir(tmp_path)
-    name = "test_consoleapp"
-    subprocess.check_call(["ssh-keygen", "-f", name, "-N", ""])
-    subprocess.check_call(["ssh-add", name])
-    yield name
-
-
 class MockConsoleApp(JupyterConsoleApp, JupyterApp):
     pass
 
@@ -38,11 +29,11 @@ def test_console_app_existing(tmp_path):
     km.shutdown_kernel()
 
 
-def test_console_app_ssh(sshkey, tmp_path):
+def test_console_app_ssh(tmp_path):
     km, kc = start_new_kernel()
     cf = kc.connection_file
     os.chdir(tmp_path)
-    app = MockConsoleApp(connection_file=cf, existing=cf, sshkey=sshkey)
+    app = MockConsoleApp(connection_file=cf, existing=cf, sshkey="test_console_app")
     app.initialize([])
     kc.stop_channels()
     km.shutdown_kernel()
