@@ -80,8 +80,6 @@ def _try_passwordless_openssh(server, keyfile):
     cmd = "ssh -f " + server
     if keyfile:
         cmd += " -i " + keyfile
-    # if "PYTEST_CURRENT_TEST" in os.environ:
-    #     cmd += " -o StrictHostKeyChecking=no"
     cmd += " exit"
 
     # pop SSH_ASKPASS from env
