@@ -2,6 +2,8 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
+import platform
+import sys
 from threading import Event
 from unittest import mock
 from unittest import TestCase
@@ -130,6 +132,10 @@ class TestAsyncKernelClient:
         assert reply["header"]["msg_type"] == reply_type + "_reply"
         assert reply["parent_header"]["msg_type"] == reply_type + "_request"
 
+    @pytest.mark.skipif(
+        sys.platform != 'linux' or platform.python_implementation().lower() == 'pypy',
+        reason='only works with cpython on ubuntu in ci',
+    )
     async def test_input_request(self, kc):
         with mock.patch('builtins.input', return_value='test\n'):
             reply = await kc.execute_interactive("a = input()", timeout=TIMEOUT)
