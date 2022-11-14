@@ -93,7 +93,7 @@ nowarn = "python -m pytest -vv -W default {args}"
 features = ["test"]
 dependencies = ["coverage", "pytest-cov"]
 [tool.hatch.envs.cov.env-vars]
-ARGS = "-vv --cov jupyter_core --cov-branch --cov-report term-missing:skip-covered"
+ARGS = "-vv --cov jupyter_client --cov-branch --cov-report term-missing:skip-covered"
 [tool.hatch.envs.cov.scripts]
 test = "python -m pytest $ARGS --cov-fail-under 70 {args}"
 
@@ -120,6 +120,20 @@ asyncio_mode = "auto"
 filterwarnings= [
   # Fail on warnings
   "error",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "if self.debug:",
+  "if settings.DEBUG",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if 0:",
+  "if __name__ == .__main__.:",
+  "class .*\bProtocol\\):",
+"@(abc\\.)?abstractmethod",
 ]
 
 [tool.mypy]
