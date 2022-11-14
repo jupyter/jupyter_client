@@ -39,9 +39,11 @@ def test_kernelspec_sub_apps(kernel_spec):
 
 def test_kernelspec_app():
     app = KernelSpecApp()
-    app.launch_instance(["list"])
+    app.initialize(["list"])
+    app.start()
 
 
 def test_list_provisioners_app():
     app = ListProvisioners()
-    app.launch_instance([])
+    app.initialize([])
+    app.start()
