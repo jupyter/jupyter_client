@@ -5,11 +5,13 @@ import json
 import os
 from tempfile import TemporaryDirectory
 
+import pytest
 from jupyter_core.application import JupyterApp
 from jupyter_core.paths import jupyter_runtime_dir
 
 from jupyter_client import connect
 from jupyter_client import KernelClient
+from jupyter_client import KernelManager
 from jupyter_client.consoleapp import JupyterConsoleApp
 from jupyter_client.session import Session
 
@@ -235,3 +237,67 @@ def test_mixin_cleanup_random_ports():
         assert not os.path.exists(filename)
         for name in dc._random_port_names:
             assert getattr(dc, name) == 0
+
+
+param_values = [
+    (True, True, None),
+    (True, False, ValueError),
+    (False, True, None),
+    (False, False, ValueError),
+]
+
+
+@pytest.mark.parametrize("file_exists, km_matches, expected_exception", param_values)
+def test_reconcile_connection_info(file_exists, km_matches, expected_exception):
+
+    expected_info = sample_info
+    mismatched_info = sample_info.copy()
+    mismatched_info["key"] = b"def456"
+    mismatched_info["shell_port"] = expected_info["shell_port"] + 42
+    mismatched_info["control_port"] = expected_info["control_port"] + 42
+
+    with TemporaryDirectory() as connection_dir:
+
+        cf = os.path.join(connection_dir, "kernel.json")
+        km = KernelManager()
+        km.connection_file = cf
+
+        if file_exists:
+            _, info = connect.write_connection_file(cf, **expected_info)
+            info["key"] = info["key"].encode()  # set 'key' back to bytes
+
+            if km_matches:
+                # Let this be the case where the connection file exists, and the KM has matching
+                # values prior to reconciliation.  This is the LocalProvisioner case.
+                provisioner_info = info
+                km.load_connection_info(provisioner_info)
+            else:
+                # Let this be the case where the connection file exists, the KM has no values
+                # prior to reconciliation, but the provisioner has returned different values
+                # and a ValueError is expected.
+                provisioner_info = mismatched_info
+        else:  # connection file does not exist
+            if km_matches:
+                # Let this be the case where the connection file does not exist, NOR does the KM
+                # have any values of its own and reconciliation sets those values. This is the
+                # non-LocalProvisioner case.
+                provisioner_info = expected_info
+            else:
+                # Let this be the case where the connection file does not exist, yet the KM
+                # has values that do not match those returned from the provisioner and a
+                # ValueError is expected.
+                km.load_connection_info(expected_info)
+                provisioner_info = mismatched_info
+
+        if expected_exception is None:
+            km._reconcile_connection_info(provisioner_info)
+            km_info = km.get_connection_info()
+            assert km._equal_connections(km_info, provisioner_info)
+        else:
+            with pytest.raises(expected_exception) as ex:
+                km._reconcile_connection_info(provisioner_info)
+            if file_exists:
+                assert "Connection file already exists" in str(ex.value)
+            else:
+                assert "KernelManager's connection information already exists" in str(ex.value)
+            assert km._equal_connections(km.get_connection_info(), provisioner_info) is False
