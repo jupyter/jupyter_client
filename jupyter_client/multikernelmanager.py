@@ -440,9 +440,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
-    def connect_iopub(
+    def connect_iopub( # type:ignore[empty-body]
         self, kernel_id: str, identity: t.Optional[bytes] = None
-    ) -> socket.socket:  # type:ignore[empty-body]
+    ) -> socket.socket:  
         """Return a zmq Socket connected to the iopub channel.
 
         Parameters
@@ -458,9 +458,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
-    def connect_shell(
+    def connect_shell( # type:ignore[empty-body]
         self, kernel_id: str, identity: t.Optional[bytes] = None
-    ) -> socket.socket:  # type:ignore[empty-body]
+    ) -> socket.socket: 
         """Return a zmq Socket connected to the shell channel.
 
         Parameters
@@ -476,9 +476,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
-    def connect_control(
+    def connect_control( # type:ignore[empty-body]
         self, kernel_id: str, identity: t.Optional[bytes] = None
-    ) -> socket.socket:  # type:ignore[empty-body]
+    ) -> socket.socket: 
         """Return a zmq Socket connected to the control channel.
 
         Parameters
@@ -494,9 +494,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
-    def connect_stdin(
+    def connect_stdin( # type:ignore[empty-body]
         self, kernel_id: str, identity: t.Optional[bytes] = None
-    ) -> socket.socket:  # type:ignore[empty-body]
+    ) -> socket.socket:  
         """Return a zmq Socket connected to the stdin channel.
 
         Parameters
@@ -512,9 +512,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
-    def connect_hb(
+    def connect_hb( # type:ignore[empty-body]
         self, kernel_id: str, identity: t.Optional[bytes] = None
-    ) -> socket.socket:  # type:ignore[empty-body]
+    ) -> socket.socket: 
         """Return a zmq Socket connected to the hb channel.
 
         Parameters
