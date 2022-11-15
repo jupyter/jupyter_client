@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.4.6
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.5...3394591f161be4a19f9e61c66ba510d7e29afd59))
+
+### Bugs fixed
+
+- Reconcile connection information [#879](https://github.com/jupyter/jupyter_client/pull/879) ([@kevin-bates](https://github.com/kevin-bates))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-11-10&to=2022-11-15&type=c))
+
+[@meeseeksmachine](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ameeseeksmachine+updated%3A2022-11-10..2022-11-15&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.4.5
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.4...d27c8a497c6cbb1a232fbbe75cb1fd0f53faa9b0))
@@ -16,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-10-25&to=2022-11-10&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-10-25..2022-11-10&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.4.4
 
