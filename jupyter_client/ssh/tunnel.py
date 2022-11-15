@@ -266,6 +266,7 @@ def openssh_tunnel(
         except pexpect.TIMEOUT:
             continue
         except pexpect.EOF as e:
+            tunnel.wait()
             if tunnel.exitstatus:
                 print(tunnel.exitstatus)
                 print(tunnel.before)

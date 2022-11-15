@@ -2,7 +2,10 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
+import platform
+import sys
 from threading import Event
+from unittest import mock
 from unittest import TestCase
 
 import pytest
@@ -11,6 +14,7 @@ from traitlets import DottedObjectName
 from traitlets import Type
 
 from .utils import test_env
+from jupyter_client.client import validate_string_dict
 from jupyter_client.kernelspec import KernelSpecManager
 from jupyter_client.kernelspec import NATIVE_KERNEL_NAME
 from jupyter_client.kernelspec import NoSuchKernel
@@ -128,6 +132,29 @@ class TestAsyncKernelClient:
         assert reply["header"]["msg_type"] == reply_type + "_reply"
         assert reply["parent_header"]["msg_type"] == reply_type + "_request"
 
+    @pytest.mark.skipif(
+        sys.platform != 'linux' or platform.python_implementation().lower() == 'pypy',
+        reason='only works with cpython on ubuntu in ci',
+    )
+    async def test_input_request(self, kc):
+        with mock.patch('builtins.input', return_value='test\n'):
+            reply = await kc.execute_interactive("a = input()", timeout=TIMEOUT)
+        assert reply["content"]["status"] == "ok"
+
+    async def test_output_hook(self, kc):
+        called = False
+
+        def output_hook(msg):
+            nonlocal called
+            if msg['header']['msg_type'] == 'stream':
+                called = True
+
+        reply = await kc.execute_interactive(
+            "print('hello')", timeout=TIMEOUT, output_hook=output_hook
+        )
+        assert reply["content"]["status"] == "ok"
+        assert called
+
     async def test_history(self, kc):
         msg_id = await kc.history(session=0)
         assert isinstance(msg_id, str)
@@ -145,6 +172,12 @@ class TestAsyncKernelClient:
         assert isinstance(msg_id, str)
         reply = await kc.complete("code", reply=True, timeout=TIMEOUT)
         self._check_reply("complete", reply)
+
+    async def test_is_complete(self, kc):
+        msg_id = await kc.is_complete("who cares")
+        assert isinstance(msg_id, str)
+        reply = await kc.is_complete("code", reply=True, timeout=TIMEOUT)
+        self._check_reply("is_complete", reply)
 
     async def test_kernel_info(self, kc):
         msg_id = await kc.kernel_info()
@@ -272,3 +305,10 @@ class TestThreadedKernelClient(TestKernelClient):
         kc = self.kc
         msg_id = kc.shutdown()
         self.assertIsInstance(msg_id, str)
+
+
+def test_validate_string_dict():
+    with pytest.raises(ValueError):
+        validate_string_dict(dict(a=1))
+    with pytest.raises(ValueError):
+        validate_string_dict({1: 'a'})

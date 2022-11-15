@@ -69,7 +69,7 @@ utc = timezone.utc
 def squash_unicode(obj):
     """coerce unicode back to bytestrings."""
     if isinstance(obj, dict):
-        for key in obj.keys():
+        for key in list(obj.keys()):
             obj[key] = squash_unicode(obj[key])
             if isinstance(key, str):
                 obj[squash_unicode(key)] = obj.pop(key)
@@ -184,7 +184,7 @@ session_flags = {
 }
 
 
-def default_secure(cfg: t.Any) -> None:
+def default_secure(cfg: t.Any) -> None:  # pragma: no cover
     """Set the default behavior for a config environment to be secure.
 
     If Session.key/keyfile have not been set, set Session.key to
@@ -255,7 +255,7 @@ class Message:
 
     # Having this iterator lets dict(msg_obj) work out of the box.
     def __iter__(self) -> t.ItemsView[str, t.Any]:
-        return self.__dict__.items()
+        return iter(self.__dict__.items())  # type:ignore[return-value]
 
     def __repr__(self) -> str:
         return repr(self.__dict__)
@@ -1086,7 +1086,7 @@ class Session(Configurable):
         # adapt to the current version
         return adapt(message)
 
-    def unserialize(self, *args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:
+    def unserialize(self, *args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:  # pragma: no cover
         warnings.warn(
             "Session.unserialize is deprecated. Use Session.deserialize.",
             DeprecationWarning,

@@ -80,6 +80,13 @@ def debug_logging():
     get_logger().setLevel("DEBUG")
 
 
+win_skip = pytest.mark.skipif(
+    os.name == 'nt',
+    reason='"RuntimeError: Cannot run the event loop while another loop is running" error on Windows',
+)
+
+
+@win_skip
 @pytest.mark.asyncio
 async def test_restart_check(config, install_kernel, debug_logging):
     """Test that the kernel is restarted and recovers"""
@@ -136,6 +143,7 @@ async def test_restart_check(config, install_kernel, debug_logging):
         assert km.context.closed
 
 
+@win_skip
 @pytest.mark.asyncio
 async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
     """Test that the restarter gives up after reaching the restart limit"""

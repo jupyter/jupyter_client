@@ -66,6 +66,7 @@ class ListKernelSpecs(JupyterApp):
                 print(f"  {kernelname.ljust(name_len)}    {path}")
         else:
             print(json.dumps({"kernelspecs": specs}, indent=2))
+        return specs
 
 
 class InstallKernelSpec(JupyterApp):
@@ -228,7 +229,7 @@ class InstallNativeKernelSpec(JupyterApp):
     description = """[DEPRECATED] Install the IPython kernel spec directory for this Python."""
     kernel_spec_manager = Instance(KernelSpecManager)
 
-    def _kernel_spec_manager_default(self):
+    def _kernel_spec_manager_default(self):  # pragma: no cover
         return KernelSpecManager(data_dir=self.data_dir)
 
     user = Bool(
@@ -248,7 +249,7 @@ class InstallNativeKernelSpec(JupyterApp):
         "debug": base_flags["debug"],
     }
 
-    def start(self):
+    def start(self):  # pragma: no cover
         self.log.warning(
             "`jupyter kernelspec install-self` is DEPRECATED as of 4.0."
             " You probably want `ipython kernel install` to install the IPython kernelspec."
