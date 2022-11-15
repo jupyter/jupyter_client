@@ -158,21 +158,9 @@ def write_connection_file(
     cfg["signature_scheme"] = signature_scheme
     cfg["kernel_name"] = kernel_name
 
-    # Prevent over-writing a file that has already been written with the same
-    # info.  This is to prevent a race condition where the process has
-    # already been launched but has not yet read the connection file.
-    if os.path.exists(fname):
-        with open(fname) as f:
-            try:
-                data = json.load(f)
-                if data == cfg:
-                    return fname, cfg
-            except Exception:
-                pass
-
     # Only ever write this file as user read/writeable
     # This would otherwise introduce a vulnerability as a file has secrets
-    # which would let others execute arbitrarily code as you
+    # which would let others execute arbitrary code as you
     with secure_write(fname) as f:
         f.write(json.dumps(cfg, indent=2))
 
@@ -579,18 +567,70 @@ class ConnectionFileMixin(LoggingConfigurable):
         if "signature_scheme" in info:
             self.session.signature_scheme = info["signature_scheme"]
 
-    def _force_connection_info(self, info: KernelConnectionInfo) -> None:
-        """Unconditionally loads connection info from a dict containing connection info.
+    def _reconcile_connection_info(self, info: KernelConnectionInfo) -> None:
+        """Reconciles the connection information returned from the Provisioner.
 
-        Overwrites connection info-based attributes, regardless of their current values
-        and writes this information to the connection file.
+        Because some provisioners (like derivations of LocalProvisioner) may have already
+        written the connection file, this method needs to ensure that, if the connection
+        file exists, its contents match that of what was returned by the provisioner.  If
+        the file does exist and its contents do not match, a ValueError is raised.
+
+        If the file does not exist, the connection information in 'info' is loaded into the
+        KernelManager and written to the file.
         """
-        # Reset current ports to 0 and indicate file has not been written to enable override
-        self._connection_file_written = False
-        for name in port_names:
-            setattr(self, name, 0)
-        self.load_connection_info(info)
-        self.write_connection_file()
+        # Prevent over-writing a file that has already been written with the same
+        # info.  This is to prevent a race condition where the process has
+        # already been launched but has not yet read the connection file - as is
+        # the case with LocalProvisioners.
+        file_exists: bool = False
+        if os.path.exists(self.connection_file):
+            with open(self.connection_file) as f:
+                file_info = json.load(f)
+                # Prior to the following comparison, we need to adjust the value of "key" to
+                # be bytes, otherwise the comparison below will fail.
+                file_info["key"] = file_info["key"].encode()
+                if not self._equal_connections(info, file_info):
+                    raise ValueError(
+                        "Connection file already exists and does not match "
+                        "the expected values returned from provisioner!"
+                    )
+                file_exists = True
+
+        if not file_exists:
+            # Load the connection info and write out file. Note, this does not necessarily
+            # overwrite non-zero port values, so we'll validate afterward.
+            self.load_connection_info(info)
+            self.write_connection_file()
+
+        # Ensure what is in KernelManager is what we expect.  This will catch issues if the file
+        # already existed, yet it's contents differed from the KernelManager's (and provisioner).
+        km_info = self.get_connection_info()
+        if not self._equal_connections(info, km_info):
+            raise ValueError(
+                "KernelManager's connection information already exists and does not match "
+                "the expected values returned from provisioner!"
+            )
+
+    @staticmethod
+    def _equal_connections(conn1: KernelConnectionInfo, conn2: KernelConnectionInfo) -> bool:
+        """Compares pertinent keys of connection info data. Returns True if equivalent, False otherwise."""
+
+        pertinent_keys = [
+            "key",
+            "ip",
+            "stdin_port",
+            "iopub_port",
+            "shell_port",
+            "control_port",
+            "hb_port",
+            "transport",
+            "signature_scheme",
+        ]
+
+        for key in pertinent_keys:
+            if conn1.get(key) != conn2.get(key):
+                return False
+        return True
 
     # --------------------------------------------------------------------------
     # Creating connected sockets
