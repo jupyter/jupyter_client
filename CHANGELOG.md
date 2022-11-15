@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.0.0a3
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0a2...10f69c9b5ac55b92b651f1f55fa2814f81f3ce51))
+
+### Bugs fixed
+
+- Reconcile connection information [#879](https://github.com/jupyter/jupyter_client/pull/879) ([@kevin-bates](https://github.com/kevin-bates))
+
+### Maintenance and upkeep improvements
+
+- Add coverage config [#876](https://github.com/jupyter/jupyter_client/pull/876) ([@blink1073](https://github.com/blink1073))
+- Bump actions/setup-python from 2 to 4 [#874](https://github.com/jupyter/jupyter_client/pull/874) ([@dependabot](https://github.com/dependabot))
+- Bump actions/checkout from 2 to 3 [#873](https://github.com/jupyter/jupyter_client/pull/873) ([@dependabot](https://github.com/dependabot))
+- Clean up types and remove use of entrypoints [#871](https://github.com/jupyter/jupyter_client/pull/871) ([@blink1073](https://github.com/blink1073))
+- Add dependabot [#870](https://github.com/jupyter/jupyter_client/pull/870) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-11-09&to=2022-11-15&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-11-09..2022-11-15&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adependabot+updated%3A2022-11-09..2022-11-15&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2022-11-09..2022-11-15&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-11-09..2022-11-15&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.0.0a2
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0a1...268a3c5c892e3e42e76c5ec120a74de10fb04218))
@@ -16,8 +40,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-10-25&to=2022-11-09&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-10-25..2022-11-09&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-10-25..2022-11-09&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.0.0a1
 
