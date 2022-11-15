@@ -18,7 +18,7 @@ from ..localinterfaces import local_ips
 from .provisioner_base import KernelProvisionerBase
 
 
-class LocalProvisioner(KernelProvisionerBase):
+class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     """
     :class:`LocalProvisioner` is a concrete class of ABC :py:class:`KernelProvisionerBase`
     and is the out-of-box default implementation used when no kernel provisioner is
