@@ -834,7 +834,7 @@ class Session(Configurable):
             else:
                 try:
                     # check to see if buf supports the buffer protocol.
-                    view = memoryview(buf)
+                    view = memoryview(buf)  # type:ignore[assignment]
                 except TypeError as e:
                     raise TypeError("Buffer objects must support the buffer protocol.") from e
             # memoryview.contiguous is new in 3.3,

@@ -381,7 +381,7 @@ class MultiKernelManager(LoggingConfigurable):
     restart_kernel = run_sync(_async_restart_kernel)
 
     @kernel_method
-    def is_alive(self, kernel_id: str) -> bool:
+    def is_alive(self, kernel_id: str) -> bool:  # type:ignore[empty-body]
         """Is the kernel alive.
 
         This calls KernelManager.is_alive() which calls Popen.poll on the
@@ -422,7 +422,7 @@ class MultiKernelManager(LoggingConfigurable):
         """remove a callback for the KernelRestarter"""
 
     @kernel_method
-    def get_connection_info(self, kernel_id: str) -> t.Dict[str, t.Any]:
+    def get_connection_info(self, kernel_id: str) -> t.Dict[str, t.Any]:  # type:ignore[empty-body]
         """Return a dictionary of connection data for a kernel.
 
         Parameters
@@ -440,7 +440,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
-    def connect_iopub(self, kernel_id: str, identity: t.Optional[bytes] = None) -> socket.socket:
+    def connect_iopub(  # type:ignore[empty-body]
+        self, kernel_id: str, identity: t.Optional[bytes] = None
+    ) -> socket.socket:
         """Return a zmq Socket connected to the iopub channel.
 
         Parameters
@@ -456,7 +458,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
-    def connect_shell(self, kernel_id: str, identity: t.Optional[bytes] = None) -> socket.socket:
+    def connect_shell(  # type:ignore[empty-body]
+        self, kernel_id: str, identity: t.Optional[bytes] = None
+    ) -> socket.socket:
         """Return a zmq Socket connected to the shell channel.
 
         Parameters
@@ -472,7 +476,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
-    def connect_control(self, kernel_id: str, identity: t.Optional[bytes] = None) -> socket.socket:
+    def connect_control(  # type:ignore[empty-body]
+        self, kernel_id: str, identity: t.Optional[bytes] = None
+    ) -> socket.socket:
         """Return a zmq Socket connected to the control channel.
 
         Parameters
@@ -488,7 +494,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
-    def connect_stdin(self, kernel_id: str, identity: t.Optional[bytes] = None) -> socket.socket:
+    def connect_stdin(  # type:ignore[empty-body]
+        self, kernel_id: str, identity: t.Optional[bytes] = None
+    ) -> socket.socket:
         """Return a zmq Socket connected to the stdin channel.
 
         Parameters
@@ -504,7 +512,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
 
     @kernel_method
-    def connect_hb(self, kernel_id: str, identity: t.Optional[bytes] = None) -> socket.socket:
+    def connect_hb(  # type:ignore[empty-body]
+        self, kernel_id: str, identity: t.Optional[bytes] = None
+    ) -> socket.socket:
         """Return a zmq Socket connected to the hb channel.
 
         Parameters
