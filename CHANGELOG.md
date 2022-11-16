@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.0.0a4
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0a3...107ccdd06c9b67fc081204ae7c0e7123a17cb0c4))
+
+### Bugs fixed
+
+- Fix connection reconciliation to handle restarts [#882](https://github.com/jupyter/jupyter_client/pull/882) ([@kevin-bates](https://github.com/kevin-bates))
+
+### Maintenance and upkeep improvements
+
+- Add more coverage [#877](https://github.com/jupyter/jupyter_client/pull/877) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-11-15&to=2022-11-16&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-11-15..2022-11-16&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2022-11-15..2022-11-16&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.0.0a3
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0a2...10f69c9b5ac55b92b651f1f55fa2814f81f3ce51))
@@ -23,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-11-09&to=2022-11-15&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-11-09..2022-11-15&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adependabot+updated%3A2022-11-09..2022-11-15&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2022-11-09..2022-11-15&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-11-09..2022-11-15&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.0.0a2
 
