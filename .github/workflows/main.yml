@@ -61,11 +61,11 @@ jobs:
       - name: Run the tests on pypy
         if: ${{ startsWith(matrix.python-version, 'pypy') }}
         run: |
-          hatch run test:test -W default || hatch run test:test -W default --lf
+          hatch run test:nowarn || hatch run test:nowarn --lf
       - name: Run the tests on windows
         if: ${{ startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:test -W default || hatch run test:test -W default --lf
+          hatch run cov:nowarn || hatch run test:nowarn --lf
       - name: Code coverage
         run: |
           pip install codecov
@@ -93,7 +93,7 @@ jobs:
       - name: Run the unit tests
         run: |
           export PIP_CONSTRAINT="./contraints_file.txt"
-          hatch run test:test || hatch run test:test --lf
+          hatch run test:nowarn || hatch run test:nowarn --lf
 
   test_prereleases:
     name: Test Prereleases
@@ -105,7 +105,7 @@ jobs:
       - name: Run the tests
         run: |
           export PIP_PRE=1
-          hatch run:test || hatch run test:test --lf
+          hatch run test:nowarn || hatch run test:nowarn --lf
 
   make_sdist:
     name: Make SDist
