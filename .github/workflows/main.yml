@@ -84,12 +84,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           python_version: "3.8"
-      - name: Install minimum versions
-        uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
         with:
           only_create_file: 1
       - name: Run the unit tests
@@ -102,10 +100,8 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: actions/checkout@v3
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Run the tests
         run: |
           export PIP_PRE=1
@@ -137,7 +133,7 @@ jobs:
       - test
       - docs
       - check_links
-      - test_miniumum_verisons
+      - test_minimum_verisons
       - pre-commit
       - test_prereleases
       - test_sdist
