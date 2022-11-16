@@ -112,6 +112,7 @@ target_version = [
 [tool.pytest.ini_options]
 addopts = "-raXs --durations 10 --color=yes --doctest-modules"
 testpaths = [
+    "jupyter_client",
     "tests/"
 ]
 timeout = 100
