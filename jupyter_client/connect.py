@@ -573,7 +573,8 @@ class ConnectionFileMixin(LoggingConfigurable):
         Because some provisioners (like derivations of LocalProvisioner) may have already
         written the connection file, this method needs to ensure that, if the connection
         file exists, its contents match that of what was returned by the provisioner.  If
-        the file does exist and its contents do not match, a ValueError is raised.
+        the file does exist and its contents do not match, the file will be replaced with
+        the provisioner information (which is considered the truth).
 
         If the file does not exist, the connection information in 'info' is loaded into the
         KernelManager and written to the file.
@@ -586,24 +587,24 @@ class ConnectionFileMixin(LoggingConfigurable):
         if os.path.exists(self.connection_file):
             with open(self.connection_file) as f:
                 file_info = json.load(f)
-                # Prior to the following comparison, we need to adjust the value of "key" to
-                # be bytes, otherwise the comparison below will fail.
-                file_info["key"] = file_info["key"].encode()
-                if not self._equal_connections(info, file_info):
-                    raise ValueError(
-                        "Connection file already exists and does not match "
-                        "the expected values returned from provisioner!"
-                    )
+            # Prior to the following comparison, we need to adjust the value of "key" to
+            # be bytes, otherwise the comparison below will fail.
+            file_info["key"] = file_info["key"].encode()
+            if not self._equal_connections(info, file_info):
+                os.remove(self.connection_file)  # Contents mismatch - remove the file
+                self._connection_file_written = False
+            else:
                 file_exists = True
 
         if not file_exists:
-            # Load the connection info and write out file. Note, this does not necessarily
-            # overwrite non-zero port values, so we'll validate afterward.
+            # Load the connection info and write out file, clearing existing
+            # port-based attributes so they will be reloaded
+            for name in port_names:
+                setattr(self, name, 0)
             self.load_connection_info(info)
             self.write_connection_file()
 
-        # Ensure what is in KernelManager is what we expect.  This will catch issues if the file
-        # already existed, yet it's contents differed from the KernelManager's (and provisioner).
+        # Ensure what is in KernelManager is what we expect.
         km_info = self.get_connection_info()
         if not self._equal_connections(info, km_info):
             raise ValueError(
