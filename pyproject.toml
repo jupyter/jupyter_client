@@ -29,7 +29,7 @@ dependencies = [
     "python-dateutil>=2.8.2",
     "pyzmq>=23.0",
     "tornado>=6.2",
-    "traitlets",
+    "traitlets>=5.3",
 ]
 
 [[project.authors]]
@@ -102,16 +102,15 @@ test = "python -m pytest $ARGS {args}"
 line-length = 100
 skip-string-normalization = true
 target_version = [
-    "py37",
     "py38",
     "py39",
     "py310",
+    "py311",
 ]
 
 [tool.pytest.ini_options]
 addopts = "-raXs --durations 10 --color=yes --doctest-modules"
 testpaths = [
-    "jupyter_client",
     "tests/"
 ]
 timeout = 100
