@@ -26,7 +26,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  check-links:
+  check_links:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -61,15 +61,16 @@ jobs:
       - name: Run the tests on pypy
         if: ${{ startsWith(matrix.python-version, 'pypy') }}
         run: |
-          hatch run test:test -W default || hatch run test:test -W default --lf
+          hatch run test:nowarn || hatch run test:nowarn --lf
       - name: Run the tests on windows
         if: ${{ startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:test -W default || hatch run test:test -W default --lf
+          hatch run cov:nowarn || hatch run test:nowarn --lf
       - name: Code coverage
         run: |
           pip install codecov
           codecov
+
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -77,40 +78,35 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - run: hatch run docs:build
 
-  test_miniumum_verisons:
+  test_minimum_verisons:
     name: Test Minimum Versions
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           python_version: "3.8"
-      - name: Install miniumum versions
-        uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
+        with:
+          only_create_file: 1
       - name: Run the unit tests
-        run: pytest -vv -W default || pytest -vv -W default --lf
+        run: |
+          export PIP_CONSTRAINT="./contraints_file.txt"
+          hatch run test:nowarn || hatch run test:nowarn --lf
 
   test_prereleases:
     name: Test Prereleases
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - name: Install the Python dependencies
-        run: |
-          pip install --upgrade --upgrade-strategy eager --pre -e ".[test]"
-      - name: List installed packages
-        run: |
-          pip freeze
-          pip check
+      - uses: actions/checkout@v3
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Run the tests
         run: |
-          pytest -vv -W default || pytest -vv -W default --lf
+          export PIP_PRE=1
+          hatch run test:nowarn || hatch run test:nowarn --lf
+
   make_sdist:
     name: Make SDist
     runs-on: ubuntu-latest
@@ -136,8 +132,8 @@ jobs:
     needs:
       - test
       - docs
-      - check-links
-      - test_miniumum_verisons
+      - check_links
+      - test_minimum_verisons
       - pre-commit
       - test_prereleases
       - test_sdist
