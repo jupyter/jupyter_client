@@ -88,16 +88,14 @@ build = "make -C docs html SPHINXOPTS='-W'"
 features = ["test"]
 [tool.hatch.envs.test.scripts]
 test = "python -m pytest -vv {args}"
-nowarn = "python -m pytest -vv -W default {args}"
+nowarn = "test -W default {args}"
 
 [tool.hatch.envs.cov]
 features = ["test"]
 dependencies = ["coverage", "pytest-cov"]
-[tool.hatch.envs.cov.env-vars]
-ARGS = "-vv --cov jupyter_client --cov-branch --cov-report term-missing:skip-covered"
 [tool.hatch.envs.cov.scripts]
-test = "python -m pytest $ARGS {args}"
-nowarn = "python -m pytest $ARGS -W default {args}"
+test = "python -m pytest $vv --cov jupyter_client --cov-branch --cov-report term-missing:skip-covered {args}"
+nowarn = "test -W default {args}"
 
 [tool.black]
 line-length = 100
