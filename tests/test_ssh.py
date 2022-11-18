@@ -1,3 +1,5 @@
+import socket
+
 import pytest
 
 from jupyter_client.ssh.tunnel import open_tunnel
@@ -13,5 +15,5 @@ def test_random_ports():
 
 
 def test_open_tunnel():
-    with pytest.raises(RuntimeError):
+    with pytest.raises((RuntimeError, socket.error)):
         open_tunnel("tcp://localhost:1234", "does.not.exist")
