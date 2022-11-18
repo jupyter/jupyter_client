@@ -9,6 +9,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell:
+      bash -eux {0}
+
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
