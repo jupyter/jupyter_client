@@ -2,9 +2,11 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import hmac
+import math
 import os
 import platform
 import uuid
+import warnings
 from datetime import datetime
 from unittest import mock
 
@@ -518,6 +520,9 @@ def test_json_packer():
     with pytest.raises(ValueError):
         ss.json_packer(dict(a=ss.Session()))
     ss.json_packer(dict(a=datetime(2021, 4, 1, 12, tzinfo=tzlocal())))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        ss.json_packer(dict(a=math.inf))
 
 
 def test_message_cls():
@@ -525,3 +530,11 @@ def test_message_cls():
     foo = dict(m)
     assert foo['a'] == 1
     assert m['a'] == 1, m['a']
+    assert 'a' in m
+    assert str(m) == "{'a': 1}"
+
+
+def test_session_factory():
+    s = ss.SessionFactory()
+    s.log.info(str(s.context))
+    s.context.destroy()
