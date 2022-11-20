@@ -16,7 +16,7 @@ defaults:
 
 
 jobs:
-  pre-commit:
+  pre_commit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -98,7 +98,6 @@ jobs:
           only_create_file: 1
       - name: Run the unit tests
         run: |
-          export PIP_CONSTRAINT="./contraints_file.txt"
           hatch run test:nowarn || hatch run test:nowarn --lf
 
   test_prereleases:
@@ -110,8 +109,7 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Run the tests
         run: |
-          export PIP_PRE=1
-          hatch run test:nowarn || hatch run test:nowarn --lf
+          PIP_PRE=1 hatch run test:nowarn || hatch run test:nowarn --lf
 
   make_sdist:
     name: Make SDist
@@ -140,7 +138,7 @@ jobs:
       - docs
       - check_links
       - test_minimum_verisons
-      - pre-commit
+      - pre_commit
       - test_prereleases
       - test_sdist
     runs-on: ubuntu-latest
