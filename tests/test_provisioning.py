@@ -278,17 +278,14 @@ class TestRuntime:
             await kernel_mgr.shutdown_kernel()
             assert kernel_mgr.provisioner.has_process is False
 
-    @pytest.mark.asyncio
     async def test_existing(self, kpf, akm):
         await self.akm_test(akm)
 
-    @pytest.mark.asyncio
     async def test_new(self, kpf):
         new_provisioner()  # Introduce provisioner after initialization of KPF
         new_km = AsyncKernelManager(kernel_name='new_provisioner')
         await self.akm_test(new_km)
 
-    @pytest.mark.asyncio
     async def test_custom_lifecycle(self, kpf):
         custom_provisioner()
         async_km = AsyncKernelManager(kernel_name='custom_provisioner')
@@ -305,7 +302,6 @@ class TestRuntime:
         assert is_alive is False
         assert async_km.context.closed
 
-    @pytest.mark.asyncio
     async def test_default_provisioner_config(self, kpf, all_provisioners):
         kpf.default_provisioner_name = 'custom-test-provisioner'
         async_km = AsyncKernelManager(kernel_name='no_provisioner')

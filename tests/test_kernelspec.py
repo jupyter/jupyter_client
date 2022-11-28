@@ -26,8 +26,6 @@ from jupyter_client import kernelspec
 
 class KernelSpecTests(unittest.TestCase):
     def setUp(self):
-        self.env_patch = test_env()
-        self.env_patch.start()
         self.sample_kernel_dir = install_kernel(
             pjoin(paths.jupyter_data_dir(), "kernels"), name="sample"
         )

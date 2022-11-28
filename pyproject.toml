@@ -55,7 +55,7 @@ test = [
     "paramiko; sys_platform == 'win32'",
     "pre-commit",
     "pytest",
-    "pytest-asyncio>=0.19",
+    "pytest-jupyter[client]>=0.3",
     "pytest-cov",
     "pytest-timeout",
 ]
@@ -116,7 +116,6 @@ testpaths = [
 timeout = 100
 # Restore this setting to debug failures
 timeout_method = "thread"
-asyncio_mode = "auto"
 filterwarnings= [
   # Fail on warnings
   "error",

@@ -4,9 +4,7 @@
 import json
 import os
 import sys
-from tempfile import TemporaryDirectory
 from typing import Dict
-from unittest.mock import patch
 
 import pytest
 
@@ -38,63 +36,6 @@ def install_kernel(kernels_dir, argv=None, name="test", display_name=None):
     with open(json_file, "w") as f:
         json.dump(kernel_json, f)
     return kernel_dir
-
-
-class test_env:
-    """Set Jupyter path variables to a temporary directory
-
-    Useful as a context manager or with explicit start/stop
-    """
-
-    def start(self):
-        self.test_dir = td = TemporaryDirectory()
-        self.env_patch = patch.dict(
-            os.environ,
-            {
-                "JUPYTER_CONFIG_DIR": pjoin(td.name, "jupyter"),
-                "JUPYTER_DATA_DIR": pjoin(td.name, "jupyter_data"),
-                "JUPYTER_RUNTIME_DIR": pjoin(td.name, "jupyter_runtime"),
-                "IPYTHONDIR": pjoin(td.name, "ipython"),
-                "TEST_VARS": "test_var_1",
-            },
-        )
-        self.env_patch.start()
-
-    def stop(self):
-        self.env_patch.stop()
-        try:
-            self.test_dir.cleanup()
-        except (PermissionError, NotADirectoryError):
-            if os.name != 'nt':
-                raise
-
-    def __enter__(self):
-        self.start()
-        return self.test_dir.name
-
-    def __exit__(self, *exc_info):
-        self.stop()
-
-
-def execute(code="", kc=None, **kwargs):
-    """wrapper for doing common steps for validating an execution request"""
-    from .test_message_spec import validate_message
-
-    if kc is None:
-        kc = KC  # noqa
-    msg_id = kc.execute(code=code, **kwargs)
-    reply = kc.get_shell_msg(timeout=TIMEOUT)  # noqa
-    validate_message(reply, "execute_reply", msg_id)
-    busy = kc.get_iopub_msg(timeout=TIMEOUT)  # noqa
-    validate_message(busy, "status", msg_id)
-    assert busy["content"]["execution_state"] == "busy"
-
-    if not kwargs.get("silent"):
-        execute_input = kc.get_iopub_msg(timeout=TIMEOUT)  # noqa
-        validate_message(execute_input, "execute_input", msg_id)
-        assert execute_input["content"]["code"] == code
-
-    return msg_id, reply["content"]
 
 
 class RecordCallMixin:
