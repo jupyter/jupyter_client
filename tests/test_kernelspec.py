@@ -38,9 +38,6 @@ class KernelSpecTests(unittest.TestCase):
         with open(pjoin(self.installable_kernel, "kernel.json"), "w") as f:
             json.dump(sample_kernel_json, f)
 
-    def tearDown(self):
-        self.env_patch.stop()
-
     def test_find_kernel_specs(self):
         kernels = self.ksm.find_kernel_specs()
         self.assertEqual(kernels["sample"], self.sample_kernel_dir)
