@@ -50,7 +50,7 @@ Homepage = "https://jupyter.org"
 test = [
     "codecov",
     "coverage",
-    "ipykernel>=6.11",
+    "ipykernel>=6.14",
     "mypy",
     "paramiko; sys_platform == 'win32'",
     "pre-commit",
