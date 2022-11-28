@@ -20,7 +20,6 @@ from jupyter_core import paths
 
 from .utils import install_kernel
 from .utils import sample_kernel_json
-from .utils import test_env
 from jupyter_client import kernelspec
 
 

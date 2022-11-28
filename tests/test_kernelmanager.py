@@ -11,7 +11,6 @@ import time
 from subprocess import PIPE
 
 import pytest
-import pytest_asyncio
 from jupyter_core import paths
 from traitlets.config.loader import Config
 
