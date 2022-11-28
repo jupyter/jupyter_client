@@ -37,7 +37,6 @@ class TestKernelClient(TestCase):
         self.km, self.kc = start_new_kernel(kernel_name="echo")
 
     def tearDown(self):
-        self.env_patch.stop()
         self.km.shutdown_kernel()
         self.kc.stop_channels()
         return super().tearDown()
@@ -228,7 +227,6 @@ class TestThreadedKernelClient(TestKernelClient):
         kc.start_channels()
 
     def tearDown(self):
-        self.env_patch.stop()
         self.km.shutdown_kernel()
         self.kc.stop_channels()
 
