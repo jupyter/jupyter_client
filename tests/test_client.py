@@ -21,7 +21,6 @@ from jupyter_client.manager import start_new_async_kernel
 from jupyter_client.manager import start_new_kernel
 from jupyter_client.threaded import ThreadedKernelClient
 from jupyter_client.threaded import ThreadedZMQSocketChannel
-from jupyter_client.utils import run_sync
 
 TIMEOUT = 30
 
@@ -101,22 +100,28 @@ class TestKernelClient(TestCase):
 
 
 @pytest.fixture
-def kc():
+def kc(jp_asyncio_loop):
     try:
         KernelSpecManager().get_kernel_spec("echo")
     except NoSuchKernel:
         pytest.skip()
-    km, kc = run_sync(start_new_async_kernel)(kernel_name="echo")
+
+    async def start():
+        return await start_new_async_kernel(kernel_name="echo")
+
+    km, kc = jp_asyncio_loop.run_until_complete(start())
     yield kc
-    run_sync(km.shutdown_kernel)()
+
+    async def stop():
+        await km.shutdown_kernel()
+
+    jp_asyncio_loop.run_until_complete(stop())
     kc.stop_channels()
 
 
 class TestAsyncKernelClient:
     async def test_execute_interactive(self, kc):
-        with capture_output() as io:
-            reply = await kc.execute_interactive("print('hello')", timeout=TIMEOUT)
-        assert "hello" in io.stdout
+        reply = await kc.execute_interactive("hello", timeout=TIMEOUT)
         assert reply["content"]["status"] == "ok"
 
     def _check_reply(self, reply_type, reply):
