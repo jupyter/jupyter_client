@@ -1,3 +1,4 @@
+import asyncio
 import os
 
 import pytest
@@ -7,6 +8,11 @@ os.environ['JUPYTER_PLATFORM_DIRS'] = '1'
 
 
 pytest_plugins = ["pytest_jupyter", "pytest_jupyter.jupyter_client"]
+
+if os.name == "nt":
+    asyncio.set_event_loop_policy(
+        asyncio.WindowsSelectorEventLoopPolicy()  # type:ignore[attr-defined]
+    )
 
 
 @pytest.fixture(autouse=True)
