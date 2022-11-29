@@ -13,10 +13,8 @@ from IPython.utils.capture import capture_output
 from traitlets import DottedObjectName
 from traitlets import Type
 
-from .utils import test_env
 from jupyter_client.client import validate_string_dict
 from jupyter_client.kernelspec import KernelSpecManager
-from jupyter_client.kernelspec import NATIVE_KERNEL_NAME
 from jupyter_client.kernelspec import NoSuchKernel
 from jupyter_client.manager import KernelManager
 from jupyter_client.manager import start_new_async_kernel
@@ -31,17 +29,13 @@ pjoin = os.path.join
 
 class TestKernelClient(TestCase):
     def setUp(self):
-        self.env_patch = test_env()
-        self.env_patch.start()
-        self.addCleanup(self.env_patch.stop)
         try:
-            KernelSpecManager().get_kernel_spec(NATIVE_KERNEL_NAME)
+            KernelSpecManager().get_kernel_spec("echo")
         except NoSuchKernel:
             pytest.skip()
-        self.km, self.kc = start_new_kernel(kernel_name=NATIVE_KERNEL_NAME)
+        self.km, self.kc = start_new_kernel(kernel_name="echo")
 
     def tearDown(self):
-        self.env_patch.stop()
         self.km.shutdown_kernel()
         self.kc.stop_channels()
         return super().tearDown()
@@ -106,25 +100,28 @@ class TestKernelClient(TestCase):
 
 
 @pytest.fixture
-async def kc():
-    env_patch = test_env()
-    env_patch.start()
+def kc(jp_asyncio_loop):
     try:
-        KernelSpecManager().get_kernel_spec(NATIVE_KERNEL_NAME)
+        KernelSpecManager().get_kernel_spec("echo")
     except NoSuchKernel:
         pytest.skip()
-    km, kc = await start_new_async_kernel(kernel_name=NATIVE_KERNEL_NAME)
+
+    async def start():
+        return await start_new_async_kernel(kernel_name="echo")
+
+    km, kc = jp_asyncio_loop.run_until_complete(start())
     yield kc
-    env_patch.stop()
-    await km.shutdown_kernel()
+
+    async def stop():
+        await km.shutdown_kernel()
+
+    jp_asyncio_loop.run_until_complete(stop())
     kc.stop_channels()
 
 
 class TestAsyncKernelClient:
     async def test_execute_interactive(self, kc):
-        with capture_output() as io:
-            reply = await kc.execute_interactive("print('hello')", timeout=TIMEOUT)
-        assert "hello" in io.stdout
+        reply = await kc.execute_interactive("hello", timeout=TIMEOUT)
         assert reply["content"]["status"] == "ok"
 
     def _check_reply(self, reply_type, reply):
@@ -225,20 +222,16 @@ class CustomThreadedKernelClient(ThreadedKernelClient):
 
 class TestThreadedKernelClient(TestKernelClient):
     def setUp(self):
-        self.env_patch = test_env()
-        self.env_patch.start()
-        self.addCleanup(self.env_patch.stop)
         try:
-            KernelSpecManager().get_kernel_spec(NATIVE_KERNEL_NAME)
+            KernelSpecManager().get_kernel_spec("echo")
         except NoSuchKernel:
             pytest.skip()
-        self.km = km = ThreadedKernelManager(kernel_name=NATIVE_KERNEL_NAME)
+        self.km = km = ThreadedKernelManager(kernel_name="echo")
         km.start_kernel()
         self.kc = kc = km.client()
         kc.start_channels()
 
     def tearDown(self):
-        self.env_patch.stop()
         self.km.shutdown_kernel()
         self.kc.stop_channels()
 

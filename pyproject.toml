@@ -50,12 +50,12 @@ Homepage = "https://jupyter.org"
 test = [
     "codecov",
     "coverage",
-    "ipykernel>=6.11",
+    "ipykernel>=6.14",
     "mypy",
     "paramiko; sys_platform == 'win32'",
     "pre-commit",
     "pytest",
-    "pytest-asyncio>=0.19",
+    "pytest-jupyter[client]>=0.4.1",
     "pytest-cov",
     "pytest-timeout",
 ]
@@ -92,7 +92,7 @@ nowarn = "test -W default {args}"
 
 [tool.hatch.envs.cov]
 features = ["test"]
-dependencies = ["coverage", "pytest-cov"]
+dependencies = ["coverage[toml]", "pytest-cov"]
 [tool.hatch.envs.cov.scripts]
 test = "python -m pytest -vv --cov jupyter_client --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"
@@ -116,7 +116,6 @@ testpaths = [
 timeout = 100
 # Restore this setting to debug failures
 timeout_method = "thread"
-asyncio_mode = "auto"
 filterwarnings= [
   # Fail on warnings
   "error",

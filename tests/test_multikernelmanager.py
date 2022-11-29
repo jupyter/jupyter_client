@@ -20,7 +20,6 @@ from .utils import install_kernel
 from .utils import skip_win32
 from .utils import SyncKMSubclass
 from .utils import SyncMKMSubclass
-from .utils import test_env
 from jupyter_client import AsyncKernelManager
 from jupyter_client import KernelManager
 from jupyter_client.localinterfaces import localhost
@@ -39,15 +38,6 @@ async def now(awaitable):
 
 
 class TestKernelManager(TestCase):
-    def setUp(self):
-        self.env_patch = test_env()
-        self.env_patch.start()
-        super().setUp()
-
-    def tearDown(self) -> None:
-        self.env_patch.stop()
-        return super().tearDown()
-
     # static so picklable for multiprocessing on Windows
     @staticmethod
     def _get_tcp_km():
@@ -280,15 +270,6 @@ class TestKernelManager(TestCase):
 
 
 class TestAsyncKernelManager(AsyncTestCase):
-    def setUp(self):
-        self.env_patch = test_env()
-        self.env_patch.start()
-        super().setUp()
-
-    def tearDown(self) -> None:
-        self.env_patch.stop()
-        return super().tearDown()
-
     # static so picklable for multiprocessing on Windows
     @staticmethod
     def _get_tcp_km():

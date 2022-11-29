@@ -657,20 +657,20 @@ class AsyncKernelManager(KernelManager):
         self._created_context = True
         return zmq.asyncio.Context()
 
-    _launch_kernel = KernelManager._async_launch_kernel
-    start_kernel = KernelManager._async_start_kernel
-    pre_start_kernel = KernelManager._async_pre_start_kernel
-    post_start_kernel = KernelManager._async_post_start_kernel
-    request_shutdown = KernelManager._async_request_shutdown
-    finish_shutdown = KernelManager._async_finish_shutdown
-    cleanup_resources = KernelManager._async_cleanup_resources
-    shutdown_kernel = KernelManager._async_shutdown_kernel
-    restart_kernel = KernelManager._async_restart_kernel
-    _send_kernel_sigterm = KernelManager._async_send_kernel_sigterm
-    _kill_kernel = KernelManager._async_kill_kernel
-    interrupt_kernel = KernelManager._async_interrupt_kernel
-    signal_kernel = KernelManager._async_signal_kernel
-    is_alive = KernelManager._async_is_alive
+    _launch_kernel = KernelManager._async_launch_kernel  # type:ignore[assignment]
+    start_kernel = KernelManager._async_start_kernel  # type:ignore[assignment]
+    pre_start_kernel = KernelManager._async_pre_start_kernel  # type:ignore[assignment]
+    post_start_kernel = KernelManager._async_post_start_kernel  # type:ignore[assignment]
+    request_shutdown = KernelManager._async_request_shutdown  # type:ignore[assignment]
+    finish_shutdown = KernelManager._async_finish_shutdown  # type:ignore[assignment]
+    cleanup_resources = KernelManager._async_cleanup_resources  # type:ignore[assignment]
+    shutdown_kernel = KernelManager._async_shutdown_kernel  # type:ignore[assignment]
+    restart_kernel = KernelManager._async_restart_kernel  # type:ignore[assignment]
+    _send_kernel_sigterm = KernelManager._async_send_kernel_sigterm  # type:ignore[assignment]
+    _kill_kernel = KernelManager._async_kill_kernel  # type:ignore[assignment]
+    interrupt_kernel = KernelManager._async_interrupt_kernel  # type:ignore[assignment]
+    signal_kernel = KernelManager._async_signal_kernel  # type:ignore[assignment]
+    is_alive = KernelManager._async_is_alive  # type:ignore[assignment]
 
 
 KernelManagerABC.register(KernelManager)
@@ -699,14 +699,14 @@ async def start_new_async_kernel(
 ) -> t.Tuple[AsyncKernelManager, KernelClient]:
     """Start a new kernel, and return its Manager and Client"""
     km = AsyncKernelManager(kernel_name=kernel_name)
-    await km.start_kernel(**kwargs)
+    await km.start_kernel(**kwargs)  # type:ignore[has-type]
     kc = km.client()
     kc.start_channels()
     try:
         await kc.wait_for_ready(timeout=startup_timeout)  # type:ignore[attr-defined]
     except RuntimeError:
         kc.stop_channels()
-        await km.shutdown_kernel()
+        await km.shutdown_kernel()  # type:ignore[has-type]
         raise
 
     return (km, kc)
