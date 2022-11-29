@@ -562,7 +562,7 @@ class AsyncMultiKernelManager(MultiKernelManager):
         self._created_context = True
         return zmq.asyncio.Context()
 
-    start_kernel = MultiKernelManager._async_start_kernel
-    restart_kernel = MultiKernelManager._async_restart_kernel
-    shutdown_kernel = MultiKernelManager._async_shutdown_kernel
-    shutdown_all = MultiKernelManager._async_shutdown_all
+    start_kernel = MultiKernelManager._async_start_kernel  # type:ignore[assignment]
+    restart_kernel = MultiKernelManager._async_restart_kernel  # type:ignore[assignment]
+    shutdown_kernel = MultiKernelManager._async_shutdown_kernel  # type:ignore[assignment]
+    shutdown_all = MultiKernelManager._async_shutdown_all  # type:ignore[assignment]
