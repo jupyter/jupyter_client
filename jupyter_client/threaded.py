@@ -3,7 +3,6 @@ replies.
 """
 import asyncio
 import atexit
-import nest_asyncio
 import errno
 import time
 from threading import Event
@@ -15,6 +14,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+import nest_asyncio
 import zmq
 from traitlets import Instance
 from traitlets import Type
