@@ -3,6 +3,7 @@ replies.
 """
 import asyncio
 import atexit
+import nest_asyncio
 import errno
 import time
 from threading import Event
@@ -211,6 +212,7 @@ class IOLoopThread(Thread):
         """Run my loop, ignoring EINTR events in the poller"""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        nest_asyncio.apply(loop)
         self.ioloop = ioloop.IOLoop()
         self.ioloop._asyncio_event_loop = loop
         # signal that self.ioloop is defined
