@@ -14,7 +14,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-import nest_asyncio
+import nest_asyncio  # type:ignore
 import zmq
 from traitlets import Instance
 from traitlets import Type
