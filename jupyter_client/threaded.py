@@ -14,6 +14,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+import nest_asyncio  # type:ignore
 import zmq
 from traitlets import Instance
 from traitlets import Type
@@ -211,6 +212,7 @@ class IOLoopThread(Thread):
         """Run my loop, ignoring EINTR events in the poller"""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        nest_asyncio.apply(loop)
         self.ioloop = ioloop.IOLoop()
         self.ioloop._asyncio_event_loop = loop
         # signal that self.ioloop is defined
