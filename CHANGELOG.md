@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.4.8
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.7...beac94baac163015e8165fde5661aaf026e92364))
+
+### Bugs fixed
+
+- Make sure loop is marked with nest_asyncio [#893](https://github.com/jupyter/jupyter_client/pull/893) ([@impact27](https://github.com/impact27))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-11-16&to=2022-12-05&type=c))
+
+[@arogozhnikov](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aarogozhnikov+updated%3A2022-11-16..2022-12-05&type=Issues) | [@impact27](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aimpact27+updated%3A2022-11-16..2022-12-05&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2022-11-16..2022-12-05&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.4.7
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.6...56df36b535710d2c247a2749deec456c75191af5))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-11-15&to=2022-11-16&type=c))
 
 [@meeseeksmachine](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ameeseeksmachine+updated%3A2022-11-15..2022-11-16&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.4.6
 
