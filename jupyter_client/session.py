@@ -854,7 +854,9 @@ class Session(Configurable):
             stream.send_multipart(to_send, copy=copy)
 
         if self.debug:
-            pass
+            pprint.pprint(msg)  # noqa
+            pprint.pprint(to_send)  # noqa
+            pprint.pprint(buffers)  # noqa
 
         msg["tracker"] = tracker
 
