@@ -123,7 +123,7 @@ class KernelManager(ConnectionFileMixin):
     client_class: DottedObjectName = DottedObjectName(
         "jupyter_client.blocking.BlockingKernelClient"
     )
-    client_factory: Type = Type(klass=BlockingKernelClient)
+    client_factory: Type = Type(klass=KernelClient)
 
     @default("client_factory")  # type:ignore[misc]
     def _client_factory_default(self) -> Type:
@@ -651,7 +651,7 @@ class AsyncKernelManager(KernelManager):
     client_class: DottedObjectName = DottedObjectName(
         "jupyter_client.asynchronous.AsyncKernelClient"
     )
-    client_factory: Type = Type(klass=AsyncKernelClient)
+    client_factory: Type = Type(klass="jupyter_client.asynchronous.AsyncKernelClient")
 
     # The PyZMQ Context to use for communication with the kernel.
     context: Instance = Instance(zmq.asyncio.Context)
