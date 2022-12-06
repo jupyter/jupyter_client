@@ -6,11 +6,10 @@ Useful for test suites and blocking terminal interfaces.
 # Distributed under the terms of the Modified BSD License.
 from traitlets import Type
 
+from jupyter_client.channels import HBChannel, ZMQSocketChannel
+from jupyter_client.client import KernelClient, reqrep
+
 from ..utils import run_sync
-from jupyter_client.channels import HBChannel
-from jupyter_client.channels import ZMQSocketChannel
-from jupyter_client.client import KernelClient
-from jupyter_client.client import reqrep
 
 
 def wrapped(meth, channel):

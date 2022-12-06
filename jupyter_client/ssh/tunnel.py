@@ -12,8 +12,7 @@ import signal
 import socket
 import sys
 import warnings
-from getpass import getpass
-from getpass import getuser
+from getpass import getpass, getuser
 from multiprocessing import Process
 
 try:
@@ -25,7 +24,7 @@ try:
 except ImportError:
     paramiko = None  # type:ignore[assignment]
 
-    class SSHException(Exception):  # type: ignore
+    class SSHException(Exception):  # type: ignore  # noqa
         pass
 
 else:
@@ -230,7 +229,7 @@ def openssh_tunnel(
     cmd = f"{ssh} -O check {server}"
     (output, exitstatus) = pexpect.run(cmd, withexitstatus=True)
     if not exitstatus:
-        pid = int(output[output.find(b"(pid=") + 5 : output.find(b")")])  # noqa
+        pid = int(output[output.find(b"(pid=") + 5 : output.find(b")")])
         cmd = "%s -O forward -L 127.0.0.1:%i:%s:%i %s" % (
             ssh,
             lport,
@@ -268,15 +267,12 @@ def openssh_tunnel(
         except pexpect.EOF as e:
             tunnel.wait()
             if tunnel.exitstatus:
-                print(tunnel.exitstatus)
-                print(tunnel.before)
-                print(tunnel.after)
                 raise RuntimeError("tunnel '%s' failed to start" % (cmd)) from e
             else:
                 return tunnel.pid
         else:
             if failed:
-                print("Password rejected, try again")
+                warnings.warn("Password rejected, try again")
                 password = None
             if password is None:
                 password = getpass("%s's password: " % (server))
@@ -353,7 +349,7 @@ def paramiko_tunnel(
     p = Process(
         target=_paramiko_tunnel,
         args=(lport, rport, server, remoteip),
-        kwargs=dict(keyfile=keyfile, password=password),
+        kwargs={"keyfile": keyfile, "password": password},
     )
     p.daemon = True
     p.start()
@@ -385,7 +381,7 @@ def _paramiko_tunnel(lport, rport, server, remoteip, keyfile=None, password=None
     #        else:
     #            raise
     except Exception as e:
-        print("*** Failed to connect to %s:%d: %r" % (server, port, e))
+        warnings.warn("*** Failed to connect to %s:%d: %r" % (server, port, e))
         sys.exit(1)
 
     # Don't let SIGINT kill the tunnel subprocess
@@ -394,10 +390,10 @@ def _paramiko_tunnel(lport, rport, server, remoteip, keyfile=None, password=None
     try:
         forward_tunnel(lport, remoteip, rport, client.get_transport())
     except KeyboardInterrupt:
-        print("SIGINT: Port forwarding stopped cleanly")
+        warnings.warn("SIGINT: Port forwarding stopped cleanly")
         sys.exit(0)
     except Exception as e:
-        print("Port forwarding stopped uncleanly: %s" % e)
+        warnings.warn("Port forwarding stopped uncleanly: %s" % e)
         sys.exit(255)
 
 

@@ -9,8 +9,7 @@ import warnings
 from binascii import b2a_base64
 from collections.abc import Iterable
 from datetime import datetime
-from typing import Optional
-from typing import Union
+from typing import Optional, Union
 
 from dateutil.parser import parse as _dateutil_parse  # type: ignore
 from dateutil.tz import tzlocal  # type: ignore

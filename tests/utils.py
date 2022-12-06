@@ -8,10 +8,12 @@ from typing import Dict
 
 import pytest
 
-from jupyter_client import AsyncKernelManager
-from jupyter_client import AsyncMultiKernelManager
-from jupyter_client import KernelManager
-from jupyter_client import MultiKernelManager
+from jupyter_client import (
+    AsyncKernelManager,
+    AsyncMultiKernelManager,
+    KernelManager,
+    MultiKernelManager,
+)
 
 pjoin = os.path.join
 

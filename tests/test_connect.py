@@ -9,9 +9,7 @@ import pytest
 from jupyter_core.application import JupyterApp
 from jupyter_core.paths import jupyter_runtime_dir
 
-from jupyter_client import connect
-from jupyter_client import KernelClient
-from jupyter_client import KernelManager
+from jupyter_client import KernelClient, KernelManager, connect
 from jupyter_client.consoleapp import JupyterConsoleApp
 from jupyter_client.session import Session
 
@@ -140,7 +138,7 @@ def test_load_connection_info():
         "control_port": 53702,
         "hb_port": 53705,
         "iopub_port": 53703,
-        "ip": "0.0.0.0",
+        "ip": "0.0.0.0",  # noqa
         "key": "secret",
         "shell_port": 53700,
         "signature_scheme": "hmac-sha256",

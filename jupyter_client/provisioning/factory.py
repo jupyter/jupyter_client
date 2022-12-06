@@ -3,22 +3,16 @@
 # Distributed under the terms of the Modified BSD License.
 import glob
 import sys
-from os import getenv
-from os import path
-from typing import Any
-from typing import Dict
-from typing import List
-
+from os import getenv, path
+from typing import Any, Dict, List
 
 # See compatibility note on `group` keyword in https://docs.python.org/3/library/importlib.metadata.html#entry-points
 if sys.version_info < (3, 10):  # pragma: no cover
-    from importlib_metadata import entry_points, EntryPoint
+    from importlib_metadata import EntryPoint, entry_points
 else:  # pragma: no cover
-    from importlib.metadata import entry_points, EntryPoint
+    from importlib.metadata import EntryPoint, entry_points
 
-from traitlets.config import default
-from traitlets.config import SingletonConfigurable
-from traitlets.config import Unicode
+from traitlets.config import SingletonConfigurable, Unicode, default
 
 from .provisioner_base import KernelProvisionerBase
 

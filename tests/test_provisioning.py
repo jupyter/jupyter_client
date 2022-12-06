@@ -7,24 +7,21 @@ import os
 import signal
 import sys
 from subprocess import PIPE
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import pytest
 from jupyter_core import paths
-from traitlets import Int
-from traitlets import Unicode
+from traitlets import Int, Unicode
 
 from jupyter_client.connect import KernelConnectionInfo
-from jupyter_client.kernelspec import KernelSpecManager
-from jupyter_client.kernelspec import NoSuchKernel
+from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
 from jupyter_client.launcher import launch_kernel
 from jupyter_client.manager import AsyncKernelManager
-from jupyter_client.provisioning import KernelProvisionerBase
-from jupyter_client.provisioning import KernelProvisionerFactory
-from jupyter_client.provisioning import LocalProvisioner
+from jupyter_client.provisioning import (
+    KernelProvisionerBase,
+    KernelProvisionerFactory,
+    LocalProvisioner,
+)
 from jupyter_client.provisioning.factory import EntryPoint
 
 pjoin = os.path.join

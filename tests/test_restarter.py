@@ -12,8 +12,7 @@ from jupyter_core import paths
 from traitlets.config.loader import Config
 from traitlets.log import get_logger
 
-from jupyter_client.ioloop import AsyncIOLoopKernelManager
-from jupyter_client.ioloop import IOLoopKernelManager
+from jupyter_client.ioloop import AsyncIOLoopKernelManager, IOLoopKernelManager
 
 pjoin = os.path.join
 

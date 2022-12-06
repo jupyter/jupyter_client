@@ -5,22 +5,16 @@ import os
 import platform
 import sys
 from threading import Event
-from unittest import mock
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import pytest
 from IPython.utils.capture import capture_output
-from traitlets import DottedObjectName
-from traitlets import Type
+from traitlets import DottedObjectName, Type
 
 from jupyter_client.client import validate_string_dict
-from jupyter_client.kernelspec import KernelSpecManager
-from jupyter_client.kernelspec import NoSuchKernel
-from jupyter_client.manager import KernelManager
-from jupyter_client.manager import start_new_async_kernel
-from jupyter_client.manager import start_new_kernel
-from jupyter_client.threaded import ThreadedKernelClient
-from jupyter_client.threaded import ThreadedZMQSocketChannel
+from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
+from jupyter_client.manager import KernelManager, start_new_async_kernel, start_new_kernel
+from jupyter_client.threaded import ThreadedKernelClient, ThreadedZMQSocketChannel
 
 TIMEOUT = 30
 

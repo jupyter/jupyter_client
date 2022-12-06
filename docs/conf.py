@@ -67,7 +67,7 @@ version_ns: dict = {}
 here = os.path.dirname(__file__)
 version_py = os.path.join(here, os.pardir, 'jupyter_client', '_version.py')
 with open(version_py) as f:
-    exec(compile(f.read(), version_py, 'exec'), version_ns)
+    exec(compile(f.read(), version_py, 'exec'), version_ns)  # noqa
 
 # The short X.Y version.
 version = '%i.%i' % version_ns['version_info'][:2]

@@ -9,12 +9,7 @@ It is an incomplete base class, and must be subclassed.
 # Distributed under the terms of the Modified BSD License.
 import time
 
-from traitlets import Bool
-from traitlets import default
-from traitlets import Dict
-from traitlets import Float
-from traitlets import Instance
-from traitlets import Integer
+from traitlets import Bool, Dict, Float, Instance, Integer, default
 from traitlets.config.configurable import LoggingConfigurable
 
 
@@ -63,7 +58,7 @@ class KernelRestarter(LoggingConfigurable):
     callbacks = Dict()
 
     def _callbacks_default(self):
-        return dict(restart=[], dead=[])
+        return {"restart": [], "dead": []}
 
     def start(self):
         """Start the polling of the kernel."""

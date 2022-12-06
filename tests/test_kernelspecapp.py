@@ -4,11 +4,13 @@
 import os
 import warnings
 
-from jupyter_client.kernelspecapp import InstallKernelSpec
-from jupyter_client.kernelspecapp import KernelSpecApp
-from jupyter_client.kernelspecapp import ListKernelSpecs
-from jupyter_client.kernelspecapp import ListProvisioners
-from jupyter_client.kernelspecapp import RemoveKernelSpec
+from jupyter_client.kernelspecapp import (
+    InstallKernelSpec,
+    KernelSpecApp,
+    ListKernelSpecs,
+    ListProvisioners,
+    RemoveKernelSpec,
+)
 
 
 def test_kernelspec_sub_apps(jp_kernel_dir):

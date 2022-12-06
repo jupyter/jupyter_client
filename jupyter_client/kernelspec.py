@@ -7,21 +7,11 @@ import re
 import shutil
 import warnings
 
-from jupyter_core.paths import jupyter_data_dir
-from jupyter_core.paths import jupyter_path
-from jupyter_core.paths import SYSTEM_JUPYTER_PATH
-from traitlets import Bool
-from traitlets import CaselessStrEnum
-from traitlets import Dict
-from traitlets import HasTraits
-from traitlets import List
-from traitlets import observe
-from traitlets import Set
-from traitlets import Type
-from traitlets import Unicode
+from jupyter_core.paths import SYSTEM_JUPYTER_PATH, jupyter_data_dir, jupyter_path
+from traitlets import Bool, CaselessStrEnum, Dict, HasTraits, List, Set, Type, Unicode, observe
 from traitlets.config import LoggingConfigurable
 
-from .provisioning import KernelProvisionerFactory as KPF
+from .provisioning import KernelProvisionerFactory as KPF  # noqa
 
 pjoin = os.path.join
 
@@ -51,14 +41,14 @@ class KernelSpec(HasTraits):
         return cls(resource_dir=resource_dir, **kernel_dict)
 
     def to_dict(self):
-        d = dict(
-            argv=self.argv,
-            env=self.env,
-            display_name=self.display_name,
-            language=self.language,
-            interrupt_mode=self.interrupt_mode,
-            metadata=self.metadata,
-        )
+        d = {
+            "argv": self.argv,
+            "env": self.env,
+            "display_name": self.display_name,
+            "language": self.language,
+            "interrupt_mode": self.interrupt_mode,
+            "metadata": self.metadata,
+        }
 
         return d
 
@@ -112,7 +102,7 @@ def _list_kernels_in(dir):
     return kernels
 
 
-class NoSuchKernel(KeyError):
+class NoSuchKernel(KeyError):  # noqa
     def __init__(self, name):
         self.name = name
 

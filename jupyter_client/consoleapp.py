@@ -14,20 +14,11 @@ import typing as t
 import uuid
 import warnings
 
-from jupyter_core.application import base_aliases
-from jupyter_core.application import base_flags
-from traitlets import CBool
-from traitlets import CUnicode
-from traitlets import Dict
-from traitlets import List
-from traitlets import Type
-from traitlets import Unicode
+from jupyter_core.application import base_aliases, base_flags
+from traitlets import CBool, CUnicode, Dict, List, Type, Unicode
 from traitlets.config.application import boolean_flag
 
-from . import connect
-from . import find_connection_file
-from . import KernelManager
-from . import tunnel_to_kernel
+from . import KernelManager, connect, find_connection_file, tunnel_to_kernel
 from .blocking import BlockingKernelClient
 from .kernelspec import NoSuchKernel
 from .localinterfaces import localhost
@@ -74,20 +65,20 @@ aliases = {}
 aliases.update(base_aliases)
 
 # also scrub aliases from the frontend
-app_aliases = dict(
-    ip="JupyterConsoleApp.ip",
-    transport="JupyterConsoleApp.transport",
-    hb="JupyterConsoleApp.hb_port",
-    shell="JupyterConsoleApp.shell_port",
-    iopub="JupyterConsoleApp.iopub_port",
-    stdin="JupyterConsoleApp.stdin_port",
-    control="JupyterConsoleApp.control_port",
-    existing="JupyterConsoleApp.existing",
-    f="JupyterConsoleApp.connection_file",
-    kernel="JupyterConsoleApp.kernel_name",
-    ssh="JupyterConsoleApp.sshserver",
-    sshkey="JupyterConsoleApp.sshkey",
-)
+app_aliases = {
+    "ip": "JupyterConsoleApp.ip",
+    "transport": "JupyterConsoleApp.transport",
+    "hb": "JupyterConsoleApp.hb_port",
+    "shell": "JupyterConsoleApp.shell_port",
+    "iopub": "JupyterConsoleApp.iopub_port",
+    "stdin": "JupyterConsoleApp.stdin_port",
+    "control": "JupyterConsoleApp.control_port",
+    "existing": "JupyterConsoleApp.existing",
+    "f": "JupyterConsoleApp.connection_file",
+    "kernel": "JupyterConsoleApp.kernel_name",
+    "ssh": "JupyterConsoleApp.sshserver",
+    "sshkey": "JupyterConsoleApp.sshkey",
+}
 aliases.update(app_aliases)
 
 # -----------------------------------------------------------------------------
@@ -239,14 +230,14 @@ class JupyterConsoleApp(ConnectionFileMixin):
             ip = localhost()
 
         # build connection dict for tunnels:
-        info = dict(
-            ip=ip,
-            shell_port=self.shell_port,
-            iopub_port=self.iopub_port,
-            stdin_port=self.stdin_port,
-            hb_port=self.hb_port,
-            control_port=self.control_port,
-        )
+        info = {
+            "ip": ip,
+            "shell_port": self.shell_port,
+            "iopub_port": self.iopub_port,
+            "stdin_port": self.stdin_port,
+            "hb_port": self.hb_port,
+            "control_port": self.control_port,
+        }
 
         self.log.info(f"Forwarding connections to {ip} via {self.sshserver}")
 

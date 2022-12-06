@@ -3,10 +3,7 @@
 # Distributed under the terms of the Modified BSD License.
 import json
 import re
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Tuple
+from typing import Any, Dict, List, Tuple
 
 from jupyter_client import protocol_version_info
 

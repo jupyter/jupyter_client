@@ -10,21 +10,21 @@ from unittest import TestCase
 
 import pytest
 from jupyter_core import paths
-from tornado.testing import AsyncTestCase
-from tornado.testing import gen_test
+from tornado.testing import AsyncTestCase, gen_test
 from traitlets.config.loader import Config
 
-from .utils import AsyncKMSubclass
-from .utils import AsyncMKMSubclass
-from .utils import install_kernel
-from .utils import skip_win32
-from .utils import SyncKMSubclass
-from .utils import SyncMKMSubclass
-from jupyter_client import AsyncKernelManager
-from jupyter_client import KernelManager
+from jupyter_client import AsyncKernelManager, KernelManager
 from jupyter_client.localinterfaces import localhost
-from jupyter_client.multikernelmanager import AsyncMultiKernelManager
-from jupyter_client.multikernelmanager import MultiKernelManager
+from jupyter_client.multikernelmanager import AsyncMultiKernelManager, MultiKernelManager
+
+from .utils import (
+    AsyncKMSubclass,
+    AsyncMKMSubclass,
+    SyncKMSubclass,
+    SyncMKMSubclass,
+    install_kernel,
+    skip_win32,
+)
 
 TIMEOUT = 30
 

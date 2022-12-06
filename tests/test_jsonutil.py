@@ -8,8 +8,7 @@ from datetime import timedelta
 from unittest import mock
 
 import pytest
-from dateutil.tz import tzlocal
-from dateutil.tz import tzoffset
+from dateutil.tz import tzlocal, tzoffset
 
 from jupyter_client import jsonutil
 from jupyter_client.session import utcnow

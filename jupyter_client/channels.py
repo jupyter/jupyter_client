@@ -6,15 +6,15 @@ import atexit
 import time
 import typing as t
 from queue import Empty
-from threading import Event
-from threading import Thread
+from threading import Event, Thread
 
 import zmq.asyncio
 
-from .channelsabc import HBChannelABC
-from .session import Session
 from jupyter_client import protocol_version_info
 from jupyter_client.utils import ensure_async
+
+from .channelsabc import HBChannelABC
+from .session import Session
 
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
 # during garbage collection of threads at exit
@@ -26,7 +26,7 @@ from jupyter_client.utils import ensure_async
 major_protocol_version = protocol_version_info[0]
 
 
-class InvalidPortNumber(Exception):
+class InvalidPortNumber(Exception):  # noqa
     pass
 
 

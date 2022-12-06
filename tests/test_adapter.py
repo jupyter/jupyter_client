@@ -5,9 +5,7 @@ import copy
 import json
 from unittest import TestCase
 
-from jupyter_client.adapter import adapt
-from jupyter_client.adapter import code_to_line
-from jupyter_client.adapter import V4toV5
+from jupyter_client.adapter import V4toV5, adapt, code_to_line
 from jupyter_client.session import Session
 
 

@@ -11,18 +11,16 @@ from getpass import getpass
 from queue import Empty
 
 import zmq.asyncio
-from traitlets import Any
-from traitlets import Bool
-from traitlets import Instance
-from traitlets import Type
+from traitlets import Any, Bool, Instance, Type
 
-from .channelsabc import ChannelABC
-from .channelsabc import HBChannelABC
+from jupyter_client.channels import major_protocol_version
+from jupyter_client.utils import ensure_async
+
+from .channelsabc import ChannelABC, HBChannelABC
 from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
 from .session import Session
-from jupyter_client.channels import major_protocol_version
-from jupyter_client.utils import ensure_async
+
 
 # some utilities to validate message structure, these might get moved elsewhere
 # if they prove to have more generic utility
@@ -265,7 +263,7 @@ class KernelClient(ConnectionFileMixin):
         elif msg_type in ("display_data", "execute_result"):
             sys.stdout.write(content["data"].get("text/plain", ""))
         elif msg_type == "error":
-            print("\n".join(content["traceback"]), file=sys.stderr)
+            sys.stderr.write("\n".join(content["traceback"]))
 
     def _output_hook_kernel(
         self,
@@ -621,14 +619,14 @@ class KernelClient(ConnectionFileMixin):
 
         # Create class for content/msg creation. Related to, but possibly
         # not in Session.
-        content = dict(
-            code=code,
-            silent=silent,
-            store_history=store_history,
-            user_expressions=user_expressions,
-            allow_stdin=allow_stdin,
-            stop_on_error=stop_on_error,
-        )
+        content = {
+            "code": code,
+            "silent": silent,
+            "store_history": store_history,
+            "user_expressions": user_expressions,
+            "allow_stdin": allow_stdin,
+            "stop_on_error": stop_on_error,
+        }
         msg = self.session.msg("execute_request", content)
         self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
@@ -651,7 +649,7 @@ class KernelClient(ConnectionFileMixin):
         """
         if cursor_pos is None:
             cursor_pos = len(code)
-        content = dict(code=code, cursor_pos=cursor_pos)
+        content = {"code": code, "cursor_pos": cursor_pos}
         msg = self.session.msg("complete_request", content)
         self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
@@ -678,11 +676,11 @@ class KernelClient(ConnectionFileMixin):
         """
         if cursor_pos is None:
             cursor_pos = len(code)
-        content = dict(
-            code=code,
-            cursor_pos=cursor_pos,
-            detail_level=detail_level,
-        )
+        content = {
+            "code": code,
+            "cursor_pos": cursor_pos,
+            "detail_level": detail_level,
+        }
         msg = self.session.msg("inspect_request", content)
         self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
@@ -754,7 +752,7 @@ class KernelClient(ConnectionFileMixin):
         if target_name is None:
             content = {}
         else:
-            content = dict(target_name=target_name)
+            content = {"target_name": target_name}
         msg = self.session.msg("comm_info_request", content)
         self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
@@ -790,7 +788,7 @@ class KernelClient(ConnectionFileMixin):
         -------
         The ID of the message sent.
         """
-        content = dict(value=string)
+        content = {"value": string}
         msg = self.session.msg("input_reply", content)
         self.stdin_channel.send(msg)
 

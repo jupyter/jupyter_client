@@ -1,6 +1,5 @@
 import re
-from typing import List
-from typing import Union
+from typing import List, Union
 
 __version__ = "8.0.0b1"
 

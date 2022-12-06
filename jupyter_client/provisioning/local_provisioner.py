@@ -5,16 +5,11 @@ import asyncio
 import os
 import signal
 import sys
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
-from ..connect import KernelConnectionInfo
-from ..connect import LocalPortCache
+from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
-from ..localinterfaces import is_local_ip
-from ..localinterfaces import local_ips
+from ..localinterfaces import is_local_ip, local_ips
 from .provisioner_base import KernelProvisionerBase
 
 

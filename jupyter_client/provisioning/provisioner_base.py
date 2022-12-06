@@ -2,18 +2,10 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
-from abc import ABC
-from abc import ABCMeta
-from abc import abstractmethod
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
+from abc import ABC, ABCMeta, abstractmethod
+from typing import Any, Dict, List, Optional, Union
 
-from traitlets.config import Instance
-from traitlets.config import LoggingConfigurable
-from traitlets.config import Unicode
+from traitlets.config import Instance, LoggingConfigurable, Unicode
 
 from ..connect import KernelConnectionInfo
 

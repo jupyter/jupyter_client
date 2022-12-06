@@ -4,22 +4,19 @@ replies.
 import asyncio
 import atexit
 import time
-from threading import Event
-from threading import Thread
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from threading import Event, Thread
+from typing import Any, Dict, List, Optional
 
 import zmq
 from tornado.ioloop import IOLoop
-from traitlets import Instance
-from traitlets import Type
+from traitlets import Instance, Type
 from zmq.eventloop import zmqstream
 
-from .session import Session
 from jupyter_client import KernelClient
 from jupyter_client.channels import HBChannel
+
+from .session import Session
+
 
 # Local imports
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages

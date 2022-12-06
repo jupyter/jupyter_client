@@ -15,25 +15,27 @@ from contextlib import contextmanager
 from enum import Enum
 
 import zmq
-from traitlets import Any
-from traitlets import Bool
-from traitlets import default
-from traitlets import DottedObjectName
-from traitlets import Float
-from traitlets import Instance
-from traitlets import observe
-from traitlets import observe_compat
-from traitlets import Type
-from traitlets import Unicode
+from traitlets import (
+    Any,
+    Bool,
+    DottedObjectName,
+    Float,
+    Instance,
+    Type,
+    Unicode,
+    default,
+    observe,
+    observe_compat,
+)
 from traitlets.utils.importstring import import_item
+
+from jupyter_client import KernelClient, kernelspec
 
 from .connect import ConnectionFileMixin
 from .managerabc import KernelManagerABC
 from .provisioning import KernelProvisionerBase
-from .provisioning import KernelProvisionerFactory as KPF
+from .provisioning import KernelProvisionerFactory as KPF  # noqa
 from .utils import run_sync
-from jupyter_client import KernelClient
-from jupyter_client import kernelspec
 
 
 class _ShutdownStatus(Enum):
@@ -243,10 +245,10 @@ class KernelManager(ConnectionFileMixin):
         kw: dict = {}
         kw.update(self.get_connection_info(session=True))
         kw.update(
-            dict(
-                connection_file=self.connection_file,
-                parent=self,
-            )
+            {
+                "connection_file": self.connection_file,
+                "parent": self,
+            }
         )
 
         # add kwargs last, for manual overrides
@@ -281,10 +283,10 @@ class KernelManager(ConnectionFileMixin):
         # is not usable by non python kernels because the path is being rerouted when
         # inside of a store app.
         # See this bug here: https://bugs.python.org/issue41196
-        ns = dict(
-            connection_file=os.path.realpath(self.connection_file),
-            prefix=sys.prefix,
-        )
+        ns = {
+            "connection_file": os.path.realpath(self.connection_file),
+            "prefix": sys.prefix,
+        }
 
         if self.kernel_spec:
             ns["resource_dir"] = self.kernel_spec.resource_dir
@@ -398,7 +400,7 @@ class KernelManager(ConnectionFileMixin):
 
     async def _async_request_shutdown(self, restart: bool = False) -> None:
         """Send a shutdown request via control channel"""
-        content = dict(restart=restart)
+        content = {"restart": restart}
         msg = self.session.msg("shutdown_request", content=content)
         # ensure control socket is connected
         self._connect_control_socket()

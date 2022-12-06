@@ -21,29 +21,28 @@ import random
 import typing as t
 import warnings
 from binascii import b2a_hex
-from datetime import datetime
-from datetime import timezone
-from hmac import (
-    compare_digest,
-)  # We are using compare_digest to limit the surface of timing attacks
-from typing import Optional
-from typing import Union
+from datetime import datetime, timezone
+from hmac import compare_digest
+
+# We are using compare_digest to limit the surface of timing attacks
+from typing import Optional, Union
 
 import zmq.asyncio
-from traitlets import Any
-from traitlets import Bool
-from traitlets import CBytes
-from traitlets import CUnicode
-from traitlets import Dict
-from traitlets import DottedObjectName
-from traitlets import Instance
-from traitlets import Integer
-from traitlets import observe
-from traitlets import Set
-from traitlets import TraitError
-from traitlets import Unicode
-from traitlets.config.configurable import Configurable
-from traitlets.config.configurable import LoggingConfigurable
+from traitlets import (
+    Any,
+    Bool,
+    CBytes,
+    CUnicode,
+    Dict,
+    DottedObjectName,
+    Instance,
+    Integer,
+    Set,
+    TraitError,
+    Unicode,
+    observe,
+)
+from traitlets.config.configurable import Configurable, LoggingConfigurable
 from traitlets.log import get_logger
 from traitlets.utils.importstring import import_item
 from zmq.eventloop.ioloop import IOLoop
@@ -51,11 +50,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from jupyter_client import protocol_version
 from jupyter_client.adapter import adapt
-from jupyter_client.jsonutil import extract_dates
-from jupyter_client.jsonutil import json_clean
-from jupyter_client.jsonutil import json_default
-from jupyter_client.jsonutil import squash_dates
-
+from jupyter_client.jsonutil import extract_dates, json_clean, json_default, squash_dates
 
 PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
 
@@ -164,11 +159,11 @@ def new_id_bytes() -> bytes:
     return new_id().encode("ascii")
 
 
-session_aliases = dict(
-    ident="Session.session",
-    user="Session.username",
-    keyfile="Session.keyfile",
-)
+session_aliases = {
+    "ident": "Session.session",
+    "user": "Session.username",
+    "keyfile": "Session.keyfile",
+}
 
 session_flags = {
     "secure": (
@@ -608,7 +603,7 @@ class Session(Configurable):
         unpack = self.unpack
 
         # check simple serialization
-        msg_list = dict(a=[1, "hi"])
+        msg_list = {"a": [1, "hi"]}
         try:
             packed = pack(msg_list)
         except Exception as e:
@@ -631,7 +626,7 @@ class Session(Configurable):
             ) from e
 
         # check datetime support
-        msg_datetime = dict(t=utcnow())
+        msg_datetime = {"t": utcnow()}
         try:
             unpacked = unpack(pack(msg_datetime))
             if isinstance(unpacked["t"], datetime):
@@ -859,9 +854,7 @@ class Session(Configurable):
             stream.send_multipart(to_send, copy=copy)
 
         if self.debug:
-            pprint.pprint(msg)
-            pprint.pprint(to_send)
-            pprint.pprint(buffers)
+            pass
 
         msg["tracker"] = tracker
 
@@ -975,7 +968,7 @@ class Session(Configurable):
         if copy:
             msg_list = t.cast(t.List[bytes], msg_list)
             idx = msg_list.index(DELIM)
-            return msg_list[:idx], msg_list[idx + 1 :]  # noqa
+            return msg_list[:idx], msg_list[idx + 1 :]
         else:
             msg_list = t.cast(t.List[zmq.Message], msg_list)
             failed = True
@@ -985,7 +978,7 @@ class Session(Configurable):
                     break
             if failed:
                 raise ValueError("DELIM not in msg_list")
-            idents, msg_list = msg_list[:idx], msg_list[idx + 1 :]  # noqa
+            idents, msg_list = msg_list[:idx], msg_list[idx + 1 :]
             return [bytes(m.bytes) for m in idents], msg_list
 
     def _add_digest(self, signature: bytes) -> None:
@@ -1082,7 +1075,7 @@ class Session(Configurable):
             buffers = [memoryview(bytes(b.bytes)) for b in msg_list[5:]]
         message["buffers"] = buffers
         if self.debug:
-            pprint.pprint(message)
+            pass
         # adapt to the current version
         return adapt(message)
 
