@@ -1075,7 +1075,7 @@ class Session(Configurable):
             buffers = [memoryview(bytes(b.bytes)) for b in msg_list[5:]]
         message["buffers"] = buffers
         if self.debug:
-            pass
+            pprint.pprint(message)  # noqa
         # adapt to the current version
         return adapt(message)
 
