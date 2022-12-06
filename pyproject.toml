@@ -109,7 +109,7 @@ nowarn = "test -W default {args}"
 features = ["test", "typing"]
 dependencies = ["mypy>=0.990"]
 [tool.hatch.envs.typing.scripts]
-test = "mypy --install-types --non-interactive {args:jupyter_client/**/*.py tests/*.py}"
+test = "mypy --install-types --non-interactive {args:.}"
 
 [tool.hatch.envs.lint]
 features = ["lint"]

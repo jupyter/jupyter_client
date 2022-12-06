@@ -661,7 +661,7 @@ class AsyncKernelManager(KernelManager):
         self._created_context = True
         return zmq.asyncio.Context()
 
-    def client(self, **kwargs: t.Any) -> AsyncKernelClient:
+    def client(self, **kwargs: t.Any) -> AsyncKernelClient:  # type:ignore
         return super().client(**kwargs)  # type:ignore
 
     _launch_kernel = KernelManager._async_launch_kernel  # type:ignore[assignment]
@@ -714,7 +714,7 @@ def start_new_kernel(
     kc = km.client()
     kc.start_channels()
     try:
-        kc.wait_for_ready(timeout=startup_timeout)  # type:ignore[attr-defined]
+        kc.wait_for_ready(timeout=startup_timeout)
     except RuntimeError:
         kc.stop_channels()
         km.shutdown_kernel()
@@ -728,14 +728,14 @@ async def start_new_async_kernel(
 ) -> t.Tuple[AsyncKernelManager, AsyncKernelClient]:
     """Start a new kernel, and return its Manager and Client"""
     km = AsyncKernelManager(kernel_name=kernel_name)
-    await km.start_kernel(**kwargs)  # type:ignore[has-type]
+    await km.start_kernel(**kwargs)
     kc = km.client()
     kc.start_channels()
     try:
-        await kc.wait_for_ready(timeout=startup_timeout)  # type:ignore[attr-defined]
+        await kc.wait_for_ready(timeout=startup_timeout)
     except RuntimeError:
         kc.stop_channels()
-        await km.shutdown_kernel()  # type:ignore[has-type]
+        await km.shutdown_kernel()
         raise
 
     return (km, kc)
