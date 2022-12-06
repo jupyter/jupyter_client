@@ -30,7 +30,7 @@ class AdapterTest(TestCase):
 
     def adapt(self, msg, version=None):
         original = copy.deepcopy(msg)
-        adapted = adapt(msg, version or self.to_version)
+        adapted = adapt(msg, version or self.to_version)  # type:ignore
         return original, adapted
 
     def check_header(self, msg):

@@ -478,7 +478,7 @@ class TestSession:
         ]
         session.send_raw(A, msg_list, ident=b"foo")
 
-        ident, new_msg_list = session.feed_identities(B.recv_multipart().result())
+        ident, new_msg_list = session.feed_identities(B.recv_multipart().result())  # type:ignore
         new_msg = session.deserialize(new_msg_list)
         self.assertEqual(ident[0], b"foo")
         self.assertEqual(new_msg["msg_type"], msg["msg_type"])
@@ -527,7 +527,7 @@ def test_json_packer():
 
 def test_message_cls():
     m = ss.Message(dict(a=1))
-    foo = dict(m)
+    foo = dict(m)  # type:ignore
     assert foo['a'] == 1
     assert m['a'] == 1, m['a']
     assert 'a' in m

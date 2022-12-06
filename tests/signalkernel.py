@@ -34,7 +34,7 @@ class SignalTestKernel(Kernel):
         self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
     ):
         code = code.strip()
-        reply = {
+        reply: dict = {
             "status": "ok",
             "user_expressions": {},
         }

@@ -89,9 +89,11 @@ classes: t.List[t.Type[t.Any]] = [KernelManager, KernelRestarter, Session]
 
 
 class JupyterConsoleApp(ConnectionFileMixin):
-    name = "jupyter-console-mixin"
+    name: t.Union[str, Unicode] = "jupyter-console-mixin"
 
-    description = """
+    description: t.Union[
+        str, Unicode
+    ] = """
         The Jupyter Console Mixin.
 
         This class contains the common portions of console client (QtConsole,

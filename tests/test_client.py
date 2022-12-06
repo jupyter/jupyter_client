@@ -8,7 +8,7 @@ from threading import Event
 from unittest import TestCase, mock
 
 import pytest
-from IPython.utils.capture import capture_output
+from IPython.utils.capture import capture_output  # type:ignore
 from traitlets import DottedObjectName, Type
 
 from jupyter_client.client import validate_string_dict
@@ -296,6 +296,6 @@ class TestThreadedKernelClient(TestKernelClient):
 
 def test_validate_string_dict():
     with pytest.raises(ValueError):
-        validate_string_dict(dict(a=1))
+        validate_string_dict(dict(a=1))  # type:ignore
     with pytest.raises(ValueError):
-        validate_string_dict({1: 'a'})
+        validate_string_dict({1: 'a'})  # type:ignore

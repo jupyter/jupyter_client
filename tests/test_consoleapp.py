@@ -10,7 +10,7 @@ from jupyter_client.consoleapp import JupyterConsoleApp
 from jupyter_client.manager import start_new_kernel
 
 
-class MockConsoleApp(JupyterConsoleApp, JupyterApp):
+class MockConsoleApp(JupyterConsoleApp, JupyterApp):  # type:ignore
     pass
 
 

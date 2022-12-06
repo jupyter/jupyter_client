@@ -34,7 +34,7 @@ class TemporaryWorkingDirectory(TemporaryDirectory):
         return super().__exit__(exc, value, tb)
 
 
-class DummyConsoleApp(JupyterApp, JupyterConsoleApp):
+class DummyConsoleApp(JupyterApp, JupyterConsoleApp):  # type:ignore
     def initialize(self, argv=None):
         JupyterApp.initialize(self, argv=argv or [])
         self.init_connection_file()
@@ -45,7 +45,7 @@ class DummyConfigurable(connect.ConnectionFileMixin):
         pass
 
 
-sample_info = dict(
+sample_info: dict = dict(
     ip="1.2.3.4",
     transport="ipc",
     shell_port=1,
@@ -58,7 +58,7 @@ sample_info = dict(
     kernel_name="python",
 )
 
-sample_info_kn = dict(
+sample_info_kn: dict = dict(
     ip="1.2.3.4",
     transport="ipc",
     shell_port=1,
@@ -134,7 +134,7 @@ def test_app_load_connection_file():
 
 def test_load_connection_info():
     client = KernelClient()
-    info = {
+    info: dict = {
         "control_port": 53702,
         "hb_port": 53705,
         "iopub_port": 53703,
@@ -233,7 +233,7 @@ def test_mixin_cleanup_random_ports():
         dc.cleanup_random_ports()
 
         assert not os.path.exists(filename)
-        for name in dc._random_port_names:
+        for name in dc._random_port_names:  # type:ignore
             assert getattr(dc, name) == 0
 
 
@@ -262,7 +262,8 @@ def test_reconcile_connection_info(file_exists, km_matches):
 
         if file_exists:
             _, info = connect.write_connection_file(cf, **expected_info)
-            info["key"] = info["key"].encode()  # set 'key' back to bytes
+            # set 'key' back to bytes
+            info["key"] = info["key"].encode()  # type:ignore
 
             if km_matches:
                 # Let this be the case where the connection file exists, and the KM has matching

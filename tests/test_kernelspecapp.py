@@ -24,18 +24,18 @@ def test_kernelspec_sub_apps(jp_kernel_dir):
         warnings.simplefilter("ignore")
         app.start()
 
-    app = ListKernelSpecs()
-    app.kernel_spec_manager.kernel_dirs.append(kernel_dir)
-    specs = app.start()
+    app1 = ListKernelSpecs()
+    app1.kernel_spec_manager.kernel_dirs.append(kernel_dir)
+    specs = app1.start()
     assert 'echo' in specs
 
-    app = RemoveKernelSpec(spec_names=['echo'], force=True)
-    app.kernel_spec_manager.kernel_dirs.append(kernel_dir)
-    app.start()
+    app2 = RemoveKernelSpec(spec_names=['echo'], force=True)
+    app2.kernel_spec_manager.kernel_dirs.append(kernel_dir)
+    app2.start()
 
-    app = ListKernelSpecs()
-    app.kernel_spec_manager.kernel_dirs.append(kernel_dir)
-    specs = app.start()
+    app3 = ListKernelSpecs()
+    app3.kernel_spec_manager.kernel_dirs.append(kernel_dir)
+    specs = app3.start()
     assert 'echo' not in specs
 
 

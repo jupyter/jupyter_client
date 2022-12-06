@@ -276,7 +276,7 @@ class TestKernelManager:
         assert km.context.closed is False
         assert jp_zmq_context.closed is False
 
-    def test_subclass_callables(self, km_subclass):
+    def test_subclass_callables(self, km_subclass: SyncKMSubclass) -> None:
         km_subclass.reset_counts()
 
         km_subclass.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -500,7 +500,7 @@ class TestAsyncKernelManager:
         is_alive = await kc.is_alive()
         assert is_alive
 
-    async def test_subclass_callables(self, async_km_subclass):
+    async def test_subclass_callables(self, async_km_subclass: AsyncKMSubclass) -> None:
         async_km_subclass.reset_counts()
 
         await async_km_subclass.start_kernel(stdout=PIPE, stderr=PIPE)

@@ -100,7 +100,7 @@ def test_json_default_date():
 def test_json_default():
     # list of input/expected output.  Use None for the expected output if it
     # can be the same as the input.
-    pairs = [
+    pairs: list = [
         (1, None),  # start with scalars
         (1.123, None),
         (1.0, None),
