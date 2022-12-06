@@ -144,7 +144,6 @@ jobs:
       - lint
       - check_links
       - test_minimum_verisons
-      - pre_commit
       - test_prereleases
       - test_sdist
     runs-on: ubuntu-latest
