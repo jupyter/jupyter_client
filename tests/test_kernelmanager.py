@@ -14,13 +14,10 @@ import pytest
 from jupyter_core import paths
 from traitlets.config.loader import Config
 
-from .utils import AsyncKMSubclass
-from .utils import SyncKMSubclass
-from jupyter_client import AsyncKernelManager
-from jupyter_client import KernelManager
-from jupyter_client.manager import _ShutdownStatus
-from jupyter_client.manager import start_new_async_kernel
-from jupyter_client.manager import start_new_kernel
+from jupyter_client import AsyncKernelManager, KernelManager
+from jupyter_client.manager import _ShutdownStatus, start_new_async_kernel, start_new_kernel
+
+from .utils import AsyncKMSubclass, SyncKMSubclass
 
 pjoin = os.path.join
 
@@ -279,7 +276,7 @@ class TestKernelManager:
         assert km.context.closed is False
         assert jp_zmq_context.closed is False
 
-    def test_subclass_callables(self, km_subclass):
+    def test_subclass_callables(self, km_subclass: SyncKMSubclass) -> None:
         km_subclass.reset_counts()
 
         km_subclass.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -503,7 +500,7 @@ class TestAsyncKernelManager:
         is_alive = await kc.is_alive()
         assert is_alive
 
-    async def test_subclass_callables(self, async_km_subclass):
+    async def test_subclass_callables(self, async_km_subclass: AsyncKMSubclass) -> None:
         async_km_subclass.reset_counts()
 
         await async_km_subclass.start_kernel(stdout=PIPE, stderr=PIPE)

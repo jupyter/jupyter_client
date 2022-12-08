@@ -5,18 +5,12 @@ import signal
 import sys
 import time
 
-from jupyter_core.application import base_aliases
-from jupyter_core.application import base_flags
-from jupyter_core.application import JupyterApp
-from traitlets import Any
-from traitlets import Dict
-from traitlets import Float
+from jupyter_core.application import JupyterApp, base_aliases, base_flags
+from traitlets import Any, Dict, Float
 from traitlets.config import catch_config_error
 
 from . import __version__
-from .consoleapp import app_aliases
-from .consoleapp import app_flags
-from .consoleapp import JupyterConsoleApp
+from .consoleapp import JupyterConsoleApp, app_aliases, app_flags
 
 OUTPUT_TIMEOUT = 10
 

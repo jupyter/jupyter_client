@@ -66,6 +66,14 @@ docs = [
     "pydata_sphinx_theme",
     "sphinxcontrib_github_alt",
 ]
+lint = [
+  "black>=22.6.0",
+  "mdformat>0.7",
+  "ruff>=0.0.156",
+]
+typing = [
+    "mypy>=0.990"
+]
 
 [project.scripts]
 jupyter-kernelspec = "jupyter_client.kernelspecapp:KernelSpecApp.launch_instance"
@@ -97,14 +105,24 @@ dependencies = ["coverage[toml]", "pytest-cov"]
 test = "python -m pytest -vv --cov jupyter_client --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"
 
-[tool.black]
-line-length = 100
-skip-string-normalization = true
-target_version = [
-    "py38",
-    "py39",
-    "py310",
-    "py311",
+[tool.hatch.envs.typing]
+features = ["test", "typing"]
+dependencies = ["mypy>=0.990"]
+[tool.hatch.envs.typing.scripts]
+test = "mypy --install-types --non-interactive {args:.}"
+
+[tool.hatch.envs.lint]
+features = ["lint"]
+[tool.hatch.envs.lint.scripts]
+style = [
+  "ruff {args:.}",
+  "black --check --diff {args:.}",
+  "mdformat --check {args:docs *.md}"
+]
+fmt = [
+  "black {args:.}",
+  "ruff --fix {args:.}",
+  "mdformat {args:docs *.md}"
 ]
 
 [tool.pytest.ini_options]
@@ -155,24 +173,62 @@ warn_redundant_casts = true
 warn_return_any = false
 warn_unused_ignores = true
 
-[tool.flake8]
-ignore = "E501, W503, E402"
-builtins = "c, get_config"
-exclude = [
-    ".cache",
-    ".github",
-    "docs",
-    "setup.py",
+
+[tool.black]
+line-length = 100
+skip-string-normalization = true
+target-version = ["py38"]
+
+[tool.ruff]
+target-version = "py38"
+line-length = 100
+select = [
+  "A", "B", "C", "E", "F", "FBT", "I", "N", "Q", "RUF", "S", "T",
+  "UP", "W", "YTT",
 ]
-enable-extensions = "G"
-extend-ignore = [
-    "G001", "G002", "G004", "G200", "G201", "G202",
-    # black adds spaces around ':'
-    "E203",
+ignore = [
+  # Allow non-abstract empty methods in abstract base classes
+  "B027",
+  # Ignore McCabe complexity
+  "C901",
+  # Allow boolean positional values in function calls, like `dict.get(... True)`
+  "FBT003",
+  # Use of `assert` detected
+  "S101",
+  # Line too long
+  "E501",
+  # Relative imports are banned
+  "I252",
+  # Boolean ... in function definition
+  "FBT001",
+  "FBT002",
+  # Module level import not at top of file
+  "E402",
+  # A001/A002/A003 .. is shadowing a python builtin
+  "A001",
+  "A002",
+  "A003",
+  # Possible hardcoded password
+  "S105",
+  "S106",
+  # Q000 Single quotes found but double quotes preferred
+  "Q000",
+  # N806 Variable `B` in function should be lowercase
+  "N806",
 ]
-per-file-ignores = [
-    # B011: Do not call assert False since python -O removes these calls
-    # F841 local variable 'foo' is assigned to but never used
-    # B007 Loop control variable
-    "tests/*: B011", "F841", "B007",
+unfixable = [
+  # Don't touch print statements
+  "T201",
+  # Don't touch noqa lines
+  "RUF100",
 ]
+
+[tool.ruff.per-file-ignores]
+# B011 Do not call assert False since python -O removes these calls
+# F841 local variable 'foo' is assigned to but never used
+# C408 Unnecessary `dict` call
+# E402 Module level import not at top of file
+# T201 `print` found
+# B007 Loop control variable `i` not used within the loop body.
+# N802 Function name `assertIn` should be lowercase
+"tests/*" = ["B011", "F841", "C408", "E402", "T201", "B007", "N802"]

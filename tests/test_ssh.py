@@ -2,8 +2,7 @@ import socket
 
 import pytest
 
-from jupyter_client.ssh.tunnel import open_tunnel
-from jupyter_client.ssh.tunnel import select_random_ports
+from jupyter_client.ssh.tunnel import open_tunnel, select_random_ports
 
 
 def test_random_ports():

@@ -5,14 +5,12 @@ import typing as t
 
 import zmq
 from tornado import ioloop
-from traitlets import Instance
-from traitlets import Type
+from traitlets import Instance, Type
 from zmq.eventloop.zmqstream import ZMQStream
 
-from .restarter import AsyncIOLoopKernelRestarter
-from .restarter import IOLoopKernelRestarter
-from jupyter_client.manager import AsyncKernelManager
-from jupyter_client.manager import KernelManager
+from jupyter_client.manager import AsyncKernelManager, KernelManager
+
+from .restarter import AsyncIOLoopKernelRestarter, IOLoopKernelRestarter
 
 
 def as_zmqstream(f):

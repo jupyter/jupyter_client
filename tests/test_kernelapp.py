@@ -2,8 +2,7 @@ import os
 import shutil
 import sys
 import time
-from subprocess import PIPE
-from subprocess import Popen
+from subprocess import PIPE, Popen
 from tempfile import mkdtemp
 
 

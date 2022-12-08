@@ -8,22 +8,13 @@ import typing as t
 import uuid
 
 import zmq
-from traitlets import Any
-from traitlets import Bool
-from traitlets import default
-from traitlets import Dict
-from traitlets import DottedObjectName
-from traitlets import Instance
-from traitlets import observe
-from traitlets import Unicode
+from traitlets import Any, Bool, Dict, DottedObjectName, Instance, Unicode, default, observe
 from traitlets.config.configurable import LoggingConfigurable
 from traitlets.utils.importstring import import_item
 
-from .kernelspec import KernelSpecManager
-from .kernelspec import NATIVE_KERNEL_NAME
+from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import KernelManager
-from .utils import ensure_async
-from .utils import run_sync
+from .utils import ensure_async, run_sync
 
 
 class DuplicateKernelError(Exception):
@@ -562,7 +553,15 @@ class AsyncMultiKernelManager(MultiKernelManager):
         self._created_context = True
         return zmq.asyncio.Context()
 
-    start_kernel = MultiKernelManager._async_start_kernel  # type:ignore[assignment]
-    restart_kernel = MultiKernelManager._async_restart_kernel  # type:ignore[assignment]
-    shutdown_kernel = MultiKernelManager._async_shutdown_kernel  # type:ignore[assignment]
-    shutdown_all = MultiKernelManager._async_shutdown_all  # type:ignore[assignment]
+    start_kernel: t.Callable[
+        ..., t.Awaitable
+    ] = MultiKernelManager._async_start_kernel  # type:ignore[assignment]
+    restart_kernel: t.Callable[
+        ..., t.Awaitable
+    ] = MultiKernelManager._async_restart_kernel  # type:ignore[assignment]
+    shutdown_kernel: t.Callable[
+        ..., t.Awaitable
+    ] = MultiKernelManager._async_shutdown_kernel  # type:ignore[assignment]
+    shutdown_all: t.Callable[
+        ..., t.Awaitable
+    ] = MultiKernelManager._async_shutdown_all  # type:ignore[assignment]

@@ -6,14 +6,8 @@ import os.path
 import sys
 import typing as t
 
-from jupyter_core.application import base_aliases
-from jupyter_core.application import base_flags
-from jupyter_core.application import JupyterApp
-from traitlets import Bool
-from traitlets import Dict
-from traitlets import Instance
-from traitlets import List
-from traitlets import Unicode
+from jupyter_core.application import JupyterApp, base_aliases, base_flags
+from traitlets import Bool, Dict, Instance, List, Unicode
 from traitlets.config.application import Application
 
 from . import __version__
@@ -47,7 +41,7 @@ class ListKernelSpecs(JupyterApp):
         specs = self.kernel_spec_manager.get_all_specs()
         if not self.json_output:
             if not specs:
-                print("No kernels available")
+                self.log.info("No kernels available")
                 return
             # pad to width of longest kernel name
             name_len = len(sorted(paths, key=lambda name: len(name))[-1])
@@ -61,11 +55,11 @@ class ListKernelSpecs(JupyterApp):
                 # not in jupyter path, artificially added to the front
                 return (-1, path)
 
-            print("Available kernels:")
+            self.log.info("Available kernels:")
             for kernelname, path in sorted(paths.items(), key=path_key):
-                print(f"  {kernelname.ljust(name_len)}    {path}")
+                self.log.info(f"  {kernelname.ljust(name_len)}    {path}")
         else:
-            print(json.dumps({"kernelspecs": specs}, indent=2))
+            self.log.info(json.dumps({"kernelspecs": specs}, indent=2))
         return specs
 
 
@@ -138,7 +132,7 @@ class InstallKernelSpec(JupyterApp):
         if self.extra_args:
             self.sourcedir = self.extra_args[0]
         else:
-            print("No source directory specified.")
+            self.log.info("No source directory specified.")
             self.exit(1)
 
     def start(self):
@@ -154,18 +148,14 @@ class InstallKernelSpec(JupyterApp):
             )
         except OSError as e:
             if e.errno == errno.EACCES:
-                print(e, file=sys.stderr)
+                self.log.exception(e)
                 if not self.user:
-                    print(
+                    self.log.warn(
                         "Perhaps you want to install with `sudo` or `--user`?",
-                        file=sys.stderr,
                     )
                 self.exit(1)
             elif e.errno == errno.EEXIST:
-                print(
-                    "A kernel spec is already present at %s" % e.filename,
-                    file=sys.stderr,
-                )
+                self.log.warn("A kernel spec is already present at %s" % e.filename)
                 self.exit(1)
             raise
 
@@ -204,9 +194,9 @@ class RemoveKernelSpec(JupyterApp):
             self.exit("Couldn't find kernel spec(s): %s" % ", ".join(missing))
 
         if not (self.force or self.answer_yes):
-            print("Kernel specs to remove:")
+            self.log.info("Kernel specs to remove:")
             for name in self.spec_names:
-                print(f"  {name.ljust(20)}\t{spec_paths[name]}")
+                self.log.info(f"  {name.ljust(20)}\t{spec_paths[name]}")
             answer = input("Remove %i kernel specs [y/N]: " % len(self.spec_names))
             if not answer.lower().startswith("y"):
                 return
@@ -216,8 +206,8 @@ class RemoveKernelSpec(JupyterApp):
                 path = self.kernel_spec_manager.remove_kernel_spec(kernel_name)
             except OSError as e:
                 if e.errno == errno.EACCES:
-                    print(e, file=sys.stderr)
-                    print("Perhaps you want sudo?", file=sys.stderr)
+                    self.log.info(e, file=sys.stderr)
+                    self.log.info("Perhaps you want sudo?", file=sys.stderr)
                     self.exit(1)
                 else:
                     raise
@@ -257,15 +247,15 @@ class InstallNativeKernelSpec(JupyterApp):
         try:
             from ipykernel import kernelspec
         except ImportError:
-            print("ipykernel not available, can't install its spec.", file=sys.stderr)
+            self.log.info("ipykernel not available, can't install its spec.", file=sys.stderr)
             self.exit(1)
         try:
             kernelspec.install(self.kernel_spec_manager, user=self.user)
         except OSError as e:
             if e.errno == errno.EACCES:
-                print(e, file=sys.stderr)
+                self.log.info(e, file=sys.stderr)
                 if not self.user:
-                    print(
+                    self.log.info(
                         "Perhaps you want to install with `sudo` or `--user`?",
                         file=sys.stderr,
                     )
@@ -279,14 +269,14 @@ class ListProvisioners(JupyterApp):
 
     def start(self):
         kfp = KernelProvisionerFactory.instance(parent=self)
-        print("Available kernel provisioners:")
+        self.log.info("Available kernel provisioners:")
         provisioners = kfp.get_provisioner_entries()
 
         # pad to width of longest kernel name
         name_len = len(sorted(provisioners, key=lambda name: len(name))[-1])
 
         for name in sorted(provisioners):
-            print(f"  {name.ljust(name_len)}    {provisioners[name]}")
+            self.log.info(f"  {name.ljust(name_len)}    {provisioners[name]}")
 
 
 class KernelSpecApp(Application):
@@ -316,8 +306,10 @@ class KernelSpecApp(Application):
 
     def start(self):
         if self.subapp is None:
-            print("No subcommand specified. Must specify one of: %s" % list(self.subcommands))
-            print()
+            self.log.info(
+                "No subcommand specified. Must specify one of: %s" % list(self.subcommands)
+            )
+            self.log.info()
             self.print_description()
             self.print_subcommands()
             self.exit(1)

@@ -8,10 +8,12 @@ from typing import Dict
 
 import pytest
 
-from jupyter_client import AsyncKernelManager
-from jupyter_client import AsyncMultiKernelManager
-from jupyter_client import KernelManager
-from jupyter_client import MultiKernelManager
+from jupyter_client import (
+    AsyncKernelManager,
+    AsyncMultiKernelManager,
+    KernelManager,
+    MultiKernelManager,
+)
 
 pjoin = os.path.join
 
@@ -124,11 +126,11 @@ class KMSubclass(RecordCallMixin):
         """Record call and defer to superclass"""
 
     @subclass_recorder
-    def signal_kernel(self, signum: int):
+    def signal_kernel(self, signum):
         """Record call and defer to superclass"""
 
     @subclass_recorder
-    def _async_signal_kernel(self, signum: int):
+    def _async_signal_kernel(self, signum):
         """Record call and defer to superclass"""
 
     @subclass_recorder
@@ -140,7 +142,7 @@ class KMSubclass(RecordCallMixin):
         """Record call and defer to superclass"""
 
     @subclass_recorder
-    def _async_send_kernel_sigterm(self, restart: bool = False):
+    def _async_send_kernel_sigterm(self, restart=False):
         """Record call and defer to superclass"""
 
 

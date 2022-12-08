@@ -7,45 +7,42 @@ import os
 import signal
 import sys
 from subprocess import PIPE
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import pytest
 from jupyter_core import paths
-from traitlets import Int
-from traitlets import Unicode
+from traitlets import Int, Unicode
 
 from jupyter_client.connect import KernelConnectionInfo
-from jupyter_client.kernelspec import KernelSpecManager
-from jupyter_client.kernelspec import NoSuchKernel
+from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
 from jupyter_client.launcher import launch_kernel
 from jupyter_client.manager import AsyncKernelManager
-from jupyter_client.provisioning import KernelProvisionerBase
-from jupyter_client.provisioning import KernelProvisionerFactory
-from jupyter_client.provisioning import LocalProvisioner
+from jupyter_client.provisioning import (
+    KernelProvisionerBase,
+    KernelProvisionerFactory,
+    LocalProvisioner,
+)
 from jupyter_client.provisioning.factory import EntryPoint
 
 pjoin = os.path.join
 
 
-class SubclassedTestProvisioner(LocalProvisioner):
+class SubclassedTestProvisioner(LocalProvisioner):  # type:ignore
 
-    config_var_1: int = Int(config=True)
-    config_var_2: str = Unicode(config=True)
+    config_var_1: int = Int(config=True)  # type:ignore
+    config_var_2: str = Unicode(config=True)  # type:ignore
 
     pass
 
 
-class CustomTestProvisioner(KernelProvisionerBase):
+class CustomTestProvisioner(KernelProvisionerBase):  # type:ignore
 
     process = None
     pid = None
     pgid = None
 
-    config_var_1: int = Int(config=True)
-    config_var_2: str = Unicode(config=True)
+    config_var_1: int = Int(config=True)  # type:ignore
+    config_var_2: str = Unicode(config=True)  # type:ignore
 
     @property
     def has_process(self) -> bool:
@@ -90,11 +87,11 @@ class CustomTestProvisioner(KernelProvisionerBase):
                     pass
             return self.process.send_signal(signum)
 
-    async def kill(self, restart=False) -> None:
+    async def kill(self, restart: bool = False) -> None:
         if self.process:
             self.process.kill()
 
-    async def terminate(self, restart=False) -> None:
+    async def terminate(self, restart: bool = False) -> None:
         if self.process:
             self.process.terminate()
 
@@ -115,6 +112,7 @@ class CustomTestProvisioner(KernelProvisionerBase):
             )  # This needs to remain here for b/c
 
             return await super().pre_launch(cmd=kernel_cmd, **kwargs)
+        return {}
 
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
         scrubbed_kwargs = kwargs
@@ -130,16 +128,16 @@ class CustomTestProvisioner(KernelProvisionerBase):
         self.pgid = pgid
         return self.connection_info
 
-    async def cleanup(self, restart=False) -> None:
+    async def cleanup(self, restart: bool = False) -> None:
         pass
 
 
-class NewTestProvisioner(CustomTestProvisioner):
+class NewTestProvisioner(CustomTestProvisioner):  # type:ignore
     pass
 
 
 def build_kernelspec(name: str, provisioner: Optional[str] = None) -> None:
-    spec = {
+    spec: dict = {
         'argv': [
             sys.executable,
             '-m',
@@ -211,7 +209,7 @@ def mock_get_all_provisioners() -> List[EntryPoint]:
     return result
 
 
-def mock_get_provisioner(factory, name) -> EntryPoint:
+def mock_get_provisioner(_: str, name: str) -> EntryPoint:
     if name == 'new-test-provisioner':
         return EntryPoint(
             'new-test-provisioner',
@@ -276,6 +274,7 @@ class TestRuntime:
             TestRuntime.validate_provisioner(kernel_mgr)
 
             await kernel_mgr.shutdown_kernel()
+            assert kernel_mgr.provisioner is not None
             assert kernel_mgr.provisioner.has_process is False
 
     async def test_existing(self, kpf, akm):
@@ -318,7 +317,7 @@ class TestRuntime:
         assert async_km.context.closed
 
     @staticmethod
-    def validate_provisioner(akm: AsyncKernelManager):
+    def validate_provisioner(akm: AsyncKernelManager) -> None:
         # Ensure the provisioner is managing a process at this point
         assert akm.provisioner is not None and akm.provisioner.has_process
 
@@ -327,8 +326,8 @@ class TestRuntime:
             assert not hasattr(akm.provisioner, 'config_var_1')
             assert not hasattr(akm.provisioner, 'config_var_2')
         else:
-            assert akm.provisioner.config_var_1 == 42
-            assert akm.provisioner.config_var_2 == akm.kernel_name
+            assert akm.provisioner.config_var_1 == 42  # type:ignore
+            assert akm.provisioner.config_var_2 == akm.kernel_name  # type:ignore
 
         # Validate provisioner class
         if akm.kernel_name in ['no_provisioner', 'default_provisioner', 'subclassed_provisioner']:

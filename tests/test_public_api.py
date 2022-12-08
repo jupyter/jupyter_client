@@ -3,8 +3,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import jupyter_client
-from jupyter_client import connect
-from jupyter_client import launcher
+from jupyter_client import connect, launcher
 
 
 def test_kms():

@@ -10,17 +10,15 @@ import unittest
 from io import StringIO
 from logging import StreamHandler
 from os.path import join as pjoin
-from subprocess import PIPE
-from subprocess import Popen
-from subprocess import STDOUT
+from subprocess import PIPE, STDOUT, Popen
 from tempfile import TemporaryDirectory
 
 import pytest
 from jupyter_core import paths
 
-from .utils import install_kernel
-from .utils import sample_kernel_json
 from jupyter_client import kernelspec
+
+from .utils import install_kernel, sample_kernel_json
 
 
 class KernelSpecTests(unittest.TestCase):

@@ -15,25 +15,29 @@ from contextlib import contextmanager
 from enum import Enum
 
 import zmq
-from traitlets import Any
-from traitlets import Bool
-from traitlets import default
-from traitlets import DottedObjectName
-from traitlets import Float
-from traitlets import Instance
-from traitlets import observe
-from traitlets import observe_compat
-from traitlets import Type
-from traitlets import Unicode
+from traitlets import (
+    Any,
+    Bool,
+    DottedObjectName,
+    Float,
+    Instance,
+    Type,
+    Unicode,
+    default,
+    observe,
+    observe_compat,
+)
 from traitlets.utils.importstring import import_item
+
+from jupyter_client import KernelClient, kernelspec
+from jupyter_client.asynchronous import AsyncKernelClient
+from jupyter_client.blocking import BlockingKernelClient
 
 from .connect import ConnectionFileMixin
 from .managerabc import KernelManagerABC
 from .provisioning import KernelProvisionerBase
-from .provisioning import KernelProvisionerFactory as KPF
+from .provisioning import KernelProvisionerFactory as KPF  # noqa
 from .utils import run_sync
-from jupyter_client import KernelClient
-from jupyter_client import kernelspec
 
 
 class _ShutdownStatus(Enum):
@@ -119,7 +123,7 @@ class KernelManager(ConnectionFileMixin):
     client_class: DottedObjectName = DottedObjectName(
         "jupyter_client.blocking.BlockingKernelClient"
     )
-    client_factory: Type = Type(klass="jupyter_client.KernelClient")
+    client_factory: Type = Type(klass=KernelClient)
 
     @default("client_factory")  # type:ignore[misc]
     def _client_factory_default(self) -> Type:
@@ -238,15 +242,15 @@ class KernelManager(ConnectionFileMixin):
     # create a Client connected to our Kernel
     # --------------------------------------------------------------------------
 
-    def client(self, **kwargs: t.Any) -> KernelClient:
+    def client(self, **kwargs: t.Any) -> BlockingKernelClient:
         """Create a client configured to connect to our kernel"""
         kw: dict = {}
         kw.update(self.get_connection_info(session=True))
         kw.update(
-            dict(
-                connection_file=self.connection_file,
-                parent=self,
-            )
+            {
+                "connection_file": self.connection_file,
+                "parent": self,
+            }
         )
 
         # add kwargs last, for manual overrides
@@ -281,10 +285,10 @@ class KernelManager(ConnectionFileMixin):
         # is not usable by non python kernels because the path is being rerouted when
         # inside of a store app.
         # See this bug here: https://bugs.python.org/issue41196
-        ns = dict(
-            connection_file=os.path.realpath(self.connection_file),
-            prefix=sys.prefix,
-        )
+        ns = {
+            "connection_file": os.path.realpath(self.connection_file),
+            "prefix": sys.prefix,
+        }
 
         if self.kernel_spec:
             ns["resource_dir"] = self.kernel_spec.resource_dir
@@ -398,7 +402,7 @@ class KernelManager(ConnectionFileMixin):
 
     async def _async_request_shutdown(self, restart: bool = False) -> None:
         """Send a shutdown request via control channel"""
-        content = dict(restart=restart)
+        content = {"restart": restart}
         msg = self.session.msg("shutdown_request", content=content)
         # ensure control socket is connected
         self._connect_control_socket()
@@ -657,20 +661,45 @@ class AsyncKernelManager(KernelManager):
         self._created_context = True
         return zmq.asyncio.Context()
 
+    def client(self, **kwargs: t.Any) -> AsyncKernelClient:  # type:ignore
+        return super().client(**kwargs)  # type:ignore
+
     _launch_kernel = KernelManager._async_launch_kernel  # type:ignore[assignment]
-    start_kernel = KernelManager._async_start_kernel  # type:ignore[assignment]
-    pre_start_kernel = KernelManager._async_pre_start_kernel  # type:ignore[assignment]
-    post_start_kernel = KernelManager._async_post_start_kernel  # type:ignore[assignment]
-    request_shutdown = KernelManager._async_request_shutdown  # type:ignore[assignment]
-    finish_shutdown = KernelManager._async_finish_shutdown  # type:ignore[assignment]
-    cleanup_resources = KernelManager._async_cleanup_resources  # type:ignore[assignment]
-    shutdown_kernel = KernelManager._async_shutdown_kernel  # type:ignore[assignment]
-    restart_kernel = KernelManager._async_restart_kernel  # type:ignore[assignment]
+    start_kernel: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_start_kernel  # type:ignore[assignment]
+    pre_start_kernel: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_pre_start_kernel  # type:ignore[assignment]
+    post_start_kernel: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_post_start_kernel  # type:ignore[assignment]
+    request_shutdown: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_request_shutdown  # type:ignore[assignment]
+    finish_shutdown: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_finish_shutdown  # type:ignore[assignment]
+    cleanup_resources: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_cleanup_resources  # type:ignore[assignment]
+    shutdown_kernel: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_shutdown_kernel  # type:ignore[assignment]
+    restart_kernel: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_restart_kernel  # type:ignore[assignment]
     _send_kernel_sigterm = KernelManager._async_send_kernel_sigterm  # type:ignore[assignment]
     _kill_kernel = KernelManager._async_kill_kernel  # type:ignore[assignment]
-    interrupt_kernel = KernelManager._async_interrupt_kernel  # type:ignore[assignment]
-    signal_kernel = KernelManager._async_signal_kernel  # type:ignore[assignment]
-    is_alive = KernelManager._async_is_alive  # type:ignore[assignment]
+    interrupt_kernel: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_interrupt_kernel  # type:ignore[assignment]
+    signal_kernel: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_signal_kernel  # type:ignore[assignment]
+    is_alive: t.Callable[
+        ..., t.Awaitable
+    ] = KernelManager._async_is_alive  # type:ignore[assignment]
 
 
 KernelManagerABC.register(KernelManager)
@@ -678,14 +707,14 @@ KernelManagerABC.register(KernelManager)
 
 def start_new_kernel(
     startup_timeout: float = 60, kernel_name: str = "python", **kwargs: t.Any
-) -> t.Tuple[KernelManager, KernelClient]:
+) -> t.Tuple[KernelManager, BlockingKernelClient]:
     """Start a new kernel, and return its Manager and Client"""
     km = KernelManager(kernel_name=kernel_name)
     km.start_kernel(**kwargs)
     kc = km.client()
     kc.start_channels()
     try:
-        kc.wait_for_ready(timeout=startup_timeout)  # type:ignore[attr-defined]
+        kc.wait_for_ready(timeout=startup_timeout)
     except RuntimeError:
         kc.stop_channels()
         km.shutdown_kernel()
@@ -696,17 +725,17 @@ def start_new_kernel(
 
 async def start_new_async_kernel(
     startup_timeout: float = 60, kernel_name: str = "python", **kwargs: t.Any
-) -> t.Tuple[AsyncKernelManager, KernelClient]:
+) -> t.Tuple[AsyncKernelManager, AsyncKernelClient]:
     """Start a new kernel, and return its Manager and Client"""
     km = AsyncKernelManager(kernel_name=kernel_name)
-    await km.start_kernel(**kwargs)  # type:ignore[has-type]
+    await km.start_kernel(**kwargs)
     kc = km.client()
     kc.start_channels()
     try:
-        await kc.wait_for_ready(timeout=startup_timeout)  # type:ignore[attr-defined]
+        await kc.wait_for_ready(timeout=startup_timeout)
     except RuntimeError:
         kc.stop_channels()
-        await km.shutdown_kernel()  # type:ignore[has-type]
+        await km.shutdown_kernel()
         raise
 
     return (km, kc)

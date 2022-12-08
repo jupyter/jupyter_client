@@ -14,28 +14,12 @@ import stat
 import tempfile
 import warnings
 from getpass import getpass
-from typing import Any
-from typing import cast
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import Tuple
-from typing import Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import zmq
-from jupyter_core.paths import jupyter_data_dir
-from jupyter_core.paths import jupyter_runtime_dir
-from jupyter_core.paths import secure_write
-from traitlets import Bool
-from traitlets import CaselessStrEnum
-from traitlets import Instance
-from traitlets import Integer
-from traitlets import observe
-from traitlets import Type
-from traitlets import Unicode
-from traitlets.config import LoggingConfigurable
-from traitlets.config import SingletonConfigurable
+from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
+from traitlets import Bool, CaselessStrEnum, Instance, Integer, Type, Unicode, observe
+from traitlets.config import LoggingConfigurable, SingletonConfigurable
 
 from .localinterfaces import localhost
 from .utils import _filefind
@@ -144,13 +128,13 @@ def write_connection_file(
     if hb_port <= 0:
         hb_port = ports.pop(0)
 
-    cfg: KernelConnectionInfo = dict(
-        shell_port=shell_port,
-        iopub_port=iopub_port,
-        stdin_port=stdin_port,
-        control_port=control_port,
-        hb_port=hb_port,
-    )
+    cfg: KernelConnectionInfo = {
+        "shell_port": shell_port,
+        "iopub_port": iopub_port,
+        "stdin_port": stdin_port,
+        "control_port": control_port,
+        "hb_port": hb_port,
+    }
     cfg["ip"] = ip
     cfg["key"] = key.decode()
     cfg["transport"] = transport
@@ -364,7 +348,7 @@ class ConnectionFileMixin(LoggingConfigurable):
     @observe("ip")
     def _ip_changed(self, change):
         if change["new"] == "*":
-            self.ip = "0.0.0.0"
+            self.ip = "0.0.0.0"  # noqa
 
     # protected traits
 
@@ -408,15 +392,15 @@ class ConnectionFileMixin(LoggingConfigurable):
         connect_info : dict
             dictionary of connection information.
         """
-        info = dict(
-            transport=self.transport,
-            ip=self.ip,
-            shell_port=self.shell_port,
-            iopub_port=self.iopub_port,
-            stdin_port=self.stdin_port,
-            hb_port=self.hb_port,
-            control_port=self.control_port,
-        )
+        info = {
+            "transport": self.transport,
+            "ip": self.ip,
+            "shell_port": self.shell_port,
+            "iopub_port": self.iopub_port,
+            "stdin_port": self.stdin_port,
+            "hb_port": self.hb_port,
+            "control_port": self.control_port,
+        }
         if session:
             # add *clone* of my session,
             # so that state such as digest_history is not shared.
@@ -424,10 +408,10 @@ class ConnectionFileMixin(LoggingConfigurable):
         else:
             # add session info
             info.update(
-                dict(
-                    signature_scheme=self.session.signature_scheme,
-                    key=self.session.key,
-                )
+                {
+                    "signature_scheme": self.session.signature_scheme,
+                    "key": self.session.key,
+                }
             )
         return info
 

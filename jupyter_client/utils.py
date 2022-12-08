@@ -5,8 +5,7 @@ utils:
 """
 import os
 
-from jupyter_core.utils import ensure_async  # noqa: F401
-from jupyter_core.utils import run_sync  # noqa: F401
+from jupyter_core.utils import ensure_async, run_sync  # noqa: F401  # noqa: F401
 
 
 def _filefind(filename, path_dirs=None):

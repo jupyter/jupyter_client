@@ -4,8 +4,7 @@
 import os
 import signal
 import time
-from subprocess import PIPE
-from subprocess import Popen
+from subprocess import PIPE, Popen
 
 from ipykernel.displayhook import ZMQDisplayHook
 from ipykernel.kernelapp import IPKernelApp
@@ -35,7 +34,7 @@ class SignalTestKernel(Kernel):
         self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
     ):
         code = code.strip()
-        reply = {
+        reply: dict = {
             "status": "ok",
             "user_expressions": {},
         }
