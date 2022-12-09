@@ -301,8 +301,8 @@ class KernelSpecApp(Application):
         }
     )
 
-    aliases: t.Dict[str, object] = {}
-    flags: t.Dict[str, object] = {}
+    aliases: t.Dict[str, object] = {}  # type:ignore[assignment]
+    flags: t.Dict[str, object] = {}  # type:ignore[assignment]
 
     def start(self):
         if self.subapp is None:

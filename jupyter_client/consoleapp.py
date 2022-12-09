@@ -32,12 +32,12 @@ ConnectionFileMixin = connect.ConnectionFileMixin
 # Aliases and Flags
 # -----------------------------------------------------------------------------
 
-flags = {}
+flags: dict = {}
 flags.update(base_flags)
 # the flags that are specific to the frontend
 # these must be scrubbed before being passed to the kernel,
 # or it will raise an error on unrecognized flags
-app_flags = {
+app_flags: dict = {
     "existing": (
         {"JupyterConsoleApp": {"existing": "kernel*.json"}},
         "Connect to an existing kernel. If no argument specified, guess most recent",
@@ -61,11 +61,11 @@ app_flags.update(
 )
 flags.update(app_flags)
 
-aliases = {}
+aliases: dict = {}
 aliases.update(base_aliases)
 
 # also scrub aliases from the frontend
-app_aliases = {
+app_aliases: dict = {
     "ip": "JupyterConsoleApp.ip",
     "transport": "JupyterConsoleApp.transport",
     "hb": "JupyterConsoleApp.hb_port",
