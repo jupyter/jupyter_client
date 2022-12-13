@@ -311,10 +311,12 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert kid in km
         assert kid in km.list_kernel_ids()
         assert len(km) == 1, f"{len(km)} != {1}"
-        await km.restart_kernel(kid, now=True)
-        assert await km.is_alive(kid)
-        assert kid in km.list_kernel_ids()
+        # Ensure we can interrupt during a restart.
+        fut = km.restart_kernel(kid, now=True)
         await km.interrupt_kernel(kid)
+        assert await km.is_alive(kid)
+        await fut
+        assert kid in km.list_kernel_ids()
         k = km.get_kernel(kid)
         assert isinstance(k, AsyncKernelManager)
         await km.shutdown_kernel(kid, now=True)

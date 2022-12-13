@@ -594,6 +594,18 @@ class KernelManager(ConnectionFileMixin):
         Unlike ``signal_kernel``, this operation is well supported on all
         platforms.
         """
+        if not self.has_kernel:
+            if self._ready is not None:
+                if isinstance(self._ready, CFuture):
+                    ready = asyncio.ensure_future(self._ready)  # type:ignore
+                else:
+                    ready = self._ready
+                # Wait for a shutdown if one is in progress.
+                if self.shutting_down:
+                    await ready
+                # Wait for a startup.
+                await ready
+
         if self.has_kernel:
             assert self.kernel_spec is not None
             interrupt_mode = self.kernel_spec.interrupt_mode
