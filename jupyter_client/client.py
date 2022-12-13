@@ -21,7 +21,6 @@ from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
 from .session import Session
 
-
 # some utilities to validate message structure, these might get moved elsewhere
 # if they prove to have more generic utility
 

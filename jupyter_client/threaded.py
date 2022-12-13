@@ -17,7 +17,6 @@ from jupyter_client.channels import HBChannel
 
 from .session import Session
 
-
 # Local imports
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
 # during garbage collection of threads at exit
