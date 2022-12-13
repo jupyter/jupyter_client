@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.0.0b3
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0b2...b51a3b5d1a0d1a8ad390c1121506217909da1c4f))
+
+### Bugs fixed
+
+- Allow interrupt during restart of pending kernels [#898](https://github.com/jupyter/jupyter_client/pull/898) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-12-08&to=2022-12-13&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-12-08..2022-12-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.0.0b2
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0b1...ff33adf784f2bd25814d7ed6ae7c6651cee8376e))
@@ -16,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-12-05&to=2022-12-08&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-12-05..2022-12-08&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-12-05..2022-12-08&type=Issues) | [@ophie200](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aophie200+updated%3A2022-12-05..2022-12-08&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-12-05..2022-12-08&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.0.0b1
 
