@@ -6,6 +6,7 @@ utils:
 import asyncio
 import inspect
 import os
+import sys
 
 
 def run_sync(coro):
@@ -13,10 +14,17 @@ def run_sync(coro):
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            # Workaround for bugs.python.org/issue39529.
-            try:
-                loop = asyncio.get_event_loop_policy().get_event_loop()
-            except RuntimeError:
+            # In python 3.10.9 this workaround breaks some tests
+            # test_client.TestKernelClient
+            # https://github.com/python/cpython/issues/83710
+            if sys.version_info <= (3, 10, 8):
+                # Workaround for bugs.python.org/issue39529.
+                try:
+                    loop = asyncio.get_event_loop_policy().get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+            else:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
         import nest_asyncio  # type: ignore
