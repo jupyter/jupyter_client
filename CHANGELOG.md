@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.0.0rc0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0b3...bf637ed9543198d6dca96d748b0307ed01b16c94))
+
+### Maintenance and upkeep improvements
+
+- Allow releasing from repo [#899](https://github.com/jupyter/jupyter_client/pull/899) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-12-13&to=2022-12-19&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-12-13..2022-12-19&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.0.0b3
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0b2...b51a3b5d1a0d1a8ad390c1121506217909da1c4f))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-12-08&to=2022-12-13&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-12-08..2022-12-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.0.0b2
 
