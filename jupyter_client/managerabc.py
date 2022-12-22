@@ -22,14 +22,17 @@ class KernelManagerABC(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def start_kernel(self, **kw):
+        """Start the kernel."""
         pass
 
     @abc.abstractmethod
     def shutdown_kernel(self, now=False, restart=False):
+        """Shut down the kernel."""
         pass
 
     @abc.abstractmethod
     def restart_kernel(self, now=False, **kw):
+        """Restart the kernel."""
         pass
 
     @abc.abstractproperty
@@ -38,12 +41,15 @@ class KernelManagerABC(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def interrupt_kernel(self):
+        """Interrupt the kernel."""
         pass
 
     @abc.abstractmethod
     def signal_kernel(self, signum):
+        """Send a signal to the kernel."""
         pass
 
     @abc.abstractmethod
     def is_alive(self):
+        """Test whether the kernel is alive."""
         pass

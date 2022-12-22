@@ -90,6 +90,7 @@ MAX_BYTES = 1024
 
 
 def json_packer(obj):
+    """Convert a json object to a bytes."""
     try:
         return json.dumps(
             obj,
@@ -117,12 +118,14 @@ def json_packer(obj):
 
 
 def json_unpacker(s):
+    """Convert a json bytes or string to an object."""
     if isinstance(s, bytes):
         s = s.decode("utf8", "replace")
     return json.loads(s)
 
 
 def pickle_packer(o):
+    """Pack an object using the pickle module."""
     return pickle.dumps(squash_dates(o), PICKLE_PROTOCOL)
 
 
@@ -228,6 +231,7 @@ class SessionFactory(LoggingConfigurable):
         return IOLoop.current()
 
     def __init__(self, **kwargs):
+        """Initialize a session factory."""
         super().__init__(**kwargs)
 
         if self.session is None:
@@ -242,6 +246,7 @@ class Message:
     simply by calling dict(msg_obj)."""
 
     def __init__(self, msg_dict: t.Dict[str, t.Any]) -> None:
+        """Initialize a message."""
         dct = self.__dict__
         for k, v in dict(msg_dict).items():
             if isinstance(v, dict):
@@ -636,6 +641,7 @@ class Session(Configurable):
             self.unpack = lambda s: unpack(s)
 
     def msg_header(self, msg_type: str) -> t.Dict[str, t.Any]:
+        """Create a header for a message type."""
         return msg_header(self.msg_id, msg_type, self.username, self.session)
 
     def msg(
@@ -1081,7 +1087,9 @@ class Session(Configurable):
         # adapt to the current version
         return adapt(message)
 
-    def unserialize(self, *args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:  # pragma: no cover
+    def unserialize(self, *args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:
+        """**DEPRECATED** Use deserialize instead."""
+        # pragma: no cover
         warnings.warn(
             "Session.unserialize is deprecated. Use Session.deserialize.",
             DeprecationWarning,

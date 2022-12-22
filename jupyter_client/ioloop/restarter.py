@@ -49,7 +49,10 @@ class IOLoopKernelRestarter(KernelRestarter):
 
 
 class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
+    """An async io loop kernel restarter."""
+
     async def poll(self):
+        """Poll the kernel."""
         if self.debug:
             self.log.debug("Polling kernel...")
         is_alive = await self.kernel_manager.is_alive()

@@ -68,15 +68,19 @@ class ThreadedZMQSocketChannel:
     _is_alive = False
 
     def is_alive(self) -> bool:
+        """Whether the channel is alive."""
         return self._is_alive
 
     def start(self) -> None:
+        """Start the channel."""
         self._is_alive = True
 
     def stop(self) -> None:
+        """Stop the channel."""
         self._is_alive = False
 
     def close(self) -> None:
+        """ "Close the channel."""
         if self.socket is not None:
             try:
                 self.socket.close(linger=0)
@@ -173,6 +177,7 @@ class IOLoopThread(Thread):
     ioloop = None
 
     def __init__(self):
+        """Initialize an io loop thread."""
         super().__init__()
         self.daemon = True
 
@@ -225,6 +230,7 @@ class IOLoopThread(Thread):
         self.close()
 
     def close(self) -> None:
+        """Close the io loop thread."""
         if self.ioloop is not None:
             try:
                 self.ioloop.close(all_fds=True)
@@ -249,6 +255,7 @@ class ThreadedKernelClient(KernelClient):
         hb: bool = True,
         control: bool = True,
     ) -> None:
+        """Start the channels on the client."""
         self.ioloop_thread = IOLoopThread()
         self.ioloop_thread.start()
 
@@ -264,6 +271,7 @@ class ThreadedKernelClient(KernelClient):
             self.shell_channel._inspect = None
 
     def stop_channels(self) -> None:
+        """Stop the channels on the client."""
         super().stop_channels()
         if self.ioloop_thread.is_alive():
             self.ioloop_thread.stop()

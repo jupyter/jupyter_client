@@ -44,9 +44,11 @@ class KernelProvisionerFactory(SingletonConfigurable):
 
     @default('default_provisioner_name')
     def default_provisioner_name_default(self):
+        """The default provisioner name."""
         return getenv(self.default_provisioner_name_env, "local-provisioner")
 
     def __init__(self, **kwargs: Any) -> None:
+        """Initialize a kernel provisioner factory."""
         super().__init__(**kwargs)
 
         for ep in KernelProvisionerFactory._get_all_provisioners():
