@@ -1,3 +1,4 @@
+"""A Jupyter console app to run files."""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import queue
@@ -35,6 +36,8 @@ frontend_flags = set(frontend_flags_dict.keys())
 
 
 class RunApp(JupyterApp, JupyterConsoleApp):
+    """An Jupyter Console app to run files."""
+
     version = __version__
     name = "jupyter run"
     description = """Run Jupyter kernel code."""
@@ -55,12 +58,14 @@ class RunApp(JupyterApp, JupyterConsoleApp):
     )
 
     def parse_command_line(self, argv=None):
+        """Parse the command line arguments."""
         super().parse_command_line(argv)
         self.build_kernel_argv(self.extra_args)
         self.filenames_to_run = self.extra_args[:]
 
     @catch_config_error
     def initialize(self, argv=None):
+        """Initialize the app."""
         self.log.debug("jupyter run: initialize...")
         super().initialize(argv)
         JupyterConsoleApp.initialize(self)
@@ -68,6 +73,7 @@ class RunApp(JupyterApp, JupyterConsoleApp):
         self.init_kernel_info()
 
     def handle_sigint(self, *args):
+        """Handle SIGINT."""
         if self.kernel_manager:
             self.kernel_manager.interrupt_kernel()
         else:
@@ -91,6 +97,7 @@ class RunApp(JupyterApp, JupyterConsoleApp):
                     return
 
     def start(self):
+        """Start the application."""
         self.log.debug("jupyter run: starting...")
         super().start()
         if self.filenames_to_run:

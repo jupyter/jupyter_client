@@ -53,14 +53,17 @@ class KernelClientABC(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def start_channels(self, shell=True, iopub=True, stdin=True, hb=True, control=True):
+        """Start the channels for the client."""
         pass
 
     @abc.abstractmethod
     def stop_channels(self):
+        """Stop the channels for the client."""
         pass
 
     @abc.abstractproperty
     def channels_running(self):
+        """Get whether the channels are running."""
         pass
 
     @abc.abstractproperty

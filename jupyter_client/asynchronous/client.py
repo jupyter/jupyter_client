@@ -11,6 +11,8 @@ from jupyter_client.client import KernelClient, reqrep
 
 
 def wrapped(meth, channel):
+    """Wrap a method on a channel and handle replies."""
+
     def _(self, *args, **kwargs):
         reply = kwargs.pop("reply", False)
         timeout = kwargs.pop("timeout", None)

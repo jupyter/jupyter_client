@@ -27,6 +27,8 @@ major_protocol_version = protocol_version_info[0]
 
 
 class InvalidPortNumber(Exception):  # noqa
+    """An exception raised for an invalid port number."""
+
     pass
 
 
@@ -142,6 +144,7 @@ class HBChannel(Thread):
                 continue
 
     def run(self) -> None:
+        """Run the heartbeat thread."""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(self._async_run())
@@ -170,6 +173,7 @@ class HBChannel(Thread):
         self.close()
 
     def close(self) -> None:
+        """Close the heartbeat thread."""
         if self.socket is not None:
             try:
                 self.socket.close(linger=0)
@@ -245,6 +249,7 @@ class ZMQSocketChannel:
         return bool(self.socket.poll(timeout=0))
 
     def close(self) -> None:
+        """Close the socket channel."""
         if self.socket is not None:
             try:
                 self.socket.close(linger=0)
@@ -255,6 +260,7 @@ class ZMQSocketChannel:
     stop = close
 
     def is_alive(self) -> bool:
+        """Test whether the channel is alive."""
         return self.socket is not None
 
     def send(self, msg: t.Dict[str, t.Any]) -> None:
@@ -263,6 +269,7 @@ class ZMQSocketChannel:
         self.session.send(self.socket, msg)
 
     def start(self) -> None:
+        """Start the socket channel."""
         pass
 
 

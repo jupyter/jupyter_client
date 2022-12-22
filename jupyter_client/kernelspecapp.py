@@ -1,3 +1,4 @@
+"""Apps for managing kernel specs."""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import errno
@@ -16,6 +17,8 @@ from .provisioning.factory import KernelProvisionerFactory
 
 
 class ListKernelSpecs(JupyterApp):
+    """An app to list kernel specs."""
+
     version = __version__
     description = """List installed kernel specifications."""
     kernel_spec_manager = Instance(KernelSpecManager)
@@ -37,6 +40,7 @@ class ListKernelSpecs(JupyterApp):
         return KernelSpecManager(parent=self, data_dir=self.data_dir)
 
     def start(self):
+        """Start the application."""
         paths = self.kernel_spec_manager.find_kernel_specs()
         specs = self.kernel_spec_manager.get_all_specs()
         if not self.json_output:
@@ -64,6 +68,8 @@ class ListKernelSpecs(JupyterApp):
 
 
 class InstallKernelSpec(JupyterApp):
+    """An app to install a kernel spec."""
+
     version = __version__
     description = """Install a kernel specification directory.
 
@@ -127,6 +133,7 @@ class InstallKernelSpec(JupyterApp):
     }
 
     def parse_command_line(self, argv):
+        """Parse the command line args."""
         super().parse_command_line(argv)
         # accept positional arg as profile name
         if self.extra_args:
@@ -136,6 +143,7 @@ class InstallKernelSpec(JupyterApp):
             self.exit(1)
 
     def start(self):
+        """Start the application."""
         if self.user and self.prefix:
             self.exit("Can't specify both user and prefix. Please choose one or the other.")
         try:
@@ -161,6 +169,8 @@ class InstallKernelSpec(JupyterApp):
 
 
 class RemoveKernelSpec(JupyterApp):
+    """An app to remove a kernel spec."""
+
     version = __version__
     description = """Remove one or more Jupyter kernelspecs by name."""
     examples = """jupyter kernelspec remove python2 [my_kernel ...]"""
@@ -179,6 +189,7 @@ class RemoveKernelSpec(JupyterApp):
     flags.update(JupyterApp.flags)
 
     def parse_command_line(self, argv):
+        """Parse the command line args."""
         super().parse_command_line(argv)
         # accept positional arg as profile name
         if self.extra_args:
@@ -187,6 +198,7 @@ class RemoveKernelSpec(JupyterApp):
             self.exit("No kernelspec specified.")
 
     def start(self):
+        """Start the application."""
         self.kernel_spec_manager.ensure_native_kernel = False
         spec_paths = self.kernel_spec_manager.find_kernel_specs()
         missing = set(self.spec_names).difference(set(spec_paths))
@@ -215,6 +227,8 @@ class RemoveKernelSpec(JupyterApp):
 
 
 class InstallNativeKernelSpec(JupyterApp):
+    """An app to install the native kernel spec."""
+
     version = __version__
     description = """[DEPRECATED] Install the IPython kernel spec directory for this Python."""
     kernel_spec_manager = Instance(KernelSpecManager)
@@ -240,6 +254,7 @@ class InstallNativeKernelSpec(JupyterApp):
     }
 
     def start(self):  # pragma: no cover
+        """Start the application."""
         self.log.warning(
             "`jupyter kernelspec install-self` is DEPRECATED as of 4.0."
             " You probably want `ipython kernel install` to install the IPython kernelspec."
@@ -264,10 +279,13 @@ class InstallNativeKernelSpec(JupyterApp):
 
 
 class ListProvisioners(JupyterApp):
+    """An app to list provisioners."""
+
     version = __version__
     description = """List available provisioners for use in kernel specifications."""
 
     def start(self):
+        """Start the application."""
         kfp = KernelProvisionerFactory.instance(parent=self)
         self.log.info("Available kernel provisioners:")
         provisioners = kfp.get_provisioner_entries()
@@ -280,6 +298,8 @@ class ListProvisioners(JupyterApp):
 
 
 class KernelSpecApp(Application):
+    """An app to manage kernel specs."""
+
     version = __version__
     name = "jupyter kernelspec"
     description = """Manage Jupyter kernel specifications."""
@@ -305,6 +325,7 @@ class KernelSpecApp(Application):
     flags: t.Dict[str, object] = {}  # type:ignore[assignment]
 
     def start(self):
+        """Start the application."""
         if self.subapp is None:
             self.log.info(
                 "No subcommand specified. Must specify one of: %s" % list(self.subcommands)

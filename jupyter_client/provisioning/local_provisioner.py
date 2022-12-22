@@ -37,12 +37,14 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         return self.process is not None
 
     async def poll(self) -> Optional[int]:
+        """Poll the provisioner."""
         ret = 0
         if self.process:
             ret = self.process.poll()
         return ret
 
     async def wait(self) -> Optional[int]:
+        """Wait for the provisioner process."""
         ret = 0
         if self.process:
             # Use busy loop at 100ms intervals, polling until the process is
@@ -91,6 +93,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
             return
 
     async def kill(self, restart: bool = False) -> None:
+        """Kill the provisioner and optionally restart."""
         if self.process:
             if hasattr(signal, "SIGKILL"):
                 # If available, give preference to signalling the process-group over `kill()`.
@@ -105,6 +108,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                 LocalProvisioner._tolerate_no_process(e)
 
     async def terminate(self, restart: bool = False) -> None:
+        """Terminate the provisioner and optionally restart."""
         if self.process:
             if hasattr(signal, "SIGTERM"):
                 # If available, give preference to signalling the process group over `terminate()`.
@@ -134,6 +138,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                 raise
 
     async def cleanup(self, restart: bool = False) -> None:
+        """Clean up the resources used by the provisioner and optionally restart."""
         if self.ports_cached and not restart:
             # provisioner is about to be destroyed, return cached ports
             lpc = LocalPortCache.instance()
@@ -194,6 +199,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
+        """Launch a kernel with a command."""
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None

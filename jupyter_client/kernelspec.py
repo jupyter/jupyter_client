@@ -19,6 +19,8 @@ NATIVE_KERNEL_NAME = "python3"
 
 
 class KernelSpec(HasTraits):
+    """A kernel spec model object."""
+
     argv = List()
     name = Unicode()
     mimetype = Unicode()
@@ -41,6 +43,7 @@ class KernelSpec(HasTraits):
         return cls(resource_dir=resource_dir, **kernel_dict)
 
     def to_dict(self):
+        """Convert the kernel spec to a dict."""
         d = {
             "argv": self.argv,
             "env": self.env,
@@ -103,7 +106,10 @@ def _list_kernels_in(dir):
 
 
 class NoSuchKernel(KeyError):  # noqa
+    """An error raised when there is no kernel of a give name."""
+
     def __init__(self, name):
+        """Initialize the error."""
         self.name = name
 
     def __str__(self):
@@ -111,6 +117,7 @@ class NoSuchKernel(KeyError):  # noqa
 
 
 class KernelSpecManager(LoggingConfigurable):
+    """A manager for kernel specs."""
 
     kernel_spec_class = Type(
         KernelSpec,
@@ -421,6 +428,7 @@ def get_kernel_spec(kernel_name):
 
 
 def install_kernel_spec(source_dir, kernel_name=None, user=False, replace=False, prefix=None):
+    """Install a kernel spec in a given directory."""
     return KernelSpecManager().install_kernel_spec(source_dir, kernel_name, user, replace, prefix)
 
 
@@ -428,6 +436,7 @@ install_kernel_spec.__doc__ = KernelSpecManager.install_kernel_spec.__doc__
 
 
 def install_native_kernel_spec(user=False):
+    """Install the native kernel spec."""
     return KernelSpecManager().install_native_kernel_spec(user=user)
 
 

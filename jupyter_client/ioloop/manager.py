@@ -14,6 +14,8 @@ from .restarter import AsyncIOLoopKernelRestarter, IOLoopKernelRestarter
 
 
 def as_zmqstream(f):
+    """Convert a socket to a zmq stream."""
+
     def wrapped(self, *args, **kwargs):
         save_socket_class = None
         # zmqstreams only support sync sockets
@@ -32,6 +34,7 @@ def as_zmqstream(f):
 
 
 class IOLoopKernelManager(KernelManager):
+    """An io loop kernel manager."""
 
     loop = Instance("tornado.ioloop.IOLoop")
 
@@ -51,6 +54,7 @@ class IOLoopKernelManager(KernelManager):
     _restarter: t.Any = Instance("jupyter_client.ioloop.IOLoopKernelRestarter", allow_none=True)
 
     def start_restarter(self):
+        """Start the restarter."""
         if self.autorestart and self.has_kernel:
             if self._restarter is None:
                 self._restarter = self.restarter_class(
@@ -59,6 +63,7 @@ class IOLoopKernelManager(KernelManager):
             self._restarter.start()
 
     def stop_restarter(self):
+        """Stop the restarter."""
         if self.autorestart:
             if self._restarter is not None:
                 self._restarter.stop()
@@ -71,6 +76,7 @@ class IOLoopKernelManager(KernelManager):
 
 
 class AsyncIOLoopKernelManager(AsyncKernelManager):
+    """An async ioloop kernel manager."""
 
     loop = Instance("tornado.ioloop.IOLoop")
 
@@ -92,6 +98,7 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
     )
 
     def start_restarter(self):
+        """Start the restarter."""
         if self.autorestart and self.has_kernel:
             if self._restarter is None:
                 self._restarter = self.restarter_class(
@@ -100,6 +107,7 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
             self._restarter.start()
 
     def stop_restarter(self):
+        """Stop the restarter."""
         if self.autorestart:
             if self._restarter is not None:
                 self._restarter.stop()

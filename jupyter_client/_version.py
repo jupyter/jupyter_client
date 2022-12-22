@@ -1,3 +1,4 @@
+"""The version information for jupyter client."""
 import re
 from typing import List, Union
 

@@ -89,6 +89,8 @@ classes: t.List[t.Type[t.Any]] = [KernelManager, KernelRestarter, Session]
 
 
 class JupyterConsoleApp(ConnectionFileMixin):
+    """The base Jupyter console application."""
+
     name: t.Union[str, Unicode] = "jupyter-console-mixin"
 
     description: t.Union[
@@ -282,6 +284,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         return cf
 
     def init_kernel_manager(self) -> None:
+        """Initialize the kernel manager."""
         # Don't let Qt or ZMQ swallow KeyboardInterupts.
         if self.existing:
             self.kernel_manager = None
@@ -331,6 +334,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         atexit.register(self.kernel_manager.cleanup_connection_file)
 
     def init_kernel_client(self) -> None:
+        """Initialize the kernel client."""
         if self.kernel_manager is not None:
             self.kernel_client = self.kernel_manager.client()
         else:
@@ -363,6 +367,9 @@ class JupyterConsoleApp(ConnectionFileMixin):
 
 
 class IPythonConsoleApp(JupyterConsoleApp):
+    """An app to manage an ipython console."""
+
     def __init__(self, *args, **kwargs):
+        """Initialize the app."""
         warnings.warn("IPythonConsoleApp is deprecated. Use JupyterConsoleApp")
         super().__init__(*args, **kwargs)

@@ -77,7 +77,7 @@ def in_pending_state(method: F) -> F:
     @t.no_type_check
     @functools.wraps(method)
     async def wrapper(self, *args, **kwargs):
-        # Create a future for the decorated method
+        """Create a future for the decorated method."""
         if self._attempted_start or not self._ready:
             self._ready = _get_future()
         try:
@@ -104,6 +104,7 @@ class KernelManager(ConnectionFileMixin):
     _ready: t.Optional[t.Union[Future, CFuture]]
 
     def __init__(self, *args, **kwargs):
+        """Initialize a kernel manager."""
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
         self._attempted_start = False
@@ -221,19 +222,21 @@ class KernelManager(ConnectionFileMixin):
     # --------------------------------------------------------------------------
 
     def start_restarter(self) -> None:
+        """Start the kernel restarter."""
         pass
 
     def stop_restarter(self) -> None:
+        """Stop the kernel restarter."""
         pass
 
     def add_restart_callback(self, callback: t.Callable, event: str = "restart") -> None:
-        """register a callback to be called when a kernel is restarted"""
+        """Register a callback to be called when a kernel is restarted"""
         if self._restarter is None:
             return
         self._restarter.add_callback(callback, event)
 
     def remove_restart_callback(self, callback: t.Callable, event: str = "restart") -> None:
-        """unregister a callback to be called when a kernel is restarted"""
+        """Unregister a callback to be called when a kernel is restarted"""
         if self._restarter is None:
             return
         self._restarter.remove_callback(callback, event)
@@ -262,7 +265,7 @@ class KernelManager(ConnectionFileMixin):
     # --------------------------------------------------------------------------
 
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
-        """replace templated args (e.g. {connection_file})"""
+        """Replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
         assert self.kernel_spec is not None
         cmd = self.kernel_spec.argv + extra_arguments
@@ -658,6 +661,7 @@ class KernelManager(ConnectionFileMixin):
 
 
 class AsyncKernelManager(KernelManager):
+    """An async kernel manager."""
 
     # the class to create with our `client` method
     client_class: DottedObjectName = DottedObjectName(
@@ -674,6 +678,7 @@ class AsyncKernelManager(KernelManager):
         return zmq.asyncio.Context()
 
     def client(self, **kwargs: t.Any) -> AsyncKernelClient:  # type:ignore
+        """Get a client for the manager."""
         return super().client(**kwargs)  # type:ignore
 
     _launch_kernel = KernelManager._async_launch_kernel  # type:ignore[assignment]

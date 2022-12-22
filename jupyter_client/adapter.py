@@ -62,12 +62,15 @@ class Adapter:
     msg_type_map: Dict[str, str] = {}
 
     def update_header(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Update the header."""
         return msg
 
     def update_metadata(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Update the metadata."""
         return msg
 
     def update_msg_type(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Update the message type."""
         header = msg["header"]
         msg_type = header["msg_type"]
         if msg_type in self.msg_type_map:
@@ -125,6 +128,7 @@ class V5toV4(Adapter):
     }
 
     def update_header(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Update the header."""
         msg["header"].pop("version", None)
         msg["parent_header"].pop("version", None)
         return msg
@@ -132,6 +136,7 @@ class V5toV4(Adapter):
     # shell channel
 
     def kernel_info_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle a kernel info reply."""
         v4c = {}
         content = msg["content"]
         for key in ("language_version", "protocol_version"):
@@ -148,17 +153,20 @@ class V5toV4(Adapter):
         return msg
 
     def execute_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle an execute request."""
         content = msg["content"]
         content.setdefault("user_variables", [])
         return msg
 
     def execute_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle an execute reply."""
         content = msg["content"]
         content.setdefault("user_variables", {})
         # TODO: handle payloads
         return msg
 
     def complete_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle a complete request."""
         content = msg["content"]
         code = content["code"]
         cursor_pos = content["cursor_pos"]
@@ -172,6 +180,7 @@ class V5toV4(Adapter):
         return msg
 
     def complete_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle a complete reply."""
         content = msg["content"]
         cursor_start = content.pop("cursor_start")
         cursor_end = content.pop("cursor_end")
@@ -181,6 +190,7 @@ class V5toV4(Adapter):
         return msg
 
     def object_info_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle an object info request."""
         content = msg["content"]
         code = content["code"]
         cursor_pos = content["cursor_pos"]
@@ -199,11 +209,13 @@ class V5toV4(Adapter):
     # iopub channel
 
     def stream(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle a stream message."""
         content = msg["content"]
         content["data"] = content.pop("text")
         return msg
 
     def display_data(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle a display data message."""
         content = msg["content"]
         content.setdefault("source", "display")
         data = content["data"]
@@ -218,6 +230,7 @@ class V5toV4(Adapter):
     # stdin channel
 
     def input_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle an input request."""
         msg["content"].pop("password", None)
         return msg
 
@@ -231,6 +244,7 @@ class V4toV5(Adapter):
     msg_type_map = {v: k for k, v in V5toV4.msg_type_map.items()}
 
     def update_header(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Update the header."""
         msg["header"]["version"] = self.version
         if msg["parent_header"]:
             msg["parent_header"]["version"] = self.version
@@ -239,6 +253,7 @@ class V4toV5(Adapter):
     # shell channel
 
     def kernel_info_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle a kernel info reply."""
         content = msg["content"]
         for key in ("protocol_version", "ipython_version"):
             if key in content:
@@ -261,6 +276,7 @@ class V4toV5(Adapter):
         return msg
 
     def execute_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle an execute request."""
         content = msg["content"]
         user_variables = content.pop("user_variables", [])
         user_expressions = content.setdefault("user_expressions", {})
@@ -269,6 +285,7 @@ class V4toV5(Adapter):
         return msg
 
     def execute_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle an execute reply."""
         content = msg["content"]
         user_expressions = content.setdefault("user_expressions", {})
         user_variables = content.pop("user_variables", {})
@@ -285,6 +302,7 @@ class V4toV5(Adapter):
         return msg
 
     def complete_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle a complete request."""
         old_content = msg["content"]
 
         new_content = msg["content"] = {}
@@ -293,6 +311,7 @@ class V4toV5(Adapter):
         return msg
 
     def complete_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle a complete reply."""
         # complete_reply needs more context than we have to get cursor_start and end.
         # use special end=null to indicate current cursor position and negative offset
         # for start relative to the cursor.
@@ -310,6 +329,7 @@ class V4toV5(Adapter):
         return msg
 
     def inspect_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle an inspect request."""
         content = msg["content"]
         name = content["oname"]
 
@@ -344,11 +364,13 @@ class V4toV5(Adapter):
     # iopub channel
 
     def stream(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle a stream message."""
         content = msg["content"]
         content["text"] = content.pop("data")
         return msg
 
     def display_data(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle display data."""
         content = msg["content"]
         content.pop("source", None)
         data = content["data"]
@@ -363,6 +385,7 @@ class V4toV5(Adapter):
     # stdin channel
 
     def input_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle an input request."""
         msg["content"].setdefault("password", False)
         return msg
 
