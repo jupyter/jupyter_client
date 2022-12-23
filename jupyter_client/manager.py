@@ -600,7 +600,7 @@ class KernelManager(ConnectionFileMixin):
         if not self.has_kernel:
             if self._ready is not None:
                 if isinstance(self._ready, CFuture):
-                    ready = asyncio.ensure_future(self._ready)  # type:ignore
+                    ready = asyncio.ensure_future(t.cast(Future[t.Any], self._ready))
                 else:
                     ready = self._ready
                 # Wait for a shutdown if one is in progress.

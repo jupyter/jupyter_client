@@ -10,6 +10,7 @@ import typing as t
 from jupyter_core.application import JupyterApp, base_aliases, base_flags
 from traitlets import Bool, Dict, Instance, List, Unicode
 from traitlets.config.application import Application
+from traitlets.config.loader import Config
 
 from . import __version__
 from .kernelspec import KernelSpecManager
@@ -321,8 +322,10 @@ class KernelSpecApp(Application):
         }
     )
 
-    aliases: t.Dict[str, object] = {}  # type:ignore[assignment]
-    flags: t.Dict[str, object] = {}  # type:ignore[assignment]
+    aliases: t.Dict[t.Union[str, t.Tuple[str, ...]], t.Union[str, t.Tuple[str, str]]] = {}
+    flags: t.Dict[
+        t.Union[str, t.Tuple[str, ...]], t.Tuple[t.Union[t.Dict[str, t.Any], Config], str]
+    ] = {}
 
     def start(self):
         """Start the application."""
