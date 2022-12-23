@@ -171,11 +171,11 @@ class MKMSubclass(RecordCallMixin):
         """Record call and defer to superclass"""
 
     @subclass_recorder
-    def start_kernel(self, kernel_name=None, **kwargs):
+    def start_kernel(self, *, kernel_name=None, **kwargs):
         """Record call and defer to superclass"""
 
     @subclass_recorder
-    def _async_start_kernel(self, kernel_name=None, **kwargs):
+    def _async_start_kernel(self, *, kernel_name=None, **kwargs):
         """Record call and defer to superclass"""
 
     @subclass_recorder
