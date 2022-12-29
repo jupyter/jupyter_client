@@ -25,7 +25,7 @@ class DuplicateKernelError(Exception):
 def kernel_method(f: t.Callable) -> t.Callable:
     """decorator for proxying MKM.method(kernel_id) to individual KMs by ID"""
 
-    @wraps
+    @wraps(f)
     def wrapped(
         self: t.Any, kernel_id: str, *args: t.Any, **kwargs: t.Any
     ) -> t.Union[t.Callable, t.Awaitable]:
