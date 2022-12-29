@@ -26,7 +26,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
     availability (in cases where the kernel specification references a kernel provisioner that has
     not been installed into the current Python environment).
 
-    It's `default_provisioner_name` attribute can be used to specify the default provisioner
+    It's ``default_provisioner_name`` attribute can be used to specify the default provisioner
     to use when a kernel_spec is found to not reference a provisioner.  It's value defaults to
     `"local-provisioner"` which identifies the local provisioner implemented by
     :class:`LocalProvisioner`.
@@ -43,7 +43,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
     )
 
     @default('default_provisioner_name')
-    def default_provisioner_name_default(self):
+    def _default_provisioner_name_default(self):
         """The default provisioner name."""
         return getenv(self.default_provisioner_name_env, "local-provisioner")
 
@@ -80,7 +80,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         Reads the associated ``kernel_spec`` to see if it has a `kernel_provisioner` stanza.
         If one exists, it instantiates an instance.  If a kernel provisioner is not
         specified in the kernel specification, a default provisioner stanza is fabricated
-        and instantiated corresponding to the current value of `default_provisioner_name` trait.
+        and instantiated corresponding to the current value of ``default_provisioner_name`` trait.
         The instantiated instance is returned.
 
         If the provisioner is found to not exist (not registered via entry_points),

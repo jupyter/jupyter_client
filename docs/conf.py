@@ -34,6 +34,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinxcontrib_github_alt',
+    "sphinx_autodoc_typehints",
 ]
 
 try:
