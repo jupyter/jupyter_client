@@ -27,7 +27,7 @@ dependencies = [
     "importlib_metadata>=4.8.3;python_version<\"3.10\"",
     "jupyter_core>=4.12,!=5.0.*",
     "python-dateutil>=2.8.2",
-    "pyzmq>=23.0",
+    "pyzmq==25.0.0b1",
     "tornado>=6.2",
     "traitlets>=5.3",
 ]
