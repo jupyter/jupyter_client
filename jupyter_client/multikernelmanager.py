@@ -365,9 +365,8 @@ class MultiKernelManager(LoggingConfigurable):
         if self._using_pending_kernels():
             if not kernel.ready.done():
                 raise RuntimeError("Kernel is in a pending state. Cannot restart.")
-        out = await ensure_async(kernel.restart_kernel(now=now))
+        await ensure_async(kernel.restart_kernel(now=now))
         self.log.info("Kernel restarted: %s" % kernel_id)
-        return out
 
     restart_kernel = run_sync(_async_restart_kernel)
 
