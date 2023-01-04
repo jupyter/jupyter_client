@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from enum import Enum
 
 import zmq
+from jupyter_core.utils import run_sync
 from traitlets import (
     Any,
     Bool,
@@ -29,15 +30,14 @@ from traitlets import (
 )
 from traitlets.utils.importstring import import_item
 
-from jupyter_client import KernelClient, kernelspec
-from jupyter_client.asynchronous import AsyncKernelClient
-from jupyter_client.blocking import BlockingKernelClient
-
+from . import kernelspec
+from .asynchronous import AsyncKernelClient
+from .blocking import BlockingKernelClient
+from .client import KernelClient
 from .connect import ConnectionFileMixin
 from .managerabc import KernelManagerABC
 from .provisioning import KernelProvisionerBase
 from .provisioning import KernelProvisionerFactory as KPF  # noqa
-from .utils import run_sync
 
 
 class _ShutdownStatus(Enum):
