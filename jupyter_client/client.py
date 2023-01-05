@@ -11,11 +11,10 @@ from getpass import getpass
 from queue import Empty
 
 import zmq.asyncio
+from jupyter_core.utils import ensure_async
 from traitlets import Any, Bool, Instance, Type
 
-from jupyter_client.channels import major_protocol_version
-from jupyter_client.utils import ensure_async
-
+from .channels import major_protocol_version
 from .channelsabc import ChannelABC, HBChannelABC
 from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
@@ -496,7 +495,7 @@ class KernelClient(ConnectionFileMixin):
         if output_hook is None:
             # detect IPython kernel
             if "IPython" in sys.modules:
-                from IPython import get_ipython  # type: ignore
+                from IPython import get_ipython
 
                 ip = get_ipython()
                 in_kernel = getattr(ip, "kernel", False)

@@ -8,8 +8,7 @@ from tornado import ioloop
 from traitlets import Instance, Type
 from zmq.eventloop.zmqstream import ZMQStream
 
-from jupyter_client.manager import AsyncKernelManager, KernelManager
-
+from ..manager import AsyncKernelManager, KernelManager
 from .restarter import AsyncIOLoopKernelRestarter, IOLoopKernelRestarter
 
 

@@ -48,9 +48,9 @@ from traitlets.utils.importstring import import_item
 from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
-from jupyter_client import protocol_version
-from jupyter_client.adapter import adapt
-from jupyter_client.jsonutil import extract_dates, json_clean, json_default, squash_dates
+from ._version import protocol_version
+from .adapter import adapt
+from .jsonutil import extract_dates, json_clean, json_default, squash_dates
 
 PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
 

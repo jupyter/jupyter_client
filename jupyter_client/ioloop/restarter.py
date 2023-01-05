@@ -10,7 +10,7 @@ import warnings
 
 from traitlets import Instance
 
-from jupyter_client.restarter import KernelRestarter
+from ..restarter import KernelRestarter
 
 
 class IOLoopKernelRestarter(KernelRestarter):

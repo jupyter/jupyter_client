@@ -369,7 +369,7 @@ class ConnectionFileMixin(LoggingConfigurable):
     session = Instance("jupyter_client.session.Session")
 
     def _session_default(self):
-        from jupyter_client.session import Session
+        from .session import Session
 
         return Session(parent=self)
 
