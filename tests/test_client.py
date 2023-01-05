@@ -8,7 +8,7 @@ from threading import Event
 from unittest import TestCase, mock
 
 import pytest
-from IPython.utils.capture import capture_output  # type:ignore
+from IPython.utils.capture import capture_output
 from traitlets import DottedObjectName, Type
 
 from jupyter_client.client import validate_string_dict
