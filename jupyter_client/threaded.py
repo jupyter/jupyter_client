@@ -121,7 +121,8 @@ class ThreadedZMQSocketChannel(object):
         Unpacks message, and calls handlers with it.
         """
         assert self.ioloop is not None
-        msg_list = self.ioloop._asyncio_event_loop.run_until_complete(get_msg(future_msg))
+        loop = self.ioloop._asyncio_event_loop  # type:ignore[attr-defined]
+        msg_list = loop.run_until_complete(get_msg(future_msg))
         assert self.session is not None
         ident, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)
@@ -214,7 +215,7 @@ class IOLoopThread(Thread):
         asyncio.set_event_loop(loop)
         nest_asyncio.apply(loop)
         self.ioloop = IOLoop()
-        self.ioloop._asyncio_event_loop = loop
+        self.ioloop._asyncio_event_loop = loop  # type:ignore[attr-defined]
         # signal that self.ioloop is defined
         self._start_event.set()
         while True:
