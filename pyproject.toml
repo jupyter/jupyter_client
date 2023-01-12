@@ -138,6 +138,8 @@ filterwarnings= [
 
   # Workaround for jupyter_core warning.
   "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
+
+  "ignore:zmq.tests.BaseZMQTestCase is deprecated in pyzmq 25:DeprecationWarning",
 ]
 
 [tool.mypy]
