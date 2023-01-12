@@ -71,7 +71,7 @@ class ThreadedZMQSocketChannel(object):
         def setup_stream():
             assert self.socket is not None
             self.stream = zmqstream.ZMQStream(self.socket, self.ioloop)
-            self.stream.on_recv(self._handle_recv)  # type:ignore[arg-type]
+            self.stream.on_recv(self._handle_recv) 
             evt.set()
 
         assert self.ioloop is not None
@@ -123,16 +123,16 @@ class ThreadedZMQSocketChannel(object):
         if asyncio.isfuture(msg):
             assert self.ioloop is not None
             loop = self.ioloop._asyncio_event_loop  # type:ignore[attr-defined]
-            msg_list = loop.run_until_complete(get_msg(future_msg))
+            msg_list = loop.run_until_complete(get_msg(msg))
         else:
             msg_list = msg
         assert self.session is not None
         ident, smsg = self.session.feed_identities(msg_list)
-        msg = self.session.deserialize(smsg)
+        new_msg = self.session.deserialize(smsg)
         # let client inspect messages
         if self._inspect:
-            self._inspect(msg)
-        self.call_handlers(msg)
+            self._inspect(new_msg)
+        self.call_handlers(new_msg)
 
     def call_handlers(self, msg: Dict[str, Any]) -> None:
         """This method is called in the ioloop thread when a message arrives.
