@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.4.9
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.8...2ee33ce6b19b34cde3956280f7c6b05da27f8db4))
+
+### Bugs fixed
+
+- Make Qtconsole work with PyZMQ 25 [#914](https://github.com/jupyter/jupyter_client/pull/914) ([@ccordoba12](https://github.com/ccordoba12))
+
+### Maintenance and upkeep improvements
+
+- \[7.x\] Remove deprecated zmq imports [#916](https://github.com/jupyter/jupyter_client/pull/916) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-12-05&to=2023-01-12&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-12-05..2023-01-12&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2022-12-05..2023-01-12&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-12-05..2023-01-12&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.4.8
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.4.7...beac94baac163015e8165fde5661aaf026e92364))
@@ -15,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-11-16&to=2022-12-05&type=c))
 
 [@arogozhnikov](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aarogozhnikov+updated%3A2022-11-16..2022-12-05&type=Issues) | [@impact27](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aimpact27+updated%3A2022-11-16..2022-12-05&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2022-11-16..2022-12-05&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.4.7
 
