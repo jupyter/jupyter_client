@@ -71,7 +71,7 @@ class ThreadedZMQSocketChannel(object):
         def setup_stream():
             assert self.socket is not None
             self.stream = zmqstream.ZMQStream(self.socket, self.ioloop)
-            self.stream.on_recv(self._handle_recv) 
+            self.stream.on_recv(self._handle_recv)
             evt.set()
 
         assert self.ioloop is not None
