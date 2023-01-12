@@ -115,13 +115,16 @@ class ThreadedZMQSocketChannel(object):
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)
 
-    def _handle_recv(self, future_msg: Awaitable) -> None:
+    def _handle_recv(self, msg: Union[List[bytes], Awaitable]) -> None:
         """Callback for stream.on_recv.
 
         Unpacks message, and calls handlers with it.
         """
-        assert self.ioloop is not None
-        msg_list = self.ioloop._asyncio_event_loop.run_until_complete(get_msg(future_msg))
+        if asyncio.isfuture(msg):
+            assert self.ioloop is not None
+            msg_list = self.ioloop._asyncio_event_loop.run_until_complete(get_msg(msg))
+        else:
+            msg_list = msg
         assert self.session is not None
         ident, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)
