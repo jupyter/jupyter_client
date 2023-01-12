@@ -16,10 +16,10 @@ from typing import Union
 
 import nest_asyncio  # type:ignore
 import zmq
+from tornado.ioloop import IOLoop
 from traitlets import Instance
 from traitlets import Type
 from zmq import ZMQError
-from zmq.eventloop import ioloop
 from zmq.eventloop import zmqstream
 
 from .session import Session
@@ -48,7 +48,7 @@ class ThreadedZMQSocketChannel(object):
         self,
         socket: Optional[zmq.Socket],
         session: Optional[Session],
-        loop: Optional[zmq.eventloop.ioloop.ZMQIOLoop],
+        loop: Optional[IOLoop],
     ) -> None:
         """Create a channel.
 
@@ -122,7 +122,8 @@ class ThreadedZMQSocketChannel(object):
         """
         if asyncio.isfuture(msg):
             assert self.ioloop is not None
-            msg_list = self.ioloop._asyncio_event_loop.run_until_complete(get_msg(msg))
+            loop = self.ioloop._asyncio_event_loop  # type:ignore[attr-defined]
+            msg_list = loop.run_until_complete(get_msg(future_msg))
         else:
             msg_list = msg
         assert self.session is not None
@@ -216,8 +217,8 @@ class IOLoopThread(Thread):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         nest_asyncio.apply(loop)
-        self.ioloop = ioloop.IOLoop()
-        self.ioloop._asyncio_event_loop = loop
+        self.ioloop = IOLoop()
+        self.ioloop._asyncio_event_loop = loop  # type:ignore[attr-defined]
         # signal that self.ioloop is defined
         self._start_event.set()
         while True:

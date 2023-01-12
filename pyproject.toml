@@ -128,7 +128,7 @@ filterwarnings= [
 
   # Workaround for https://github.com/tornadoweb/tornado/issues/3106
   # (To be fixed in Tornado 6.2)
-  "ignore:There is no current event loop:DeprecationWarning:tornado",
+  "ignore:There is no current event loop:DeprecationWarning",
 
   # ZMQ uses Future internally, which raises a DeprecationWarning
   # When there is no loop running.
@@ -138,6 +138,8 @@ filterwarnings= [
 
   # Workaround for jupyter_core warning.
   "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
+
+  "ignore:zmq.tests.BaseZMQTestCase is deprecated in pyzmq 25:DeprecationWarning",
 ]
 
 [tool.mypy]

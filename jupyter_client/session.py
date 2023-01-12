@@ -30,6 +30,7 @@ from typing import Optional
 from typing import Union
 
 import zmq.asyncio
+from tornado.ioloop import IOLoop
 from traitlets import Any
 from traitlets import Bool
 from traitlets import CBytes
@@ -46,7 +47,6 @@ from traitlets.config.configurable import Configurable
 from traitlets.config.configurable import LoggingConfigurable
 from traitlets.log import get_logger
 from traitlets.utils.importstring import import_item
-from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from jupyter_client import protocol_version
