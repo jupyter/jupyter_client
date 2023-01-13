@@ -19,7 +19,7 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: ipykernel
-          package_spec: "pyqt5 ipykernel[test]"
+          package_spec: "ipykernel[test]"
 
   nbclient:
     runs-on: ubuntu-latest
@@ -34,13 +34,14 @@ jobs:
 
   nbconvert:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: nbconvert
+          package_spec: pip install -e ".[test]"
 
   jupyter_server:
     runs-on: ubuntu-latest
