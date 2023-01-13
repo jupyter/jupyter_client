@@ -289,7 +289,6 @@ class TestSession:
         s = session
         s.copy_threshold = 1
         loop = ioloop.IOLoop(make_current=False)
-        ZMQStream(a, io_loop=loop)
 
         msg = s.send(a, "hello", track=False)
         self.assertTrue(msg["tracker"] is ss.DONE)
