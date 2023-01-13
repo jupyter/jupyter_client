@@ -8,6 +8,7 @@ Also defined here are utilities for working with Sessions:
 Sessions.
 * A Message object for convenience that allows attribute-access to the msg dict.
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import hashlib
@@ -27,6 +28,7 @@ from hmac import (
 )  # We are using compare_digest to limit the surface of timing attacks
 
 import zmq
+from tornado.ioloop import IOLoop
 from traitlets import Any  # type: ignore
 from traitlets import Bool
 from traitlets import CBytes
@@ -43,7 +45,6 @@ from traitlets.config.configurable import Configurable  # type: ignore
 from traitlets.config.configurable import LoggingConfigurable
 from traitlets.log import get_logger  # type: ignore
 from traitlets.utils.importstring import import_item  # type: ignore
-from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 from zmq.utils import jsonapi
 
@@ -444,7 +445,7 @@ class Session(Configurable):
 
     digest_history = Set()
     digest_history_size = Integer(
-        2 ** 16,
+        2**16,
         config=True,
         help="""The maximum number of digests to remember.
 
@@ -483,7 +484,7 @@ class Session(Configurable):
 
     # thresholds:
     copy_threshold = Integer(
-        2 ** 16,
+        2**16,
         config=True,
         help="Threshold (in bytes) beyond which a buffer should be sent without copying.",
     )

@@ -1,10 +1,6 @@
 repos:
-  - repo: https://github.com/asottile/reorder_python_imports
-    rev: v1.9.0
-    hooks:
-      - id: reorder-python-imports
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 24.2.0
     hooks:
       - id: black
         args: ["--line-length", "100"]
@@ -12,8 +8,8 @@ repos:
     rev: v2.2.1
     hooks:
       - id: prettier
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: "3.8.4"
+  - repo: https://github.com/PyCQA/flake8
+    rev: "7.0.0"
     hooks:
       - id: flake8
   - repo: https://github.com/pre-commit/pre-commit-hooks
