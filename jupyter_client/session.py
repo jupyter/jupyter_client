@@ -28,6 +28,7 @@ from hmac import compare_digest
 from typing import Optional, Union
 
 import zmq.asyncio
+from tornado.ioloop import IOLoop
 from traitlets import (
     Any,
     Bool,
@@ -45,7 +46,6 @@ from traitlets import (
 from traitlets.config.configurable import Configurable, LoggingConfigurable
 from traitlets.log import get_logger
 from traitlets.utils.importstring import import_item
-from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from ._version import protocol_version

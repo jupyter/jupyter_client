@@ -19,7 +19,6 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: ipykernel
-          package_spec: "pyqt5 ipykernel[test]"
 
   nbclient:
     runs-on: ubuntu-latest
