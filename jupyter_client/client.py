@@ -496,7 +496,7 @@ class KernelClient(ConnectionFileMixin):
         if output_hook is None:
             # detect IPython kernel
             if "IPython" in sys.modules:
-                from IPython import get_ipython  # type: ignore
+                from IPython import get_ipython
 
                 ip = get_ipython()
                 in_kernel = getattr(ip, "kernel", False)

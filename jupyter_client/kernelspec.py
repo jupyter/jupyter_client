@@ -195,13 +195,13 @@ class KernelSpecManager(LoggingConfigurable):
         # At some point, we should stop adding .ipython/kernels to the path,
         # but the cost to keeping it is very small.
         try:
-            from IPython.paths import get_ipython_dir  # type: ignore
+            from IPython.paths import get_ipython_dir
         except ImportError:
             try:
                 from IPython.utils.path import get_ipython_dir  # type: ignore
             except ImportError:
                 # no IPython, no ipython dir
-                get_ipython_dir = None
+                get_ipython_dir = None  # type:ignore
         if get_ipython_dir is not None:
             dirs.append(os.path.join(get_ipython_dir(), "kernels"))
         return dirs
