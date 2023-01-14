@@ -30,7 +30,7 @@ with Jupyter kernels.
    :maxdepth: 2
    :caption: API
 
-   api/index
+   API Docs <api/modules>
 
 .. toctree::
     :maxdepth: 2

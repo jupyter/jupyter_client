@@ -71,14 +71,19 @@ jobs:
           codecov
 
   docs:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - name: Install Dependencies
+      - name: Build API docs
         run: |
-          sudo apt-get update
-          sudo apt-get install enchant-2  # for spell checking
+          hatch run docs:api
+          # If this fails run `hatch run docs:api` locally
+          # and commit.
+          git status --porcelain
+          git status -s | grep "A" && exit 1
+          git status -s | grep "M" && exit 1
+          echo "API docs done"
       - run: hatch run docs:build
 
   lint:

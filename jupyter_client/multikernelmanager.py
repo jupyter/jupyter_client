@@ -6,6 +6,7 @@ import os
 import socket
 import typing as t
 import uuid
+from functools import wraps
 
 import zmq
 from traitlets import Any, Bool, Dict, DottedObjectName, Instance, Unicode, default, observe
@@ -24,6 +25,7 @@ class DuplicateKernelError(Exception):
 def kernel_method(f: t.Callable) -> t.Callable:
     """decorator for proxying MKM.method(kernel_id) to individual KMs by ID"""
 
+    @wraps(f)
     def wrapped(
         self: t.Any, kernel_id: str, *args: t.Any, **kwargs: t.Any
     ) -> t.Union[t.Callable, t.Awaitable]:

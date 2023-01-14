@@ -66,6 +66,7 @@ docs = [
     "pydata_sphinx_theme",
     "sphinxcontrib_github_alt",
     "sphinxcontrib-spelling",
+    "sphinx-autodoc-typehints",
 ]
 
 [project.scripts]
@@ -84,6 +85,7 @@ validate-bump = false
 features = ["docs"]
 [tool.hatch.envs.docs.scripts]
 build = "make -C docs html SPHINXOPTS='-W'"
+api = "sphinx-apidoc -o docs/api -f -E jupyter_client"
 
 [tool.hatch.envs.test]
 features = ["test"]
