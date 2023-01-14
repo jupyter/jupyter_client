@@ -10,7 +10,7 @@ import warnings
 
 from traitlets import Instance
 
-from jupyter_client.restarter import KernelRestarter
+from ..restarter import KernelRestarter
 
 
 class IOLoopKernelRestarter(KernelRestarter):
@@ -24,7 +24,7 @@ class IOLoopKernelRestarter(KernelRestarter):
             DeprecationWarning,
             stacklevel=4,
         )
-        from zmq.eventloop import ioloop
+        from tornado import ioloop
 
         return ioloop.IOLoop.current()
 

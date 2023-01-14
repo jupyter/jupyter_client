@@ -12,9 +12,8 @@ from tornado.ioloop import IOLoop
 from traitlets import Instance, Type
 from zmq.eventloop import zmqstream
 
-from jupyter_client import KernelClient
-from jupyter_client.channels import HBChannel
-
+from .channels import HBChannel
+from .client import KernelClient
 from .session import Session
 
 # Local imports

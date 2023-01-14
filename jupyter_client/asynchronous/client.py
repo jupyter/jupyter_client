@@ -6,8 +6,8 @@ import asyncio
 import zmq.asyncio
 from traitlets import Instance, Type
 
-from jupyter_client.channels import AsyncZMQSocketChannel, HBChannel
-from jupyter_client.client import KernelClient, reqrep
+from ..channels import AsyncZMQSocketChannel, HBChannel
+from ..client import KernelClient, reqrep
 
 
 def wrapped(meth, channel):

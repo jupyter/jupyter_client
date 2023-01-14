@@ -5,7 +5,7 @@ import json
 import re
 from typing import Any, Dict, List, Tuple
 
-from jupyter_client import protocol_version_info
+from ._version import protocol_version_info
 
 
 def code_to_line(code: str, cursor_pos: int) -> Tuple[str, int]:
