@@ -21,7 +21,7 @@ Versioning
 
 The Jupyter message specification is versioned independently of the packages
 that use it.
-The current version of the specification is 5.3.
+The current version of the specification is 5.4.
 
 .. note::
    *New in* and *Changed in* messages in this document refer to versions of the
