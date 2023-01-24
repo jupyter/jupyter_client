@@ -56,7 +56,7 @@ class KernelApp(JupyterApp):
 
     def shutdown(self, signo: int) -> None:
         """Shut down the application."""
-        self.log.info("Shutting down on signal %d" % signo)
+        self.log.info("Shutting down on signal %d", signo)
         self.km.shutdown_kernel()
         self.loop.stop()
 

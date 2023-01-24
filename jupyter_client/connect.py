@@ -639,7 +639,7 @@ class ConnectionFileMixin(LoggingConfigurable):
         """Create a zmq Socket and connect it to the kernel."""
         url = self._make_url(channel)
         socket_type = channel_socket_types[channel]
-        self.log.debug("Connecting to: %s" % url)
+        self.log.debug("Connecting to: %s", url)
         sock = self.context.socket(socket_type)
         # set linger to 1s to prevent hangs at exit
         sock.linger = 1000
