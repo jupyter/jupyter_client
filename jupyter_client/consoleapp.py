@@ -181,7 +181,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
                     "Could not find existing kernel connection file %s", self.existing
                 )
                 self.exit(1)  # type:ignore[attr-defined]
-            self.log.debug("Connecting to existing kernel: %s" % cf)
+            self.log.debug("Connecting to existing kernel: %s", cf)
             self.connection_file = cf
         else:
             # not existing, check if we are going to write the file
@@ -243,7 +243,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
             "control_port": self.control_port,
         }
 
-        self.log.info(f"Forwarding connections to {ip} via {self.sshserver}")
+        self.log.info("Forwarding connections to %s via %s", ip, self.sshserver)
 
         # tunnels return a new set of ports, which will be on localhost:
         self.ip = localhost()
@@ -267,7 +267,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         self.connection_file = root + "-ssh" + ext
         self.write_connection_file()  # write the new connection file
         self.log.info("To connect another client via this tunnel, use:")
-        self.log.info("--existing %s" % os.path.basename(self.connection_file))
+        self.log.info("--existing %s", os.path.basename(self.connection_file))
 
     def _new_connection_file(self) -> str:
         cf = ""

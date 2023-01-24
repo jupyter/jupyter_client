@@ -239,7 +239,7 @@ class MultiKernelManager(LoggingConfigurable):
         restart : bool
             Will the kernel be restarted?
         """
-        self.log.info("Kernel shutdown: %s" % kernel_id)
+        self.log.info("Kernel shutdown: %s", kernel_id)
         # If the kernel is still starting, wait for it to be ready.
         if kernel_id in self._pending_kernels:
             task = self._pending_kernels[kernel_id]
@@ -281,7 +281,7 @@ class MultiKernelManager(LoggingConfigurable):
         pollinterval: t.Optional[float] = 0.1,
     ) -> None:
         """Wait for a kernel to finish shutting down, and kill it if it doesn't"""
-        self.log.info("Kernel shutdown: %s" % kernel_id)
+        self.log.info("Kernel shutdown: %s", kernel_id)
 
     @kernel_method
     def cleanup_resources(self, kernel_id: str, restart: bool = False) -> None:
@@ -329,7 +329,7 @@ class MultiKernelManager(LoggingConfigurable):
         if not kernel.ready.done():
             raise RuntimeError("Kernel is in a pending state. Cannot interrupt.")
         out = kernel.interrupt_kernel()
-        self.log.info("Kernel interrupted: %s" % kernel_id)
+        self.log.info("Kernel interrupted: %s", kernel_id)
         return out
 
     @kernel_method
@@ -346,7 +346,7 @@ class MultiKernelManager(LoggingConfigurable):
         signum : int
             Signal number to send kernel.
         """
-        self.log.info(f"Signaled Kernel {kernel_id} with {signum}")
+        self.log.info("Signaled Kernel %s with %s", kernel_id, signum)
 
     async def _async_restart_kernel(self, kernel_id: str, now: bool = False) -> None:
         """Restart a kernel by its uuid, keeping the same ports.
@@ -368,7 +368,7 @@ class MultiKernelManager(LoggingConfigurable):
             if not kernel.ready.done():
                 raise RuntimeError("Kernel is in a pending state. Cannot restart.")
         await ensure_async(kernel.restart_kernel(now=now))
-        self.log.info("Kernel restarted: %s" % kernel_id)
+        self.log.info("Kernel restarted: %s", kernel_id)
 
     restart_kernel = run_sync(_async_restart_kernel)
 

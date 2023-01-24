@@ -62,7 +62,7 @@ class ListKernelSpecs(JupyterApp):
 
             self.log.info("Available kernels:")
             for kernelname, path in sorted(paths.items(), key=path_key):
-                self.log.info(f"  {kernelname.ljust(name_len)}    {path}")
+                self.log.info("  %s    %s", kernelname.ljust(name_len), path)
         else:
             self.log.info(json.dumps({"kernelspecs": specs}, indent=2))
         return specs
@@ -164,7 +164,7 @@ class InstallKernelSpec(JupyterApp):
                     )
                 self.exit(1)
             elif e.errno == errno.EEXIST:
-                self.log.warn("A kernel spec is already present at %s" % e.filename)
+                self.log.warn("A kernel spec is already present at %s", e.filename)
                 self.exit(1)
             raise
 
@@ -209,7 +209,7 @@ class RemoveKernelSpec(JupyterApp):
         if not (self.force or self.answer_yes):
             self.log.info("Kernel specs to remove:")
             for name in self.spec_names:
-                self.log.info(f"  {name.ljust(20)}\t{spec_paths[name]}")
+                self.log.info("  %s\t%s", name.ljust(20), name.ljust(20))
             answer = input("Remove %i kernel specs [y/N]: " % len(self.spec_names))
             if not answer.lower().startswith("y"):
                 return
@@ -262,7 +262,7 @@ class InstallNativeKernelSpec(JupyterApp):
         )
         try:
             from ipykernel import kernelspec
-        except ImportError:
+        except ModuleNotFoundError:
             self.log.info("ipykernel not available, can't install its spec.", file=sys.stderr)
             self.exit(1)
         try:
@@ -295,7 +295,7 @@ class ListProvisioners(JupyterApp):
         name_len = len(sorted(provisioners, key=lambda name: len(name))[-1])
 
         for name in sorted(provisioners):
-            self.log.info(f"  {name.ljust(name_len)}    {provisioners[name]}")
+            self.log.info("  %s    %s", name.ljust(name_len), provisioners[name])
 
 
 class KernelSpecApp(Application):

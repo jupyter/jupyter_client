@@ -102,7 +102,7 @@ class RunApp(JupyterApp, JupyterConsoleApp):
         super().start()
         if self.filenames_to_run:
             for filename in self.filenames_to_run:
-                self.log.debug("jupyter run: executing `%s`" % filename)
+                self.log.debug("jupyter run: executing `%s`", filename)
                 with open(filename) as fp:
                     code = fp.read()
                     reply = self.kernel_client.execute_interactive(code, timeout=OUTPUT_TIMEOUT)
