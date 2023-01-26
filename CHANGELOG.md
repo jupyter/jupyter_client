@@ -2,6 +2,76 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.0.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.5...760a7835d8b20a9daea3737759b1751d5e55dad8))
+
+This release is primarily focused on improving `asyncio` support, while aiming to have minimal API changes.
+
+### Enhancements made
+
+- Remove nest-asyncio dependency [#835](https://github.com/jupyter/jupyter_client/pull/835) ([@blink1073](https://github.com/blink1073))
+
+### Bugs fixed
+
+- Allow interrupt during restart of pending kernels [#898](https://github.com/jupyter/jupyter_client/pull/898) ([@blink1073](https://github.com/blink1073))
+- Fix connection reconciliation to handle restarts [#882](https://github.com/jupyter/jupyter_client/pull/882) ([@kevin-bates](https://github.com/kevin-bates))
+- Reconcile connection information [#879](https://github.com/jupyter/jupyter_client/pull/879) ([@kevin-bates](https://github.com/kevin-bates))
+- Workaround for launch bug [#861](https://github.com/jupyter/jupyter_client/pull/861) ([@blink1073](https://github.com/blink1073))
+- Defer creation of ready future [#858](https://github.com/jupyter/jupyter_client/pull/858) ([@blink1073](https://github.com/blink1073))
+- Fix handling of initial ready promise [#854](https://github.com/jupyter/jupyter_client/pull/854) ([@blink1073](https://github.com/blink1073))
+- Revert "Fix pending kernels again" [#853](https://github.com/jupyter/jupyter_client/pull/853) ([@blink1073](https://github.com/blink1073))
+- Fix pending kernels again [#845](https://github.com/jupyter/jupyter_client/pull/845) ([@blink1073](https://github.com/blink1073))
+- Use pytest_asyncio fixture [#826](https://github.com/jupyter/jupyter_client/pull/826) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Maintenance and upkeep improvements
+
+- MAINT: Don't format log in log call. [#919](https://github.com/jupyter/jupyter_client/pull/919) ([@Carreau](https://github.com/Carreau))
+- Remove deprecated zmq imports [#915](https://github.com/jupyter/jupyter_client/pull/915) ([@blink1073](https://github.com/blink1073))
+- MAINT: consistently use relative imports. [#912](https://github.com/jupyter/jupyter_client/pull/912) ([@Carreau](https://github.com/Carreau))
+- Sync lint deps [#911](https://github.com/jupyter/jupyter_client/pull/911) ([@blink1073](https://github.com/blink1073))
+- MAINT: Proper typing and cast [#906](https://github.com/jupyter/jupyter_client/pull/906) ([@Carreau](https://github.com/Carreau))
+- MAINT: \[_async_\]start_kernel should only take kwarg only. [#905](https://github.com/jupyter/jupyter_client/pull/905) ([@Carreau](https://github.com/Carreau))
+- Add more ci checks [#903](https://github.com/jupyter/jupyter_client/pull/903) ([@blink1073](https://github.com/blink1073))
+- Allow releasing from repo [#899](https://github.com/jupyter/jupyter_client/pull/899) ([@blink1073](https://github.com/blink1073))
+- Fix jupyter_core pinning [#896](https://github.com/jupyter/jupyter_client/pull/896) ([@ophie200](https://github.com/ophie200))
+- Adopt ruff and reduce pre-commit usage [#895](https://github.com/jupyter/jupyter_client/pull/895) ([@blink1073](https://github.com/blink1073))
+- Use pytest-jupyter [#891](https://github.com/jupyter/jupyter_client/pull/891) ([@blink1073](https://github.com/blink1073))
+- Import ensure_async and run_sync from jupyter_core [#889](https://github.com/jupyter/jupyter_client/pull/889) ([@davidbrochart](https://github.com/davidbrochart))
+- Use base setup dependency type [#888](https://github.com/jupyter/jupyter_client/pull/888) ([@blink1073](https://github.com/blink1073))
+- More CI Cleanup [#886](https://github.com/jupyter/jupyter_client/pull/886) ([@blink1073](https://github.com/blink1073))
+- More coverage [#885](https://github.com/jupyter/jupyter_client/pull/885) ([@blink1073](https://github.com/blink1073))
+- Clean up workflow and pyproject [#884](https://github.com/jupyter/jupyter_client/pull/884) ([@blink1073](https://github.com/blink1073))
+- Add more coverage [#877](https://github.com/jupyter/jupyter_client/pull/877) ([@blink1073](https://github.com/blink1073))
+- Add coverage config [#876](https://github.com/jupyter/jupyter_client/pull/876) ([@blink1073](https://github.com/blink1073))
+- Bump actions/setup-python from 2 to 4 [#874](https://github.com/jupyter/jupyter_client/pull/874) ([@dependabot](https://github.com/dependabot))
+- Bump actions/checkout from 2 to 3 [#873](https://github.com/jupyter/jupyter_client/pull/873) ([@dependabot](https://github.com/dependabot))
+- Use platform dirs in tests [#872](https://github.com/jupyter/jupyter_client/pull/872) ([@blink1073](https://github.com/blink1073))
+- Clean up types and remove use of entrypoints [#871](https://github.com/jupyter/jupyter_client/pull/871) ([@blink1073](https://github.com/blink1073))
+- Add dependabot [#870](https://github.com/jupyter/jupyter_client/pull/870) ([@blink1073](https://github.com/blink1073))
+- Support Python 3.8-3.11 [#866](https://github.com/jupyter/jupyter_client/pull/866) ([@blink1073](https://github.com/blink1073))
+- Fix assertion in `TestSession.test_serialize` [#860](https://github.com/jupyter/jupyter_client/pull/860) ([@samrat](https://github.com/samrat))
+- Maintenance cleanup [#856](https://github.com/jupyter/jupyter_client/pull/856) ([@blink1073](https://github.com/blink1073))
+- Ignore warnings in prereleases test [#844](https://github.com/jupyter/jupyter_client/pull/844) ([@blink1073](https://github.com/blink1073))
+- Use hatch for version [#837](https://github.com/jupyter/jupyter_client/pull/837) ([@blink1073](https://github.com/blink1073))
+- Move tests to top level [#834](https://github.com/jupyter/jupyter_client/pull/834) ([@blink1073](https://github.com/blink1073))
+- Fix nbconvert downstream test [#827](https://github.com/jupyter/jupyter_client/pull/827) ([@blink1073](https://github.com/blink1073))
+
+### Documentation improvements
+
+- Reflect current protocol version in documentation [#918](https://github.com/jupyter/jupyter_client/pull/918) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Add full api docs [#908](https://github.com/jupyter/jupyter_client/pull/908) ([@blink1073](https://github.com/blink1073))
+- Add more ci checks [#903](https://github.com/jupyter/jupyter_client/pull/903) ([@blink1073](https://github.com/blink1073))
+- Switch to pydata sphinx theme [#840](https://github.com/jupyter/jupyter_client/pull/840) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-08-25&to=2023-01-26&type=c))
+
+[@arogozhnikov](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aarogozhnikov+updated%3A2022-08-25..2023-01-26&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-08-25..2023-01-26&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2022-08-25..2023-01-26&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2022-08-25..2023-01-26&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-08-25..2023-01-26&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adependabot+updated%3A2022-08-25..2023-01-26&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2022-08-25..2023-01-26&type=Issues) | [@meeseeksdev](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ameeseeksdev+updated%3A2022-08-25..2023-01-26&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2022-08-25..2023-01-26&type=Issues) | [@ophie200](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aophie200+updated%3A2022-08-25..2023-01-26&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-08-25..2023-01-26&type=Issues) | [@samrat](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Asamrat+updated%3A2022-08-25..2023-01-26&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ASylvainCorlay+updated%3A2022-08-25..2023-01-26&type=Issues) | [@Zsailer](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AZsailer+updated%3A2022-08-25..2023-01-26&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.0.0rc0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0b3...bf637ed9543198d6dca96d748b0307ed01b16c94))
@@ -15,8 +85,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-12-13&to=2022-12-19&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-12-13..2022-12-19&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.0.0b3
 
