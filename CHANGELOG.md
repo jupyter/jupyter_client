@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.0.1
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0...dc6113c360e05122430b8e130374e9f4e4b701d7))
+
+### Bugs fixed
+
+- Fix json_output in kernelspec app [#921](https://github.com/jupyter/jupyter_client/pull/921) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-01-26&to=2023-01-26&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-01-26..2023-01-26&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.0.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v7.3.5...760a7835d8b20a9daea3737759b1751d5e55dad8))
@@ -69,8 +85,6 @@ This release is primarily focused on improving `asyncio` support, while aiming t
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2022-08-25&to=2023-01-26&type=c))
 
 [@arogozhnikov](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aarogozhnikov+updated%3A2022-08-25..2023-01-26&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2022-08-25..2023-01-26&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2022-08-25..2023-01-26&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2022-08-25..2023-01-26&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2022-08-25..2023-01-26&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adependabot+updated%3A2022-08-25..2023-01-26&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2022-08-25..2023-01-26&type=Issues) | [@meeseeksdev](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ameeseeksdev+updated%3A2022-08-25..2023-01-26&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2022-08-25..2023-01-26&type=Issues) | [@ophie200](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aophie200+updated%3A2022-08-25..2023-01-26&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2022-08-25..2023-01-26&type=Issues) | [@samrat](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Asamrat+updated%3A2022-08-25..2023-01-26&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ASylvainCorlay+updated%3A2022-08-25..2023-01-26&type=Issues) | [@Zsailer](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AZsailer+updated%3A2022-08-25..2023-01-26&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.0.0rc0
 
