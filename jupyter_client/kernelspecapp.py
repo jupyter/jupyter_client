@@ -64,7 +64,7 @@ class ListKernelSpecs(JupyterApp):
             for kernelname, path in sorted(paths.items(), key=path_key):
                 self.log.info("  %s    %s", kernelname.ljust(name_len), path)
         else:
-            self.log.info(json.dumps({"kernelspecs": specs}, indent=2))
+            print(json.dumps({"kernelspecs": specs}, indent=2))  # noqa
         return specs
 
 
