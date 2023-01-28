@@ -234,10 +234,10 @@ class KernelClient(ConnectionFileMixin):
     async def _stdin_hook_default(self, msg: t.Dict[str, t.Any]) -> None:
         """Handle an input request"""
         content = msg["content"]
-        prompt = getpass if content.get("password", False) else input  # type: ignore
+        prompt = getpass if content.get("password", False) else input
 
         try:
-            raw_data = prompt(content["prompt"])
+            raw_data = prompt(content["prompt"])  # type:ignore[operator]
         except EOFError:
             # turn EOFError into EOF character
             raw_data = "\x04"
@@ -474,13 +474,13 @@ class KernelClient(ConnectionFileMixin):
             The reply message for this request
         """
         if not self.iopub_channel.is_alive():
-            msg = "IOPub channel must be running to receive output"
-            raise RuntimeError(msg)
+            emsg = "IOPub channel must be running to receive output"
+            raise RuntimeError(emsg)
         if allow_stdin is None:
             allow_stdin = self.allow_stdin
         if allow_stdin and not self.stdin_channel.is_alive():
-            msg = "stdin channel must be running to allow input"
-            raise RuntimeError(msg)
+            emsg = "stdin channel must be running to allow input"
+            raise RuntimeError(emsg)
         msg_id = await ensure_async(
             self.execute(
                 code,
@@ -532,8 +532,8 @@ class KernelClient(ConnectionFileMixin):
                 timeout_ms = int(1000 * timeout)
             events = dict(poller.poll(timeout_ms))
             if not events:
-                msg = "Timeout waiting for output"
-                raise TimeoutError(msg)
+                emsg = "Timeout waiting for output"
+                raise TimeoutError(emsg)
             if stdin_socket in events:
                 req = await ensure_async(self.stdin_channel.get_msg(timeout=0))
                 res = stdin_hook(req)

@@ -837,8 +837,8 @@ class Session(Configurable):
                     # check to see if buf supports the buffer protocol.
                     view = memoryview(buf)  # type:ignore[assignment]
                 except TypeError as e:
-                    msg = "Buffer objects must support the buffer protocol."
-                    raise TypeError(msg) from e
+                    emsg = "Buffer objects must support the buffer protocol."
+                    raise TypeError(emsg) from e
             # memoryview.contiguous is new in 3.3,
             # just skip the check on Python 2
             if hasattr(view, "contiguous") and not view.contiguous:

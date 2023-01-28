@@ -161,7 +161,7 @@ def open_tunnel(addr, server, keyfile=None, password=None, paramiko=None, timeou
     paramiko = sys.platform == "win32" if paramiko is None else paramiko_tunnel
     tunnelf = paramiko_tunnel if paramiko else open_tunnel
 
-    tunnel = tunnelf(
+    tunnel = tunnelf(  # type:ignore[operator]
         lport,
         rport,
         server,
