@@ -86,11 +86,9 @@ def test_json_default_date():
     local = tzoffset("Local", -8 * 3600)
     other = tzoffset("Other", 2 * 3600)
     data = dict(naive=naive, utc=utcnow(), withtz=naive.replace(tzinfo=other))
-    with (
-        mock.patch.object(jsonutil, "tzlocal", lambda: local),
-        pytest.deprecated_call(match="Please add timezone info"),
-    ):
-        jsondata = json.dumps(data, default=jsonutil.json_default)
+    with mock.patch.object(jsonutil, "tzlocal", lambda: local):  # noqa
+        with pytest.deprecated_call(match="Please add timezone info"):
+            jsondata = json.dumps(data, default=jsonutil.json_default)
     assert "Z" in jsondata
     assert jsondata.count("Z") == 1
     extracted = jsonutil.extract_dates(json.loads(jsondata))
