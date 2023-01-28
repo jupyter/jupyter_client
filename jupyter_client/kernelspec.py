@@ -368,10 +368,12 @@ class KernelSpecManager(LoggingConfigurable):
             kernel_name = os.path.basename(source_dir)
         kernel_name = kernel_name.lower()
         if not _is_valid_kernel_name(kernel_name):
-            raise ValueError(f"Invalid kernel name {kernel_name!r}.  {_kernel_name_description}")
+            msg = f"Invalid kernel name {kernel_name!r}.  {_kernel_name_description}"
+            raise ValueError(msg)
 
         if user and prefix:
-            raise ValueError("Can't specify both user and prefix. Please choose one or the other.")
+            msg = "Can't specify both user and prefix. Please choose one or the other."
+            raise ValueError(msg)
 
         if replace is not None:
             warnings.warn(

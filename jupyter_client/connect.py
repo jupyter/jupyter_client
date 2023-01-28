@@ -218,7 +218,8 @@ def find_connection_file(
 
     matches = [os.path.abspath(m) for m in matches]
     if not matches:
-        raise OSError(f"Could not find {filename!r} in {path!r}")
+        msg = f"Could not find {filename!r} in {path!r}"
+        raise OSError(msg)
     elif len(matches) == 1:
         return matches[0]
     else:
@@ -592,10 +593,11 @@ class ConnectionFileMixin(LoggingConfigurable):
         # Ensure what is in KernelManager is what we expect.
         km_info = self.get_connection_info()
         if not self._equal_connections(info, km_info):
-            raise ValueError(
+            msg = (
                 "KernelManager's connection information already exists and does not match "
                 "the expected values returned from provisioner!"
             )
+            raise ValueError(msg)
 
     @staticmethod
     def _equal_connections(conn1: KernelConnectionInfo, conn2: KernelConnectionInfo) -> bool:
@@ -613,10 +615,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             "signature_scheme",
         ]
 
-        for key in pertinent_keys:
-            if conn1.get(key) != conn2.get(key):
-                return False
-        return True
+        return all(conn1.get(key) == conn2.get(key) for key in pertinent_keys)
 
     # --------------------------------------------------------------------------
     # Creating connected sockets

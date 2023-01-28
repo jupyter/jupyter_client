@@ -189,16 +189,15 @@ def default_secure(cfg: t.Any) -> None:  # pragma: no cover
     a new random UUID.
     """
     warnings.warn("default_secure is deprecated", DeprecationWarning)
-    if "Session" in cfg:
-        if "key" in cfg.Session or "keyfile" in cfg.Session:
-            return
+    if "Session" in cfg and ("key" in cfg.Session or "keyfile" in cfg.Session):
+        return
     # key/keyfile not specified, generate new UUID:
     cfg.Session.key = new_id_bytes()
 
 
 def utcnow() -> datetime:
     """Return timezone-aware UTC timestamp"""
-    return datetime.utcnow().replace(tzinfo=utc)
+    return datetime.utcnow().replace(tzinfo=utc)  # noqa
 
 
 # -----------------------------------------------------------------------------
@@ -612,9 +611,8 @@ class Session(Configurable):
         try:
             packed = pack(msg_list)
         except Exception as e:
-            raise ValueError(
-                f"packer '{self.packer}' could not serialize a simple message: {e}"
-            ) from e
+            msg = f"packer '{self.packer}' could not serialize a simple message: {e}"
+            raise ValueError(msg) from e
 
         # ensure packed message is bytes
         if not isinstance(packed, bytes):
@@ -625,17 +623,19 @@ class Session(Configurable):
             unpacked = unpack(packed)
             assert unpacked == msg_list
         except Exception as e:
-            raise ValueError(
+            msg = (
                 f"unpacker '{self.unpacker}' could not handle output from packer"
                 f" '{self.packer}': {e}"
-            ) from e
+            )
+            raise ValueError(msg) from e
 
         # check datetime support
         msg_datetime = {"t": utcnow()}
         try:
             unpacked = unpack(pack(msg_datetime))
             if isinstance(unpacked["t"], datetime):
-                raise ValueError("Shouldn't deserialize to datetime")
+                msg = "Shouldn't deserialize to datetime"
+                raise ValueError(msg)
         except Exception:
             self.pack = lambda o: pack(squash_dates(o))
             self.unpack = lambda s: unpack(s)
@@ -825,7 +825,7 @@ class Session(Configurable):
                 header=header,
                 metadata=metadata,
             )
-        if self.check_pid and not os.getpid() == self.pid:
+        if self.check_pid and os.getpid() != self.pid:
             get_logger().warning("WARNING: attempted to send message from fork\n%s", msg)
             return None
         buffers = [] if buffers is None else buffers
@@ -837,7 +837,8 @@ class Session(Configurable):
                     # check to see if buf supports the buffer protocol.
                     view = memoryview(buf)  # type:ignore[assignment]
                 except TypeError as e:
-                    raise TypeError("Buffer objects must support the buffer protocol.") from e
+                    msg = "Buffer objects must support the buffer protocol."
+                    raise TypeError(msg) from e
             # memoryview.contiguous is new in 3.3,
             # just skip the check on Python 2
             if hasattr(view, "contiguous") and not view.contiguous:
@@ -985,7 +986,8 @@ class Session(Configurable):
                     failed = False
                     break
             if failed:
-                raise ValueError("DELIM not in msg_list")
+                msg = "DELIM not in msg_list"
+                raise ValueError(msg)
             idents, msg_list = msg_list[:idx], msg_list[idx + 1 :]
             return [bytes(m.bytes) for m in idents], msg_list
 
@@ -1055,7 +1057,8 @@ class Session(Configurable):
         if self.auth is not None:
             signature = msg_list[0]
             if not signature:
-                raise ValueError("Unsigned Message")
+                msg = "Unsigned Message"
+                raise ValueError(msg)
             if signature in self.digest_history:
                 raise ValueError("Duplicate Signature: %r" % signature)
             if content:
@@ -1063,9 +1066,11 @@ class Session(Configurable):
                 self._add_digest(signature)
             check = self.sign(msg_list[1:5])
             if not compare_digest(signature, check):
-                raise ValueError("Invalid Signature: %r" % signature)
+                msg = "Invalid Signature: %r" % signature
+                raise ValueError(msg)
         if not len(msg_list) >= minlen:
-            raise TypeError("malformed message, must have at least %i elements" % minlen)
+            msg = "malformed message, must have at least %i elements" % minlen
+            raise TypeError(msg)
         header = self.unpack(msg_list[1])
         message["header"] = extract_dates(header)
         message["msg_id"] = header["msg_id"]

@@ -541,7 +541,8 @@ class KernelManager(ConnectionFileMixin):
             kernel.
         """
         if self._launch_args is None:
-            raise RuntimeError("Cannot restart the kernel. No previous call to 'start_kernel'.")
+            msg = "Cannot restart the kernel. No previous call to 'start_kernel'."
+            raise RuntimeError(msg)
 
         # Stop currently running kernel.
         await self._async_shutdown_kernel(now=now, restart=True)
@@ -597,17 +598,16 @@ class KernelManager(ConnectionFileMixin):
         Unlike ``signal_kernel``, this operation is well supported on all
         platforms.
         """
-        if not self.has_kernel:
-            if self._ready is not None:
-                if isinstance(self._ready, CFuture):
-                    ready = asyncio.ensure_future(t.cast(Future[t.Any], self._ready))
-                else:
-                    ready = self._ready
-                # Wait for a shutdown if one is in progress.
-                if self.shutting_down:
-                    await ready
-                # Wait for a startup.
+        if not self.has_kernel and self._ready is not None:
+            if isinstance(self._ready, CFuture):
+                ready = asyncio.ensure_future(t.cast(Future[t.Any], self._ready))
+            else:
+                ready = self._ready
+            # Wait for a shutdown if one is in progress.
+            if self.shutting_down:
                 await ready
+            # Wait for a startup.
+            await ready
 
         if self.has_kernel:
             assert self.kernel_spec is not None
@@ -620,7 +620,8 @@ class KernelManager(ConnectionFileMixin):
                 self._connect_control_socket()
                 self.session.send(self._control_socket, msg)
         else:
-            raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
+            msg = "Cannot interrupt kernel. No kernel is running!"
+            raise RuntimeError(msg)
 
     interrupt_kernel = run_sync(_async_interrupt_kernel)
 
@@ -636,7 +637,8 @@ class KernelManager(ConnectionFileMixin):
             assert self.provisioner is not None
             await self.provisioner.send_signal(signum)
         else:
-            raise RuntimeError("Cannot signal kernel. No kernel is running!")
+            msg = "Cannot signal kernel. No kernel is running!"
+            raise RuntimeError(msg)
 
     signal_kernel = run_sync(_async_signal_kernel)
 

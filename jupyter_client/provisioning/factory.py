@@ -89,9 +89,8 @@ class KernelProvisionerFactory(SingletonConfigurable):
         provisioner_cfg = self._get_provisioner_config(kernel_spec)
         provisioner_name = str(provisioner_cfg.get('provisioner_name'))
         if not self._check_availability(provisioner_name):
-            raise ModuleNotFoundError(
-                f"Kernel provisioner '{provisioner_name}' has not been registered."
-            )
+            msg = f"Kernel provisioner '{provisioner_name}' has not been registered."
+            raise ModuleNotFoundError(msg)
 
         self.log.debug(
             f"Instantiating kernel '{kernel_spec.display_name}' with "

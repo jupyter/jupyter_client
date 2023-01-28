@@ -65,17 +65,15 @@ def try_passwordless_ssh(server, keyfile, paramiko=None):
     """
     if paramiko is None:
         paramiko = sys.platform == "win32"
-    if not paramiko:
-        f = _try_passwordless_openssh
-    else:
-        f = _try_passwordless_paramiko
+    f = _try_passwordless_paramiko if paramiko else _try_passwordless_openssh
     return f(server, keyfile)
 
 
 def _try_passwordless_openssh(server, keyfile):
     """Try passwordless login with shell ssh command."""
     if pexpect is None:
-        raise ImportError("pexpect unavailable, use paramiko")
+        msg = "pexpect unavailable, use paramiko"
+        raise ImportError(msg)
     cmd = "ssh -f " + server
     if keyfile:
         cmd += " -i " + keyfile
@@ -91,7 +89,8 @@ def _try_passwordless_openssh(server, keyfile):
         try:
             i = p.expect([ssh_newkey, _password_pat], timeout=0.1)
             if i == 0:
-                raise SSHException("The authenticity of the host can't be established.")
+                msg = "The authenticity of the host can't be established."
+                raise SSHException(msg)
         except pexpect.TIMEOUT:
             continue
         except pexpect.EOF:
@@ -156,15 +155,11 @@ def open_tunnel(addr, server, keyfile=None, password=None, paramiko=None, timeou
     """
 
     lport = select_random_ports(1)[0]
-    transport, addr = addr.split("://")
+    _, addr = addr.split("://")
     ip, rport = addr.split(":")
     rport = int(rport)
-    if paramiko is None:
-        paramiko = sys.platform == "win32"
-    if paramiko:
-        tunnelf = paramiko_tunnel
-    else:
-        tunnelf = openssh_tunnel
+    paramiko = sys.platform == "win32" if paramiko is None else paramiko_tunnel
+    tunnelf = paramiko_tunnel if paramiko else open_tunnel
 
     tunnel = tunnelf(
         lport,
@@ -217,7 +212,8 @@ def openssh_tunnel(
         closing.  This prevents orphaned tunnels from running forever.
     """
     if pexpect is None:
-        raise ImportError("pexpect unavailable, use paramiko_tunnel")
+        msg = "pexpect unavailable, use paramiko_tunnel"
+        raise ImportError(msg)
     ssh = "ssh "
     if keyfile:
         ssh += "-i " + keyfile
@@ -261,7 +257,8 @@ def openssh_tunnel(
         try:
             i = tunnel.expect([ssh_newkey, _password_pat], timeout=0.1)
             if i == 0:
-                raise SSHException("The authenticity of the host can't be established.")
+                msg = "The authenticity of the host can't be established."
+                raise SSHException(msg)
         except pexpect.TIMEOUT:
             continue
         except pexpect.EOF as e:
@@ -340,11 +337,11 @@ def paramiko_tunnel(
 
     """
     if paramiko is None:
-        raise ImportError("Paramiko not available")
+        msg = "Paramiko not available"
+        raise ImportError(msg)
 
-    if password is None:
-        if not _try_passwordless_paramiko(server, keyfile):
-            password = getpass("%s's password: " % (server))
+    if password is None and not _try_passwordless_paramiko(server, keyfile):
+        password = getpass("%s's password: " % (server))
 
     p = Process(
         target=_paramiko_tunnel,

@@ -90,7 +90,8 @@ class RunApp(JupyterApp, JupyterConsoleApp):
                 reply = self.kernel_client.get_shell_msg(timeout=1)
             except queue.Empty as e:
                 if (time.time() - tic) > timeout:
-                    raise RuntimeError("Kernel didn't respond to kernel_info_request") from e
+                    msg = "Kernel didn't respond to kernel_info_request"
+                    raise RuntimeError(msg) from e
             else:
                 if reply["parent_header"].get("msg_id") == msg_id:
                     self.kernel_info = reply["content"]
@@ -114,7 +115,8 @@ class RunApp(JupyterApp, JupyterConsoleApp):
             reply = self.kernel_client.execute_interactive(code, timeout=OUTPUT_TIMEOUT)
             return_code = 0 if reply["content"]["status"] == "ok" else 1
             if return_code:
-                raise Exception("jupyter-run error running 'stdin'")
+                msg = "jupyter-run error running 'stdin'"
+                raise Exception(msg)
 
 
 main = launch_new_instance = RunApp.launch_instance

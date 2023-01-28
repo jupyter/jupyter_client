@@ -257,7 +257,7 @@ class TestDiscovery:
         new_provisioner()  # Introduce provisioner after initialization of KPF
         ksm = KernelSpecManager()
         kernel = ksm.get_kernel_spec('new_provisioner')
-        assert 'new-test-provisioner' == kernel.metadata['kernel_provisioner']['provisioner_name']
+        assert kernel.metadata['kernel_provisioner']['provisioner_name'] == 'new-test-provisioner'
 
 
 class TestRuntime:
