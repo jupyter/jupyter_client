@@ -147,37 +147,37 @@ class TestAsyncKernelClient:
         assert called
 
     async def test_history(self, kc):
-        msg_id = await kc.history(session=0)
+        msg_id = kc.history(session=0)
         assert isinstance(msg_id, str)
         reply = await kc.history(session=0, reply=True, timeout=TIMEOUT)
         self._check_reply("history", reply)
 
     async def test_inspect(self, kc):
-        msg_id = await kc.inspect("who cares")
+        msg_id = kc.inspect("who cares")
         assert isinstance(msg_id, str)
         reply = await kc.inspect("code", reply=True, timeout=TIMEOUT)
         self._check_reply("inspect", reply)
 
     async def test_complete(self, kc):
-        msg_id = await kc.complete("who cares")
+        msg_id = kc.complete("who cares")
         assert isinstance(msg_id, str)
         reply = await kc.complete("code", reply=True, timeout=TIMEOUT)
         self._check_reply("complete", reply)
 
     async def test_is_complete(self, kc):
-        msg_id = await kc.is_complete("who cares")
+        msg_id = kc.is_complete("who cares")
         assert isinstance(msg_id, str)
         reply = await kc.is_complete("code", reply=True, timeout=TIMEOUT)
         self._check_reply("is_complete", reply)
 
     async def test_kernel_info(self, kc):
-        msg_id = await kc.kernel_info()
+        msg_id = kc.kernel_info()
         assert isinstance(msg_id, str)
         reply = await kc.kernel_info(reply=True, timeout=TIMEOUT)
         self._check_reply("kernel_info", reply)
 
     async def test_comm_info(self, kc):
-        msg_id = await kc.comm_info()
+        msg_id = kc.comm_info()
         assert isinstance(msg_id, str)
         reply = await kc.comm_info(reply=True, timeout=TIMEOUT)
         self._check_reply("comm_info", reply)
@@ -187,7 +187,7 @@ class TestAsyncKernelClient:
         self._check_reply("shutdown", reply)
 
     async def test_shutdown_id(self, kc):
-        msg_id = await kc.shutdown()
+        msg_id = kc.shutdown()
         assert isinstance(msg_id, str)
 
 
