@@ -472,7 +472,7 @@ class TestAsyncKernelManager:
         assert reply["user_expressions"]["poll"] == [None] * N
 
         # start a job on the kernel to be interrupted
-        request_id = await kc.execute("sleep")
+        request_id = kc.execute("sleep")
         await asyncio.sleep(1)  # ensure sleep message has been handled before we interrupt
         await km.interrupt_kernel()
         while True:
