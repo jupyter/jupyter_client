@@ -231,6 +231,8 @@ unfixable = [
 # B007 Loop control variable `i` not used within the loop body.
 # N802 Function name `assertIn` should be lowercase
 "tests/*" = ["B011", "F841", "C408", "E402", "T201", "B007", "N802"]
+# T201 `print` found
+"*app.py" = ["T201"]
 
 [tool.interrogate]
 ignore-init-module=true
