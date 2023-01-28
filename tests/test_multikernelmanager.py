@@ -637,7 +637,7 @@ class TestAsyncKernelManager(AsyncTestCase):
 
         stream.on_recv(record_activity)
         while True:
-            await client.kernel_info()
+            await client.kernel_info(reply=True)
             if called:
                 break
             await asyncio.sleep(0.1)
