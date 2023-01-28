@@ -159,9 +159,9 @@ def open_tunnel(addr, server, keyfile=None, password=None, paramiko=None, timeou
     ip, rport = addr.split(":")
     rport = int(rport)
     paramiko = sys.platform == "win32" if paramiko is None else paramiko_tunnel
-    tunnelf = paramiko_tunnel if paramiko else open_tunnel
+    tunnelf = paramiko_tunnel if paramiko else openssh_tunnel
 
-    tunnel = tunnelf(  # type:ignore[operator]
+    tunnel = tunnelf(
         lport,
         rport,
         server,
