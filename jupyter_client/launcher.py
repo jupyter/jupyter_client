@@ -66,7 +66,7 @@ def launch_kernel(
     # stderr are all invalid.
     redirect_out = sys.executable.endswith("pythonw.exe")
     if redirect_out:
-        blackhole = open(os.devnull, "w")
+        blackhole = open(os.devnull, "w")  # noqa
         _stdout = blackhole if stdout is None else stdout
         _stderr = blackhole if stderr is None else stderr
     else:
@@ -171,10 +171,9 @@ def launch_kernel(
         proc.win32_interrupt_event = interrupt_event
 
     # Clean up pipes created to work around Popen bug.
-    if redirect_in:
-        if stdin is None:
-            assert proc.stdin is not None
-            proc.stdin.close()
+    if redirect_in and stdin is None:
+        assert proc.stdin is not None
+        proc.stdin.close()
 
     return proc
 

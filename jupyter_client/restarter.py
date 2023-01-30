@@ -62,11 +62,13 @@ class KernelRestarter(LoggingConfigurable):
 
     def start(self):
         """Start the polling of the kernel."""
-        raise NotImplementedError("Must be implemented in a subclass")
+        msg = "Must be implemented in a subclass"
+        raise NotImplementedError(msg)
 
     def stop(self):
         """Stop the kernel polling."""
-        raise NotImplementedError("Must be implemented in a subclass")
+        msg = "Must be implemented in a subclass"
+        raise NotImplementedError(msg)
 
     def add_callback(self, f, event="restart"):
         """register a callback to fire on a particular event

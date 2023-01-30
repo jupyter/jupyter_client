@@ -327,7 +327,8 @@ class MultiKernelManager(LoggingConfigurable):
         """
         kernel = self.get_kernel(kernel_id)
         if not kernel.ready.done():
-            raise RuntimeError("Kernel is in a pending state. Cannot interrupt.")
+            msg = "Kernel is in a pending state. Cannot interrupt."
+            raise RuntimeError(msg)
         out = kernel.interrupt_kernel()
         self.log.info("Kernel interrupted: %s", kernel_id)
         return out
@@ -364,9 +365,9 @@ class MultiKernelManager(LoggingConfigurable):
             it is given a chance to perform a clean shutdown or not.
         """
         kernel = self.get_kernel(kernel_id)
-        if self._using_pending_kernels():
-            if not kernel.ready.done():
-                raise RuntimeError("Kernel is in a pending state. Cannot restart.")
+        if self._using_pending_kernels() and not kernel.ready.done():
+            msg = "Kernel is in a pending state. Cannot restart."
+            raise RuntimeError(msg)
         await ensure_async(kernel.restart_kernel(now=now))
         self.log.info("Kernel restarted: %s", kernel_id)
 

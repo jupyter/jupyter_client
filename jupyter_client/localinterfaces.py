@@ -39,7 +39,8 @@ def _get_output(cmd):
     p = Popen(cmd, stdout=PIPE, stderr=PIPE, startupinfo=startupinfo)
     stdout, stderr = p.communicate()
     if p.returncode:
-        raise OSError("Failed to run {}: {}".format(cmd, stderr.decode("utf8", "replace")))
+        msg = "Failed to run {}: {}".format(cmd, stderr.decode("utf8", "replace"))
+        raise OSError(msg)
     return stdout.decode("utf8", "replace")
 
 
@@ -127,7 +128,7 @@ def _load_ips_ip():
     addrs = []
     for line in lines:
         blocks = line.lower().split()
-        if (len(blocks) >= 2) and (blocks[0] == "inet"):
+        if (len(blocks) >= 2) and (blocks[0] == "inet"):  # noqa
             addrs.append(blocks[1].split("/")[0])
     _populate_from_list(addrs)
 

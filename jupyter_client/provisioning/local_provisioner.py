@@ -127,7 +127,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         # In Windows, we will get an Access Denied error if the process
         # has already terminated. Ignore it.
         if sys.platform == 'win32':
-            if os_error.winerror != 5:
+            if os_error.winerror != 5:  # noqa
                 raise
         # On Unix, we may get an ESRCH error (or ProcessLookupError instance) if
         # the process has already terminated. Ignore it.
@@ -165,13 +165,14 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         km = self.parent
         if km:
             if km.transport == 'tcp' and not is_local_ip(km.ip):
-                raise RuntimeError(
+                msg = (
                     "Can only launch a kernel on a local interface. "
-                    "This one is not: %s."
+                    "This one is not: {}."
                     "Make sure that the '*_address' attributes are "
                     "configured properly. "
-                    "Currently valid addresses are: %s" % (km.ip, local_ips())
+                    "Currently valid addresses are: {}".format(km.ip, local_ips())
                 )
+                raise RuntimeError(msg)
             # build the Popen cmd
             extra_arguments = kwargs.pop('extra_arguments', [])
 

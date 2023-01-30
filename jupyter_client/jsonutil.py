@@ -28,7 +28,7 @@ ISO8601_PAT = re.compile(
 
 # holy crap, strptime is not threadsafe.
 # Calling it once at import seems to help.
-datetime.strptime("1", "%d")
+datetime.strptime("1", "%d")  # noqa
 
 # -----------------------------------------------------------------------------
 # Classes and functions
@@ -174,10 +174,11 @@ def json_clean(obj):
         nkeys = len(obj)
         nkeys_collapsed = len(set(map(str, obj)))
         if nkeys != nkeys_collapsed:
-            raise ValueError(
+            msg = (
                 'dict cannot be safely converted to JSON: '
                 'key collision would lead to dropped values'
             )
+            raise ValueError(msg)
         # If all OK, proceed by making the new dict that will be json-safe
         out = {}
         for k, v in obj.items():

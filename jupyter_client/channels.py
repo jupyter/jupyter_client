@@ -159,7 +159,7 @@ class HBChannel(Thread):
 
     def is_beating(self) -> bool:
         """Is the heartbeat running and responsive (and not paused)."""
-        if self.is_alive() and not self._pause and self._beating:
+        if self.is_alive() and not self._pause and self._beating:  # noqa
             return True
         else:
             return False
@@ -290,7 +290,8 @@ class AsyncZMQSocketChannel(ZMQSocketChannel):
             Unused here, for other implementations
         """
         if not isinstance(socket, zmq.asyncio.Socket):
-            raise ValueError('Socket must be asyncio')
+            msg = 'Socket must be asyncio'
+            raise ValueError(msg)
         super().__init__(socket, session)
 
     async def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:  # type:ignore[override]
