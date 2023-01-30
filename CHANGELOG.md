@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.0.2
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.1...717d36edcd9ce595f727d8b5a27e270c2a6e2c46))
+
+### Bugs fixed
+
+- Add papermill downstream check and fix kernel client replies [#925](https://github.com/jupyter/jupyter_client/pull/925) ([@blink1073](https://github.com/blink1073))
+
+### Maintenance and upkeep improvements
+
+- Adopt more ruff rules [#924](https://github.com/jupyter/jupyter_client/pull/924) ([@blink1073](https://github.com/blink1073))
+- Prefer print in kernelspecapp [#923](https://github.com/jupyter/jupyter_client/pull/923) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-01-26&to=2023-01-30&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-01-26..2023-01-30&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.0.1
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.0...dc6113c360e05122430b8e130374e9f4e4b701d7))
@@ -15,8 +36,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-01-26&to=2023-01-26&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-01-26..2023-01-26&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.0.0
 
