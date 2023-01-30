@@ -31,6 +31,16 @@ jobs:
           package_name: nbclient
           env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
 
+  papermill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v3
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        with:
+          package_name: papermill
+
   nbconvert:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -115,3 +125,20 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/../qtconsole
           xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes qtconsole
+
+  downstreams_check: # This job does nothing and is only used for the branch protection
+    if: always()
+    needs:
+      - ipykernel
+      - nbclient
+      - papermill
+      - nbconvert
+      - jupyter_server
+      - jupyter_kernel_test
+      - qtconsole
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}

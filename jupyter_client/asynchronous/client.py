@@ -1,7 +1,6 @@
 """Implements an async kernel client"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import asyncio
 
 import zmq.asyncio
 from traitlets import Instance, Type
@@ -17,10 +16,8 @@ def wrapped(meth, channel):
         reply = kwargs.pop("reply", False)
         timeout = kwargs.pop("timeout", None)
         msg_id = meth(self, *args, **kwargs)
-        fut: asyncio.Future = asyncio.Future()
-        fut.set_result(msg_id)
         if not reply:
-            return fut
+            return msg_id
         return self._recv_reply(msg_id, timeout=timeout, channel=channel)
 
     return _

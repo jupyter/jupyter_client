@@ -199,7 +199,7 @@ class TestKernelManager:
         km, kc = await jp_start_kernel("signaltest")
 
         async def execute(cmd):
-            request_id = await kc.execute(cmd)
+            request_id = kc.execute(cmd)
             while True:
                 reply = await kc.get_shell_msg(TIMEOUT)
                 if reply["parent_header"]["msg_id"] == request_id:
@@ -241,7 +241,7 @@ class TestKernelManager:
 
     async def _env_test_body(self, kc):
         async def execute(cmd):
-            request_id = await kc.execute(cmd)
+            request_id = kc.execute(cmd)
             while True:
                 reply = await kc.get_shell_msg(TIMEOUT)
                 if reply["parent_header"]["msg_id"] == request_id:
@@ -452,7 +452,7 @@ class TestAsyncKernelManager:
         km, kc = await jp_start_kernel("signaltest")
 
         async def execute(cmd):
-            request_id = await kc.execute(cmd)
+            request_id = kc.execute(cmd)
             while True:
                 reply = await kc.get_shell_msg(TIMEOUT)
                 if reply["parent_header"]["msg_id"] == request_id:
@@ -472,7 +472,7 @@ class TestAsyncKernelManager:
         assert reply["user_expressions"]["poll"] == [None] * N
 
         # start a job on the kernel to be interrupted
-        request_id = await kc.execute("sleep")
+        request_id = kc.execute("sleep")
         await asyncio.sleep(1)  # ensure sleep message has been handled before we interrupt
         await km.interrupt_kernel()
         while True:
