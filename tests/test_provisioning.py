@@ -28,7 +28,6 @@ pjoin = os.path.join
 
 
 class SubclassedTestProvisioner(LocalProvisioner):  # type:ignore
-
     config_var_1: int = Int(config=True)  # type:ignore
     config_var_2: str = Unicode(config=True)  # type:ignore
 
@@ -36,7 +35,6 @@ class SubclassedTestProvisioner(LocalProvisioner):  # type:ignore
 
 
 class CustomTestProvisioner(KernelProvisionerBase):  # type:ignore
-
     process = None
     pid = None
     pgid = None

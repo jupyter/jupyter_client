@@ -137,7 +137,6 @@ async def test_restart_check(config, install_kernel, debug_logging):
         assert km.is_alive()
 
     finally:
-
         km.shutdown_kernel(now=True)
         assert km.context.closed
 
@@ -183,7 +182,6 @@ async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
         assert cbs == N_restarts
 
     finally:
-
         km.shutdown_kernel(now=True)
         assert km.context.closed
 
@@ -239,7 +237,6 @@ async def test_async_restart_check(config, install_kernel, debug_logging):
         assert await km.is_alive()
 
     finally:
-
         await km.shutdown_kernel(now=True)
         assert km.context.closed
 
@@ -284,6 +281,5 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_
         assert cbs == N_restarts
 
     finally:
-
         await km.shutdown_kernel(now=True)
         assert km.context.closed

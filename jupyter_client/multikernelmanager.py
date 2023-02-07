@@ -533,7 +533,6 @@ class MultiKernelManager(LoggingConfigurable):
 
 
 class AsyncMultiKernelManager(MultiKernelManager):
-
     kernel_manager_class = DottedObjectName(
         "jupyter_client.ioloop.AsyncIOLoopKernelManager",
         config=True,

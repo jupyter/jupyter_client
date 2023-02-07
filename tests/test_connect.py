@@ -247,7 +247,6 @@ param_values = [
 
 @pytest.mark.parametrize("file_exists, km_matches", param_values)
 def test_reconcile_connection_info(file_exists, km_matches):
-
     expected_info = sample_info
     mismatched_info = sample_info.copy()
     mismatched_info["key"] = b"def456"
@@ -255,7 +254,6 @@ def test_reconcile_connection_info(file_exists, km_matches):
     mismatched_info["control_port"] = expected_info["control_port"] + 42
 
     with TemporaryDirectory() as connection_dir:
-
         cf = os.path.join(connection_dir, "kernel.json")
         km = KernelManager()
         km.connection_file = cf

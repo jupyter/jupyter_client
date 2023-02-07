@@ -195,7 +195,6 @@ class TestKernelManager:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     async def test_signal_kernel_subprocesses(self, install_kernel, jp_start_kernel):
-
         km, kc = await jp_start_kernel("signaltest")
 
         async def execute(cmd):
@@ -448,7 +447,6 @@ class TestAsyncKernelManager:
     @pytest.mark.timeout(10)
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     async def test_signal_kernel_subprocesses(self, install_kernel, jp_start_kernel):
-
         km, kc = await jp_start_kernel("signaltest")
 
         async def execute(cmd):
