@@ -835,7 +835,7 @@ class Session(Configurable):
             else:
                 try:
                     # check to see if buf supports the buffer protocol.
-                    view = memoryview(buf)  # type:ignore[assignment]
+                    view = memoryview(buf)
                 except TypeError as e:
                     emsg = "Buffer objects must support the buffer protocol."
                     raise TypeError(emsg) from e
