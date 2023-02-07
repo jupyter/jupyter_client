@@ -128,7 +128,7 @@ def _load_ips_ip():
     addrs = []
     for line in lines:
         blocks = line.lower().split()
-        if (len(blocks) >= 2) and (blocks[0] == "inet"):  # noqa
+        if (len(blocks) >= 2) and (blocks[0] == "inet"):
             addrs.append(blocks[1].split("/")[0])
     _populate_from_list(addrs)
 
