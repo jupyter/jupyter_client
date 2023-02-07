@@ -216,7 +216,6 @@ class MKMSubclass(RecordCallMixin):
 
 
 class SyncMKMSubclass(MKMSubclass, MultiKernelManager):
-
     _superclass = MultiKernelManager
 
     def _kernel_manager_class_default(self):
@@ -224,7 +223,6 @@ class SyncMKMSubclass(MKMSubclass, MultiKernelManager):
 
 
 class AsyncMKMSubclass(MKMSubclass, AsyncMultiKernelManager):
-
     _superclass = AsyncMultiKernelManager
 
     def _kernel_manager_class_default(self):

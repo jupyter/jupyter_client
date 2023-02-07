@@ -127,7 +127,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         # In Windows, we will get an Access Denied error if the process
         # has already terminated. Ignore it.
         if sys.platform == 'win32':
-            if os_error.winerror != 5:  # noqa
+            if os_error.winerror != 5:
                 raise
         # On Unix, we may get an ESRCH error (or ProcessLookupError instance) if
         # the process has already terminated. Ignore it.
