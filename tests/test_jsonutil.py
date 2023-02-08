@@ -33,7 +33,7 @@ numbers.Real.register(MyFloat)
 
 
 def test_parse_date_invalid():
-    assert jsonutil.parse_date(None) == None
+    assert jsonutil.parse_date(None) is None
     assert jsonutil.parse_date("") == ""
     assert jsonutil.parse_date("invalid-date") == "invalid-date"
 
