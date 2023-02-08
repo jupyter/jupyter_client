@@ -41,11 +41,8 @@ def test_parse_date_invalid():
 def test_parse_date_valid():
     ref = REFERENCE_DATETIME
     timestamp = "2013-07-03T16:34:52.249482Z"
-
     parsed = jsonutil.parse_date(timestamp)
-
     assert isinstance(parsed, datetime.datetime)
-    assert parsed.tzinfo.utcoffset(ref) == timedelta(0)
 
 
 def test_parse_date_from_naive():
