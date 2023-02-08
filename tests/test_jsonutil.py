@@ -32,6 +32,32 @@ class MyFloat:
 numbers.Real.register(MyFloat)
 
 
+def test_parse_date_invalid():
+    assert jsonutil.parse_date(None) is None
+    assert jsonutil.parse_date("") == ""
+    assert jsonutil.parse_date("invalid-date") == "invalid-date"
+
+
+def test_parse_date_valid():
+    ref = REFERENCE_DATETIME
+    timestamp = "2013-07-03T16:34:52.249482Z"
+    parsed = jsonutil.parse_date(timestamp)
+    assert isinstance(parsed, datetime.datetime)
+
+
+def test_parse_date_from_naive():
+    ref = REFERENCE_DATETIME
+    timestamp = "2013-07-03T16:34:52.249482"
+
+    with pytest.deprecated_call(match="Interpreting naive datetime as local"):
+        parsed = jsonutil.parse_date(timestamp)
+
+    assert isinstance(parsed, datetime.datetime)
+    assert parsed.tzinfo is not None
+    assert parsed.tzinfo.utcoffset(ref) == tzlocal().utcoffset(ref)
+    assert parsed == ref
+
+
 def test_extract_date_from_naive():
     ref = REFERENCE_DATETIME
     timestamp = "2013-07-03T16:34:52.249482"
@@ -45,7 +71,17 @@ def test_extract_date_from_naive():
     assert extracted == ref
 
 
-def test_extract_dates():
+def test_extract_dates_from_str():
+    ref = REFERENCE_DATETIME
+    timestamp = "2013-07-03T16:34:52.249482Z"
+    extracted = jsonutil.extract_dates(timestamp)
+
+    assert isinstance(extracted, datetime.datetime)
+    assert extracted.tzinfo is not None
+    assert extracted.tzinfo.utcoffset(ref) == timedelta(0)
+
+
+def test_extract_dates_from_list():
     ref = REFERENCE_DATETIME
     timestamps = [
         "2013-07-03T16:34:52.249482Z",
@@ -56,6 +92,28 @@ def test_extract_dates():
     ]
     extracted = jsonutil.extract_dates(timestamps)
     for dt in extracted:
+        assert isinstance(dt, datetime.datetime)
+        assert dt.tzinfo is not None
+
+    assert extracted[0].tzinfo.utcoffset(ref) == timedelta(0)
+    assert extracted[1].tzinfo.utcoffset(ref) == timedelta(hours=-8)
+    assert extracted[2].tzinfo.utcoffset(ref) == timedelta(hours=8)
+    assert extracted[3].tzinfo.utcoffset(ref) == timedelta(hours=-8)
+    assert extracted[4].tzinfo.utcoffset(ref) == timedelta(hours=8)
+
+
+def test_extract_dates_from_dict():
+    ref = REFERENCE_DATETIME
+    timestamps = {
+        0: "2013-07-03T16:34:52.249482Z",
+        1: "2013-07-03T16:34:52.249482-0800",
+        2: "2013-07-03T16:34:52.249482+0800",
+        3: "2013-07-03T16:34:52.249482-08:00",
+        4: "2013-07-03T16:34:52.249482+08:00",
+    }
+    extracted = jsonutil.extract_dates(timestamps)
+    for k in extracted:
+        dt = extracted[k]
         assert isinstance(dt, datetime.datetime)
         assert dt.tzinfo is not None
 
