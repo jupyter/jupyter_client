@@ -32,6 +32,35 @@ class MyFloat:
 numbers.Real.register(MyFloat)
 
 
+def test_parse_date_invalid():
+    assert jsonutil.parse_date(None) == None
+    assert jsonutil.parse_date("") == ""
+    assert jsonutil.parse_date("invalid-date") == "invalid-date"
+
+
+def test_parse_date_valid():
+    ref = REFERENCE_DATETIME
+    timestamp = "2013-07-03T16:34:52.249482Z"
+
+    parsed = jsonutil.parse_date(timestamp)
+
+    assert isinstance(parsed, datetime.datetime)
+    assert parsed.tzinfo.utcoffset(ref) == timedelta(0)
+
+
+def test_parse_date_from_naive():
+    ref = REFERENCE_DATETIME
+    timestamp = "2013-07-03T16:34:52.249482"
+
+    with pytest.deprecated_call(match="Interpreting naive datetime as local"):
+        parsed = jsonutil.parse_date(timestamp)
+
+    assert isinstance(parsed, datetime.datetime)
+    assert parsed.tzinfo is not None
+    assert parsed.tzinfo.utcoffset(ref) == tzlocal().utcoffset(ref)
+    assert parsed == ref
+
+
 def test_extract_date_from_naive():
     ref = REFERENCE_DATETIME
     timestamp = "2013-07-03T16:34:52.249482"
