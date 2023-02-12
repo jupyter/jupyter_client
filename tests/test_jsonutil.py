@@ -166,7 +166,7 @@ def test_json_default():
         (True, None),
         (False, None),
         (None, None),
-        ({"key": b"\xFF"}, {"key": "/w==\n"}),
+        ({"key": b"\xFF"}, {"key": "/w=="}),
         # Containers
         ([1, 2], None),
         ((1, 2), [1, 2]),
