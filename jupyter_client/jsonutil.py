@@ -111,7 +111,7 @@ def json_default(obj):
         return obj.isoformat().replace('+00:00', 'Z')
 
     if isinstance(obj, bytes):
-        return b2a_base64(obj).decode('ascii')
+        return b2a_base64(obj, newline=False).decode('ascii')
 
     if isinstance(obj, Iterable):
         return list(obj)
@@ -157,7 +157,7 @@ def json_clean(obj):
     if isinstance(obj, bytes):
         # unanmbiguous binary data is base64-encoded
         # (this probably should have happened upstream)
-        return b2a_base64(obj).decode('ascii')
+        return b2a_base64(obj, newline=False).decode('ascii')
 
     if isinstance(obj, container_to_list) or (
         hasattr(obj, '__iter__') and hasattr(obj, next_attr_name)
