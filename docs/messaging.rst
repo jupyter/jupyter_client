@@ -1131,9 +1131,14 @@ Additions to the DAP
 
 The Jupyter debugger protocol makes several additions to the DAP:
 
-- the `dumpCell` request and response messages
-- the `debugInfo` request and response messages
-- the `inspectVariables` request and response messages
+- the `dumpCell`_ request and response messages
+- the `debugInfo`_ request and response messages
+- the `inspectVariables`_ request and response messages
+- the `richInspectVariables`_ request and response messages
+- the `copyToGlobals`_ request and response messages
+
+dumpCell
+########
 
 In order to support the debugging of notebook cells and of Jupyter consoles,
 which are not based on source files, we need a message to submit code to the
@@ -1158,6 +1163,9 @@ debugger to which breakpoints can be added.
               'sourcePath': str  # filename for the dumped source
           }
      }
+
+debugInfo
+#########
 
 In order to support page reloading, or a client connecting at a later stage,
 Jupyter kernels must store the state of the debugger (such as breakpoints,
@@ -1196,6 +1204,9 @@ whether the debugger is currently stopped). The `debugInfo` request is a DAP
 
   The `source_breakpoint` schema is specified by the Debug Adapter Protocol.
 
+inspectVariables
+################
+
 The `inspectVariables` is meant to retrieve the values of all the variables
 that have been defined in the kernel. It is a DAP `Request` with no extra
 argument.
@@ -1224,10 +1235,13 @@ argument.
           }
       }
 
-The ``richInspectVariables`` request allows to get the rich representation of a
+richInspectVariables
+####################
+
+The `richInspectVariables` request allows to get the rich representation of a
 variable that has been defined in the kernel.
 
-  Content of the ``richInspectVariables`` request::
+  Content of the `richInspectVariables` request::
 
       {
           'type' : 'request',
@@ -1239,7 +1253,7 @@ variable that has been defined in the kernel.
           }
       }
 
-  Content of the ``richInspectVariables`` response::
+  Content of the `richInspectVariables` response::
 
       {
           'type' : 'response',
@@ -1250,6 +1264,41 @@ variable that has been defined in the kernel.
               'metadata' : dict
           }
       }
+
+copyToGlobals
+#############
+
+The `copyToGlobals` request allows to copy a variable from the local variable panel
+of the debugger to the `global`` scope to inspect it after debug session.
+
+  Content of the `copyToGlobals` request::
+
+    {
+        'type': 'request',
+        'command': 'copyToGlobals',
+        'arguments': {
+            # the variable to copy from the frame corresponding to `srcFrameId`
+            'srcVariableName': str,
+            'srcFrameId': int,
+            # the copied variable name in the global scope
+            'dstVariableName': str
+        }
+    }
+
+  Content of the `copyToGlobals` response::
+
+    {
+        'type': 'response',
+        'success': bool,
+        'command': 'setExpression',
+        'body': {
+            # string representation of the copied variable
+            'value': str,
+            # type of the copied variable
+            'type': str,
+            'variablesReference': int
+        }
+    }
 
 .. versionadded:: 5.5
 
