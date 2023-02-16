@@ -62,7 +62,7 @@ class ListKernelSpecs(JupyterApp):
 
             print("Available kernels:")
             for kernelname, path in sorted(paths.items(), key=path_key):
-                print("  %s    %s", kernelname.ljust(name_len), path)
+                print(f"  {kernelname.ljust(name_len)}    {path}")
         else:
             print(json.dumps({"kernelspecs": specs}, indent=2))
         return specs
@@ -140,7 +140,7 @@ class InstallKernelSpec(JupyterApp):
         if self.extra_args:
             self.sourcedir = self.extra_args[0]
         else:
-            print("No source directory specified.")
+            print("No source directory specified.", file=sys.stderr)
             self.exit(1)
 
     def start(self):
@@ -157,14 +157,12 @@ class InstallKernelSpec(JupyterApp):
             )
         except OSError as e:
             if e.errno == errno.EACCES:
-                print(e)
+                print(e, file=sys.stderr)
                 if not self.user:
-                    print(
-                        "Perhaps you want to install with `sudo` or `--user`?",
-                    )
+                    print("Perhaps you want to install with `sudo` or `--user`?", file=sys.stderr)
                 self.exit(1)
             elif e.errno == errno.EEXIST:
-                print("A kernel spec is already present at %s", e.filename)
+                print(f"A kernel spec is already present at {e.filename}", file=sys.stderr)
                 self.exit(1)
             raise
 
@@ -209,7 +207,8 @@ class RemoveKernelSpec(JupyterApp):
         if not (self.force or self.answer_yes):
             print("Kernel specs to remove:")
             for name in self.spec_names:
-                print("  %s\t%s", name.ljust(20), name.ljust(20))
+                path = spec_paths.get(name, name)
+                print(f"  {name.ljust(20)}\t{path.ljust(20)}")
             answer = input("Remove %i kernel specs [y/N]: " % len(self.spec_names))
             if not answer.lower().startswith("y"):
                 return
@@ -224,7 +223,7 @@ class RemoveKernelSpec(JupyterApp):
                     self.exit(1)
                 else:
                     raise
-            print("Removed %s", path)
+            print(f"Removed {path}")
 
 
 class InstallNativeKernelSpec(JupyterApp):
@@ -295,7 +294,7 @@ class ListProvisioners(JupyterApp):
         name_len = len(sorted(provisioners, key=lambda name: len(name))[-1])
 
         for name in sorted(provisioners):
-            print("  %s    %s", name.ljust(name_len), provisioners[name])
+            print(f"  {name.ljust(name_len)}    {provisioners[name]}")
 
 
 class KernelSpecApp(Application):
