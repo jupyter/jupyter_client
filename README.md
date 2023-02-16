@@ -79,9 +79,6 @@ yourself after that.
 Some of the hooks only run on CI by default, but you can invoke them by
 running with the `--hook-stage manual` argument.
 
-[jupyter protocol]: https://jupyter-client.readthedocs.io/en/latest/messaging.html
-
-
 ## About the Jupyter Development Team
 
 The Jupyter Development Team is the set of all contributors to the Jupyter project.
@@ -109,3 +106,5 @@ to indicate the copyright and license terms:
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 ```
+
+[jupyter protocol]: https://jupyter-client.readthedocs.io/en/latest/messaging.html
