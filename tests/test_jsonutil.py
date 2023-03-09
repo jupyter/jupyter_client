@@ -182,7 +182,7 @@ def test_json_default():
 
     for val, jval in pairs:
         if jval is None:
-            jval = val
+            jval = val  # noqa
         out = json.loads(json.dumps(val, default=jsonutil.json_default))
         # validate our cleanup
         assert out == jval

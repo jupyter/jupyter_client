@@ -6,17 +6,17 @@ from ._version import version_info  # noqa
 
 try:
     from .asynchronous import AsyncKernelClient  # noqa
-    from .blocking import BlockingKernelClient  # noqa
-    from .client import KernelClient  # noqa
+    from .blocking import BlockingKernelClient
+    from .client import KernelClient
     from .connect import *  # noqa
     from .launcher import *  # noqa
-    from .manager import AsyncKernelManager  # noqa
-    from .manager import KernelManager  # noqa
-    from .manager import run_kernel  # noqa
-    from .multikernelmanager import AsyncMultiKernelManager  # noqa
-    from .multikernelmanager import MultiKernelManager  # noqa
-    from .provisioning import KernelProvisionerBase  # noqa
-    from .provisioning import LocalProvisioner  # noqa
+    from .manager import AsyncKernelManager
+    from .manager import KernelManager
+    from .manager import run_kernel
+    from .multikernelmanager import AsyncMultiKernelManager
+    from .multikernelmanager import MultiKernelManager
+    from .provisioning import KernelProvisionerBase
+    from .provisioning import LocalProvisioner
 except ModuleNotFoundError:
     import warnings
 
