@@ -6,7 +6,7 @@ from ._version import version_info  # noqa
 
 try:
     from .asynchronous import AsyncKernelClient  # noqa
-    from .blocking import BlockingKernelClient 
+    from .blocking import BlockingKernelClient
     from .client import KernelClient
     from .connect import *  # noqa
     from .launcher import *  # noqa
@@ -15,7 +15,7 @@ try:
     from .manager import run_kernel
     from .multikernelmanager import AsyncMultiKernelManager
     from .multikernelmanager import MultiKernelManager
-    from .provisioning import KernelProvisionerBase 
+    from .provisioning import KernelProvisionerBase
     from .provisioning import LocalProvisioner
 except ModuleNotFoundError:
     import warnings

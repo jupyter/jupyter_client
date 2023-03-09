@@ -861,7 +861,7 @@ class Session(Configurable):
             stream.send_multipart(to_send, copy=copy)
 
         if self.debug:
-            pprint.pprint(msg) 
+            pprint.pprint(msg)
             pprint.pprint(to_send)
             pprint.pprint(buffers)
 
