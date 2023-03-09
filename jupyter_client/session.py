@@ -249,7 +249,7 @@ class Message:
         dct = self.__dict__
         for k, v in dict(msg_dict).items():
             if isinstance(v, dict):
-                v = Message(v)
+                v = Message(v)  # noqa
             dct[k] = v
 
     # Having this iterator lets dict(msg_obj) work out of the box.
@@ -861,9 +861,9 @@ class Session(Configurable):
             stream.send_multipart(to_send, copy=copy)
 
         if self.debug:
-            pprint.pprint(msg)  # noqa
-            pprint.pprint(to_send)  # noqa
-            pprint.pprint(buffers)  # noqa
+            pprint.pprint(msg) 
+            pprint.pprint(to_send)
+            pprint.pprint(buffers)
 
         msg["tracker"] = tracker
 
@@ -1088,7 +1088,7 @@ class Session(Configurable):
             buffers = [memoryview(bytes(b.bytes)) for b in msg_list[5:]]
         message["buffers"] = buffers
         if self.debug:
-            pprint.pprint(message)  # noqa
+            pprint.pprint(message)
         # adapt to the current version
         return adapt(message)
 
