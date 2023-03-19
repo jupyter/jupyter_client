@@ -4,12 +4,14 @@ replies.
 import asyncio
 import atexit
 import time
+from concurrent.futures import Future
 from threading import Event, Thread
 from typing import Any, Dict, List, Optional
 
 import zmq
 from tornado.ioloop import IOLoop
 from traitlets import Instance, Type
+from traitlets.log import get_logger
 from zmq.eventloop import zmqstream
 
 from .channels import HBChannel
@@ -45,7 +47,7 @@ class ThreadedZMQSocketChannel:
         session : :class:`session.Session`
             The session to use.
         loop
-            A pyzmq ioloop to connect the socket to using a ZMQStream
+            A tornado ioloop to connect the socket to using a ZMQStream
         """
         super().__init__()
 
@@ -79,7 +81,30 @@ class ThreadedZMQSocketChannel:
         self._is_alive = False
 
     def close(self) -> None:
-        """ "Close the channel."""
+        """Close the channel."""
+        if self.stream is not None and self.ioloop is not None:
+            # c.f.Future for threadsafe results
+            f: Future = Future()
+
+            def close_stream():
+                try:
+                    if self.stream is not None:
+                        self.stream.close(linger=0)
+                        self.stream = None
+                except Exception as e:
+                    f.set_exception(e)
+                else:
+                    f.set_result(None)
+
+            self.ioloop.add_callback(close_stream)
+            # wait for result
+            try:
+                f.result(timeout=5)
+            except Exception as e:
+                log = get_logger()
+                msg = f"Error closing stream {self.stream}: {e}"
+                log.warning(msg, RuntimeWarning, stacklevel=2)
+
         if self.socket is not None:
             try:
                 self.socket.close(linger=0)
