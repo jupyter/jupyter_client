@@ -81,7 +81,7 @@ class ThreadedZMQSocketChannel:
         self._is_alive = False
 
     def close(self) -> None:
-        """ "Close the channel."""
+        """Close the channel."""
         if self.stream is not None and self.ioloop is not None:
             # c.f.Future for threadsafe results
             f: Future = Future()
