@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.1.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.3...e3ac7a69355dd1af66038eda767e51e92ef034fb))
+
+### Bugs fixed
+
+- ThreadedZMQStream: close stream before socket [#936](https://github.com/jupyter/jupyter_client/pull/936) ([@minrk](https://github.com/minrk))
+
+### Maintenance and upkeep improvements
+
+### Documentation improvements
+
+- Adds spec for the copyToGlobals request [#932](https://github.com/jupyter/jupyter_client/pull/932) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-02-16&to=2023-03-20&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-02-16..2023-03-20&type=Issues) | [@brichet](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Abrichet+updated%3A2023-02-16..2023-03-20&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2023-02-16..2023-03-20&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-02-16..2023-03-20&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.0.3
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.2...dc0eaba1f609079672ec739fcd977dc44431da92))
@@ -21,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-01-30&to=2023-02-16&type=c))
 
 [@andrehora](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aandrehora+updated%3A2023-01-30..2023-02-16&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-01-30..2023-02-16&type=Issues) | [@dcsaba89](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adcsaba89+updated%3A2023-01-30..2023-02-16&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2023-01-30..2023-02-16&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2023-01-30..2023-02-16&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-01-30..2023-02-16&type=Issues) | [@xl0](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Axl0+updated%3A2023-01-30..2023-02-16&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.0.2
 
