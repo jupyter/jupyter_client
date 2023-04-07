@@ -45,6 +45,8 @@ file = "LICENSE"
 
 [project.urls]
 Homepage = "https://jupyter.org"
+Documentation = "https://jupyter-client.readthedocs.io/"
+Source = "https://github.com/jupyter/jupyter_client"
 
 [project.optional-dependencies]
 test = [
