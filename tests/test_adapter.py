@@ -20,7 +20,7 @@ def test_default_version():
 
 def test_code_to_line_no_code():
     line, pos = code_to_line("", 0)
-    assert line == ""
+    assert line == ""  # noqa
     assert pos == 0
 
 

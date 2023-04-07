@@ -162,8 +162,11 @@ def launch_kernel(
             msg = msg.format(cmd, env.get("PATH", os.defpath), without_env)
             get_logger().error(msg)
         except Exception as ex2:  # Don't let a formatting/logger issue lead to the wrong exception
-            warnings.warn(f"Failed to run command: '{cmd}' due to exception: {ex}")
-            warnings.warn(f"The following exception occurred handling the previous failure: {ex2}")
+            warnings.warn(f"Failed to run command: '{cmd}' due to exception: {ex}", stacklevel=2)
+            warnings.warn(
+                f"The following exception occurred handling the previous failure: {ex2}",
+                stacklevel=2,
+            )
         raise ex
 
     if sys.platform == "win32":

@@ -261,7 +261,7 @@ def _load_ips(suppress_exceptions=True):
         if not suppress_exceptions:
             raise
         # unexpected error shouldn't crash, load dumb default values instead.
-        warn("Unexpected error discovering local network interfaces: %s" % e)
+        warn("Unexpected error discovering local network interfaces: %s" % e, stacklevel=2)
     _load_ips_dumb()
 
 
