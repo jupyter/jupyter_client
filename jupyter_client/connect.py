@@ -191,7 +191,9 @@ def find_connection_file(
     str : The absolute path of the connection file.
     """
     if profile is not None:
-        warnings.warn("Jupyter has no profiles. profile=%s has been ignored." % profile)
+        warnings.warn(
+            "Jupyter has no profiles. profile=%s has been ignored." % profile, stacklevel=2
+        )
     if path is None:
         path = [".", jupyter_runtime_dir()]
     if isinstance(path, str):
