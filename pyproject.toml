@@ -50,7 +50,6 @@ Source = "https://github.com/jupyter/jupyter_client"
 
 [project.optional-dependencies]
 test = [
-    "codecov",
     "coverage",
     "ipykernel>=6.14",
     "mypy",
@@ -141,6 +140,8 @@ filterwarnings= [
 ]
 
 [tool.coverage.report]
+relative_files = true
+source = ["jupyter_client"]
 exclude_lines = [
   "pragma: no cover",
   "def __repr__",
