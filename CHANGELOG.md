@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.2.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.1.0...dbf6b81fa5ab606eaedc5e8d0843debce18e8746))
+
+### Enhancements made
+
+- use c.f.Future to wait across threads [#940](https://github.com/jupyter/jupyter_client/pull/940) ([@minrk](https://github.com/minrk))
+
+### Maintenance and upkeep improvements
+
+- Use local coverage [#945](https://github.com/jupyter/jupyter_client/pull/945) ([@blink1073](https://github.com/blink1073))
+- Add more project URLs [#944](https://github.com/jupyter/jupyter_client/pull/944) ([@fcollonval](https://github.com/fcollonval))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-03-20&to=2023-04-13&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-03-20..2023-04-13&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afcollonval+updated%3A2023-03-20..2023-04-13&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2023-03-20..2023-04-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-03-20..2023-04-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.1.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.0.3...e3ac7a69355dd1af66038eda767e51e92ef034fb))
@@ -21,8 +42,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-02-16&to=2023-03-20&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-02-16..2023-03-20&type=Issues) | [@brichet](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Abrichet+updated%3A2023-02-16..2023-03-20&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2023-02-16..2023-03-20&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-02-16..2023-03-20&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.0.3
 
