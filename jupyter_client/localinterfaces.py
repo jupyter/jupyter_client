@@ -36,7 +36,7 @@ def _get_output(cmd):
     if os.name == "nt":
         startupinfo = subprocess.STARTUPINFO()  # type:ignore[attr-defined]
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW  # type:ignore[attr-defined]
-    p = Popen(cmd, stdout=PIPE, stderr=PIPE, startupinfo=startupinfo)
+    p = Popen(cmd, stdout=PIPE, stderr=PIPE, startupinfo=startupinfo)  # noqa
     stdout, stderr = p.communicate()
     if p.returncode:
         msg = "Failed to run {}: {}".format(cmd, stderr.decode("utf8", "replace"))
