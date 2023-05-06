@@ -152,7 +152,7 @@ def launch_kernel(
     try:
         # Allow to use ~/ in the command or its arguments
         cmd = [os.path.expanduser(s) for s in cmd]
-        proc = Popen(cmd, **kwargs)
+        proc = Popen(cmd, **kwargs)  # noqa
     except Exception as ex:
         try:
             msg = "Failed to run command:\n{}\n    PATH={!r}\n    with kwargs:\n{!r}\n"
