@@ -485,7 +485,7 @@ class ConnectionFileMixin(LoggingConfigurable):
 
         self.cleanup_connection_file()
 
-    def write_connection_file(self,**kwargs) -> None:
+    def write_connection_file(self, **kwargs) -> None:
         """Write connection info to JSON dict in self.connection_file."""
         if self._connection_file_written and os.path.exists(self.connection_file):
             return
@@ -502,7 +502,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             control_port=self.control_port,
             signature_scheme=self.session.signature_scheme,
             kernel_name=self.kernel_name,
-            **kwargs
+            **kwargs,
         )
         # write_connection_file also sets default ports:
         self._record_random_port_names()
