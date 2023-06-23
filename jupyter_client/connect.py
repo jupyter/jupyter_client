@@ -40,7 +40,7 @@ def write_connection_file(
     transport: str = "tcp",
     signature_scheme: str = "hmac-sha256",
     kernel_name: str = "",
-    **kwargs,
+    **kwargs: Any,
 ) -> Tuple[str, KernelConnectionInfo]:
     """Generates a JSON config file, including the selection of random ports.
 
@@ -485,7 +485,7 @@ class ConnectionFileMixin(LoggingConfigurable):
 
         self.cleanup_connection_file()
 
-    def write_connection_file(self, **kwargs) -> None:
+    def write_connection_file(self, **kwargs: Any) -> None:
         """Write connection info to JSON dict in self.connection_file."""
         if self._connection_file_written and os.path.exists(self.connection_file):
             return
