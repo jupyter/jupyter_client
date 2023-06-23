@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.3.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.2.0...bddb8854a4aa3324e128e0497539e17246fbf630))
+
+### Enhancements made
+
+- Allow kwargs when writting connection_file [#953](https://github.com/jupyter/jupyter_client/pull/953) ([@fecet](https://github.com/fecet))
+
+### Maintenance and upkeep improvements
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-04-13&to=2023-06-23&type=c))
+
+[@fecet](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afecet+updated%3A2023-04-13..2023-06-23&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-04-13..2023-06-23&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.2.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.1.0...dbf6b81fa5ab606eaedc5e8d0843debce18e8746))
@@ -20,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-03-20&to=2023-04-13&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-03-20..2023-04-13&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afcollonval+updated%3A2023-03-20..2023-04-13&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2023-03-20..2023-04-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-03-20..2023-04-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.1.0
 
