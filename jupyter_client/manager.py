@@ -185,7 +185,7 @@ class KernelManager(ConnectionFileMixin):
     cache_ports: Bool = Bool(
         False,
         config=True,
-        help="True if the MultiKernelManager should cache ports for this KernelManager instance"
+        help="True if the MultiKernelManager should cache ports for this KernelManager instance",
     )
 
     @default("cache_ports")  # type:ignore[misc]
