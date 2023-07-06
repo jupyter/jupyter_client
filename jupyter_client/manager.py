@@ -183,6 +183,8 @@ class KernelManager(ConnectionFileMixin):
         return self._kernel_spec
 
     cache_ports: Bool = Bool(
+        False,
+        config=True,
         help="True if the MultiKernelManager should cache ports for this KernelManager instance"
     )
 
