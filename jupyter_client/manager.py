@@ -655,6 +655,17 @@ class KernelManager(ConnectionFileMixin):
 
     is_alive = run_sync(_async_is_alive)
 
+    async def _async_exit_status(self) -> int | None:
+        """Returns 0 if there's no kernel or it exited gracefully,
+        None if the kernel is running, or a negative value `-N` if the
+        kernel was killed by signal `N` (posix only)."""
+        if not self.has_kernel:
+            return 0
+        assert self.provisioner is not None
+        return await self.provisioner.poll()
+
+    exit_status = run_sync(_async_exit_status)
+
     async def _async_wait(self, pollinterval: float = 0.1) -> None:
         # Use busy loop at 100ms intervals, polling until the process is
         # not alive.  If we find the process is no longer alive, complete

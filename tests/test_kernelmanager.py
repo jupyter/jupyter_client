@@ -160,6 +160,46 @@ class TestKernelManagerShutDownGracefully:
         assert km._shutdown_status in expected
 
 
+class TestKernelManagerExitStatus:
+    @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
+    @pytest.mark.parametrize('_signal', [signal.SIGHUP, signal.SIGTERM, signal.SIGKILL])
+    async def test_exit_status(self, _signal):
+        # install kernel
+        _install_kernel(name="test_exit_status")
+
+        # start kernel
+        km, kc = start_new_kernel(kernel_name="test_exit_status")
+
+        # stop restarter - not needed?
+        # km.stop_restarter()
+
+        # check that process is running
+        assert km.exit_status() is None
+
+        # get the provisioner
+        # send signal
+        provisioner = km.provisioner
+        assert provisioner is not None
+        assert provisioner.has_process
+        await provisioner.send_signal(_signal)
+
+        # wait for the process to exit
+        try:
+            await asyncio.wait_for(km._async_wait(), timeout=3.0)
+        except TimeoutError:
+            assert False, f'process never stopped for signal {signal}'
+
+        # check that the signal is correct
+        assert km.exit_status() == -_signal
+
+        # doing a proper shutdown now wipes the status, might be bad?
+        km.shutdown_kernel(now=True)
+        assert km.exit_status() == 0
+
+        # stop channels so cleanup doesn't complain
+        kc.stop_channels()
+
+
 class TestKernelManager:
     def test_lifecycle(self, km):
         km.start_kernel(stdout=PIPE, stderr=PIPE)
