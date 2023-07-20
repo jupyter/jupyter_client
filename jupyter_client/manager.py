@@ -655,7 +655,7 @@ class KernelManager(ConnectionFileMixin):
 
     is_alive = run_sync(_async_is_alive)
 
-    async def _async_exit_status(self) -> int | None:
+    async def _async_exit_status(self) -> t.Optional[int]:
         """Returns 0 if there's no kernel or it exited gracefully,
         None if the kernel is running, or a negative value `-N` if the
         kernel was killed by signal `N` (posix only)."""
