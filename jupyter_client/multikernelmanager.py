@@ -2,11 +2,13 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
+import json
 import os
 import socket
 import typing as t
 import uuid
 from functools import wraps
+from pathlib import Path
 
 import zmq
 from traitlets import Any, Bool, Dict, DottedObjectName, Instance, Unicode, default, observe
@@ -15,7 +17,7 @@ from traitlets.utils.importstring import import_item
 
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import KernelManager
-from .utils import ensure_async, run_sync
+from .utils import ensure_async, run_sync, utcnow
 
 
 class DuplicateKernelError(Exception):
@@ -105,8 +107,13 @@ class MultiKernelManager(LoggingConfigurable):
         return zmq.Context()
 
     connection_dir = Unicode("")
+    external_connection_dir = Unicode("")
 
     _kernels = Dict()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.kernel_id_to_connection_file = {}
 
     def __del__(self):
         """Handle garbage collection.  Destroy context if applicable."""
@@ -123,6 +130,56 @@ class MultiKernelManager(LoggingConfigurable):
 
     def list_kernel_ids(self) -> t.List[str]:
         """Return a list of the kernel ids of the active kernels."""
+        if self.external_connection_dir:
+            connection_files = [
+                p for p in Path(self.external_connection_dir).iterdir() if p.is_file()
+            ]
+
+            # remove kernels (whose connection file has disappeared) from our list
+            k = list(self.kernel_id_to_connection_file.keys())
+            v = list(self.kernel_id_to_connection_file.values())
+            for connection_file in list(self.kernel_id_to_connection_file.values()):
+                if connection_file not in connection_files:
+                    kernel_id = k[v.index(connection_file)]
+                    del self.kernel_id_to_connection_file[kernel_id]
+                    del self._kernels[kernel_id]
+
+            # add kernels (whose connection file appeared) to our list
+            for connection_file in connection_files:
+                if connection_file in self.kernel_id_to_connection_file.values():
+                    continue
+                try:
+                    connection_info = json.loads(connection_file.read_text())
+                except Exception:
+                    continue
+                if not ("kernel_name" in connection_info and "key" in connection_info):
+                    continue
+                # it looks like a connection file
+                kernel_id = self.new_kernel_id()
+                self.kernel_id_to_connection_file[kernel_id] = connection_file
+                km = self.kernel_manager_factory(
+                    parent=self,
+                    log=self.log,
+                    owns_kernel=False,
+                )
+                km.last_activity = utcnow()
+                km.execution_state = "idle"
+                km.connections = 1
+                km.kernel_id = kernel_id
+                km.shell_port = connection_info["shell_port"]
+                km.iopub_port = connection_info["iopub_port"]
+                km.stdin_port = connection_info["stdin_port"]
+                km.control_port = connection_info["control_port"]
+                km.hb_port = connection_info["hb_port"]
+                km.ip = connection_info["ip"]
+                km.transport = connection_info["transport"]
+                km.session.key = connection_info["key"].encode()
+                km.session.signature_scheme = connection_info["signature_scheme"]
+                km.kernel_name = connection_info["kernel_name"]
+                km.ready.set_result(None)
+
+                self._kernels[kernel_id] = km
+
         # Create a copy so we can iterate over kernels in operations
         # that delete keys.
         return list(self._kernels.keys())
