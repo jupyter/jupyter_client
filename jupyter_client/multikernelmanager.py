@@ -150,7 +150,7 @@ class MultiKernelManager(LoggingConfigurable):
                     continue
                 try:
                     connection_info = json.loads(connection_file.read_text())
-                except Exception:
+                except Exception:  # noqa: S112
                     continue
                 if not ("kernel_name" in connection_info and "key" in connection_info):
                     continue
