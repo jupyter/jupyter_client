@@ -15,6 +15,7 @@ from traitlets import Any, Bool, Dict, DottedObjectName, Instance, Unicode, defa
 from traitlets.config.configurable import LoggingConfigurable
 from traitlets.utils.importstring import import_item
 
+from .connect import KernelConnectionInfo
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import KernelManager
 from .utils import ensure_async, run_sync, utcnow
@@ -149,9 +150,12 @@ class MultiKernelManager(LoggingConfigurable):
                     if connection_file in self.kernel_id_to_connection_file.values():
                         continue
                     try:
-                        connection_info = json.loads(connection_file.read_text())
+                        connection_info: KernelConnectionInfo = json.loads(
+                            connection_file.read_text()
+                        )
                     except Exception:  # noqa: S112
                         continue
+                    self.log.debug("Loading connection file %s", connection_file)
                     if not ("kernel_name" in connection_info and "key" in connection_info):
                         continue
                     # it looks like a connection file
@@ -162,19 +166,11 @@ class MultiKernelManager(LoggingConfigurable):
                         log=self.log,
                         owns_kernel=False,
                     )
+                    km.load_connection_info(connection_info)
                     km.last_activity = utcnow()
                     km.execution_state = "idle"
                     km.connections = 1
                     km.kernel_id = kernel_id
-                    km.shell_port = connection_info["shell_port"]
-                    km.iopub_port = connection_info["iopub_port"]
-                    km.stdin_port = connection_info["stdin_port"]
-                    km.control_port = connection_info["control_port"]
-                    km.hb_port = connection_info["hb_port"]
-                    km.ip = connection_info["ip"]
-                    km.transport = connection_info["transport"]
-                    km.session.key = connection_info["key"].encode()
-                    km.session.signature_scheme = connection_info["signature_scheme"]
                     km.kernel_name = connection_info["kernel_name"]
                     km.ready.set_result(None)
 
