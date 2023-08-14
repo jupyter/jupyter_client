@@ -472,8 +472,9 @@ class KernelManager(ConnectionFileMixin):
 
         if self._created_context and not restart:
             self.context.destroy(linger=100)
-
-        await self.provisioner.cleanup(restart=restart, restart_in_place=restart_in_place)
+        
+        if self.provisioner:
+            await self.provisioner.cleanup(restart=restart, restart_in_place=restart_in_place)
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
