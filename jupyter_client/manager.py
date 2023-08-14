@@ -459,7 +459,9 @@ class KernelManager(ConnectionFileMixin):
 
     finish_shutdown = run_sync(_async_finish_shutdown)
 
-    async def _async_cleanup_resources(self, restart: bool = False) -> None:
+    async def _async_cleanup_resources(
+        self, restart: bool = False, restart_in_place: bool = False
+    ) -> None:
         """Clean up resources when the kernel is shut down"""
         if not restart:
             self.cleanup_connection_file()
@@ -471,13 +473,14 @@ class KernelManager(ConnectionFileMixin):
         if self._created_context and not restart:
             self.context.destroy(linger=100)
 
-        if self.provisioner:
-            await self.provisioner.cleanup(restart=restart)
+        await self.provisioner.cleanup(restart=restart, restart_in_place=restart_in_place)
 
     cleanup_resources = run_sync(_async_cleanup_resources)
 
     @in_pending_state
-    async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False) -> None:
+    async def _async_shutdown_kernel(
+        self, now: bool = False, restart: bool = False, restart_in_place: bool = False
+    ) -> None:
         """Attempts to stop the kernel process cleanly.
 
         This attempts to shutdown the kernels cleanly by:
@@ -511,12 +514,12 @@ class KernelManager(ConnectionFileMixin):
             # most 1s, checking every 0.1s.
             await self._async_finish_shutdown(restart=restart)
 
-        await self._async_cleanup_resources(restart=restart)
+        await self._async_cleanup_resources(restart=restart, restart_in_place=restart_in_place)
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
     async def _async_restart_kernel(
-        self, now: bool = False, newports: bool = False, **kw: t.Any
+        self, now: bool = False, newports: bool = False, restart_in_place: bool = False, **kw: t.Any
     ) -> None:
         """Restarts a kernel with the arguments that were used to launch it.
 
@@ -547,7 +550,7 @@ class KernelManager(ConnectionFileMixin):
             raise RuntimeError(msg)
 
         # Stop currently running kernel.
-        await self._async_shutdown_kernel(now=now, restart=True)
+        await self._async_shutdown_kernel(now=now, restart=True, restart_in_place=restart_in_place)
 
         if newports:
             self.cleanup_random_ports()

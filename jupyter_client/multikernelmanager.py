@@ -349,7 +349,9 @@ class MultiKernelManager(LoggingConfigurable):
         """
         self.log.info("Signaled Kernel %s with %s", kernel_id, signum)
 
-    async def _async_restart_kernel(self, kernel_id: str, now: bool = False) -> None:
+    async def _async_restart_kernel(
+        self, kernel_id: str, now: bool = False, restart_in_place: bool = False
+    ) -> None:
         """Restart a kernel by its uuid, keeping the same ports.
 
         Parameters
@@ -368,7 +370,7 @@ class MultiKernelManager(LoggingConfigurable):
         if self._using_pending_kernels() and not kernel.ready.done():
             msg = "Kernel is in a pending state. Cannot restart."
             raise RuntimeError(msg)
-        await ensure_async(kernel.restart_kernel(now=now))
+        await ensure_async(kernel.restart_kernel(now=now, restart_in_place=restart_in_place))
         self.log.info("Kernel restarted: %s", kernel_id)
 
     restart_kernel = run_sync(_async_restart_kernel)
