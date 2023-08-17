@@ -72,6 +72,26 @@ class KernelRestarter(LoggingConfigurable):
         msg = "Must be implemented in a subclass"
         raise NotImplementedError(msg)
 
+    @t.overload
+    def add_callback(
+        self,
+        f: t.Callable[[int], object],
+        event: str = "restart",
+        *,
+        accepts_exit_code: t.Literal[True],
+    ) -> None:
+        ...
+
+    @t.overload
+    def add_callback(
+        self,
+        f: t.Callable[[], object],
+        event: str = "restart",
+        *,
+        accepts_exit_code: t.Literal[False] = False,
+    ) -> None:
+        ...
+
     def add_callback(
         self,
         f: t.Callable[[], object] | t.Callable[[int], object],
@@ -87,7 +107,7 @@ class KernelRestarter(LoggingConfigurable):
           'dead': restart has failed, kernel will be left dead.
 
         """
-        # no dynamic validation that the callable is valid in accordance to accepts_exit_code
+        # the type correlation from overloads is not tracked to here by mypy
         self.callbacks[event].append((f, accepts_exit_code))  # type: ignore[arg-type]
 
     def remove_callback(self, f, event="restart"):
