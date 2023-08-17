@@ -4,7 +4,9 @@
 import asyncio
 import json
 import os
+import signal
 import sys
+import typing as t
 from concurrent.futures import Future
 
 import pytest
@@ -95,9 +97,9 @@ async def test_restart_check(config, install_kernel, debug_logging):
     km = IOLoopKernelManager(kernel_name=install_kernel, config=config)
 
     cbs = 0
-    restarts: list = [Future() for i in range(N_restarts)]
+    restarts: t.List[Future[bool]] = [Future() for i in range(N_restarts)]
 
-    def cb():
+    def cb() -> None:
         nonlocal cbs
         if cbs >= N_restarts:
             raise RuntimeError("Kernel restarted more than %d times!" % N_restarts)
@@ -123,6 +125,62 @@ async def test_restart_check(config, install_kernel, debug_logging):
                 assert km.provisioner is not None
                 await km.provisioner.kill()
                 restarts[i].result()
+                # Wait for kill + restart
+                max_wait = 10.0
+                waited = 0.0
+                while waited < max_wait and km.is_alive():
+                    await asyncio.sleep(0.1)
+                    waited += 0.1
+                while waited < max_wait and not km.is_alive():
+                    await asyncio.sleep(0.1)
+                    waited += 0.1
+
+        assert cbs == N_restarts
+        assert km.is_alive()
+
+    finally:
+        km.shutdown_kernel(now=True)
+        assert km.context.closed
+
+
+@win_skip
+async def test_restart_check_exit_status(config, install_kernel, debug_logging):
+    """Test that the kernel is restarted and recovers, and validates the exit code."""
+    # If this test fails, run it with --log-cli-level=DEBUG to inspect
+    N_restarts = 1
+    config.KernelRestarter.restart_limit = N_restarts
+    config.KernelRestarter.debug = True
+    km = IOLoopKernelManager(kernel_name=install_kernel, config=config)
+
+    cbs = 0
+    restarts: t.List[Future[int]] = [Future() for i in range(N_restarts)]
+
+    def cb(exit_status: int) -> None:
+        nonlocal cbs
+        if cbs >= N_restarts:
+            raise RuntimeError("Kernel restarted more than %d times!" % N_restarts)
+        restarts[cbs].set_result(exit_status)
+        cbs += 1
+
+    try:
+        km.start_kernel()
+        km.add_restart_callback(cb, 'restart', accepts_exit_code=True)
+    except BaseException:
+        if km.has_kernel:
+            km.shutdown_kernel()
+        raise
+
+    try:
+        for i in range(N_restarts + 1):
+            kc = km.client()
+            kc.start_channels()
+            kc.wait_for_ready(timeout=60)
+            kc.stop_channels()
+            if i < N_restarts:
+                # Kill without cleanup to simulate crash:
+                assert km.provisioner is not None
+                await km.provisioner.kill()
+                assert restarts[i].result() == -signal.SIGKILL
                 # Wait for kill + restart
                 max_wait = 10.0
                 waited = 0.0
