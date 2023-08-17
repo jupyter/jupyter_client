@@ -88,7 +88,7 @@ win_skip = pytest.mark.skipif(
 @win_skip
 async def test_restart_check(config, install_kernel, debug_logging):
     """Test that the kernel is restarted and recovers"""
-    # If this test failes, run it with --log-cli-level=DEBUG to inspect
+    # If this test fails, run it with --log-cli-level=DEBUG to inspect
     N_restarts = 1
     config.KernelRestarter.restart_limit = N_restarts
     config.KernelRestarter.debug = True
@@ -144,7 +144,7 @@ async def test_restart_check(config, install_kernel, debug_logging):
 @win_skip
 async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
     """Test that the restarter gives up after reaching the restart limit"""
-    # If this test failes, run it with --log-cli-level=DEBUG to inspect
+    # If this test fails, run it with --log-cli-level=DEBUG to inspect
     N_restarts = 1
     config.KernelRestarter.restart_limit = N_restarts
     config.KernelRestarter.debug = True
@@ -188,7 +188,7 @@ async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
 
 async def test_async_restart_check(config, install_kernel, debug_logging):
     """Test that the kernel is restarted and recovers"""
-    # If this test failes, run it with --log-cli-level=DEBUG to inspect
+    # If this test fails, run it with --log-cli-level=DEBUG to inspect
     N_restarts = 1
     config.KernelRestarter.restart_limit = N_restarts
     config.KernelRestarter.debug = True
@@ -243,7 +243,7 @@ async def test_async_restart_check(config, install_kernel, debug_logging):
 
 async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_logging):
     """Test that the restarter gives up after reaching the restart limit"""
-    # If this test failes, run it with --log-cli-level=DEBUG to inspect
+    # If this test fails, run it with --log-cli-level=DEBUG to inspect
     N_restarts = 2
     config.KernelRestarter.restart_limit = N_restarts
     config.KernelRestarter.debug = True

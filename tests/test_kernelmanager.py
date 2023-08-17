@@ -161,6 +161,7 @@ class TestKernelManagerShutDownGracefully:
 
 
 class TestKernelManagerExitStatus:
+    @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     @pytest.mark.parametrize('_signal', [signal.SIGILL, signal.SIGSEGV, signal.SIGTERM])
     async def test_exit_status(self, _signal):
         # install kernel

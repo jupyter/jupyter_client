@@ -231,11 +231,17 @@ class KernelManager(ConnectionFileMixin):
         """Stop the kernel restarter."""
         pass
 
-    def add_restart_callback(self, callback: t.Callable, event: str = "restart") -> None:
+    def add_restart_callback(
+        self,
+        callback: t.Callable[[], object] | t.Callable[[int], object],
+        event: str = "restart",
+        *,
+        accepts_exit_code: bool = False,
+    ) -> None:
         """Register a callback to be called when a kernel is restarted"""
         if self._restarter is None:
             return
-        self._restarter.add_callback(callback, event)
+        self._restarter.add_callback(callback, event, accepts_exit_code=accepts_exit_code)
 
     def remove_restart_callback(self, callback: t.Callable, event: str = "restart") -> None:
         """Unregister a callback to be called when a kernel is restarted"""
