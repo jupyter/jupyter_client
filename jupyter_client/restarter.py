@@ -7,7 +7,6 @@ It is an incomplete base class, and must be subclassed.
 """
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import functools
 import time
 import typing as t
 
@@ -58,7 +57,7 @@ class KernelRestarter(LoggingConfigurable):
         return time.time()
 
     # traitlets.Dict is not typed generic
-    callbacks: t.Dict[str, t.List[t.Callable[[int], object]]] = Dict()  # type: ignore
+    callbacks: t.Dict[str, t.List[t.Tuple[t.Callable[[int], object], t.Literal[True]] | t.Tuple[t.Callable[[], object], t.Literal[False]]]] = Dict()  # type: ignore[assignment]
 
     def _callbacks_default(self):
         return {"restart": [], "dead": []}
@@ -88,16 +87,8 @@ class KernelRestarter(LoggingConfigurable):
           'dead': restart has failed, kernel will be left dead.
 
         """
-        if not accepts_exit_code:
-
-            @functools.wraps(f)
-            def ignore_exit_code(code: int) -> object:
-                return f()  # type: ignore[call-arg]
-
-            f = ignore_exit_code
-            self.callbacks[event].append(f)
-
-        self.callbacks[event].append(f)  # type: ignore[arg-type]
+        # no dynamic validation that the callable is valid in accordance to accepts_exit_code
+        self.callbacks[event].append((f, accepts_exit_code))  # type: ignore[arg-type]
 
     def remove_callback(self, f, event="restart"):
         """unregister a callback to fire on a particular event
@@ -115,14 +106,18 @@ class KernelRestarter(LoggingConfigurable):
 
     def _fire_callbacks(self, event, status):
         """fire our callbacks for a particular event"""
+        # unpacking in the loop breaks the connection between the variables for mypy
         for callback in self.callbacks[event]:
             try:
-                callback(status)
+                if callback[1] is True:
+                    callback[0](status)
+                else:
+                    callback[0]()
             except Exception:
                 self.log.error(
                     "KernelRestarter: %s callback %r failed",
                     event,
-                    callback,
+                    callback[0],
                     exc_info=True,
                 )
 
