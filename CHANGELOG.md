@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.3.1
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.3.0...b4f7d947fae55a4fe59a27df0830a9a78dcd4e12))
+
+### Enhancements made
+
+- Support external kernels [#961](https://github.com/jupyter/jupyter_client/pull/961) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Bugs fixed
+
+- Make cache_ports configurable with default value of False. [#956](https://github.com/jupyter/jupyter_client/pull/956) ([@jkitchin](https://github.com/jkitchin))
+
+### Maintenance and upkeep improvements
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-06-23&to=2023-08-29&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-06-23..2023-08-29&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2023-06-23..2023-08-29&type=Issues) | [@jkitchin](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ajkitchin+updated%3A2023-06-23..2023-08-29&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2023-06-23..2023-08-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-06-23..2023-08-29&type=Issues) | [@tmaxwell-anthropic](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Atmaxwell-anthropic+updated%3A2023-06-23..2023-08-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.3.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.2.0...bddb8854a4aa3324e128e0497539e17246fbf630))
@@ -17,8 +39,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-04-13&to=2023-06-23&type=c))
 
 [@fecet](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afecet+updated%3A2023-04-13..2023-06-23&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-04-13..2023-06-23&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.2.0
 
