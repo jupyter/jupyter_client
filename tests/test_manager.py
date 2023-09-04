@@ -7,7 +7,7 @@ from unittest import mock
 import asyncio
 
 from jupyter_client.kernelspec import KernelSpec
-from jupyter_client.manager import KernelManager, in_pending_state
+from jupyter_client.manager import KernelManager
 
 def test_connection_file_real_path():
     """Verify realpath is used when formatting connection file"""
