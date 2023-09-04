@@ -99,8 +99,11 @@ def in_pending_state(method: F) -> F:
                     self._ready.set_result(None)
             return out
         except Exception as e:
-            self._ready.set_exception(e)
-            self.log.exception(self._ready.exception())
+            if self.owns_kernel:
+                self._ready_count -= 1
+                if self._ready_count == 0:
+                    self._ready.set_exception(e)
+            self.log.exception(e)
             raise e
 
     return t.cast(F, wrapper)
