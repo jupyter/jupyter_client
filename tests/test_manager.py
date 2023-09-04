@@ -1,10 +1,10 @@
 """Tests for KernelManager"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import asyncio
 import os
 import tempfile
 from unittest import mock
-import asyncio
 
 from jupyter_client.kernelspec import KernelSpec
 from jupyter_client.manager import KernelManager
@@ -43,4 +43,4 @@ async def test_in_pending_state():
 
     await start_kernel
     await shutdown_kernel
-    assert tm.is_alive() == False
+    assert tm.is_alive() is False
