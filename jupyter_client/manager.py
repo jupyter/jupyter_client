@@ -78,15 +78,25 @@ def in_pending_state(method: F) -> F:
     @functools.wraps(method)
     async def wrapper(self, *args, **kwargs):
         """Create a future for the decorated method."""
-        if self._attempted_start or not self._ready:
-            self._ready = _get_future()
+        # Initialize the ready_count to 0 if it doesn't exist
+        if self.owns_kernel:
+            if not hasattr(self, "_ready_count"):
+                self._ready_count = 0
+
+            if self._ready_count == 0:
+                self._ready = _get_future()
+
+            self._ready_count += 1
+
         try:
             # call wrapped method, await, and set the result or exception.
             out = await method(self, *args, **kwargs)
             # Add a small sleep to ensure tests can capture the state before done
             await asyncio.sleep(0.01)
             if self.owns_kernel:
-                self._ready.set_result(None)
+                self._ready_count -= 1
+                if self._ready_count == 0:
+                    self._ready.set_result(None)
             return out
         except Exception as e:
             self._ready.set_exception(e)
@@ -109,7 +119,6 @@ class KernelManager(ConnectionFileMixin):
         self._owns_kernel = kwargs.pop("owns_kernel", True)
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
-        self._attempted_start = False
         self._ready = None
 
     _created_context: Bool = Bool(False)
@@ -397,7 +406,6 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        self._attempted_start = True
         kernel_cmd, kw = await self._async_pre_start_kernel(**kw)
 
         # launch the kernel subprocess
