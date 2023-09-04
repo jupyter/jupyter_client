@@ -9,6 +9,7 @@ import asyncio
 from jupyter_client.kernelspec import KernelSpec
 from jupyter_client.manager import KernelManager
 
+
 def test_connection_file_real_path():
     """Verify realpath is used when formatting connection file"""
     with mock.patch("os.path.realpath") as patched_realpath:
@@ -32,6 +33,7 @@ def test_connection_file_real_path():
         km._launch_args = {}
         cmds = km.format_kernel_cmd()
         assert cmds[4] == "foobar"
+
 
 async def test_in_pending_state():
     """Verify in_pending_state race condition"""
