@@ -167,10 +167,10 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
             if km.transport == 'tcp' and not is_local_ip(km.ip):
                 msg = (
                     "Can only launch a kernel on a local interface. "
-                    "This one is not: {}."
+                    f"This one is not: {km.ip}."
                     "Make sure that the '*_address' attributes are "
                     "configured properly. "
-                    "Currently valid addresses are: {}".format(km.ip, local_ips())
+                    f"Currently valid addresses are: {local_ips()}"
                 )
                 raise RuntimeError(msg)
             # build the Popen cmd
