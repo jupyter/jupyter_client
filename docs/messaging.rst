@@ -1049,13 +1049,14 @@ multiple cases:
   IPythonQt client) to force a kernel restart to get a clean kernel without
   losing client-side state like history or inlined figures.
 
-A restart should optimally preserve as many resources outside the kernel as
-possible (e.g. only restart the kernel and its subprocesses and not any
-parent processes). That is, ideally a restart should be "in-place". For local
-kernels, there is typically no parent process so a "hard" restart and an in-place
-restart are identical whereas for remote kernels this is not generally the same.
-
-.. versionchanged:: 5.4
+Implementation recommendation for starting kernels: A restart should optimally
+preserve as many resources outside the kernel as possible (e.g. only restart the
+kernel and its subprocesses and not any parent processes). That is, ideally a
+restart should be "in-place". For local kernels, there is typically no parent
+process so a "hard" restart and an in-place restart are identical whereas for
+remote kernels this is not generally the same. As an example, if a remote kernel
+is run in a container, during an in-place restart the container may be kept
+running and a new kernel process within it would be started.
 
 The client sends a shutdown request to the kernel, and once it receives the
 reply message (which is otherwise empty), it can assume that the kernel has
