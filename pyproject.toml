@@ -103,7 +103,7 @@ nowarn = "test -W default {args}"
 
 [tool.hatch.envs.typing]
 features = ["test"]
-dependencies = ["mypy>=0.990"]
+dependencies = ["mypy>=1.5.1"]
 [tool.hatch.envs.typing.scripts]
 test = "mypy --install-types --non-interactive {args:.}"
 
@@ -126,7 +126,13 @@ fmt = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "-raXs --durations 10 --color=yes --doctest-modules"
+minversion = "6.0"
+xfail_strict = true
+log_cli_level = "info"
+addopts = [
+  "-raXs", "--durations=10", "--color=yes", "--doctest-modules",
+   "--showlocals", "--strict-markers", "--strict-config"
+]
 testpaths = [
     "jupyter_client",
     "tests/"
@@ -165,6 +171,7 @@ check_untyped_defs = true
 disallow_any_generics = false
 disallow_incomplete_defs = true
 disallow_untyped_decorators = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 no_implicit_optional = true
 no_implicit_reexport = false
 pretty = true
@@ -175,6 +182,7 @@ strict_optional = true
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_return_any = false
+warn_unreachable = true
 warn_unused_ignores = true
 
 
@@ -287,3 +295,6 @@ ignore-nested-functions=true
 ignore-nested-classes=true
 fail-under=90
 exclude = ["docs", "test"]
+
+[tool.repo-review]
+ignore = ["PY007", "PP308", "GH102", "PC140", "MY101"]
