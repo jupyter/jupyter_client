@@ -26,7 +26,7 @@ class ProblemTestApp(IPKernelApp):
 
     def init_sockets(self):
         if os.environ.get("FAIL_ON_START") == "1":
-            # Simulates e.g. a port binding issue (Adress already in use)
+            # Simulates e.g. a port binding issue (Address already in use)
             raise RuntimeError("Failed for testing purposes")
         return super().init_sockets()
 

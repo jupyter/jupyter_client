@@ -189,7 +189,7 @@ class KernelSpecManager(LoggingConfigurable):
         # but the cost to keeping it is very small.
         try:
             # this should always be valid on IPython 3+
-            from IPython.paths import get_ipython_dir
+            from IPython.paths import get_ipython_dir  # type:ignore[import]
 
             dirs.append(os.path.join(get_ipython_dir(), "kernels"))
         except ModuleNotFoundError:

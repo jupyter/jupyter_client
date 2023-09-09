@@ -30,7 +30,7 @@
 
 ### Enhancements made
 
-- Allow kwargs when writting connection_file [#953](https://github.com/jupyter/jupyter_client/pull/953) ([@fecet](https://github.com/fecet))
+- Allow kwargs when writing connection_file [#953](https://github.com/jupyter/jupyter_client/pull/953) ([@fecet](https://github.com/fecet))
 
 ### Maintenance and upkeep improvements
 
@@ -574,7 +574,7 @@ No merged PRs
 
 ### Enhancements made
 
-- Further improvements to pending kernels managment [#732](https://github.com/jupyter/jupyter_client/pull/732) ([@Zsailer](https://github.com/Zsailer))
+- Further improvements to pending kernels management [#732](https://github.com/jupyter/jupyter_client/pull/732) ([@Zsailer](https://github.com/Zsailer))
 
 ### Maintenance and upkeep improvements
 

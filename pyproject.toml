@@ -185,6 +185,10 @@ warn_return_any = false
 warn_unreachable = true
 warn_unused_ignores = true
 
+[[tool.mypy.overrides]]
+module = "tests.*"
+disable_error_code = ["ignore-without-code"]
+warn_unreachable = false
 
 [tool.black]
 line-length = 100
