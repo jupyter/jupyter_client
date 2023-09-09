@@ -694,8 +694,8 @@ class AsyncKernelManager(KernelManager):
         return zmq.asyncio.Context()
 
     def client(
-        self, **kwargs: t.Any
-    ) -> AsyncKernelClient:  # type:ignore[explicit-override, override]
+        self, **kwargs: t.Any  # type:ignore[explicit-override, override]
+    ) -> AsyncKernelClient:
         """Get a client for the manager."""
         return super().client(**kwargs)  # type:ignore[return-value]
 
