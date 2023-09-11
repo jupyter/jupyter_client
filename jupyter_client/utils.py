@@ -7,7 +7,7 @@ import os
 
 from jupyter_core.utils import ensure_async, run_sync  # noqa: F401  # noqa: F401
 
-from .session import utcnow
+from .session import utcnow  # noqa
 
 
 def _filefind(filename, path_dirs=None):
