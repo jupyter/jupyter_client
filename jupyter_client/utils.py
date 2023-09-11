@@ -9,6 +9,7 @@ from jupyter_core.utils import ensure_async, run_sync  # noqa: F401  # noqa: F40
 
 from .session import utcnow
 
+
 def _filefind(filename, path_dirs=None):
     """Find a file by looking through a sequence of paths.
 
