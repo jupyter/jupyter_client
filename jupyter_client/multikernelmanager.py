@@ -250,7 +250,7 @@ class MultiKernelManager(LoggingConfigurable):
         """
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         if not isinstance(km, KernelManager):
-            self.log.warning(
+            self.log.warning(  # type:ignore[unreachable]
                 "Kernel manager class ({km_class}) is not an instance of 'KernelManager'!".format(
                     km_class=self.kernel_manager_class.__class__
                 )
@@ -269,7 +269,7 @@ class MultiKernelManager(LoggingConfigurable):
             await task
             # raise an exception if one occurred during kernel startup.
             if km.ready.exception():
-                raise km.ready.exception()  # type: ignore
+                raise km.ready.exception()  # type: ignore[misc]
 
         return kernel_id
 
@@ -318,7 +318,7 @@ class MultiKernelManager(LoggingConfigurable):
             await fut
             # raise an exception if one occurred during kernel shutdown.
             if km.ready.exception():
-                raise km.ready.exception()  # type: ignore
+                raise km.ready.exception()  # type: ignore[misc]
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 

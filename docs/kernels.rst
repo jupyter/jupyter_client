@@ -143,14 +143,14 @@ JSON serialised dictionary containing the following keys and values:
   characters.
 - **language**: The name of the language of the kernel.
   When loading notebooks, if no matching kernelspec key (may differ across machines)
-  is found, a kernel with a matching `language` will be used.
+  is found, a kernel with a matching ``language`` will be used.
   This allows a notebook written on any Python or Julia kernel to be properly associated
   with the user's Python or Julia kernel, even if they aren't listed under the
   same name as the author's.
 - **interrupt_mode** (optional): May be either ``signal`` or ``message`` and
   specifies how a client is supposed to interrupt cell execution on this kernel,
   either by sending an interrupt ``signal`` via the operating system's
-  signalling facilities (e.g. `SIGINT` on POSIX systems), or by sending an
+  signalling facilities (e.g. ``SIGINT`` on POSIX systems), or by sending an
   ``interrupt_request`` message on the control channel (see
   :ref:`msging_interrupt`). If this is not specified
   the client will default to ``signal`` mode.

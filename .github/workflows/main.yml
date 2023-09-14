@@ -11,9 +11,7 @@ concurrency:
 
 defaults:
   run:
-    shell:
-      bash -eux {0}
-
+    shell: bash -eux {0}
 
 jobs:
   check_release:
@@ -99,8 +97,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      -  name: Run Linters
-         run: |
+      - name: Run Linters
+        run: |
           hatch run typing:test
           hatch run lint:style
           pipx run interrogate -v .
