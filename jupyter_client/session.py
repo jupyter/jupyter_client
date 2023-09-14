@@ -197,7 +197,7 @@ def default_secure(cfg: t.Any) -> None:  # pragma: no cover
 
 def utcnow() -> datetime:
     """Return timezone-aware UTC timestamp"""
-    return datetime.utcnow().replace(tzinfo=utc)  # noqa
+    return datetime.now(utc)
 
 
 # -----------------------------------------------------------------------------
