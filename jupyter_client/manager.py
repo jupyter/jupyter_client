@@ -297,7 +297,7 @@ class KernelManager(ConnectionFileMixin):
             "prefix": sys.prefix,
         }
 
-        if self.kernel_spec:
+        if self.kernel_spec:  # type:ignore[truthy-bool]
             ns["resource_dir"] = self.kernel_spec.resource_dir
 
         ns.update(self._launch_args)
@@ -693,9 +693,11 @@ class AsyncKernelManager(KernelManager):
         self._created_context = True
         return zmq.asyncio.Context()
 
-    def client(self, **kwargs: t.Any) -> AsyncKernelClient:  # type:ignore
+    def client(  # type:ignore[override]
+        self, **kwargs: t.Any
+    ) -> AsyncKernelClient:
         """Get a client for the manager."""
-        return super().client(**kwargs)  # type:ignore
+        return super().client(**kwargs)  # type:ignore[return-value]
 
     _launch_kernel = KernelManager._async_launch_kernel  # type:ignore[assignment]
     start_kernel: t.Callable[

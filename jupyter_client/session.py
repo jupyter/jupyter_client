@@ -809,7 +809,7 @@ class Session(Configurable):
             track = False
 
         if isinstance(stream, zmq.asyncio.Socket):
-            assert stream is not None
+            assert stream is not None  # type:ignore[unreachable]
             stream = zmq.Socket.shadow(stream.underlying)
 
         if isinstance(msg_or_type, (Message, dict)):
@@ -926,8 +926,8 @@ class Session(Configurable):
             [idents] is a list of idents and msg is a nested message dict of
             same format as self.msg returns.
         """
-        if isinstance(socket, ZMQStream):
-            socket = socket.socket
+        if isinstance(socket, ZMQStream):  # type:ignore[unreachable]
+            socket = socket.socket  # type:ignore[unreachable]
         if isinstance(socket, zmq.asyncio.Socket):
             socket = zmq.Socket.shadow(socket.underlying)
 

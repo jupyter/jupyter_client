@@ -147,7 +147,7 @@ class ThreadedZMQSocketChannel:
         msg = self.session.deserialize(smsg)
         # let client inspect messages
         if self._inspect:
-            self._inspect(msg)
+            self._inspect(msg)  # type:ignore[unreachable]
         self.call_handlers(msg)
 
     def call_handlers(self, msg: Dict[str, Any]) -> None:
