@@ -16,7 +16,7 @@ import os
 import os.path as osp
 import shutil
 
-from sphinx.util import logging
+from sphinx.util import logging  # type:ignore[import]
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
