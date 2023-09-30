@@ -299,7 +299,8 @@ class ThreadedKernelClient(KernelClient):
 
     @property
     def ioloop(self):
-        return self.ioloop_thread.ioloop
+        if self.ioloop_thread:
+            return self.ioloop_thread.ioloop
 
     ioloop_thread = Instance(IOLoopThread, allow_none=True)
 
@@ -329,7 +330,7 @@ class ThreadedKernelClient(KernelClient):
     def stop_channels(self) -> None:
         """Stop the channels on the client."""
         super().stop_channels()
-        if self.ioloop_thread.is_alive():
+        if self.ioloop_thread and self.ioloop_thread.is_alive():
             self.ioloop_thread.stop()
 
     iopub_channel_class = Type(ThreadedZMQSocketChannel)

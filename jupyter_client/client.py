@@ -115,7 +115,9 @@ class KernelClient(ConnectionFileMixin):
 
     def __del__(self):
         """Handle garbage collection.  Destroy context if applicable."""
-        if self._created_context and self.context and not self.context.closed:
+        if (
+            self._created_context and self.context is not None and not self.context.closed
+        ):  # type:ignore[redundant-expr]
             if self.channels_running:
                 if self.log:
                     self.log.warning("Could not destroy zmq context for %s", self)
@@ -349,7 +351,9 @@ class KernelClient(ConnectionFileMixin):
             url = self._make_url("shell")
             self.log.debug("connecting shell channel to %s", url)
             socket = self.connect_shell(identity=self.session.bsession)
-            self._shell_channel = self.shell_channel_class(socket, self.session, self.ioloop)
+            self._shell_channel = self.shell_channel_class(
+                socket, self.session, self.ioloop
+            )  # type:ignore[operator]
         return self._shell_channel
 
     @property
@@ -359,7 +363,9 @@ class KernelClient(ConnectionFileMixin):
             url = self._make_url("iopub")
             self.log.debug("connecting iopub channel to %s", url)
             socket = self.connect_iopub()
-            self._iopub_channel = self.iopub_channel_class(socket, self.session, self.ioloop)
+            self._iopub_channel = self.iopub_channel_class(
+                socket, self.session, self.ioloop
+            )  # type:ignore[operator]
         return self._iopub_channel
 
     @property
@@ -369,7 +375,9 @@ class KernelClient(ConnectionFileMixin):
             url = self._make_url("stdin")
             self.log.debug("connecting stdin channel to %s", url)
             socket = self.connect_stdin(identity=self.session.bsession)
-            self._stdin_channel = self.stdin_channel_class(socket, self.session, self.ioloop)
+            self._stdin_channel = self.stdin_channel_class(
+                socket, self.session, self.ioloop
+            )  # type:ignore[operator]
         return self._stdin_channel
 
     @property
@@ -378,7 +386,9 @@ class KernelClient(ConnectionFileMixin):
         if self._hb_channel is None:
             url = self._make_url("hb")
             self.log.debug("connecting heartbeat channel to %s", url)
-            self._hb_channel = self.hb_channel_class(self.context, self.session, url)
+            self._hb_channel = self.hb_channel_class(
+                self.context, self.session, url
+            )  # type:ignore[operator]
         return self._hb_channel
 
     @property
@@ -388,7 +398,9 @@ class KernelClient(ConnectionFileMixin):
             url = self._make_url("control")
             self.log.debug("connecting control channel to %s", url)
             socket = self.connect_control(identity=self.session.bsession)
-            self._control_channel = self.control_channel_class(socket, self.session, self.ioloop)
+            self._control_channel = self.control_channel_class(
+                socket, self.session, self.ioloop
+            )  # type:ignore[operator]
         return self._control_channel
 
     async def _async_is_alive(self) -> bool:

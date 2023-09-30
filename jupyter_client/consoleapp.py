@@ -20,6 +20,7 @@ from traitlets.config.application import boolean_flag
 
 from . import KernelManager, connect, find_connection_file, tunnel_to_kernel
 from .blocking import BlockingKernelClient
+from .connect import KernelConnectionInfo
 from .kernelspec import NoSuchKernel
 from .localinterfaces import localhost
 from .restarter import KernelRestarter
@@ -234,7 +235,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
             ip = localhost()
 
         # build connection dict for tunnels:
-        info = {
+        info: KernelConnectionInfo = {
             "ip": ip,
             "shell_port": self.shell_port,
             "iopub_port": self.iopub_port,
@@ -293,7 +294,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
 
         # Create a KernelManager and start a kernel.
         try:
-            self.kernel_manager = self.kernel_manager_class(
+            self.kernel_manager = self.kernel_manager_class(  # type:ignore[operator]
                 ip=self.ip,
                 session=self.session,
                 transport=self.transport,

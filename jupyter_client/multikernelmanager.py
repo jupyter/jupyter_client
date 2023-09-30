@@ -102,7 +102,7 @@ class MultiKernelManager(LoggingConfigurable):
         """A shim for backwards compatibility."""
         return self._pending_kernels
 
-    @default("context")  # type:ignore[misc]
+    @default("context")
     def _context_default(self) -> zmq.Context:
         self._created_context = True
         return zmq.Context()
@@ -602,7 +602,7 @@ class AsyncMultiKernelManager(MultiKernelManager):
 
     context = Instance("zmq.asyncio.Context")
 
-    @default("context")  # type:ignore[misc]
+    @default("context")
     def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True
         return zmq.asyncio.Context()

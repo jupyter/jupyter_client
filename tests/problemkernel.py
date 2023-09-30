@@ -18,7 +18,7 @@ class ProblemTestKernel(Kernel):
 
 
 class ProblemTestApp(IPKernelApp):
-    kernel_class = ProblemTestKernel
+    kernel_class = ProblemTestKernel  # type:ignore[assignment]
 
     def init_io(self):
         # Overridden to disable stdout/stderr capture
