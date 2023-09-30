@@ -117,8 +117,8 @@ class KernelClient(ConnectionFileMixin):
         """Handle garbage collection.  Destroy context if applicable."""
         if (
             self._created_context
-            and self.context is not None
-            and not self.context.closed  # type:ignore[redundant-expr]
+            and self.context is not None  # type:ignore[redundant-expr]
+            and not self.context.closed
         ):
             if self.channels_running:
                 if self.log:
