@@ -116,8 +116,10 @@ class KernelClient(ConnectionFileMixin):
     def __del__(self):
         """Handle garbage collection.  Destroy context if applicable."""
         if (
-            self._created_context and self.context is not None and not self.context.closed
-        ):  # type:ignore[redundant-expr]
+            self._created_context
+            and self.context is not None
+            and not self.context.closed  # type:ignore[redundant-expr]
+        ):
             if self.channels_running:
                 if self.log:
                     self.log.warning("Could not destroy zmq context for %s", self)

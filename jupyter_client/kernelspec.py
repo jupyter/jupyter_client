@@ -243,8 +243,8 @@ class KernelSpecManager(LoggingConfigurable):
                     )  # type:ignore[operator]
         if not kspec:
             kspec = self.kernel_spec_class.from_resource_dir(
-                resource_dir
-            )  # type:ignore[attr-defined]
+                resource_dir  # type:ignore[attr-defined]
+            )
 
         if not KPF.instance(parent=self.parent).is_provisioner_available(kspec):
             raise NoSuchKernel(kernel_name)
