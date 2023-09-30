@@ -185,7 +185,7 @@ class RemoveKernelSpec(JupyterApp):
     flags = {
         "f": ({"RemoveKernelSpec": {"force": True}}, force.help),
     }
-    flags.update(JupyterApp.flags)  # type:ignore[arg-type]
+    flags.update(JupyterApp.flags)  # type:ignore[has-type]
 
     def parse_command_line(self, argv):
         """Parse the command line args."""
