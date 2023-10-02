@@ -115,7 +115,7 @@ class InstallKernelSpec(JupyterApp):
         "name": "InstallKernelSpec.kernel_name",
         "prefix": "InstallKernelSpec.prefix",
     }
-    aliases.update(base_aliases)
+    aliases.update(base_aliases)  # type:ignore[arg-type]
 
     flags = {
         "user": (
@@ -185,7 +185,7 @@ class RemoveKernelSpec(JupyterApp):
     flags = {
         "f": ({"RemoveKernelSpec": {"force": True}}, force.help),
     }
-    flags.update(JupyterApp.flags)
+    flags.update(JupyterApp.flags)  # type:ignore[has-type]
 
     def parse_command_line(self, argv):
         """Parse the command line args."""

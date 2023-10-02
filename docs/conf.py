@@ -11,9 +11,12 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
+import logging as pylogging
 import os
 import os.path as osp
 import shutil
+
+from sphinx.util import logging  # type:ignore[import]
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -36,6 +39,16 @@ extensions = [
     'sphinxcontrib_github_alt',
     "sphinx_autodoc_typehints",
 ]
+
+
+# Workaround for https://github.com/agronholm/sphinx-autodoc-typehints/issues/123
+class FilterForIssue123(pylogging.Filter):
+    def filter(self, record: pylogging.LogRecord) -> bool:
+        return not record.getMessage().startswith("Cannot handle as a local function")
+
+
+logging.getLogger("sphinx_autodoc_typehints").logger.addFilter(FilterForIssue123())
+# End of a workaround
 
 try:
     import enchant  # type:ignore[import]  # noqa
