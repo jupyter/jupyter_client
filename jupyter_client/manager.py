@@ -150,7 +150,7 @@ class KernelManager(ConnectionFileMixin):
         return kernelspec.KernelSpecManager(data_dir=self.data_dir)
 
     @observe("kernel_spec_manager")
-    @observe_compat  # type:ignore[misc]
+    @observe_compat
     def _kernel_spec_manager_changed(self, change: t.Dict[str, Instance]) -> None:
         self._kernel_spec = None
 

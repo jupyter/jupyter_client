@@ -294,7 +294,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
 
         # Create a KernelManager and start a kernel.
         try:
-            self.kernel_manager = self.kernel_manager_class(  # type:ignore[operator]
+            self.kernel_manager = self.kernel_manager_class(
                 ip=self.ip,
                 session=self.session,
                 transport=self.transport,
