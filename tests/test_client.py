@@ -208,10 +208,10 @@ class CustomThreadedZMQSocketChannel(ThreadedZMQSocketChannel):
 
 
 class CustomThreadedKernelClient(ThreadedKernelClient):
-    iopub_channel_class = Type(CustomThreadedZMQSocketChannel)
-    shell_channel_class = Type(CustomThreadedZMQSocketChannel)
-    stdin_channel_class = Type(CustomThreadedZMQSocketChannel)
-    control_channel_class = Type(CustomThreadedZMQSocketChannel)
+    iopub_channel_class = Type(CustomThreadedZMQSocketChannel)  # type:ignore[arg-type]
+    shell_channel_class = Type(CustomThreadedZMQSocketChannel)  # type:ignore[arg-type]
+    stdin_channel_class = Type(CustomThreadedZMQSocketChannel)  # type:ignore[arg-type]
+    control_channel_class = Type(CustomThreadedZMQSocketChannel)  # type:ignore[arg-type]
 
 
 class TestThreadedKernelClient(TestKernelClient):

@@ -5,7 +5,7 @@ import asyncio
 import os
 import signal
 import sys
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
@@ -150,6 +150,8 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                 self.connection_info['control_port'],
             )
             for port in ports:
+                if TYPE_CHECKING:
+                    assert isinstance(port, int)
                 lpc.return_port(port)
 
     async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
