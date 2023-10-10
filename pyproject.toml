@@ -16,11 +16,7 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3"
 ]
 requires-python = ">=3.8"
 dependencies = [
@@ -143,6 +139,9 @@ timeout_method = "thread"
 filterwarnings= [
   # Fail on warnings
   "error",
+  # from python-dateutil
+  "ignore:datetime.datetime.utcfromtimestamp:DeprecationWarning",
+  "ignore:datetime.datetime.utcnow:DeprecationWarning",
 ]
 
 [tool.coverage.report]
