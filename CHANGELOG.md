@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.4.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.3.1...74044393230e70134f68e664f2ef19fab92b7774))
+
+### Maintenance and upkeep improvements
+
+- Test on python 3.12 [#978](https://github.com/jupyter/jupyter_client/pull/978) ([@blink1073](https://github.com/blink1073))
+- Update typing for traitlets 5.11 [#977](https://github.com/jupyter/jupyter_client/pull/977) ([@blink1073](https://github.com/blink1073))
+- chore: update pre-commit hooks [#975](https://github.com/jupyter/jupyter_client/pull/975) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Update typings for traitlets 5.10.1 [#974](https://github.com/jupyter/jupyter_client/pull/974) ([@blink1073](https://github.com/blink1073))
+- Do not use datetime.utcnow() that is deprecated in Python 3.12 [#972](https://github.com/jupyter/jupyter_client/pull/972) ([@ellert](https://github.com/ellert))
+- Use sp-repo-review [#971](https://github.com/jupyter/jupyter_client/pull/971) ([@blink1073](https://github.com/blink1073))
+- Bump actions/checkout from 3 to 4 [#968](https://github.com/jupyter/jupyter_client/pull/968) ([@dependabot](https://github.com/dependabot))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-08-29&to=2023-10-11&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-08-29..2023-10-11&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adependabot+updated%3A2023-08-29..2023-10-11&type=Issues) | [@ellert](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aellert+updated%3A2023-08-29..2023-10-11&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-08-29..2023-10-11&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.3.1
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.3.0...b4f7d947fae55a4fe59a27df0830a9a78dcd4e12))
@@ -21,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-06-23&to=2023-08-29&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-06-23..2023-08-29&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2023-06-23..2023-08-29&type=Issues) | [@jkitchin](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ajkitchin+updated%3A2023-06-23..2023-08-29&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2023-06-23..2023-08-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-06-23..2023-08-29&type=Issues) | [@tmaxwell-anthropic](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Atmaxwell-anthropic+updated%3A2023-06-23..2023-08-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.3.0
 
