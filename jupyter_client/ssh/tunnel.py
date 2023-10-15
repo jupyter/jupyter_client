@@ -31,7 +31,7 @@ else:
     from .forward import forward_tunnel
 
 try:
-    import pexpect  # type: ignore[import]
+    import pexpect  # type: ignore[import-untyped]
 except ImportError:
     pexpect = None
 

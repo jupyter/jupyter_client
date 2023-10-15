@@ -12,7 +12,7 @@ from warnings import warn
 LOCAL_IPS: List = []
 PUBLIC_IPS: List = []
 
-LOCALHOST = ""
+LOCALHOST: str = ""
 
 
 def _uniq_stable(elems: Iterable) -> List:
@@ -151,7 +151,7 @@ def _load_ips_ipconfig():
 
 def _load_ips_netifaces():
     """load ip addresses with netifaces"""
-    import netifaces  # type: ignore[import]
+    import netifaces  # type: ignore[import-not-found]
 
     global LOCALHOST
     local_ips = []
