@@ -16,7 +16,7 @@ import os
 import os.path as osp
 import shutil
 
-from sphinx.util import logging  # type:ignore[import]
+from sphinx.util import logging  # type:ignore[import-not-found]
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -51,7 +51,7 @@ logging.getLogger("sphinx_autodoc_typehints").logger.addFilter(FilterForIssue123
 # End of a workaround
 
 try:
-    import enchant  # type:ignore[import]  # noqa
+    import enchant  # type:ignore[import-not-found]  # noqa
 
     extensions += ["sphinxcontrib.spelling"]
 except ImportError:
