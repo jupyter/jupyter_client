@@ -101,7 +101,7 @@ nowarn = "test -W default {args}"
 features = ["test"]
 dependencies = ["mypy~=1.6", "traitlets>=5.11.2", "jupyter_core>=5.3.2"]
 [tool.hatch.envs.typing.scripts]
-test = "mypy --install-types --non-interactive {args:.}"
+test = "mypy --install-types --non-interactive {args}"
 
 [tool.hatch.envs.lint]
 dependencies = [
@@ -166,28 +166,17 @@ relative_files = true
 source = ["jupyter_client"]
 
 [tool.mypy]
-check_untyped_defs = true
+files = "jupyter_client"
+python_version = "3.8"
+strict = true
 disallow_any_generics = false
-disallow_incomplete_defs = true
-disallow_untyped_decorators = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
-no_implicit_optional = true
 no_implicit_reexport = false
 pretty = true
 show_error_context = true
 show_error_codes = true
-strict_equality = true
-strict_optional = true
-warn_unused_configs = true
-warn_redundant_casts = true
 warn_return_any = false
 warn_unreachable = true
-warn_unused_ignores = true
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-disable_error_code = ["ignore-without-code"]
-warn_unreachable = false
 
 [tool.black]
 line-length = 100
@@ -300,4 +289,4 @@ fail-under=90
 exclude = ["docs", "test"]
 
 [tool.repo-review]
-ignore = ["PY007", "PP308", "GH102", "PC140", "MY101"]
+ignore = ["PY007", "PP308", "GH102", "PC140"]

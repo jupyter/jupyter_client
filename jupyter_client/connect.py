@@ -14,7 +14,7 @@ import stat
 import tempfile
 import warnings
 from getpass import getpass
-from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import zmq
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
@@ -23,6 +23,11 @@ from traitlets.config import LoggingConfigurable, SingletonConfigurable
 
 from .localinterfaces import localhost
 from .utils import _filefind
+
+if TYPE_CHECKING:
+    from jupyter_client import BlockingKernelClient
+
+    from .session import Session
 
 # Define custom type for kernel connection info
 KernelConnectionInfo = Dict[str, Union[int, str, bytes]]
@@ -312,7 +317,7 @@ class ConnectionFileMixin(LoggingConfigurable):
 
     data_dir: Union[str, Unicode] = Unicode()
 
-    def _data_dir_default(self):
+    def _data_dir_default(self) -> str:
         return jupyter_data_dir()
 
     # The addresses for the communication channels
@@ -351,7 +356,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             return localhost()
 
     @observe("ip")
-    def _ip_changed(self, change):
+    def _ip_changed(self, change: Any) -> None:
         if change["new"] == "*":
             self.ip = "0.0.0.0"  # noqa
 
@@ -373,7 +378,7 @@ class ConnectionFileMixin(LoggingConfigurable):
     # The Session to use for communication with the kernel.
     session = Instance("jupyter_client.session.Session")
 
-    def _session_default(self):
+    def _session_default(self) -> Session:
         from .session import Session
 
         return Session(parent=self)
@@ -423,7 +428,7 @@ class ConnectionFileMixin(LoggingConfigurable):
     # factory for blocking clients
     blocking_class = Type(klass=object, default_value="jupyter_client.BlockingKernelClient")
 
-    def blocking_client(self):
+    def blocking_client(self) -> BlockingKernelClient:
         """Make a blocking client connected to my kernel"""
         info = self.get_connection_info()
         bc = self.blocking_class(parent=self)  # type:ignore[operator]

@@ -76,7 +76,7 @@ def in_pending_state(method: F) -> F:
 
     @t.no_type_check
     @functools.wraps(method)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(self: t.Any, *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Create a future for the decorated method."""
         if self._attempted_start or not self._ready:
             self._ready = _get_future()
@@ -104,7 +104,7 @@ class KernelManager(ConnectionFileMixin):
 
     _ready: t.Optional[t.Union[Future, CFuture]]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         """Initialize a kernel manager."""
         self._owns_kernel = kwargs.pop("owns_kernel", True)
         super().__init__(**kwargs)
@@ -304,7 +304,7 @@ class KernelManager(ConnectionFileMixin):
 
         pat = re.compile(r"\{([A-Za-z0-9_]+)\}")
 
-        def from_ns(match):
+        def from_ns(match: t.Any) -> t.Any:
             """Get the key out of ns if it's there, otherwise no change."""
             return ns.get(match.group(1), match.group())
 

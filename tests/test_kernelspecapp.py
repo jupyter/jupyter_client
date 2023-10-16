@@ -27,7 +27,7 @@ def test_kernelspec_sub_apps(jp_kernel_dir):
     app1 = ListKernelSpecs()
     app1.kernel_spec_manager.kernel_dirs.append(kernel_dir)
     specs = app1.start()
-    assert 'echo' in specs
+    assert specs and 'echo' in specs
 
     app2 = RemoveKernelSpec(spec_names=['echo'], force=True)
     app2.kernel_spec_manager.kernel_dirs.append(kernel_dir)
@@ -36,7 +36,7 @@ def test_kernelspec_sub_apps(jp_kernel_dir):
     app3 = ListKernelSpecs()
     app3.kernel_spec_manager.kernel_dirs.append(kernel_dir)
     specs = app3.start()
-    assert 'echo' not in specs
+    assert specs and 'echo' not in specs
 
 
 def test_kernelspec_app():
