@@ -8,8 +8,10 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+from __future__ import annotations
+
 import abc
-from typing import TYPE_CHECKING, Any, Type
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .channelsabc import ChannelABC
@@ -32,23 +34,23 @@ class KernelClientABC(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractproperty
-    def shell_channel_class(self) -> Type[ChannelABC]:
+    def shell_channel_class(self) -> type[ChannelABC]:
         pass
 
     @abc.abstractproperty
-    def iopub_channel_class(self) -> Type[ChannelABC]:
+    def iopub_channel_class(self) -> type[ChannelABC]:
         pass
 
     @abc.abstractproperty
-    def hb_channel_class(self) -> Type[ChannelABC]:
+    def hb_channel_class(self) -> type[ChannelABC]:
         pass
 
     @abc.abstractproperty
-    def stdin_channel_class(self) -> Type[ChannelABC]:
+    def stdin_channel_class(self) -> type[ChannelABC]:
         pass
 
     @abc.abstractproperty
-    def control_channel_class(self) -> Type[ChannelABC]:
+    def control_channel_class(self) -> type[ChannelABC]:
         pass
 
     # --------------------------------------------------------------------------
