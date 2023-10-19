@@ -212,7 +212,7 @@ class MultiKernelManager(LoggingConfigurable):
         }
         for arg_key, env_key in ports_env_map.items():
             if env_key in env:
-                constructor_kwargs[arg_key] = env[env_key]
+                constructor_kwargs[arg_key] = int(env[env_key])
         # ------ set ports from env end
         if self.kernel_spec_manager:
             constructor_kwargs["kernel_spec_manager"] = self.kernel_spec_manager
