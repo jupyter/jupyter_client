@@ -10,8 +10,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip, local_ips
-from .provisioner_base import KernelProvisionerBase
 from ..utils import PORTS_ENV_MAP
+from .provisioner_base import KernelProvisionerBase
+
 
 class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     """

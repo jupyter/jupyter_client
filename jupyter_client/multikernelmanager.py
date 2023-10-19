@@ -18,7 +18,7 @@ from traitlets.utils.importstring import import_item
 from .connect import KernelConnectionInfo
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import KernelManager
-from .utils import ensure_async, run_sync, utcnow, PORTS_ENV_MAP
+from .utils import PORTS_ENV_MAP, ensure_async, run_sync, utcnow
 
 
 class DuplicateKernelError(Exception):

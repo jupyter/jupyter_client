@@ -16,6 +16,8 @@ PORTS_ENV_MAP = {
     'stdin_port': 'JUPYTER_SERVER_STDIN_PORT',
     'control_port': 'JUPYTER_SERVER_CONTROL_PORT',
 }
+
+
 def _filefind(filename, path_dirs=None):
     """Find a file by looking through a sequence of paths.
 
