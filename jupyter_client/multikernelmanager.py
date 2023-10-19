@@ -201,6 +201,19 @@ class MultiKernelManager(LoggingConfigurable):
         # subclass we are using. It can be configured as any Configurable,
         # including things like its transport and ip.
         constructor_kwargs = {}
+        # ------ set ports from env begin
+        env = kwargs.get("env", {})
+        ports_env_map = {
+            'hb_port': 'JUPYTER_SERVER_HB_PORT',
+            'shell_port': 'JUPYTER_SERVER_SHELL_PORT',
+            'iopub_port': 'JUPYTER_SERVER_IOPUB_PORT',
+            'stdin_port': 'JUPYTER_SERVER_STDIN_PORT',
+            'control_port': 'JUPYTER_SERVER_CONTROL_PORT'
+        }
+        for arg_key, env_key in ports_env_map.items():
+            if env_key in env:
+                constructor_kwargs[arg_key] = env[env_key]
+        # ------ set ports from env end
         if self.kernel_spec_manager:
             constructor_kwargs["kernel_spec_manager"] = self.kernel_spec_manager
         km = self.kernel_manager_factory(
