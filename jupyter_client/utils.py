@@ -9,7 +9,13 @@ from jupyter_core.utils import ensure_async, run_sync  # noqa: F401  # noqa: F40
 
 from .session import utcnow  # noqa
 
-
+PORTS_ENV_MAP = {
+    'hb_port': 'JUPYTER_SERVER_HB_PORT',
+    'shell_port': 'JUPYTER_SERVER_SHELL_PORT',
+    'iopub_port': 'JUPYTER_SERVER_IOPUB_PORT',
+    'stdin_port': 'JUPYTER_SERVER_STDIN_PORT',
+    'control_port': 'JUPYTER_SERVER_CONTROL_PORT',
+}
 def _filefind(filename, path_dirs=None):
     """Find a file by looking through a sequence of paths.
 

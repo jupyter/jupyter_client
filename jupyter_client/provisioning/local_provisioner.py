@@ -11,7 +11,7 @@ from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip, local_ips
 from .provisioner_base import KernelProvisionerBase
-
+from ..utils import PORTS_ENV_MAP
 
 class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     """
@@ -189,6 +189,10 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                 km.control_port = lpc.find_available_port(km.ip)
                 self.ports_cached = True
             if 'env' in kwargs:
+                env = kwargs.get("env", {})
+                for arg_key, env_key in PORTS_ENV_MAP.items():
+                    if env_key in env:
+                        setattr(km, arg_key, int(env[env_key]))
                 jupyter_session = kwargs['env'].get("JPY_SESSION_NAME", "")
                 km.write_connection_file(jupyter_session=jupyter_session)
             else:

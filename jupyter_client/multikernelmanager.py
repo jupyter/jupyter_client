@@ -18,7 +18,7 @@ from traitlets.utils.importstring import import_item
 from .connect import KernelConnectionInfo
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import KernelManager
-from .utils import ensure_async, run_sync, utcnow
+from .utils import ensure_async, run_sync, utcnow, PORTS_ENV_MAP
 
 
 class DuplicateKernelError(Exception):
@@ -203,14 +203,7 @@ class MultiKernelManager(LoggingConfigurable):
         constructor_kwargs = {}
         # ------ set ports from env begin
         env = kwargs.get("env", {})
-        ports_env_map = {
-            'hb_port': 'JUPYTER_SERVER_HB_PORT',
-            'shell_port': 'JUPYTER_SERVER_SHELL_PORT',
-            'iopub_port': 'JUPYTER_SERVER_IOPUB_PORT',
-            'stdin_port': 'JUPYTER_SERVER_STDIN_PORT',
-            'control_port': 'JUPYTER_SERVER_CONTROL_PORT'
-        }
-        for arg_key, env_key in ports_env_map.items():
+        for arg_key, env_key in PORTS_ENV_MAP.items():
             if env_key in env:
                 constructor_kwargs[arg_key] = int(env[env_key])
         # ------ set ports from env end
