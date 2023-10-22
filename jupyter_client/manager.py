@@ -233,11 +233,17 @@ class KernelManager(ConnectionFileMixin):
         """Stop the kernel restarter."""
         pass
 
-    def add_restart_callback(self, callback: t.Callable, event: str = "restart") -> None:
+    def add_restart_callback(
+        self,
+        callback: t.Callable[[], object] | t.Callable[[int], object],
+        event: str = "restart",
+        *,
+        accepts_exit_code: bool = False,
+    ) -> None:
         """Register a callback to be called when a kernel is restarted"""
         if self._restarter is None:
             return
-        self._restarter.add_callback(callback, event)
+        self._restarter.add_callback(callback, event, accepts_exit_code=accepts_exit_code)
 
     def remove_restart_callback(self, callback: t.Callable, event: str = "restart") -> None:
         """Unregister a callback to be called when a kernel is restarted"""
@@ -666,6 +672,17 @@ class KernelManager(ConnectionFileMixin):
         return False
 
     is_alive = run_sync(_async_is_alive)
+
+    async def _async_exit_status(self) -> t.Optional[int]:
+        """Returns 0 if there's no kernel or it exited gracefully,
+        None if the kernel is running, or a negative value `-N` if the
+        kernel was killed by signal `N` (posix only)."""
+        if not self.has_kernel:
+            return 0
+        assert self.provisioner is not None
+        return await self.provisioner.poll()
+
+    exit_status = run_sync(_async_exit_status)
 
     async def _async_wait(self, pollinterval: float = 0.1) -> None:
         # Use busy loop at 100ms intervals, polling until the process is

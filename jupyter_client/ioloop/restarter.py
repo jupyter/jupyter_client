@@ -55,9 +55,9 @@ class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
         """Poll the kernel."""
         if self.debug:
             self.log.debug("Polling kernel...")
-        is_alive = await self.kernel_manager.is_alive()
+        exit_status = await self.kernel_manager.exit_status()
         now = time.time()
-        if not is_alive:
+        if exit_status is not None:
             self._last_dead = now
             if self._restarting:
                 self._restart_count += 1
@@ -66,7 +66,7 @@ class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
 
             if self._restart_count > self.restart_limit:
                 self.log.warning("AsyncIOLoopKernelRestarter: restart failed")
-                self._fire_callbacks("dead")
+                self._fire_callbacks("dead", exit_status)
                 self._restarting = False
                 self._restart_count = 0
                 self.stop()
@@ -78,7 +78,7 @@ class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
                     self.restart_limit,
                     "new" if newports else "keep",
                 )
-                self._fire_callbacks("restart")
+                self._fire_callbacks("restart", exit_status)
                 await self.kernel_manager.restart_kernel(now=True, newports=newports)
                 self._restarting = True
         else:

@@ -8,6 +8,7 @@ It is an incomplete base class, and must be subclassed.
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import time
+import typing as t
 
 from traitlets import Bool, Dict, Float, Instance, Integer, default
 from traitlets.config.configurable import LoggingConfigurable
@@ -55,7 +56,8 @@ class KernelRestarter(LoggingConfigurable):
     def _default_last_dead(self):
         return time.time()
 
-    callbacks = Dict()
+    # traitlets.Dict is not typed generic
+    callbacks: t.Dict[str, t.List[t.Tuple[t.Callable[[int], object], t.Literal[True]] | t.Tuple[t.Callable[[], object], t.Literal[False]]]] = Dict()  # type: ignore[assignment]
 
     def _callbacks_default(self):
         return {"restart": [], "dead": []}
@@ -70,8 +72,34 @@ class KernelRestarter(LoggingConfigurable):
         msg = "Must be implemented in a subclass"
         raise NotImplementedError(msg)
 
-    def add_callback(self, f, event="restart"):
-        """register a callback to fire on a particular event
+    @t.overload
+    def add_callback(
+        self,
+        f: t.Callable[[int], object],
+        event: str = "restart",
+        *,
+        accepts_exit_code: t.Literal[True],
+    ) -> None:
+        ...
+
+    @t.overload
+    def add_callback(
+        self,
+        f: t.Callable[[], object],
+        event: str = "restart",
+        *,
+        accepts_exit_code: t.Literal[False] = False,
+    ) -> None:
+        ...
+
+    def add_callback(
+        self,
+        f: t.Callable[[], object] | t.Callable[[int], object],
+        event: str = "restart",
+        *,
+        accepts_exit_code: bool = False,
+    ) -> None:
+        """register a callback to fire on a particular event. If ``accepts_exit_code`` is set, the callable will be passed the exit code as reported by `KernelManager.exit_status`
 
         Possible values for event:
 
@@ -79,7 +107,8 @@ class KernelRestarter(LoggingConfigurable):
           'dead': restart has failed, kernel will be left dead.
 
         """
-        self.callbacks[event].append(f)
+        # the type correlation from overloads is not tracked to here by mypy
+        self.callbacks[event].append((f, accepts_exit_code))  # type: ignore[arg-type]
 
     def remove_callback(self, f, event="restart"):
         """unregister a callback to fire on a particular event
@@ -95,16 +124,20 @@ class KernelRestarter(LoggingConfigurable):
         except ValueError:
             pass
 
-    def _fire_callbacks(self, event):
+    def _fire_callbacks(self, event, status):
         """fire our callbacks for a particular event"""
+        # unpacking in the loop breaks the connection between the variables for mypy
         for callback in self.callbacks[event]:
             try:
-                callback()
+                if callback[1] is True:
+                    callback[0](status)
+                else:
+                    callback[0]()
             except Exception:
                 self.log.error(
                     "KernelRestarter: %s callback %r failed",
                     event,
-                    callback,
+                    callback[0],
                     exc_info=True,
                 )
 
@@ -115,7 +148,8 @@ class KernelRestarter(LoggingConfigurable):
             self.log.debug("Kernel shutdown in progress...")
             return
         now = time.time()
-        if not self.kernel_manager.is_alive():
+        status = self.kernel_manager.exit_status()
+        if status is not None:
             self._last_dead = now
             if self._restarting:
                 self._restart_count += 1
@@ -124,7 +158,7 @@ class KernelRestarter(LoggingConfigurable):
 
             if self._restart_count > self.restart_limit:
                 self.log.warning("KernelRestarter: restart failed")
-                self._fire_callbacks("dead")
+                self._fire_callbacks("dead", status)
                 self._restarting = False
                 self._restart_count = 0
                 self.stop()
@@ -136,7 +170,7 @@ class KernelRestarter(LoggingConfigurable):
                     self.restart_limit,
                     "new" if newports else "keep",
                 )
-                self._fire_callbacks("restart")
+                self._fire_callbacks("restart", status)
                 self.kernel_manager.restart_kernel(now=True, newports=newports)
                 self._restarting = True
         else:
