@@ -212,6 +212,17 @@ class MultiKernelManager(LoggingConfigurable):
         )
         return km, kernel_name, kernel_id
 
+    def update_env(self, *, kernel_id: str, env: t.Dict[str, str]) -> None:
+        """
+        Allow to update the environment of the given kernel.
+
+        Forward the update env request to the corresponding kernel.
+
+        .. version-added: 8.5
+        """
+        if kernel_id in self:
+            self._kernels[kernel_id].update_env(env)
+
     async def _add_kernel_when_ready(
         self, kernel_id: str, km: KernelManager, kernel_awaitable: t.Awaitable
     ) -> None:

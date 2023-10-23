@@ -268,6 +268,21 @@ class KernelManager(ConnectionFileMixin):
     # Kernel management
     # --------------------------------------------------------------------------
 
+    def update_env(self, *, env: t.Dict[str, str]) -> None:
+        """
+        Allow to update the environment of a kernel manager.
+
+        This will take effect only after kernel restart when the new env is
+        passed to the new kernel.
+
+        This is useful as some of the information of the current kernel reflect
+        the state of the session that started it, and those session information
+        (like the attach file path, or name), are mutable.
+
+        .. version-added: 8.5
+        """
+        self._launch_args['env'].update(env)
+
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """Replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
