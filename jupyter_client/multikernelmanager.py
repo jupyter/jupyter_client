@@ -1,6 +1,8 @@
 """A kernel manager for multiple kernels"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+from __future__ import annotations
+
 import asyncio
 import json
 import os
@@ -31,7 +33,7 @@ def kernel_method(f: t.Callable) -> t.Callable:
     @wraps(f)
     def wrapped(
         self: t.Any, kernel_id: str, *args: t.Any, **kwargs: t.Any
-    ) -> t.Union[t.Callable, t.Awaitable]:
+    ) -> t.Callable | t.Awaitable:
         # get the kernel
         km = self.get_kernel(kernel_id)
         method = getattr(km, f.__name__)
@@ -63,13 +65,13 @@ class MultiKernelManager(LoggingConfigurable):
     ).tag(config=True)
 
     @observe("kernel_manager_class")
-    def _kernel_manager_class_changed(self, change):
+    def _kernel_manager_class_changed(self, change: t.Any) -> None:
         self.kernel_manager_factory = self._create_kernel_manager_factory()
 
     kernel_manager_factory = Any(help="this is kernel_manager_class after import")
 
     @default("kernel_manager_factory")
-    def _kernel_manager_factory_default(self):
+    def _kernel_manager_factory_default(self) -> t.Callable:
         return self._create_kernel_manager_factory()
 
     def _create_kernel_manager_factory(self) -> t.Callable:
@@ -98,7 +100,7 @@ class MultiKernelManager(LoggingConfigurable):
     _pending_kernels = Dict()
 
     @property
-    def _starting_kernels(self):
+    def _starting_kernels(self) -> dict:
         """A shim for backwards compatibility."""
         return self._pending_kernels
 
@@ -112,11 +114,11 @@ class MultiKernelManager(LoggingConfigurable):
 
     _kernels = Dict()
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
-        self.kernel_id_to_connection_file = {}
+        self.kernel_id_to_connection_file: dict[str, Path] = {}
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Handle garbage collection.  Destroy context if applicable."""
         if self._created_context and self.context and not self.context.closed:
             if self.log:
@@ -129,7 +131,7 @@ class MultiKernelManager(LoggingConfigurable):
         else:
             super_del()
 
-    def list_kernel_ids(self) -> t.List[str]:
+    def list_kernel_ids(self) -> list[str]:
         """Return a list of the kernel ids of the active kernels."""
         if self.external_connection_dir is not None:
             external_connection_dir = Path(self.external_connection_dir)
@@ -188,8 +190,8 @@ class MultiKernelManager(LoggingConfigurable):
         return kernel_id in self._kernels
 
     def pre_start_kernel(
-        self, kernel_name: t.Optional[str], kwargs: t.Any
-    ) -> t.Tuple[KernelManager, str, str]:
+        self, kernel_name: str | None, kwargs: t.Any
+    ) -> tuple[KernelManager, str, str]:
         # kwargs should be mutable, passing it as a dict argument.
         kernel_id = kwargs.pop("kernel_id", self.new_kernel_id(**kwargs))
         if kernel_id in self:
@@ -243,15 +245,13 @@ class MultiKernelManager(LoggingConfigurable):
         except Exception as e:
             self.log.exception(e)
 
-    def _using_pending_kernels(self):
+    def _using_pending_kernels(self) -> bool:
         """Returns a boolean; a clearer method for determining if
         this multikernelmanager is using pending kernels or not
         """
         return getattr(self, 'use_pending_kernels', False)
 
-    async def _async_start_kernel(
-        self, *, kernel_name: t.Optional[str] = None, **kwargs: t.Any
-    ) -> str:
+    async def _async_start_kernel(self, *, kernel_name: str | None = None, **kwargs: t.Any) -> str:
         """Start a new kernel.
 
         The caller can pick a kernel_id by passing one in as a keyword arg,
@@ -289,8 +289,8 @@ class MultiKernelManager(LoggingConfigurable):
     async def _async_shutdown_kernel(
         self,
         kernel_id: str,
-        now: t.Optional[bool] = False,
-        restart: t.Optional[bool] = False,
+        now: bool | None = False,
+        restart: bool | None = False,
     ) -> None:
         """Shutdown a kernel by its kernel uuid.
 
@@ -334,15 +334,15 @@ class MultiKernelManager(LoggingConfigurable):
     shutdown_kernel = run_sync(_async_shutdown_kernel)
 
     @kernel_method
-    def request_shutdown(self, kernel_id: str, restart: t.Optional[bool] = False) -> None:
+    def request_shutdown(self, kernel_id: str, restart: bool | None = False) -> None:
         """Ask a kernel to shut down by its kernel uuid"""
 
     @kernel_method
     def finish_shutdown(
         self,
         kernel_id: str,
-        waittime: t.Optional[float] = None,
-        pollinterval: t.Optional[float] = 0.1,
+        waittime: float | None = None,
+        pollinterval: float | None = 0.1,
     ) -> None:
         """Wait for a kernel to finish shutting down, and kill it if it doesn't"""
         self.log.info("Kernel shutdown: %s", kernel_id)
@@ -479,7 +479,7 @@ class MultiKernelManager(LoggingConfigurable):
         """remove a callback for the KernelRestarter"""
 
     @kernel_method
-    def get_connection_info(self, kernel_id: str) -> t.Dict[str, t.Any]:  # type:ignore[empty-body]
+    def get_connection_info(self, kernel_id: str) -> dict[str, t.Any]:  # type:ignore[empty-body]
         """Return a dictionary of connection data for a kernel.
 
         Parameters
@@ -498,7 +498,7 @@ class MultiKernelManager(LoggingConfigurable):
 
     @kernel_method
     def connect_iopub(  # type:ignore[empty-body]
-        self, kernel_id: str, identity: t.Optional[bytes] = None
+        self, kernel_id: str, identity: bytes | None = None
     ) -> socket.socket:
         """Return a zmq Socket connected to the iopub channel.
 
@@ -516,7 +516,7 @@ class MultiKernelManager(LoggingConfigurable):
 
     @kernel_method
     def connect_shell(  # type:ignore[empty-body]
-        self, kernel_id: str, identity: t.Optional[bytes] = None
+        self, kernel_id: str, identity: bytes | None = None
     ) -> socket.socket:
         """Return a zmq Socket connected to the shell channel.
 
@@ -534,7 +534,7 @@ class MultiKernelManager(LoggingConfigurable):
 
     @kernel_method
     def connect_control(  # type:ignore[empty-body]
-        self, kernel_id: str, identity: t.Optional[bytes] = None
+        self, kernel_id: str, identity: bytes | None = None
     ) -> socket.socket:
         """Return a zmq Socket connected to the control channel.
 
@@ -552,7 +552,7 @@ class MultiKernelManager(LoggingConfigurable):
 
     @kernel_method
     def connect_stdin(  # type:ignore[empty-body]
-        self, kernel_id: str, identity: t.Optional[bytes] = None
+        self, kernel_id: str, identity: bytes | None = None
     ) -> socket.socket:
         """Return a zmq Socket connected to the stdin channel.
 
@@ -570,7 +570,7 @@ class MultiKernelManager(LoggingConfigurable):
 
     @kernel_method
     def connect_hb(  # type:ignore[empty-body]
-        self, kernel_id: str, identity: t.Optional[bytes] = None
+        self, kernel_id: str, identity: bytes | None = None
     ) -> socket.socket:
         """Return a zmq Socket connected to the hb channel.
 

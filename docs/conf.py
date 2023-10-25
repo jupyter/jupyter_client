@@ -329,7 +329,7 @@ texinfo_documents = [
 intersphinx_mapping = {'ipython': ('http://ipython.readthedocs.io/en/stable/', None)}
 
 
-def setup(app):
+def setup(app: object) -> None:
     HERE = osp.abspath(osp.dirname(__file__))
     dest = osp.join(HERE, 'changelog.md')
     shutil.copy(osp.join(HERE, '..', 'CHANGELOG.md'), dest)
