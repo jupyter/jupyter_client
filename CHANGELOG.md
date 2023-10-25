@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.5.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.4.0...ff94e310c2af3546f2f9384e6b35fd11c3d09a71))
+
+### Enhancements made
+
+- Allow to update kernels env in between restart. [#987](https://github.com/jupyter/jupyter_client/pull/987) ([@Carreau](https://github.com/Carreau))
+
+### Maintenance and upkeep improvements
+
+- Enable strict typing [#984](https://github.com/jupyter/jupyter_client/pull/984) ([@blink1073](https://github.com/blink1073))
+- Update typings for mypy 1.6 [#983](https://github.com/jupyter/jupyter_client/pull/983) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-10-11&to=2023-10-25&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-10-11..2023-10-25&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2023-10-11..2023-10-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.4.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.3.1...74044393230e70134f68e664f2ef19fab92b7774))
@@ -21,8 +42,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-08-29&to=2023-10-11&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-08-29..2023-10-11&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adependabot+updated%3A2023-08-29..2023-10-11&type=Issues) | [@ellert](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aellert+updated%3A2023-08-29..2023-10-11&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-08-29..2023-10-11&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.3.1
 
