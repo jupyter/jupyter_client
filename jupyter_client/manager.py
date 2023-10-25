@@ -281,7 +281,12 @@ class KernelManager(ConnectionFileMixin):
 
         .. version-added: 8.5
         """
-        self._launch_args["env"].update(env)
+        if (
+            isinstance(self._launch_args, dict)
+            and "env" in self._launch_args
+            and isinstance(self._launch_args["env"], dict)
+        ):
+            self._launch_args["env"].update(env)
 
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """Replace templated args (e.g. {connection_file})"""

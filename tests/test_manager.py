@@ -32,3 +32,33 @@ def test_connection_file_real_path():
         km._launch_args = {}
         cmds = km.format_kernel_cmd()
         assert cmds[4] == "foobar"
+
+
+def test_env_update_launch_args_not_set():
+    km = KernelManager()
+    km.update_env(env={"A": "A"})
+
+
+def test_env_update_launch_args_not_dict():
+    km = KernelManager()
+    km._launch_args = None
+    km.update_env(env={"B": "B"})
+
+
+def test_env_update_launch_args_no_env():
+    km = KernelManager()
+    km._launch_args = {}
+    km.update_env(env={"C": "C"})
+
+
+def test_env_update_launch_args_env_not_dict():
+    km = KernelManager()
+    km._launch_args = {"env": None}
+    km.update_env(env={"D": "D"})
+
+
+def test_env_update_launch_args_env_dic():
+    km = KernelManager()
+    km._launch_args = {"env": {}}
+    km.update_env(env={"E": "E"})
+    assert km._launch_args["env"]["E"] == "E"
