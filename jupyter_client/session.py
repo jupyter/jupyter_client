@@ -861,6 +861,8 @@ class Session(Configurable):
             # use dummy tracker, which will be done immediately
             tracker = DONE
             stream.send_multipart(to_send, copy=copy)
+        else:
+            tracker = DONE
 
         if self.debug:
             pprint.pprint(msg)  # noqa
