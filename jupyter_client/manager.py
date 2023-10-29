@@ -55,7 +55,7 @@ class _ShutdownStatus(Enum):
     SigkillRequest = "SigkillRequest"
 
 
-F = t.TypeVar('F', bound=t.Callable[..., t.Any])
+F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 
 
 def _get_future() -> t.Union[Future, CFuture]:
@@ -281,7 +281,7 @@ class KernelManager(ConnectionFileMixin):
 
         .. version-added: 8.5
         """
-        self._launch_args['env'].update(env)
+        self._launch_args["env"].update(env)
 
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """Replace templated args (e.g. {connection_file})"""
@@ -369,7 +369,7 @@ class KernelManager(ConnectionFileMixin):
              and launching the kernel (e.g. Popen kwargs).
         """
         self.shutting_down = False
-        self.kernel_id = self.kernel_id or kw.pop('kernel_id', str(uuid.uuid4()))
+        self.kernel_id = self.kernel_id or kw.pop("kernel_id", str(uuid.uuid4()))
         # save kwargs for use in restart
         self._launch_args = kw.copy()
         if self.provisioner is None:  # will not be None on restarts
@@ -379,7 +379,7 @@ class KernelManager(ConnectionFileMixin):
                 parent=self,
             )
         kw = await self.provisioner.pre_launch(**kw)
-        kernel_cmd = kw.pop('cmd')
+        kernel_cmd = kw.pop("cmd")
         return kernel_cmd, kw
 
     pre_start_kernel = run_sync(_async_pre_start_kernel)
@@ -715,41 +715,19 @@ class AsyncKernelManager(KernelManager):
         return super().client(**kwargs)  # type:ignore[return-value]
 
     _launch_kernel = KernelManager._async_launch_kernel  # type:ignore[assignment]
-    start_kernel: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_start_kernel  # type:ignore[assignment]
-    pre_start_kernel: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_pre_start_kernel  # type:ignore[assignment]
-    post_start_kernel: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_post_start_kernel  # type:ignore[assignment]
-    request_shutdown: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_request_shutdown  # type:ignore[assignment]
-    finish_shutdown: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_finish_shutdown  # type:ignore[assignment]
-    cleanup_resources: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_cleanup_resources  # type:ignore[assignment]
-    shutdown_kernel: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_shutdown_kernel  # type:ignore[assignment]
-    restart_kernel: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_restart_kernel  # type:ignore[assignment]
+    start_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_start_kernel  # type:ignore[assignment]
+    pre_start_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_pre_start_kernel  # type:ignore[assignment]
+    post_start_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_post_start_kernel  # type:ignore[assignment]
+    request_shutdown: t.Callable[..., t.Awaitable] = KernelManager._async_request_shutdown  # type:ignore[assignment]
+    finish_shutdown: t.Callable[..., t.Awaitable] = KernelManager._async_finish_shutdown  # type:ignore[assignment]
+    cleanup_resources: t.Callable[..., t.Awaitable] = KernelManager._async_cleanup_resources  # type:ignore[assignment]
+    shutdown_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_shutdown_kernel  # type:ignore[assignment]
+    restart_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_restart_kernel  # type:ignore[assignment]
     _send_kernel_sigterm = KernelManager._async_send_kernel_sigterm  # type:ignore[assignment]
     _kill_kernel = KernelManager._async_kill_kernel  # type:ignore[assignment]
-    interrupt_kernel: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_interrupt_kernel  # type:ignore[assignment]
-    signal_kernel: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_signal_kernel  # type:ignore[assignment]
-    is_alive: t.Callable[
-        ..., t.Awaitable
-    ] = KernelManager._async_is_alive  # type:ignore[assignment]
+    interrupt_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_interrupt_kernel  # type:ignore[assignment]
+    signal_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_signal_kernel  # type:ignore[assignment]
+    is_alive: t.Callable[..., t.Awaitable] = KernelManager._async_is_alive  # type:ignore[assignment]
 
 
 KernelManagerABC.register(KernelManager)

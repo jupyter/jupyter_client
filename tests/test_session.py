@@ -249,7 +249,7 @@ class TestSession:
         self.assertEqual(s.session, u)
         self.assertEqual(s.username, "carrot")
 
-    @pytest.mark.skipif(platform.python_implementation() == 'PyPy', reason='Test fails on PyPy')
+    @pytest.mark.skipif(platform.python_implementation() == "PyPy", reason="Test fails on PyPy")
     def test_tracking_sync(self, session):
         """test tracking messages"""
         ctx = zmq.Context()
@@ -278,7 +278,7 @@ class TestSession:
         b.close()
         ctx.term()
 
-    @pytest.mark.skipif(platform.python_implementation() == 'PyPy', reason='Test fails on PyPy')
+    @pytest.mark.skipif(platform.python_implementation() == "PyPy", reason="Test fails on PyPy")
     async def test_tracking(self, session):
         """test tracking messages"""
         ctx = zmq.asyncio.Context()
@@ -509,9 +509,9 @@ class TestSession:
 
 
 def test_squash_unicode():
-    assert ss.squash_unicode(dict(a='1')) == {b'a': b'1'}
-    assert ss.squash_unicode(['a', 1]) == [b'a', 1]
-    assert ss.squash_unicode('hi') == b'hi'
+    assert ss.squash_unicode(dict(a="1")) == {b"a": b"1"}
+    assert ss.squash_unicode(["a", 1]) == [b"a", 1]
+    assert ss.squash_unicode("hi") == b"hi"
 
 
 def test_json_packer():
@@ -527,9 +527,9 @@ def test_json_packer():
 def test_message_cls():
     m = ss.Message(dict(a=1))
     foo = dict(m)  # type:ignore
-    assert foo['a'] == 1
-    assert m['a'] == 1, m['a']
-    assert 'a' in m
+    assert foo["a"] == 1
+    assert m["a"] == 1, m["a"]
+    assert "a" in m
     assert str(m) == "{'a': 1}"
 
 
