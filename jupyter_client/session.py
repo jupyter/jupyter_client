@@ -588,7 +588,7 @@ class Session(Configurable):
         """
         # make a copy
         new_session = type(self)()
-        for name in self.traits():  # type:ignore[no-untyped-call]
+        for name in self.traits():
             setattr(new_session, name, getattr(self, name))
         # fork digest_history
         new_session.digest_history = set()
