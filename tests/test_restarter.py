@@ -80,7 +80,7 @@ def debug_logging():
 
 
 win_skip = pytest.mark.skipif(
-    os.name == 'nt',
+    os.name == "nt",
     reason='"RuntimeError: Cannot run the event loop while another loop is running" error on Windows',
 )
 
@@ -106,7 +106,7 @@ async def test_restart_check(config, install_kernel, debug_logging):
 
     try:
         km.start_kernel()
-        km.add_restart_callback(cb, 'restart')
+        km.add_restart_callback(cb, "restart")
     except BaseException:
         if km.has_kernel:
             km.shutdown_kernel()
@@ -167,8 +167,8 @@ async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
 
     try:
         km.start_kernel()
-        km.add_restart_callback(cb, 'restart')
-        km.add_restart_callback(on_death, 'dead')
+        km.add_restart_callback(cb, "restart")
+        km.add_restart_callback(on_death, "dead")
     except BaseException:
         if km.has_kernel:
             km.shutdown_kernel()
@@ -206,7 +206,7 @@ async def test_async_restart_check(config, install_kernel, debug_logging):
 
     try:
         await km.start_kernel()
-        km.add_restart_callback(cb, 'restart')
+        km.add_restart_callback(cb, "restart")
     except BaseException:
         if km.has_kernel:
             await km.shutdown_kernel()
@@ -267,8 +267,8 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_
 
     try:
         await km.start_kernel()
-        km.add_restart_callback(cb, 'restart')
-        km.add_restart_callback(on_death, 'dead')
+        km.add_restart_callback(cb, "restart")
+        km.add_restart_callback(on_death, "dead")
     except BaseException:
         if km.has_kernel:
             await km.shutdown_kernel()

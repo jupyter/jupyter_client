@@ -241,7 +241,7 @@ class KernelSpecManager(LoggingConfigurable):
                 pass
             else:
                 if resource_dir == RESOURCES:
-                    kdict = get_kernel_dict()  # type:ignore[no-untyped-call]
+                    kdict = get_kernel_dict()
                     kspec = self.kernel_spec_class(resource_dir=resource_dir, **kdict)
         if not kspec:
             kspec = self.kernel_spec_class.from_resource_dir(resource_dir)
@@ -415,7 +415,7 @@ class KernelSpecManager(LoggingConfigurable):
         )
         from ipykernel.kernelspec import install
 
-        install(self, user=user)  # type:ignore[no-untyped-call]
+        install(self, user=user)
 
 
 def find_kernel_specs() -> dict[str, str]:
