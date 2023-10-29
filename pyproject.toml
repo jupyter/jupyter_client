@@ -1,85 +1,76 @@
 [build-system]
+requires = ["hatchling>=1.5"]
 build-backend = "hatchling.build"
-requires = [
-  "hatchling>=1.5",
-]
 
 [project]
-name = "jupyter-client"
+name = "jupyter_client"
+dynamic = ["version"]
 description = "Jupyter protocol implementation and client libraries"
-[project.readme]
-file = "README.md"
-content-type = "text/markdown"
-
-keywords = [
-  "Interactive",
-  "Interpreter",
-  "Shell",
-  "Web",
+keywords = [ "Interactive", "Interpreter", "Shell", "Web",]
+classifiers = [
+    "Framework :: Jupyter",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3"
 ]
-[project.license]
-file = "LICENSE"
+requires-python = ">=3.8"
+dependencies = [
+    "importlib_metadata>=4.8.3;python_version<\"3.10\"",
+    "jupyter_core>=4.12,!=5.0.*",
+    "python-dateutil>=2.8.2",
+    "pyzmq>=23.0",
+    "tornado>=6.2",
+    "traitlets>=5.3",
+]
 
 [[project.authors]]
 name = "Jupyter Development Team"
 email = "jupyter@googlegroups.com"
 
-requires-python = ">=3.8"
-classifiers = [
-  "Framework :: Jupyter",
-  "Intended Audience :: Developers",
-  "Intended Audience :: Education",
-  "Intended Audience :: Science/Research",
-  "Intended Audience :: System Administrators",
-  "License :: OSI Approved :: BSD License",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-]
-dynamic = [
-  "version",
-]
-dependencies = [
-  'importlib_metadata>=4.8.3; python_version < "3.10"',
-  "jupyter_core!=5.0.*,>=4.12",
-  "python-dateutil>=2.8.2",
-  "pyzmq>=23",
-  "tornado>=6.2",
-  "traitlets>=5.3",
-]
-[project.optional-dependencies]
-docs = [
-  "ipykernel",
-  "myst-parser",
-  "pydata_sphinx_theme",
-  "sphinx>=4",
-  "sphinx-autodoc-typehints",
-  "sphinxcontrib-spelling",
-  "sphinxcontrib_github_alt",
-]
-test = [
-  "coverage",
-  "ipykernel>=6.14",
-  "mypy",
-  'paramiko; sys_platform == "win32"',
-  "pre-commit",
-  "pytest",
-  "pytest-cov",
-  "pytest-jupyter[client]>=0.4.1",
-  "pytest-timeout",
-]
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.license]
+file = "LICENSE"
+
 [project.urls]
-Documentation = "https://jupyter-client.readthedocs.io/"
 Homepage = "https://jupyter.org"
+Documentation = "https://jupyter-client.readthedocs.io/"
 Source = "https://github.com/jupyter/jupyter_client"
+
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "ipykernel>=6.14",
+    "mypy",
+    "paramiko; sys_platform == 'win32'",
+    "pre-commit",
+    "pytest",
+    "pytest-jupyter[client]>=0.4.1",
+    "pytest-cov",
+    "pytest-timeout",
+]
+docs = [
+    "ipykernel",
+    "myst-parser",
+    "sphinx>=4",
+    "pydata_sphinx_theme",
+    "sphinxcontrib_github_alt",
+    "sphinxcontrib-spelling",
+    "sphinx-autodoc-typehints",
+]
+
 [project.scripts]
-jupyter-kernel = "jupyter_client.kernelapp:main"
 jupyter-kernelspec = "jupyter_client.kernelspecapp:KernelSpecApp.launch_instance"
 jupyter-run = "jupyter_client.runapp:RunApp.launch_instance"
+jupyter-kernel = "jupyter_client.kernelapp:main"
+
 [project.entry-points."jupyter_client.kernel_provisioners"]
 local-provisioner = "jupyter_client.provisioning:LocalProvisioner"
 
@@ -128,6 +119,63 @@ fmt = [
   "ruff format {args:.}",
   "mdformat {args:docs *.md}"
 ]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+xfail_strict = true
+log_cli_level = "info"
+addopts = [
+  "-raXs", "--durations=10", "--color=yes", "--doctest-modules",
+   "--showlocals", "--strict-markers", "--strict-config"
+]
+testpaths = [
+    "jupyter_client",
+    "tests/"
+]
+timeout = 100
+# Restore this setting to debug failures
+timeout_method = "thread"
+filterwarnings= [
+  # Fail on warnings
+  "error",
+  # from python-dateutil
+  "ignore:datetime.datetime.utcfromtimestamp:DeprecationWarning",
+  "ignore:datetime.datetime.utcnow:DeprecationWarning",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "if self.debug:",
+  "if settings.DEBUG",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if 0:",
+  "if __name__ == .__main__.:",
+  "class .*\bProtocol\\):",
+"@(abc\\.)?abstractmethod",
+]
+omit = [
+    "jupyter_client/ssh/forward.py"
+]
+
+[tool.coverage.run]
+relative_files = true
+source = ["jupyter_client"]
+
+[tool.mypy]
+files = "jupyter_client"
+python_version = "3.8"
+strict = true
+disallow_any_generics = false
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+no_implicit_reexport = false
+pretty = true
+show_error_context = true
+show_error_codes = true
+warn_return_any = false
+warn_unreachable = true
 
 [tool.ruff]
 target-version = "py38"
@@ -229,63 +277,6 @@ unfixable = [
 "*app.py" = ["T201"]
 # F401 `._version.__version__` imported but unused
 "jupyter_client/__init__.py" = ["F401"]
-
-[tool.pytest.ini_options]
-minversion = "6.0"
-xfail_strict = true
-log_cli_level = "info"
-addopts = [
-  "-raXs", "--durations=10", "--color=yes", "--doctest-modules",
-   "--showlocals", "--strict-markers", "--strict-config"
-]
-testpaths = [
-    "jupyter_client",
-    "tests/"
-]
-timeout = 100
-# Restore this setting to debug failures
-timeout_method = "thread"
-filterwarnings= [
-  # Fail on warnings
-  "error",
-  # from python-dateutil
-  "ignore:datetime.datetime.utcfromtimestamp:DeprecationWarning",
-  "ignore:datetime.datetime.utcnow:DeprecationWarning",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-  "pragma: no cover",
-  "def __repr__",
-  "if self.debug:",
-  "if settings.DEBUG",
-  "raise AssertionError",
-  "raise NotImplementedError",
-  "if 0:",
-  "if __name__ == .__main__.:",
-  "class .*\bProtocol\\):",
-"@(abc\\.)?abstractmethod",
-]
-omit = [
-    "jupyter_client/ssh/forward.py"
-]
-
-[tool.coverage.run]
-relative_files = true
-source = ["jupyter_client"]
-
-[tool.mypy]
-files = "jupyter_client"
-python_version = "3.8"
-strict = true
-disallow_any_generics = false
-enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
-no_implicit_reexport = false
-pretty = true
-show_error_context = true
-show_error_codes = true
-warn_return_any = false
-warn_unreachable = true
 
 [tool.interrogate]
 ignore-init-module=true
