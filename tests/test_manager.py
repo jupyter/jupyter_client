@@ -1,6 +1,7 @@
 """Tests for KernelManager"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import asyncio
 import os
 import tempfile
 from unittest import mock
@@ -32,3 +33,14 @@ def test_connection_file_real_path():
         km._launch_args = {}
         cmds = km.format_kernel_cmd()
         assert cmds[4] == "foobar"
+
+
+async def test_in_pending_state():
+    """Verify in_pending_state race condition"""
+    tm = KernelManager()
+    start_kernel = asyncio.ensure_future(tm._async_start_kernel())
+    shutdown_kernel = asyncio.ensure_future(tm._async_shutdown_kernel())
+
+    await start_kernel
+    await shutdown_kernel
+    assert tm.is_alive() is False
