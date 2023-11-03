@@ -24,7 +24,7 @@ NATIVE_KERNEL_NAME = "python3"
 class KernelSpec(HasTraits):
     """A kernel spec model object."""
 
-    argv = List()
+    argv: List[str] = List()
     name = Unicode()
     mimetype = Unicode()
     display_name = Unicode()
@@ -160,7 +160,7 @@ class KernelSpecManager(LoggingConfigurable):
         By default, all installed kernels are allowed.
         """,
     )
-    kernel_dirs = List(
+    kernel_dirs: List[str] = List(
         help="List of kernel directories to search. Later ones take priority over earlier."
     )
 
