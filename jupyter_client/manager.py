@@ -109,10 +109,10 @@ class KernelManager(ConnectionFileMixin):
         """Initialize a kernel manager."""
         if args:
             warnings.warn(
-                'Passing positional only arguments to '
-                '`KernelManager.__init__` is deprecated since jupyter_client'
-                ' 8.6, and will become an error on future versions. Positional '
-                ' arguments have been ignored since jupyter_client 7.0',
+                "Passing positional only arguments to "
+                "`KernelManager.__init__` is deprecated since jupyter_client"
+                " 8.6, and will become an error on future versions. Positional "
+                " arguments have been ignored since jupyter_client 7.0",
                 DeprecationWarning,
                 stacklevel=2,
             )
