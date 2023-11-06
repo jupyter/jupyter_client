@@ -9,6 +9,7 @@ import signal
 import sys
 import typing as t
 import uuid
+import warnings
 from asyncio.futures import Future
 from concurrent.futures import Future as CFuture
 from contextlib import contextmanager
@@ -107,6 +108,15 @@ class KernelManager(ConnectionFileMixin):
 
     def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         """Initialize a kernel manager."""
+        if args:
+            warnings.warn(
+                "Passing positional only arguments to "
+                "`KernelManager.__init__` is deprecated since jupyter_client"
+                " 8.6, and will become an error on future versions. Positional "
+                " arguments have been ignored since jupyter_client 7.0",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self._owns_kernel = kwargs.pop("owns_kernel", True)
         super().__init__(**kwargs)
         self._shutdown_status = _ShutdownStatus.Unset
