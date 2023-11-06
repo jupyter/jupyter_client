@@ -2,6 +2,29 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.6.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.5.0...2d6f52bdf5266688c51f3270cd7e47bbd17c708c))
+
+### Bugs fixed
+
+- Fix possibly not defined tracker [#991](https://github.com/jupyter/jupyter_client/pull/991) ([@davidbrochart](https://github.com/davidbrochart))
+- BUG: Fix Kwarg only in update_env [#989](https://github.com/jupyter/jupyter_client/pull/989) ([@Carreau](https://github.com/Carreau))
+
+### Maintenance and upkeep improvements
+
+- Update typing for traitlets 5.13 [#995](https://github.com/jupyter/jupyter_client/pull/995) ([@blink1073](https://github.com/blink1073))
+- Use ruff format [#992](https://github.com/jupyter/jupyter_client/pull/992) ([@blink1073](https://github.com/blink1073))
+- Unused `*args` in `KernelManager`'s `__init__` [#986](https://github.com/jupyter/jupyter_client/pull/986) ([@Carreau](https://github.com/Carreau))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-10-25&to=2023-11-06&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-10-25..2023-11-06&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2023-10-25..2023-11-06&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2023-10-25..2023-11-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.5.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.4.0...ff94e310c2af3546f2f9384e6b35fd11c3d09a71))
@@ -20,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-10-11&to=2023-10-25&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-10-11..2023-10-25&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2023-10-11..2023-10-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.4.0
 
