@@ -223,7 +223,7 @@ class MultiKernelManager(LoggingConfigurable):
         .. version-added: 8.5
         """
         if kernel_id in self:
-            self._kernels[kernel_id].update_env(env)
+            self._kernels[kernel_id].update_env(env=env)
 
     async def _add_kernel_when_ready(
         self, kernel_id: str, km: KernelManager, kernel_awaitable: t.Awaitable
