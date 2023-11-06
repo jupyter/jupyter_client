@@ -19,6 +19,7 @@ from jupyter_core.utils import run_sync
 from traitlets import (
     Any,
     Bool,
+    Dict,
     DottedObjectName,
     Float,
     Instance,
@@ -206,7 +207,7 @@ class KernelManager(ConnectionFileMixin):
         return self.kernel_name in {"python", "python2", "python3"}
 
     # Protected traits
-    _launch_args: Any = Any()
+    _launch_args: t.Optional[Dict] = Dict(allow_none=True)
     _control_socket: Any = Any()
 
     _restarter: Any = Any()
@@ -319,7 +320,7 @@ class KernelManager(ConnectionFileMixin):
 
         if self.kernel_spec:  # type:ignore[truthy-bool]
             ns["resource_dir"] = self.kernel_spec.resource_dir
-
+        assert self._launch_args is not None
         ns.update(self._launch_args)
 
         pat = re.compile(r"\{([A-Za-z0-9_]+)\}")
@@ -376,7 +377,8 @@ class KernelManager(ConnectionFileMixin):
         self.shutting_down = False
         self.kernel_id = self.kernel_id or kw.pop("kernel_id", str(uuid.uuid4()))
         # save kwargs for use in restart
-        self._launch_args = kw.copy()
+        # assigning Traitlets Dicts to Dict make mypy unhappy but is ok
+        self._launch_args = kw.copy()  # type:ignore [assignment]
         if self.provisioner is None:  # will not be None on restarts
             self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
                 self.kernel_id,
