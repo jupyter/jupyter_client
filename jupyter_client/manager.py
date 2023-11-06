@@ -207,7 +207,7 @@ class KernelManager(ConnectionFileMixin):
         return self.kernel_name in {"python", "python2", "python3"}
 
     # Protected traits
-    _launch_args: t.Optional[Dict] = Dict(allow_none=True)
+    _launch_args: t.Optional["Dict[str, Any]"] = Dict(allow_none=True)
     _control_socket: Any = Any()
 
     _restarter: Any = Any()
@@ -282,12 +282,13 @@ class KernelManager(ConnectionFileMixin):
 
         .. version-added: 8.5
         """
+        # Mypy think this is unreachable as it see _launch_args as Dict, not t.Dict
         if (
             isinstance(self._launch_args, dict)
             and "env" in self._launch_args
-            and isinstance(self._launch_args["env"], dict)
+            and isinstance(self._launch_args["env"], dict)  # type: ignore [unreachable]
         ):
-            self._launch_args["env"].update(env)
+            self._launch_args["env"].update(env)  # type: ignore [unreachable]
 
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """Replace templated args (e.g. {connection_file})"""
@@ -313,14 +314,15 @@ class KernelManager(ConnectionFileMixin):
         # is not usable by non python kernels because the path is being rerouted when
         # inside of a store app.
         # See this bug here: https://bugs.python.org/issue41196
-        ns = {
+        ns: t.Dict[str, t.Any] = {
             "connection_file": os.path.realpath(self.connection_file),
             "prefix": sys.prefix,
         }
 
         if self.kernel_spec:  # type:ignore[truthy-bool]
             ns["resource_dir"] = self.kernel_spec.resource_dir
-        assert self._launch_args is not None
+        assert isinstance(self._launch_args, dict)
+
         ns.update(self._launch_args)
 
         pat = re.compile(r"\{([A-Za-z0-9_]+)\}")
