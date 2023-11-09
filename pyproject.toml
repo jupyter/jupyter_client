@@ -107,7 +107,10 @@ test = "pre-commit run --all-files --hook-stage manual mypy"
 dependencies = ["pre-commit"]
 detached = true
 [tool.hatch.envs.lint.scripts]
-build = ["pre-commit run --all-files ruff"]
+build = [
+  "pre-commit run --all-files ruff",
+  "pre-commit run --all-files ruff-format"
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -167,7 +170,6 @@ warn_return_any = false
 warn_unreachable = true
 
 [tool.ruff]
-target-version = "py38"
 line-length = 100
 
 [tool.ruff.lint]
