@@ -1,44 +1,23 @@
-"""A kernel manager with a tornado IOLoop"""
+"""A kernel manager with an asyncio IOLoop"""
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import asyncio
 import typing as t
 
-import zmq
-from tornado import ioloop
 from traitlets import Instance, Type
-from zmq.eventloop.zmqstream import ZMQStream
 
 from ..manager import AsyncKernelManager, KernelManager
+from ..utils import get_event_loop
 from .restarter import AsyncIOLoopKernelRestarter, IOLoopKernelRestarter
-
-
-def as_zmqstream(f: t.Any) -> t.Callable:
-    """Convert a socket to a zmq stream."""
-
-    def wrapped(self: t.Any, *args: t.Any, **kwargs: t.Any) -> t.Any:
-        save_socket_class = None
-        # zmqstreams only support sync sockets
-        if self.context._socket_class is not zmq.Socket:
-            save_socket_class = self.context._socket_class
-            self.context._socket_class = zmq.Socket
-        try:
-            socket = f(self, *args, **kwargs)
-        finally:
-            if save_socket_class:
-                # restore default socket class
-                self.context._socket_class = save_socket_class
-        return ZMQStream(socket, self.loop)
-
-    return wrapped
 
 
 class IOLoopKernelManager(KernelManager):
     """An io loop kernel manager."""
 
-    loop = Instance("tornado.ioloop.IOLoop")
+    loop = Instance(asyncio.AbstractEventLoop)
 
-    def _loop_default(self) -> ioloop.IOLoop:
-        return ioloop.IOLoop.current()
+    def _loop_default(self) -> asyncio.AbstractEventLoop:
+        return get_event_loop()
 
     restarter_class = Type(
         default_value=IOLoopKernelRestarter,
@@ -66,20 +45,14 @@ class IOLoopKernelManager(KernelManager):
         if self.autorestart and self._restarter is not None:
             self._restarter.stop()
 
-    connect_shell = as_zmqstream(KernelManager.connect_shell)
-    connect_control = as_zmqstream(KernelManager.connect_control)
-    connect_iopub = as_zmqstream(KernelManager.connect_iopub)
-    connect_stdin = as_zmqstream(KernelManager.connect_stdin)
-    connect_hb = as_zmqstream(KernelManager.connect_hb)
-
 
 class AsyncIOLoopKernelManager(AsyncKernelManager):
     """An async ioloop kernel manager."""
 
-    loop = Instance("tornado.ioloop.IOLoop")
+    loop = Instance(asyncio.AbstractEventLoop)
 
-    def _loop_default(self) -> ioloop.IOLoop:
-        return ioloop.IOLoop.current()
+    def _loop_default(self) -> asyncio.AbstractEventLoop:
+        return get_event_loop()
 
     restarter_class = Type(
         default_value=AsyncIOLoopKernelRestarter,
@@ -108,9 +81,3 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
         """Stop the restarter."""
         if self.autorestart and self._restarter is not None:
             self._restarter.stop()
-
-    connect_shell = as_zmqstream(AsyncKernelManager.connect_shell)
-    connect_control = as_zmqstream(AsyncKernelManager.connect_control)
-    connect_iopub = as_zmqstream(AsyncKernelManager.connect_iopub)
-    connect_stdin = as_zmqstream(AsyncKernelManager.connect_stdin)
-    connect_hb = as_zmqstream(AsyncKernelManager.connect_hb)

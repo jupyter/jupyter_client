@@ -28,7 +28,6 @@ from hmac import compare_digest
 
 # We are using compare_digest to limit the surface of timing attacks
 import zmq.asyncio
-from tornado.ioloop import IOLoop
 from traitlets import (
     Any,
     Bool,
@@ -46,7 +45,6 @@ from traitlets import (
 from traitlets.config.configurable import Configurable, LoggingConfigurable
 from traitlets.log import get_logger
 from traitlets.utils.importstring import import_item
-from zmq.eventloop.zmqstream import ZMQStream
 
 from ._version import protocol_version
 from .adapter import adapt
@@ -206,9 +204,7 @@ def utcnow() -> datetime:
 
 
 class SessionFactory(LoggingConfigurable):
-    """The Base class for configurables that have a Session, Context, logger,
-    and IOLoop.
-    """
+    """The Base class for configurables that have a Session, Context, logger."""
 
     logname = Unicode("")
 
@@ -223,11 +219,6 @@ class SessionFactory(LoggingConfigurable):
         return zmq.Context()
 
     session = Instance("jupyter_client.session.Session", allow_none=True)
-
-    loop = Instance("tornado.ioloop.IOLoop")
-
-    def _loop_default(self) -> IOLoop:
-        return IOLoop.current()
 
     def __init__(self, **kwargs: t.Any) -> None:
         """Initialize a session factory."""
@@ -302,7 +293,7 @@ class Session(Configurable):
     """Object for handling serialization and sending of messages.
 
     The Session object handles building messages and sending them
-    with ZMQ sockets or ZMQStream objects.  Objects can communicate with each
+    with ZMQ sockets.  Objects can communicate with each
     other over the network via Session objects, and only need to work with the
     dict-based IPython message spec. The Session will handle
     serialization/deserialization, security, and metadata.
@@ -753,7 +744,7 @@ class Session(Configurable):
 
     def send(
         self,
-        stream: zmq.sugar.socket.Socket | ZMQStream | None,
+        socket: zmq.sugar.socket.Socket | None,
         msg_or_type: dict[str, t.Any] | str,
         content: dict[str, t.Any] | None = None,
         parent: dict[str, t.Any] | None = None,
@@ -763,7 +754,7 @@ class Session(Configurable):
         header: dict[str, t.Any] | None = None,
         metadata: dict[str, t.Any] | None = None,
     ) -> dict[str, t.Any] | None:
-        """Build and send a message via stream or socket.
+        """Build and send a message via socket.
 
         The message format used by this function internally is as follows:
 
@@ -776,8 +767,8 @@ class Session(Configurable):
         Parameters
         ----------
 
-        stream : zmq.Socket or ZMQStream
-            The socket-like object used to send the data.
+        socket : zmq.Socket
+            The zmq Socket object used to send the data.
         msg_or_type : str or Message/dict
             Normally, msg_or_type will be a msg_type unless a message is being
             sent more than once. If a header is supplied, this can be set to
@@ -797,8 +788,7 @@ class Session(Configurable):
         buffers : list or None
             The already-serialized buffers to be appended to the message.
         track : bool
-            Whether to track.  Only for use with Sockets, because ZMQStream
-            objects cannot track messages.
+            Whether to track.
 
 
         Returns
@@ -806,13 +796,9 @@ class Session(Configurable):
         msg : dict
             The constructed message.
         """
-        if not isinstance(stream, zmq.Socket):
-            # ZMQStreams and dummy sockets do not support tracking.
-            track = False
-
-        if isinstance(stream, zmq.asyncio.Socket):
-            assert stream is not None  # type:ignore[unreachable]
-            stream = zmq.Socket.shadow(stream.underlying)
+        if isinstance(socket, zmq.asyncio.Socket):
+            assert socket is not None  # type:ignore[unreachable]
+            socket = zmq.Socket.shadow(socket.underlying)
 
         if isinstance(msg_or_type, (Message, dict)):
             # We got a Message or message dict, not a msg_type so don't
@@ -854,13 +840,13 @@ class Session(Configurable):
         longest = max([len(s) for s in to_send])
         copy = longest < self.copy_threshold
 
-        if stream and buffers and track and not copy:
+        if socket and buffers and track and not copy:
             # only really track when we are doing zero-copy buffers
-            tracker = stream.send_multipart(to_send, copy=False, track=True)
-        elif stream:
+            tracker = socket.send_multipart(to_send, copy=False, track=True)
+        elif socket:
             # use dummy tracker, which will be done immediately
             tracker = DONE
-            stream.send_multipart(to_send, copy=copy)
+            socket.send_multipart(to_send, copy=copy)
         else:
             tracker = DONE
 
@@ -875,7 +861,7 @@ class Session(Configurable):
 
     def send_raw(
         self,
-        stream: zmq.sugar.socket.Socket,
+        socket: zmq.sugar.socket.Socket,
         msg_list: list,
         flags: int = 0,
         copy: bool = True,
@@ -887,8 +873,8 @@ class Session(Configurable):
 
         Parameters
         ----------
-        stream : ZMQStream or Socket
-            The ZMQ stream or socket to use for sending the message.
+        socket : Socket
+            The ZMQ socket to use for sending the message.
         msg_list : list
             The serialized list of messages to send. This only includes the
             [p_header,p_parent,p_metadata,p_content,buffer1,buffer2,...] portion of
@@ -906,9 +892,9 @@ class Session(Configurable):
         # Don't include buffers in signature (per spec).
         to_send.append(self.sign(msg_list[0:4]))
         to_send.extend(msg_list)
-        if isinstance(stream, zmq.asyncio.Socket):
-            stream = zmq.Socket.shadow(stream.underlying)
-        stream.send_multipart(to_send, flags, copy=copy)
+        if isinstance(socket, zmq.asyncio.Socket):
+            socket = zmq.Socket.shadow(socket.underlying)
+        socket.send_multipart(to_send, flags, copy=copy)
 
     def recv(
         self,
@@ -921,8 +907,8 @@ class Session(Configurable):
 
         Parameters
         ----------
-        socket : ZMQStream or Socket
-            The socket or stream to use in receiving.
+        socket : Socket
+            The socket to use in receiving.
 
         Returns
         -------
@@ -930,8 +916,6 @@ class Session(Configurable):
             [idents] is a list of idents and msg is a nested message dict of
             same format as self.msg returns.
         """
-        if isinstance(socket, ZMQStream):  # type:ignore[unreachable]
-            socket = socket.socket  # type:ignore[unreachable]
         if isinstance(socket, zmq.asyncio.Socket):
             socket = zmq.Socket.shadow(socket.underlying)
 

@@ -13,8 +13,6 @@ from unittest import mock
 import pytest
 import zmq
 from dateutil.tz import tzlocal
-from tornado import ioloop
-from zmq.eventloop.zmqstream import ZMQStream
 
 from jupyter_client import jsonutil
 from jupyter_client import session as ss
@@ -259,8 +257,6 @@ class TestSession:
         b.connect("inproc://test")
         s = session
         s.copy_threshold = 1
-        loop = ioloop.IOLoop(make_current=False)
-        ZMQStream(a, io_loop=loop)
         msg = s.send(a, "hello", track=False)
         self.assertTrue(msg["tracker"] is ss.DONE)
         msg = s.send(a, "hello", track=True)
@@ -288,7 +284,6 @@ class TestSession:
         b.connect("inproc://test")
         s = session
         s.copy_threshold = 1
-        loop = ioloop.IOLoop(make_current=False)
 
         msg = s.send(a, "hello", track=False)
         self.assertTrue(msg["tracker"] is ss.DONE)

@@ -5,11 +5,8 @@ restarts the kernel if it dies.
 """
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import asyncio
 import time
-import warnings
-from typing import Any
-
-from traitlets import Instance
 
 from ..restarter import KernelRestarter
 
@@ -17,36 +14,25 @@ from ..restarter import KernelRestarter
 class IOLoopKernelRestarter(KernelRestarter):
     """Monitor and autorestart a kernel."""
 
-    loop = Instance("tornado.ioloop.IOLoop")
-
-    def _loop_default(self) -> Any:
-        warnings.warn(
-            "IOLoopKernelRestarter.loop is deprecated in jupyter-client 5.2",
-            DeprecationWarning,
-            stacklevel=4,
-        )
-        from tornado import ioloop
-
-        return ioloop.IOLoop.current()
-
-    _pcallback = None
+    _running = False
 
     def start(self) -> None:
         """Start the polling of the kernel."""
-        if self._pcallback is None:
-            from tornado.ioloop import PeriodicCallback
+        if not self._running:
+            self._running = True
+            self.parent.loop.call_soon_threadsafe(self._poll)
 
-            self._pcallback = PeriodicCallback(
-                self.poll,
-                1000 * self.time_to_dead,
-            )
-            self._pcallback.start()
+    async def _poll(self):
+        while 1:
+            if not self._running:
+                return
+            self.poll()
+            await asyncio.sleep(1000 * self.time_to_dead)
 
     def stop(self) -> None:
         """Stop the kernel polling."""
-        if self._pcallback is not None:
-            self._pcallback.stop()
-            self._pcallback = None
+        if self._running:
+            self._running = False
 
 
 class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):

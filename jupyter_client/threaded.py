@@ -3,17 +3,12 @@ replies.
 """
 import asyncio
 import atexit
-import time
 from concurrent.futures import Future
-from functools import partial
 from threading import Thread
 from typing import Any, Dict, List, Optional
 
 import zmq
-from tornado.ioloop import IOLoop
 from traitlets import Instance, Type
-from traitlets.log import get_logger
-from zmq.eventloop import zmqstream
 
 from .channels import HBChannel
 from .client import KernelClient
@@ -37,7 +32,7 @@ class ThreadedZMQSocketChannel:
         self,
         socket: Optional[zmq.Socket],
         session: Optional[Session],
-        loop: Optional[IOLoop],
+        loop: Optional[asyncio.AbstractEventLoop],
     ) -> None:
         """Create a channel.
 
@@ -48,31 +43,29 @@ class ThreadedZMQSocketChannel:
         session : :class:`session.Session`
             The session to use.
         loop
-            A tornado ioloop to connect the socket to using a ZMQStream
+            A ioloop to poll the socket.
         """
         super().__init__()
 
         self.socket = socket
         self.session = session
         self.ioloop = loop
-        f: Future = Future()
+        self.ioloop.call_soon_threadsafe(self._poll)
 
-        def setup_stream() -> None:
+    def _poll(self):
+        if self.socket.poll(0.1, zmq.POLLIN) == zmq.POLLIN:
+            self._handle_recv(self.socket.recv_multipart())
+        if not self._stopping:
+            self.ioloop.call_soon_threadsafe(self._poll)
+        elif self.socket is not None:
             try:
-                assert self.socket is not None
-                self.stream = zmqstream.ZMQStream(self.socket, self.ioloop)
-                self.stream.on_recv(self._handle_recv)
-            except Exception as e:
-                f.set_exception(e)
-            else:
-                f.set_result(None)
-
-        assert self.ioloop is not None
-        self.ioloop.add_callback(setup_stream)
-        # don't wait forever, raise any errors
-        f.result(timeout=10)
+                self.socket.close(linger=0)
+            except Exception:
+                pass
+            self.socket = None
 
     _is_alive = False
+    _stopping = False
 
     def is_alive(self) -> bool:
         """Whether the channel is alive."""
@@ -88,35 +81,13 @@ class ThreadedZMQSocketChannel:
 
     def close(self) -> None:
         """Close the channel."""
-        if self.stream is not None and self.ioloop is not None:
-            # c.f.Future for threadsafe results
-            f: Future = Future()
+        if self.ioloop is not None:
+            self._stopping = True
 
-            def close_stream() -> None:
-                try:
-                    if self.stream is not None:
-                        self.stream.close(linger=0)
-                        self.stream = None
-                except Exception as e:
-                    f.set_exception(e)
-                else:
-                    f.set_result(None)
-
-            self.ioloop.add_callback(close_stream)
-            # wait for result
-            try:
-                f.result(timeout=5)
-            except Exception as e:
-                log = get_logger()
-                msg = f"Error closing stream {self.stream}: {e}"
-                log.warning(msg, RuntimeWarning, stacklevel=2)
-
-        if self.socket is not None:
-            try:
-                self.socket.close(linger=0)
-            except Exception:
-                pass
-            self.socket = None
+    def _thread_send(self, msg):
+        assert self.session is not None
+        if self.socket:
+            self.session.send(self.socket, msg)
 
     def send(self, msg: Dict[str, Any]) -> None:
         """Queue a message to be sent from the IOLoop's thread.
@@ -128,13 +99,8 @@ class ThreadedZMQSocketChannel:
         This is threadsafe, as it uses IOLoop.add_callback to give the loop's
         thread control of the action.
         """
-
-        def thread_send() -> None:
-            assert self.session is not None
-            self.session.send(self.stream, msg)
-
         assert self.ioloop is not None
-        self.ioloop.add_callback(thread_send)
+        self.ioloop.call_soon_threadsafe(self._thread_send, msg)
 
     def _handle_recv(self, msg_list: List) -> None:
         """Callback for stream.on_recv.
@@ -185,41 +151,24 @@ class ThreadedZMQSocketChannel:
         """
         # We do the IOLoop callback process twice to ensure that the IOLoop
         # gets to perform at least one full poll.
-        stop_time = time.monotonic() + timeout
+        # stop_time = time.monotonic() + timeout
         assert self.ioloop is not None
-        if self.stream is None or self.stream.closed():
+        if not self._is_alive:
             # don't bother scheduling flush on a thread if we're closed
-            _msg = "Attempt to flush closed stream"
+            _msg = "Attempt to flush closed channel"
             raise OSError(_msg)
-
-        def flush(f: Any) -> None:
-            try:
-                self._flush()
-            except Exception as e:
-                f.set_exception(e)
-            else:
-                f.set_result(None)
-
-        for _ in range(2):
-            f: Future = Future()
-            self.ioloop.add_callback(partial(flush, f))
-            # wait for async flush, re-raise any errors
-            timeout = max(stop_time - time.monotonic(), 0)
-            try:
-                f.result(max(stop_time - time.monotonic(), 0))
-            except TimeoutError:
-                # flush with a timeout means stop waiting, not raise
-                return
+        self.ioloop.call_soon_threadsafe(self._flush)
 
     def _flush(self) -> None:
         """Callback for :method:`self.flush`."""
-        assert self.stream is not None
+        assert self.socket is not None
+        # TODO test this
         self.stream.flush()
         self._flushed = True
 
 
 class IOLoopThread(Thread):
-    """Run a pyzmq ioloop in a thread to send and receive messages"""
+    """Run an asyncio ioloop in a thread to send and receive messages"""
 
     _exiting = False
     ioloop = None
@@ -251,13 +200,8 @@ class IOLoopThread(Thread):
     def run(self) -> None:
         """Run my loop, ignoring EINTR events in the poller"""
         try:
-            loop = asyncio.new_event_loop()
+            self.ioloop = loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-
-            async def assign_ioloop() -> None:
-                self.ioloop = IOLoop.current()
-
-            loop.run_until_complete(assign_ioloop())
         except Exception as e:
             self._start_future.set_exception(e)
         else:
@@ -298,7 +242,7 @@ class ThreadedKernelClient(KernelClient):
     """A KernelClient that provides thread-safe sockets with async callbacks on message replies."""
 
     @property
-    def ioloop(self) -> Optional[IOLoop]:  # type:ignore[override]
+    def ioloop(self) -> Optional[asyncio.AbstractEventLoop]:  # type:ignore[override]
         if self.ioloop_thread:
             return self.ioloop_thread.ioloop
         return None

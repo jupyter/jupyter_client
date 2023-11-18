@@ -511,7 +511,7 @@ class MultiKernelManager(LoggingConfigurable):
 
         Returns
         =======
-        stream : zmq Socket or ZMQStream
+        stream : zmq Socket
         """
 
     @kernel_method
@@ -529,7 +529,7 @@ class MultiKernelManager(LoggingConfigurable):
 
         Returns
         =======
-        stream : zmq Socket or ZMQStream
+        stream : zmq Socket
         """
 
     @kernel_method
@@ -547,7 +547,7 @@ class MultiKernelManager(LoggingConfigurable):
 
         Returns
         =======
-        stream : zmq Socket or ZMQStream
+        stream : zmq Socket
         """
 
     @kernel_method
@@ -565,7 +565,7 @@ class MultiKernelManager(LoggingConfigurable):
 
         Returns
         =======
-        stream : zmq Socket or ZMQStream
+        stream : zmq Socket
         """
 
     @kernel_method
@@ -583,7 +583,7 @@ class MultiKernelManager(LoggingConfigurable):
 
         Returns
         =======
-        stream : zmq Socket or ZMQStream
+        stream : zmq Socket
         """
 
     def new_kernel_id(self, **kwargs: t.Any) -> str:
