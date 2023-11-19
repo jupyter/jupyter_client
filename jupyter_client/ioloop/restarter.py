@@ -5,6 +5,8 @@ restarts the kernel if it dies.
 """
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+from __future__ import annotations
+
 import asyncio
 import time
 
@@ -14,29 +16,31 @@ from ..restarter import KernelRestarter
 class IOLoopKernelRestarter(KernelRestarter):
     """Monitor and autorestart a kernel."""
 
-    _running = False
+    _poll_task: asyncio.Task | None = None
 
     def start(self) -> None:
         """Start the polling of the kernel."""
-        if not self._running:
-            self._running = True
-            self.parent.loop.call_soon_threadsafe(self._poll)
+        if not self._poll_task:
+            self._poll_task = self.parent.loop.create_task(self._poll())
 
     async def _poll(self):
         while 1:
-            if not self._running:
-                return
             self.poll()
             await asyncio.sleep(1000 * self.time_to_dead)
 
     def stop(self) -> None:
         """Stop the kernel polling."""
-        if self._running:
-            self._running = False
+        if self._poll_task is not None:
+            self._poll_task.cancel()
+            self._poll_task = None
 
 
 class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
     """An async io loop kernel restarter."""
+
+    async def _poll(self):
+        while 1:
+            await self.poll()
 
     async def poll(self) -> None:  # type:ignore[override]
         """Poll the kernel."""

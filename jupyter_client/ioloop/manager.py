@@ -36,7 +36,7 @@ class IOLoopKernelManager(KernelManager):
         if self.autorestart and self.has_kernel:
             if self._restarter is None:
                 self._restarter = self.restarter_class(
-                    kernel_manager=self, loop=self.loop, parent=self, log=self.log
+                    kernel_manager=self, parent=self, log=self.log
                 )
             self._restarter.start()
 
@@ -73,7 +73,7 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
         if self.autorestart and self.has_kernel:
             if self._restarter is None:
                 self._restarter = self.restarter_class(
-                    kernel_manager=self, loop=self.loop, parent=self, log=self.log
+                    kernel_manager=self, parent=self, log=self.log
                 )
             self._restarter.start()
 
