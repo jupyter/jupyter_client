@@ -214,84 +214,84 @@ class CustomThreadedKernelClient(ThreadedKernelClient):
     control_channel_class = Type(CustomThreadedZMQSocketChannel)  # type:ignore[arg-type]
 
 
-# class TestThreadedKernelClient(TestKernelClient):
-#     def setUp(self):
-#         try:
-#             KernelSpecManager().get_kernel_spec("echo")
-#         except NoSuchKernel:
-#             pytest.skip()
-#         self.km = km = ThreadedKernelManager(kernel_name="echo")
-#         km.start_kernel()
-#         self.kc = kc = km.client()
-#         kc.start_channels()
+class TestThreadedKernelClient(TestKernelClient):
+    def setUp(self):
+        try:
+            KernelSpecManager().get_kernel_spec("echo")
+        except NoSuchKernel:
+            pytest.skip()
+        self.km = km = ThreadedKernelManager(kernel_name="echo")
+        km.start_kernel()
+        self.kc = kc = km.client()
+        kc.start_channels()
 
-#     def tearDown(self):
-#         self.km.shutdown_kernel()
-#         self.kc.stop_channels()
+    def tearDown(self):
+        self.km.shutdown_kernel()
+        self.kc.stop_channels()
 
-#     def _check_reply(self, reply_type, reply):
-#         self.assertIsInstance(reply, dict)
-#         self.assertEqual(reply["header"]["msg_type"], reply_type + "_reply")
-#         self.assertEqual(reply["parent_header"]["msg_type"], reply_type + "_request")
+    def _check_reply(self, reply_type, reply):
+        self.assertIsInstance(reply, dict)
+        self.assertEqual(reply["header"]["msg_type"], reply_type + "_reply")
+        self.assertEqual(reply["parent_header"]["msg_type"], reply_type + "_request")
 
-#     def test_execute_interactive(self):
-#         pytest.skip("Not supported")
+    def test_execute_interactive(self):
+        pytest.skip("Not supported")
 
-#     def test_history(self):
-#         kc = self.kc
-#         msg_id = kc.history(session=0)
-#         self.assertIsInstance(msg_id, str)
-#         kc.history(session=0)
-#         kc.shell_channel.msg_recv.wait()
-#         reply = kc.shell_channel.last_msg
-#         self._check_reply("history", reply)
+    def test_history(self):
+        kc = self.kc
+        msg_id = kc.history(session=0)
+        self.assertIsInstance(msg_id, str)
+        kc.history(session=0)
+        kc.shell_channel.msg_recv.wait()
+        reply = kc.shell_channel.last_msg
+        self._check_reply("history", reply)
 
-#     def test_inspect(self):
-#         kc = self.kc
-#         msg_id = kc.inspect("who cares")
-#         self.assertIsInstance(msg_id, str)
-#         kc.inspect("code")
-#         kc.shell_channel.msg_recv.wait()
-#         reply = kc.shell_channel.last_msg
-#         self._check_reply("inspect", reply)
+    def test_inspect(self):
+        kc = self.kc
+        msg_id = kc.inspect("who cares")
+        self.assertIsInstance(msg_id, str)
+        kc.inspect("code")
+        kc.shell_channel.msg_recv.wait()
+        reply = kc.shell_channel.last_msg
+        self._check_reply("inspect", reply)
 
-#     def test_complete(self):
-#         kc = self.kc
-#         msg_id = kc.complete("who cares")
-#         self.assertIsInstance(msg_id, str)
-#         kc.complete("code")
-#         kc.shell_channel.msg_recv.wait()
-#         reply = kc.shell_channel.last_msg
-#         self._check_reply("complete", reply)
+    def test_complete(self):
+        kc = self.kc
+        msg_id = kc.complete("who cares")
+        self.assertIsInstance(msg_id, str)
+        kc.complete("code")
+        kc.shell_channel.msg_recv.wait()
+        reply = kc.shell_channel.last_msg
+        self._check_reply("complete", reply)
 
-#     def test_kernel_info(self):
-#         kc = self.kc
-#         msg_id = kc.kernel_info()
-#         self.assertIsInstance(msg_id, str)
-#         kc.kernel_info()
-#         kc.shell_channel.msg_recv.wait()
-#         reply = kc.shell_channel.last_msg
-#         self._check_reply("kernel_info", reply)
+    def test_kernel_info(self):
+        kc = self.kc
+        msg_id = kc.kernel_info()
+        self.assertIsInstance(msg_id, str)
+        kc.kernel_info()
+        kc.shell_channel.msg_recv.wait()
+        reply = kc.shell_channel.last_msg
+        self._check_reply("kernel_info", reply)
 
-#     def test_comm_info(self):
-#         kc = self.kc
-#         msg_id = kc.comm_info()
-#         self.assertIsInstance(msg_id, str)
-#         kc.shell_channel.msg_recv.wait()
-#         reply = kc.shell_channel.last_msg
-#         self._check_reply("comm_info", reply)
+    def test_comm_info(self):
+        kc = self.kc
+        msg_id = kc.comm_info()
+        self.assertIsInstance(msg_id, str)
+        kc.shell_channel.msg_recv.wait()
+        reply = kc.shell_channel.last_msg
+        self._check_reply("comm_info", reply)
 
-#     def test_shutdown(self):
-#         kc = self.kc
-#         kc.shutdown()
-#         kc.control_channel.msg_recv.wait()
-#         reply = kc.control_channel.last_msg
-#         self._check_reply("shutdown", reply)
+    def test_shutdown(self):
+        kc = self.kc
+        kc.shutdown()
+        kc.control_channel.msg_recv.wait()
+        reply = kc.control_channel.last_msg
+        self._check_reply("shutdown", reply)
 
-#     def test_shutdown_id(self):
-#         kc = self.kc
-#         msg_id = kc.shutdown()
-#         self.assertIsInstance(msg_id, str)
+    def test_shutdown_id(self):
+        kc = self.kc
+        msg_id = kc.shutdown()
+        self.assertIsInstance(msg_id, str)
 
 
 def test_validate_string_dict():

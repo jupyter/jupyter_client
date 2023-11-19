@@ -9,10 +9,12 @@ from typing import Any, Dict, List, Optional
 
 import zmq
 from traitlets import Instance, Type
+from traitlets.log import get_logger
 
 from .channels import HBChannel
 from .client import KernelClient
 from .session import Session
+from .utils import get_event_loop
 
 # Local imports
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
@@ -24,9 +26,10 @@ class ThreadedZMQSocketChannel:
 
     session = None
     socket = None
-    ioloop = None
     stream = None
     _inspect = None
+    _close_future = None
+    _stopping = False
 
     def __init__(
         self,
@@ -49,23 +52,9 @@ class ThreadedZMQSocketChannel:
 
         self.socket = socket
         self.session = session
-        self.ioloop = loop
-        self.ioloop.call_soon_threadsafe(self._poll)
-
-    def _poll(self):
-        if self.socket.poll(0.1, zmq.POLLIN) == zmq.POLLIN:
-            self._handle_recv(self.socket.recv_multipart())
-        if not self._stopping:
-            self.ioloop.call_soon_threadsafe(self._poll)
-        elif self.socket is not None:
-            try:
-                self.socket.close(linger=0)
-            except Exception:
-                pass
-            self.socket = None
+        self.ioloop = loop or get_event_loop()
 
     _is_alive = False
-    _stopping = False
 
     def is_alive(self) -> bool:
         """Whether the channel is alive."""
@@ -73,6 +62,8 @@ class ThreadedZMQSocketChannel:
 
     def start(self) -> None:
         """Start the channel."""
+        if not self._is_alive:
+            self.ioloop.call_soon_threadsafe(self._thread_poll)
         self._is_alive = True
 
     def stop(self) -> None:
@@ -81,8 +72,36 @@ class ThreadedZMQSocketChannel:
 
     def close(self) -> None:
         """Close the channel."""
-        if self.ioloop is not None:
-            self._stopping = True
+        if self.socket is not None:
+            self._close_future = f = Future()
+            self.ioloop.call_soon_threadsafe(self._thread_close)
+            # wait for result
+            try:
+                f.result(timeout=5)
+            except Exception as e:
+                log = get_logger()
+                msg = f"Error closing socket {self.socket}: {e}"
+                log.warning(msg, RuntimeWarning, stacklevel=2)
+
+    def _thread_close(self):
+        if self.socket is None:
+            return
+        assert self._close_future is not None
+        try:
+            self.socket.close(linger=0)
+            self.socket = None
+            self._close_future.set_result(None)
+        except Exception as e:
+            self._close_future.set_exception(e)
+
+    def _thread_poll(self):
+        if self.socket is None:
+            return
+        if self.socket.poll(0.1, zmq.POLLIN) == zmq.POLLIN:
+            self._handle_recv(self.socket.recv_multipart())
+        if self._is_alive:
+            self.ioloop.call_soon_threadsafe(self._thread_poll)
+            return
 
     def _thread_send(self, msg):
         assert self.session is not None
@@ -109,7 +128,7 @@ class ThreadedZMQSocketChannel:
         """
         assert self.ioloop is not None
         assert self.session is not None
-        ident, smsg = self.session.feed_identities(msg_list)
+        _, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)
         # let client inspect messages
         if self._inspect:
@@ -206,8 +225,8 @@ class IOLoopThread(Thread):
             self._start_future.set_exception(e)
         else:
             self._start_future.set_result(None)
-
-        loop.run_until_complete(self._async_run())
+        if self.ioloop is not None:
+            self.ioloop.run_until_complete(self._async_run())
 
     async def _async_run(self) -> None:
         """Run forever (until self._exiting is set)"""

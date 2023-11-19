@@ -87,16 +87,16 @@ class TestKernelManager(TestCase):
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
         km.get_kernel(kid)
         cinfo = km.get_connection_info(kid)
-        self.assertEqual(transport, cinfo["transport"])
-        self.assertEqual(ip, cinfo["ip"])
-        self.assertTrue("stdin_port" in cinfo)
-        self.assertTrue("iopub_port" in cinfo)
+        assert transport == cinfo["transport"]
+        assert ip == cinfo["ip"]
+        assert "stdin_port" in cinfo
+        assert "iopub_port" in cinfo
         stream = km.connect_iopub(kid)
         stream.close()
-        self.assertTrue("shell_port" in cinfo)
+        assert "shell_port" in cinfo
         stream = km.connect_shell(kid)
         stream.close()
-        self.assertTrue("hb_port" in cinfo)
+        assert "hb_port" in cinfo
         stream = km.connect_hb(kid)
         stream.close()
         km.shutdown_kernel(kid, now=True)
@@ -114,9 +114,9 @@ class TestKernelManager(TestCase):
     def test_shutdown_all(self):
         km = self._get_tcp_km()
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
-        self.assertIn(kid, km)
+        assert kid in km
         km.shutdown_all()
-        self.assertNotIn(kid, km)
+        assert kid not in km
         # shutdown again is okay, because we have no kernels
         km.shutdown_all()
 
@@ -293,48 +293,48 @@ class TestAsyncKernelManager:
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
         km.get_kernel(kid)
         cinfo = km.get_connection_info(kid)
-        self.assertEqual(transport, cinfo["transport"])
-        self.assertEqual(ip, cinfo["ip"])
-        self.assertTrue("stdin_port" in cinfo)
-        self.assertTrue("iopub_port" in cinfo)
+        assert transport == cinfo["transport"]
+        assert ip == cinfo["ip"]
+        assert "stdin_port" in cinfo
+        assert "iopub_port" in cinfo
         stream = km.connect_iopub(kid)
         stream.close()
-        self.assertTrue("shell_port" in cinfo)
+        assert "shell_port" in cinfo
         stream = km.connect_shell(kid)
         stream.close()
-        self.assertTrue("hb_port" in cinfo)
+        assert "hb_port" in cinfo
         stream = km.connect_hb(kid)
         stream.close()
         await km.shutdown_kernel(kid, now=True)
-        self.assertNotIn(kid, km)
+        assert kid not in km
 
-    # async def test_tcp_lifecycle(self):
-    #     await self.raw_tcp_lifecycle()
+    async def test_tcp_lifecycle(self):
+        await self.raw_tcp_lifecycle()
 
-    # async def test_tcp_lifecycle_with_kernel_id(self):
-    #     await self.raw_tcp_lifecycle(test_kid=str(uuid.uuid4()))
+    async def test_tcp_lifecycle_with_kernel_id(self):
+        await self.raw_tcp_lifecycle(test_kid=str(uuid.uuid4()))
 
     async def test_shutdown_all(self):
         km = self._get_tcp_km()
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
-        self.assertIn(kid, km)
+        assert kid in km
         await km.shutdown_all()
-        self.assertNotIn(kid, km)
+        assert kid not in km
         # shutdown again is okay, because we have no kernels
         await km.shutdown_all()
 
     async def test_use_after_shutdown_all(self):
         km = self._get_tcp_km()
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
-        self.assertIn(kid, km)
+        assert kid in km
         await km.shutdown_all()
-        self.assertNotIn(kid, km)
+        assert kid not in km
 
         # Start another kernel
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
-        self.assertIn(kid, km)
+        assert kid in km
         await km.shutdown_all()
-        self.assertNotIn(kid, km)
+        assert kid not in km
         # shutdown again is okay, because we have no kernels
         await km.shutdown_all()
 
@@ -343,14 +343,14 @@ class TestAsyncKernelManager:
         kid_future = asyncio.ensure_future(km.start_kernel(stdout=PIPE, stderr=PIPE))
         # This is relying on the ordering of the asyncio queue, not sure if guaranteed or not:
         kid, _ = await asyncio.gather(kid_future, km.shutdown_all())
-        self.assertNotIn(kid, km)
+        assert kid not in km
 
         # Start another kernel
         kid = await ensure_future(km.start_kernel(stdout=PIPE, stderr=PIPE))
-        self.assertIn(kid, km)
-        self.assertEqual(len(km), 1)
+        assert kid in km
+        assert len(km) == 1
         await km.shutdown_all()
-        self.assertNotIn(kid, km)
+        assert kid not in km
         # shutdown again is okay, because we have no kernels
         await km.shutdown_all()
 

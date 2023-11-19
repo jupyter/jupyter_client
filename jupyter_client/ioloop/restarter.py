@@ -10,6 +10,8 @@ from __future__ import annotations
 import asyncio
 import time
 
+from jupyter_core.utils import ensure_async
+
 from ..restarter import KernelRestarter
 
 
@@ -17,30 +19,28 @@ class IOLoopKernelRestarter(KernelRestarter):
     """Monitor and autorestart a kernel."""
 
     _poll_task: asyncio.Task | None = None
+    _running = False
 
     def start(self) -> None:
         """Start the polling of the kernel."""
         if not self._poll_task:
-            self._poll_task = self.parent.loop.create_task(self._poll())
+            self._poll_task = self.parent.loop.create_task(self._poll_loop())
+            self._running = True
 
-    async def _poll(self):
-        while 1:
-            self.poll()
-            await asyncio.sleep(1000 * self.time_to_dead)
+    async def _poll_loop(self):
+        while self._running:
+            await ensure_async(self.poll())
+            await asyncio.sleep(0.01)
 
     def stop(self) -> None:
         """Stop the kernel polling."""
         if self._poll_task is not None:
-            self._poll_task.cancel()
             self._poll_task = None
+            self._running = False
 
 
 class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
     """An async io loop kernel restarter."""
-
-    async def _poll(self):
-        while 1:
-            await self.poll()
 
     async def poll(self) -> None:  # type:ignore[override]
         """Poll the kernel."""
