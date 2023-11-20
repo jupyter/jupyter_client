@@ -14,7 +14,7 @@ from .restarter import AsyncIOLoopKernelRestarter, IOLoopKernelRestarter
 class IOLoopKernelManager(KernelManager):
     """An io loop kernel manager."""
 
-    loop = Instance(asyncio.AbstractEventLoop)
+    loop = Instance(asyncio.AbstractEventLoop)  # type:ignore[type-abstract]
 
     def _loop_default(self) -> asyncio.AbstractEventLoop:
         return get_event_loop()
@@ -49,7 +49,7 @@ class IOLoopKernelManager(KernelManager):
 class AsyncIOLoopKernelManager(AsyncKernelManager):
     """An async ioloop kernel manager."""
 
-    loop = Instance(asyncio.AbstractEventLoop)
+    loop = Instance(asyncio.AbstractEventLoop)  # type:ignore[type-abstract]
 
     def _loop_default(self) -> asyncio.AbstractEventLoop:
         return get_event_loop()

@@ -24,12 +24,14 @@ class IOLoopKernelRestarter(KernelRestarter):
     def start(self) -> None:
         """Start the polling of the kernel."""
         if not self._poll_task:
+            assert self.parent is not None
+            assert isinstance(self.parent.loop, asyncio.AbstractEventLoop)
             self._poll_task = self.parent.loop.create_task(self._poll_loop())
             self._running = True
 
-    async def _poll_loop(self):
+    async def _poll_loop(self) -> None:
         while self._running:
-            await ensure_async(self.poll())
+            await ensure_async(self.poll())  # type:ignore[func-returns-value]
             await asyncio.sleep(0.01)
 
     def stop(self) -> None:

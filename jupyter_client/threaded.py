@@ -1,6 +1,8 @@
 """ Defines a KernelClient that provides thread-safe sockets with async callbacks on message
 replies.
 """
+from __future__ import annotations
+
 import asyncio
 import atexit
 from concurrent.futures import Future
@@ -28,7 +30,7 @@ class ThreadedZMQSocketChannel:
     socket = None
     stream = None
     _inspect = None
-    _close_future = None
+    _close_future: Future | None = None
     _stopping = False
 
     def __init__(
@@ -73,6 +75,7 @@ class ThreadedZMQSocketChannel:
     def close(self) -> None:
         """Close the channel."""
         if self.socket is not None:
+            f: Future
             self._close_future = f = Future()
             self.ioloop.call_soon_threadsafe(self._thread_close)
             # wait for result
@@ -83,18 +86,20 @@ class ThreadedZMQSocketChannel:
                 msg = f"Error closing socket {self.socket}: {e}"
                 log.warning(msg, RuntimeWarning, stacklevel=2)
 
-    def _thread_close(self):
+    def _thread_close(self) -> None:
         if self.socket is None:
             return
-        assert self._close_future is not None
         try:
             self.socket.close(linger=0)
             self.socket = None
-            self._close_future.set_result(None)
+            self._is_alive = False
+            if self._close_future is not None:
+                self._close_future.set_result(None)
         except Exception as e:
-            self._close_future.set_exception(e)
+            if self._close_future is not None:
+                self._close_future.set_exception(e)
 
-    def _thread_poll(self):
+    def _thread_poll(self) -> None:
         if self.socket is None:
             return
         if self.socket.poll(0.1, zmq.POLLIN) == zmq.POLLIN:
@@ -102,8 +107,9 @@ class ThreadedZMQSocketChannel:
         if self._is_alive:
             self.ioloop.call_soon_threadsafe(self._thread_poll)
             return
+        self._thread_close()
 
-    def _thread_send(self, msg):
+    def _thread_send(self, msg: Dict[str, Any]) -> None:
         assert self.session is not None
         if self.socket:
             self.session.send(self.socket, msg)
@@ -150,40 +156,6 @@ class ThreadedZMQSocketChannel:
         processing any pending GUI events.
         """
         pass
-
-    def flush(self, timeout: float = 1.0) -> None:
-        """Immediately processes all pending messages on this channel.
-
-        This is only used for the IOPub channel.
-
-        Callers should use this method to ensure that :meth:`call_handlers`
-        has been called for all messages that have been received on the
-        0MQ SUB socket of this channel.
-
-        This method is thread safe.
-
-        Parameters
-        ----------
-        timeout : float, optional
-            The maximum amount of time to spend flushing, in seconds. The
-            default is one second.
-        """
-        # We do the IOLoop callback process twice to ensure that the IOLoop
-        # gets to perform at least one full poll.
-        # stop_time = time.monotonic() + timeout
-        assert self.ioloop is not None
-        if not self._is_alive:
-            # don't bother scheduling flush on a thread if we're closed
-            _msg = "Attempt to flush closed channel"
-            raise OSError(_msg)
-        self.ioloop.call_soon_threadsafe(self._flush)
-
-    def _flush(self) -> None:
-        """Callback for :method:`self.flush`."""
-        assert self.socket is not None
-        # TODO test this
-        self.stream.flush()
-        self._flushed = True
 
 
 class IOLoopThread(Thread):
@@ -252,9 +224,11 @@ class IOLoopThread(Thread):
         """Close the io loop thread."""
         if self.ioloop is not None:
             try:
-                self.ioloop.close(all_fds=True)
-            except Exception:
-                pass
+                self.ioloop.close()
+            except Exception as e:
+                log = get_logger()
+                msg = f"Error closing loop {self.ioloop}: {e}"
+                log.warning(msg, RuntimeWarning, stacklevel=2)
 
 
 class ThreadedKernelClient(KernelClient):

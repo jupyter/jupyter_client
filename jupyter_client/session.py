@@ -797,7 +797,7 @@ class Session(Configurable):
             The constructed message.
         """
         if isinstance(socket, zmq.asyncio.Socket):
-            assert socket is not None  # type:ignore[unreachable]
+            assert socket is not None
             socket = zmq.Socket.shadow(socket.underlying)
 
         if isinstance(msg_or_type, (Message, dict)):

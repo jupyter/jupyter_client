@@ -50,7 +50,7 @@ class KernelApp(JupyterApp):
             return
 
         def shutdown_handler(signo: int, frame: t.Any) -> None:
-            self.loop.add_callback_from_signal(self.shutdown, signo)
+            self.loop.add_signal_handler(signo, self.shutdown)
 
         for sig in [signal.SIGTERM, signal.SIGINT]:
             signal.signal(sig, shutdown_handler)
