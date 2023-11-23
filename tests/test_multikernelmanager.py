@@ -323,6 +323,7 @@ class TestAsyncKernelManager:
         # shutdown again is okay, because we have no kernels
         await km.shutdown_all()
 
+    @pytest.mark.timeout(20)
     async def test_use_after_shutdown_all(self):
         km = self._get_tcp_km()
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -338,6 +339,7 @@ class TestAsyncKernelManager:
         # shutdown again is okay, because we have no kernels
         await km.shutdown_all()
 
+    @pytest.mark.timeout(20)
     async def test_shutdown_all_while_starting(self):
         km = self._get_tcp_km()
         kid_future = asyncio.ensure_future(km.start_kernel(stdout=PIPE, stderr=PIPE))

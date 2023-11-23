@@ -5,6 +5,8 @@ import time
 from subprocess import PIPE, Popen
 from tempfile import mkdtemp
 
+import pytest
+
 
 def _launch(extra_env):
     env = os.environ.copy()
@@ -20,6 +22,7 @@ WAIT_TIME = 10
 POLL_FREQ = 10
 
 
+@pytest.mark.timeout(20)
 def test_kernelapp_lifecycle():
     # Check that 'jupyter kernel' starts and terminates OK.
     runtime_dir = mkdtemp()
