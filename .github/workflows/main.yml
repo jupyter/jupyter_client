@@ -11,15 +11,13 @@ concurrency:
 
 defaults:
   run:
-    shell:
-      bash -eux {0}
-
+    shell: bash -eux {0}
 
 jobs:
   check_release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - uses: jupyter-server/jupyter_releaser/.github/actions/check-release@v2
         with:
@@ -28,7 +26,7 @@ jobs:
   check_links:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - uses: jupyterlab/maintainer-tools/.github/actions/check-links@v1
 
@@ -40,18 +38,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.8", "3.11"]
+        python-version: ["3.8", "3.12"]
         include:
           - os: windows-latest
-            python-version: "3.9"
+            python-version: "3.11"
           - os: ubuntu-latest
-            python-version: "pypy-3.8"
+            python-version: "pypy-3.9"
           - os: ubuntu-latest
             python-version: "3.10"
           - os: macos-latest
-            python-version: "3.8"
+            python-version: "3.9"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
@@ -72,7 +70,7 @@ jobs:
     needs:
       - test
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/report-coverage@v1
         with:
           fail_under: 78
@@ -80,7 +78,7 @@ jobs:
   docs:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Build API docs
         run: |
@@ -97,12 +95,12 @@ jobs:
     name: Test Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      -  name: Run Linters
-         run: |
+      - name: Run Linters
+        run: |
           hatch run typing:test
-          hatch run lint:style
+          hatch run lint:build
           pipx run interrogate -v .
           pipx run doc8 --max-line-length=200  --ignore-path=docs/source/other/full-config.rst
 
@@ -111,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           dependency_type: minimum
@@ -124,7 +122,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           dependency_type: pre
@@ -137,7 +135,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - uses: jupyterlab/maintainer-tools/.github/actions/make-sdist@v1
 

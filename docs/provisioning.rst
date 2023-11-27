@@ -84,7 +84,7 @@ Kernel provisioner authors implement their provisioners by deriving from
 :class:`KernelProvisionerBase` and expose their provisioner for consumption
 via entry-points:
 
-.. code:: python
+.. code::
 
     'jupyter_client.kernel_provisioners': [
                 'k8s-provisioner = my_package:K8sProvisioner',
@@ -145,14 +145,13 @@ provisioner. If the user is not in the role, an exception will be thrown.
 .. code:: python
 
     class RBACProvisioner(LocalProvisioner):
-
         role: str = Unicode(config=True)
 
         async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
-
             if not self.user_in_role(self.role):
-                raise PermissionError(f"User is not in role {self.role} and "
-                                      f"cannot launch this kernel.")
+                raise PermissionError(
+                    f"User is not in role {self.role} and " f"cannot launch this kernel."
+                )
 
             return await super().pre_launch(**kwargs)
 
@@ -197,7 +196,7 @@ implementation of :class:`LocalProvisioner` can also be used as a reference.
 
 Notice the internal method ``_get_application_id()``.  This method is
 what the provisioner uses to determine if the YARN application (i.e.,
-the kernel) is still running within te cluster.  Although the provisioner
+the kernel) is still running within the cluster.  Although the provisioner
 doesn't dictate the application id, the application id is
 discovered via the application *name* which is a function of ``kernel_id``.
 
@@ -236,8 +235,8 @@ discovered via the application *name* which is a function of ``kernel_id``.
 
 Notice how in some cases we can compose provisioner methods to implement others.  For
 example, since sending a signal number of 0 is tantamount to polling the process, we
-go ahead and call :meth:`poll` to handle `signum` of 0 and :meth:`kill` to handle
-`SIGKILL` requests.
+go ahead and call :meth:`poll` to handle ``signum`` of 0 and :meth:`kill` to handle
+``SIGKILL`` requests.
 
 Here we see how ``_get_application_id`` uses the ``kernel_id`` to acquire the application
 id - which is the *primary id* for controlling YARN application lifecycles. Since startup
@@ -249,33 +248,37 @@ This answer is implemented in the provisioner via the :meth:`get_shutdown_wait_t
 .. code:: python
 
     def _get_application_id(self, ignore_final_states: bool = False) -> str:
-
         if not self.application_id:
             app = self._query_app_by_name(self.kernel_id)
             state_condition = True
             if type(app) is dict:
-                state = app.get('state')
+                state = app.get("state")
                 self.last_known_state = state
 
                 if ignore_final_states:
                     state_condition = state not in YarnProvisioner.final_states
 
-                if len(app.get('id', '')) > 0 and state_condition:
-                    self.application_id = app['id']
-                    self.log.info(f"ApplicationID: '{app['id']}' assigned for "
-                                  f"KernelID: '{self.kernel_id}', state: {state}.")
+                if len(app.get("id", "")) > 0 and state_condition:
+                    self.application_id = app["id"]
+                    self.log.info(
+                        f"ApplicationID: '{app['id']}' assigned for "
+                        f"KernelID: '{self.kernel_id}', state: {state}."
+                    )
             if not self.application_id:
-                self.log.debug(f"ApplicationID not yet assigned for KernelID: "
-                               f"'{self.kernel_id}' - retrying...")
+                self.log.debug(
+                    f"ApplicationID not yet assigned for KernelID: "
+                    f"'{self.kernel_id}' - retrying..."
+                )
         return self.application_id
 
 
     def get_shutdown_wait_time(self, recommended: Optional[float] = 5.0) -> float:
-
         if recommended < yarn_shutdown_wait_time:
             recommended = yarn_shutdown_wait_time
-            self.log.debug(f"{type(self).__name__} shutdown wait time adjusted to "
-                           f"{recommended} seconds.")
+            self.log.debug(
+                f"{type(self).__name__} shutdown wait time adjusted to "
+                f"{recommended} seconds."
+            )
 
         return recommended
 
@@ -343,7 +346,7 @@ Listing available kernel provisioners
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To confirm that your custom provisioner is available for use,
 the ``jupyter kernelspec`` command has been extended to include
-a `provisioners` sub-command.  As a result, running ``jupyter kernelspec provisioners``
+a ``provisioners`` sub-command.  As a result, running ``jupyter kernelspec provisioners``
 will list the available provisioners by name followed by their module and object
 names (colon-separated):
 

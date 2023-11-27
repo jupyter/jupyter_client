@@ -1,7 +1,7 @@
 Making simple Python wrapper kernels
 ====================================
 
-You can re-use IPython's kernel machinery to easily make new kernels.
+You can reuse IPython's kernel machinery to easily make new kernels.
 This is useful for languages that have Python bindings, such as `Hy
 <https://github.com/hylang/hy/>`_ (see
 `Calysto Hy <https://github.com/Calysto/calysto_hy/#>`_), or languages

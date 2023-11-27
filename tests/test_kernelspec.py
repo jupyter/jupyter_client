@@ -41,13 +41,13 @@ class KernelSpecTests(unittest.TestCase):
 
     def test_allowed_kernel_names(self):
         ksm = kernelspec.KernelSpecManager()
-        ksm.allowed_kernelspecs = ["foo"]
+        ksm.allowed_kernelspecs = {"foo"}
         kernels = ksm.find_kernel_specs()
         assert not len(kernels)
 
     def test_deprecated_whitelist(self):
         ksm = kernelspec.KernelSpecManager()
-        ksm.whitelist = ["bar"]
+        ksm.whitelist = {"bar"}
         kernels = ksm.find_kernel_specs()
         assert not len(kernels)
 

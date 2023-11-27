@@ -124,11 +124,11 @@ class TestAsyncKernelClient:
         assert reply["parent_header"]["msg_type"] == reply_type + "_request"
 
     @pytest.mark.skipif(
-        sys.platform != 'linux' or platform.python_implementation().lower() == 'pypy',
-        reason='only works with cpython on ubuntu in ci',
+        sys.platform != "linux" or platform.python_implementation().lower() == "pypy",
+        reason="only works with cpython on ubuntu in ci",
     )
     async def test_input_request(self, kc):
-        with mock.patch('builtins.input', return_value='test\n'):
+        with mock.patch("builtins.input", return_value="test\n"):
             reply = await kc.execute_interactive("a = input()", timeout=TIMEOUT)
         assert reply["content"]["status"] == "ok"
 
@@ -137,7 +137,7 @@ class TestAsyncKernelClient:
 
         def output_hook(msg):
             nonlocal called
-            if msg['header']['msg_type'] == 'stream':
+            if msg["header"]["msg_type"] == "stream":
                 called = True
 
         reply = await kc.execute_interactive(
@@ -192,7 +192,7 @@ class TestAsyncKernelClient:
 
 
 class ThreadedKernelManager(KernelManager):
-    client_class = DottedObjectName('tests.test_client.CustomThreadedKernelClient')
+    client_class = DottedObjectName("tests.test_client.CustomThreadedKernelClient")
 
 
 class CustomThreadedZMQSocketChannel(ThreadedZMQSocketChannel):
@@ -208,10 +208,10 @@ class CustomThreadedZMQSocketChannel(ThreadedZMQSocketChannel):
 
 
 class CustomThreadedKernelClient(ThreadedKernelClient):
-    iopub_channel_class = Type(CustomThreadedZMQSocketChannel)
-    shell_channel_class = Type(CustomThreadedZMQSocketChannel)
-    stdin_channel_class = Type(CustomThreadedZMQSocketChannel)
-    control_channel_class = Type(CustomThreadedZMQSocketChannel)
+    iopub_channel_class = Type(CustomThreadedZMQSocketChannel)  # type:ignore[arg-type]
+    shell_channel_class = Type(CustomThreadedZMQSocketChannel)  # type:ignore[arg-type]
+    stdin_channel_class = Type(CustomThreadedZMQSocketChannel)  # type:ignore[arg-type]
+    control_channel_class = Type(CustomThreadedZMQSocketChannel)  # type:ignore[arg-type]
 
 
 class TestThreadedKernelClient(TestKernelClient):
@@ -235,7 +235,7 @@ class TestThreadedKernelClient(TestKernelClient):
         self.assertEqual(reply["parent_header"]["msg_type"], reply_type + "_request")
 
     def test_execute_interactive(self):
-        pytest.skip('Not supported')
+        pytest.skip("Not supported")
 
     def test_history(self):
         kc = self.kc
@@ -298,4 +298,4 @@ def test_validate_string_dict():
     with pytest.raises(ValueError):
         validate_string_dict(dict(a=1))  # type:ignore
     with pytest.raises(ValueError):
-        validate_string_dict({1: 'a'})  # type:ignore
+        validate_string_dict({1: "a"})  # type:ignore
