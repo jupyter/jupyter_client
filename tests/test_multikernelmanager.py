@@ -170,7 +170,7 @@ class TestKernelManager(TestCase):
     )
     @pytest.mark.skipif(
         sys.platform == "linux",
-        reason='Kernel refuses to start in process pool',
+        reason="Kernel refuses to start in process pool",
     )
     def test_start_parallel_process_kernels(self):
         self.test_tcp_lifecycle()

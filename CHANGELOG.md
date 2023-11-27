@@ -2,6 +2,68 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.6.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.5.0...2d6f52bdf5266688c51f3270cd7e47bbd17c708c))
+
+### Bugs fixed
+
+- Fix possibly not defined tracker [#991](https://github.com/jupyter/jupyter_client/pull/991) ([@davidbrochart](https://github.com/davidbrochart))
+- BUG: Fix Kwarg only in update_env [#989](https://github.com/jupyter/jupyter_client/pull/989) ([@Carreau](https://github.com/Carreau))
+
+### Maintenance and upkeep improvements
+
+- Update typing for traitlets 5.13 [#995](https://github.com/jupyter/jupyter_client/pull/995) ([@blink1073](https://github.com/blink1073))
+- Use ruff format [#992](https://github.com/jupyter/jupyter_client/pull/992) ([@blink1073](https://github.com/blink1073))
+- Unused `*args` in `KernelManager`'s `__init__` [#986](https://github.com/jupyter/jupyter_client/pull/986) ([@Carreau](https://github.com/Carreau))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-10-25&to=2023-11-06&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-10-25..2023-11-06&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2023-10-25..2023-11-06&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2023-10-25..2023-11-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
+## 8.5.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.4.0...ff94e310c2af3546f2f9384e6b35fd11c3d09a71))
+
+### Enhancements made
+
+- Allow to update kernels env in between restart. [#987](https://github.com/jupyter/jupyter_client/pull/987) ([@Carreau](https://github.com/Carreau))
+
+### Maintenance and upkeep improvements
+
+- Enable strict typing [#984](https://github.com/jupyter/jupyter_client/pull/984) ([@blink1073](https://github.com/blink1073))
+- Update typings for mypy 1.6 [#983](https://github.com/jupyter/jupyter_client/pull/983) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-10-11&to=2023-10-25&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-10-11..2023-10-25&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2023-10-11..2023-10-25&type=Issues)
+
+## 8.4.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.3.1...74044393230e70134f68e664f2ef19fab92b7774))
+
+### Maintenance and upkeep improvements
+
+- Test on python 3.12 [#978](https://github.com/jupyter/jupyter_client/pull/978) ([@blink1073](https://github.com/blink1073))
+- Update typing for traitlets 5.11 [#977](https://github.com/jupyter/jupyter_client/pull/977) ([@blink1073](https://github.com/blink1073))
+- chore: update pre-commit hooks [#975](https://github.com/jupyter/jupyter_client/pull/975) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Update typings for traitlets 5.10.1 [#974](https://github.com/jupyter/jupyter_client/pull/974) ([@blink1073](https://github.com/blink1073))
+- Do not use datetime.utcnow() that is deprecated in Python 3.12 [#972](https://github.com/jupyter/jupyter_client/pull/972) ([@ellert](https://github.com/ellert))
+- Use sp-repo-review [#971](https://github.com/jupyter/jupyter_client/pull/971) ([@blink1073](https://github.com/blink1073))
+- Bump actions/checkout from 3 to 4 [#968](https://github.com/jupyter/jupyter_client/pull/968) ([@dependabot](https://github.com/dependabot))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-08-29&to=2023-10-11&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-08-29..2023-10-11&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adependabot+updated%3A2023-08-29..2023-10-11&type=Issues) | [@ellert](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aellert+updated%3A2023-08-29..2023-10-11&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-08-29..2023-10-11&type=Issues)
+
 ## 8.3.1
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.3.0...b4f7d947fae55a4fe59a27df0830a9a78dcd4e12))
@@ -22,15 +84,13 @@
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-06-23..2023-08-29&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2023-06-23..2023-08-29&type=Issues) | [@jkitchin](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ajkitchin+updated%3A2023-06-23..2023-08-29&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2023-06-23..2023-08-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-06-23..2023-08-29&type=Issues) | [@tmaxwell-anthropic](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Atmaxwell-anthropic+updated%3A2023-06-23..2023-08-29&type=Issues)
 
-<!-- <END NEW CHANGELOG ENTRY> -->
-
 ## 8.3.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.2.0...bddb8854a4aa3324e128e0497539e17246fbf630))
 
 ### Enhancements made
 
-- Allow kwargs when writting connection_file [#953](https://github.com/jupyter/jupyter_client/pull/953) ([@fecet](https://github.com/fecet))
+- Allow kwargs when writing connection_file [#953](https://github.com/jupyter/jupyter_client/pull/953) ([@fecet](https://github.com/fecet))
 
 ### Maintenance and upkeep improvements
 
@@ -574,7 +634,7 @@ No merged PRs
 
 ### Enhancements made
 
-- Further improvements to pending kernels managment [#732](https://github.com/jupyter/jupyter_client/pull/732) ([@Zsailer](https://github.com/Zsailer))
+- Further improvements to pending kernels management [#732](https://github.com/jupyter/jupyter_client/pull/732) ([@Zsailer](https://github.com/Zsailer))
 
 ### Maintenance and upkeep improvements
 

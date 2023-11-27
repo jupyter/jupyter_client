@@ -162,7 +162,7 @@ def test_json_default():
         (1, None),  # start with scalars
         (1.123, None),
         (1.0, None),
-        ('a', None),
+        ("a", None),
         (True, None),
         (False, None),
         (None, None),
@@ -172,7 +172,7 @@ def test_json_default():
         ((1, 2), [1, 2]),
         ({1, 2}, [1, 2]),
         (dict(x=1), None),
-        ({'x': 1, 'y': [1, 2, 3], '1': 'int'}, None),
+        ({"x": 1, "y": [1, 2, 3], "1": "int"}, None),
         # More exotic objects
         ((x for x in range(3)), [0, 1, 2]),
         (iter([1, 2]), [1, 2]),
