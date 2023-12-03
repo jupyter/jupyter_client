@@ -1,9 +1,4 @@
-import asyncio
 import os
-
-if os.name == "nt":
-    # TODO: move this logic into get_event_loop?
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type:ignore
 
 import pytest
 

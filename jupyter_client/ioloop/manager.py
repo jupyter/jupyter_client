@@ -28,31 +28,33 @@ class ZMQStream:
 
     def __init__(self, socket: zmq.sugar.socket.Socket):
         self.__socket = socket
-        self.__on_recv = None
-        self.__on_send = None
+        self.__on_recv: t.Optional[t.Callable] = None
+        self.__on_send: t.Optional[t.Callable] = None
         self.__recv_copy = False
-        self.__send_queue = Queue()
+        self.__send_queue: Queue[t.Any] = Queue()
         self.__polling = False
 
-    def on_send(self, callback):
+    def on_send(self, callback: t.Callable) -> None:
         """Register a callback to be run every time you call send."""
         self.__on_send = callback
 
-    def on_recv(self, callback, copy=True):
+    def on_recv(self, callback: t.Callable, copy: bool = True) -> None:
         """Register a callback to be run every time the socket has something to receive."""
         self.__on_recv = callback
         self.__recv_copy = copy
         self.__start_polling()
 
-    def stop_on_recv(self):
+    def stop_on_recv(self) -> None:
         """Turn off the recv callback."""
         self.__on_recv = None
 
-    def stop_on_send(self):
+    def stop_on_send(self) -> None:
         """Turn off the send callback."""
         self.__on_send = None
 
-    def send(self, msg, flags=0, copy=True, track=False, **kwargs):
+    def send(
+        self, msg: t.Any, flags: int = 0, copy: bool = True, track: bool = False, **kwargs: t.Any
+    ) -> None:
         """Send a message, optionally also register a new callback for sends.
         See zmq.socket.send for details.
         """
@@ -60,12 +62,15 @@ class ZMQStream:
         self.__send_queue.put((msg, kwargs))
         self.__start_polling()
 
-    def recv(self, flags, copy=True, track=False):
+    def recv(self, flags: int, copy: bool = True, track: bool = False) -> t.Any:
         assert self.__socket is not None
         value = self.__socket.recv(flags, copy=copy, track=track)
         if self.__on_recv:
             self.__on_recv(value)
         return value
+
+    def flush(self) -> None:
+        """This is a no-op, for backwards compatibility."""
 
     def close(self, linger: t.Optional[int] = None) -> None:
         """Close the channel."""
@@ -77,7 +82,7 @@ class ZMQStream:
         finally:
             self.__socket = None
 
-    def __poll(self):
+    def __poll(self) -> None:
         if self.__socket is None:
             self.__polling = False
             return
@@ -93,25 +98,25 @@ class ZMQStream:
             loop = get_event_loop()
             loop.call_soon_threadsafe(self.__poll)
 
-    def __handle_send(self):
+    def __handle_send(self) -> None:
         msg, kwargs = self.__send_queue.get_nowait()
         assert self.__socket is not None
         self.__socket.send_multipart(msg, **kwargs)
         if self.__on_send:
             self.__on_send()
 
-    def __start_polling(self):
+    def __start_polling(self) -> None:
         if self.__socket and not self.__polling:
             loop = get_event_loop()
             self.__polling = True
             loop.call_soon_threadsafe(self.__poll)
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> t.Any:
         """Pass through to the underlying socket for other methods."""
         if attr.startswith("__"):
-            return super().__getattr__(attr)
+            return super().__getattr__(attr)  # type:ignore[misc]
         if self.__socket is not None:
-            return self.__socket.get(attr)
+            return getattr(self.__socket, attr)
 
 
 def as_zmqstream(f: t.Any) -> t.Callable[..., ZMQStream]:
@@ -168,11 +173,11 @@ class IOLoopKernelManager(KernelManager):
         if self.autorestart and self._restarter is not None:
             self._restarter.stop()
 
-    connect_shell = as_zmqstream(KernelManager.connect_shell)
-    connect_control = as_zmqstream(KernelManager.connect_control)
-    connect_iopub = as_zmqstream(KernelManager.connect_iopub)
-    connect_stdin = as_zmqstream(KernelManager.connect_stdin)
-    connect_hb = as_zmqstream(KernelManager.connect_hb)
+    connect_shell = as_zmqstream(KernelManager.connect_shell)  # type:ignore[assignment]
+    connect_control = as_zmqstream(KernelManager.connect_control)  # type:ignore[assignment]
+    connect_iopub = as_zmqstream(KernelManager.connect_iopub)  # type:ignore[assignment]
+    connect_stdin = as_zmqstream(KernelManager.connect_stdin)  # type:ignore[assignment]
+    connect_hb = as_zmqstream(KernelManager.connect_hb)  # type:ignore[assignment]
 
 
 class AsyncIOLoopKernelManager(AsyncKernelManager):
@@ -211,8 +216,8 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
         if self.autorestart and self._restarter is not None:
             self._restarter.stop()
 
-    connect_shell = as_zmqstream(KernelManager.connect_shell)
-    connect_control = as_zmqstream(KernelManager.connect_control)
-    connect_iopub = as_zmqstream(KernelManager.connect_iopub)
-    connect_stdin = as_zmqstream(KernelManager.connect_stdin)
-    connect_hb = as_zmqstream(KernelManager.connect_hb)
+    connect_shell = as_zmqstream(KernelManager.connect_shell)  # type:ignore[assignment]
+    connect_control = as_zmqstream(KernelManager.connect_control)  # type:ignore[assignment]
+    connect_iopub = as_zmqstream(KernelManager.connect_iopub)  # type:ignore[assignment]
+    connect_stdin = as_zmqstream(KernelManager.connect_stdin)  # type:ignore[assignment]
+    connect_hb = as_zmqstream(KernelManager.connect_hb)  # type:ignore[assignment]

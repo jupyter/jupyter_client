@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import sys
 import warnings
 from typing import Sequence
 
@@ -97,12 +98,15 @@ def get_event_loop() -> asyncio.AbstractEventLoop:
     # In Python 3.12, a deprecation warning is raised, which
     # may later turn into a RuntimeError.  We handle both
     # cases.
-    # TODO: handle loop factory, and migrate to jupyter_core
+    # TODO: migrate to jupyter_core
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError:
-            loop = asyncio.new_event_loop()
+            if sys.platform == "win32":
+                loop = asyncio.WindowsSelectorEventLoopPolicy().new_event_loop()
+            else:
+                loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
     return loop
