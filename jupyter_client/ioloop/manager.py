@@ -24,10 +24,10 @@ class ZMQStream:
     does not rely on the tornado event loop.
     """
 
-    __socket: t.Optional[zmq.sugar.socket.Socket]
+    socket: t.Optional[zmq.sugar.socket.Socket]
 
     def __init__(self, socket: zmq.sugar.socket.Socket):
-        self.__socket = socket
+        self.socket = socket
         self.__on_recv: t.Optional[t.Callable] = None
         self.__on_send: t.Optional[t.Callable] = None
         self.__recv_copy = False
@@ -63,8 +63,8 @@ class ZMQStream:
         self.__start_polling()
 
     def recv(self, flags: int, copy: bool = True, track: bool = False) -> t.Any:
-        assert self.__socket is not None
-        value = self.__socket.recv(flags, copy=copy, track=track)
+        assert self.socket is not None
+        value = self.socket.recv(flags, copy=copy, track=track)
         if self.__on_recv:
             self.__on_recv(value)
         return value
@@ -74,39 +74,39 @@ class ZMQStream:
 
     def close(self, linger: t.Optional[int] = None) -> None:
         """Close the channel."""
-        socket = self.__socket
+        socket = self.socket
         if socket is None:
             return
         try:
             socket.close(linger=linger)
         finally:
-            self.__socket = None
+            self.socket = None
 
     def __poll(self) -> None:
-        if self.__socket is None:
+        if self.socket is None:
             self.__polling = False
             return
         mask = zmq.POLLIN
         if not self.__send_queue.empty():
             mask |= zmq.POLLOUT
-        poll_result = self.__socket.poll(0.1, mask)
+        poll_result = self.socket.poll(0.1, mask)
         if poll_result == zmq.POLLIN:
             self.recv(zmq.NOBLOCK, copy=self.__recv_copy)
         elif poll_result == zmq.POLLOUT:
             self.__handle_send()
-        if self._polling:
+        if self.__polling:
             loop = get_event_loop()
             loop.call_soon_threadsafe(self.__poll)
 
     def __handle_send(self) -> None:
         msg, kwargs = self.__send_queue.get_nowait()
-        assert self.__socket is not None
-        self.__socket.send_multipart(msg, **kwargs)
+        assert self.socket is not None
+        self.socket.send_multipart(msg, **kwargs)
         if self.__on_send:
             self.__on_send()
 
     def __start_polling(self) -> None:
-        if self.__socket and not self.__polling:
+        if self.socket and not self.__polling:
             loop = get_event_loop()
             self.__polling = True
             loop.call_soon_threadsafe(self.__poll)
@@ -115,8 +115,8 @@ class ZMQStream:
         """Pass through to the underlying socket for other methods."""
         if attr.startswith("__"):
             return super().__getattr__(attr)  # type:ignore[misc]
-        if self.__socket is not None:
-            return getattr(self.__socket, attr)
+        if self.socket is not None:
+            return getattr(self.socket, attr)
 
 
 def as_zmqstream(f: t.Any) -> t.Callable[..., ZMQStream]:
