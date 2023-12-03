@@ -67,7 +67,7 @@ class ZMQStream:
             self.__on_recv(value)
         return value
 
-    def close(self, linger: int | None = None) -> None:
+    def close(self, linger: t.Optional[int] = None) -> None:
         """Close the channel."""
         socket = self.__socket
         if socket is None:
