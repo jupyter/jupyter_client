@@ -24,7 +24,7 @@ class ZMQStream:
     does not rely on the tornado event loop.
     """
 
-    __socket: zmq.sugar.socket.Socket | None
+    __socket: t.Optional[zmq.sugar.socket.Socket]
 
     def __init__(self, socket: zmq.sugar.socket.Socket):
         self.__socket = socket
