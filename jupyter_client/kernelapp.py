@@ -1,4 +1,5 @@
 """An application to launch a kernel by name in a local subprocess."""
+import functools
 import os
 import signal
 import typing as t
@@ -49,11 +50,8 @@ class KernelApp(JupyterApp):
         if os.name == "nt":
             return
 
-        def shutdown_handler(signo: int, frame: t.Any) -> None:
-            self.loop.add_signal_handler(signo, self.shutdown)
-
-        for sig in [signal.SIGTERM, signal.SIGINT]:
-            signal.signal(sig, shutdown_handler)
+        for signo in [signal.SIGTERM, signal.SIGINT]:
+            self.loop.add_signal_handler(signo, functools.partial(self.shutdown, signo))
 
     def shutdown(self, signo: int) -> None:
         """Shut down the application."""
