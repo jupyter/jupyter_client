@@ -165,7 +165,6 @@ enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 no_implicit_reexport = false
 pretty = true
 show_error_context = true
-show_error_codes = true
 warn_return_any = false
 warn_unreachable = true
 
@@ -280,4 +279,4 @@ fail-under=90
 exclude = ["docs", "test"]
 
 [tool.repo-review]
-ignore = ["PY007", "PP308", "GH102"]
+ignore = ["GH102"]
