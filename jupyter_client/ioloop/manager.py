@@ -62,7 +62,7 @@ class ZMQStream:
         self.__send_queue.put((msg, kwargs))
         self.__start_polling()
 
-    def recv(self, flags: int, copy: bool = True, track: bool = False) -> t.Any:
+    def recv(self, flags: int = 0, copy: bool = True, track: bool = False) -> t.Any:
         assert self.socket is not None
         value = self.socket.recv(flags, copy=copy, track=track)
         if self.__on_recv:
@@ -101,7 +101,7 @@ class ZMQStream:
     def __handle_send(self) -> None:
         msg, kwargs = self.__send_queue.get_nowait()
         assert self.socket is not None
-        self.socket.send_multipart(msg, **kwargs)
+        self.socket.send_multipart([msg], **kwargs)
         if self.__on_send:
             self.__on_send()
 
