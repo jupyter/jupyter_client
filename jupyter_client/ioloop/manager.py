@@ -82,6 +82,16 @@ class ZMQStream:
         finally:
             self.socket = None
 
+    def closed(self) -> bool:
+        if self.socket is None:
+            return True
+        if self.socket.closed:
+            # underlying socket has been closed, but not by us!
+            # trigger our cleanup
+            self.close()
+            return True
+        return False
+
     def __poll(self) -> None:
         if self.socket is None:
             self.__polling = False
