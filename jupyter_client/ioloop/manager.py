@@ -63,6 +63,7 @@ class ZMQStream:
         self.__start_polling()
 
     def recv(self, flags: int = 0, copy: bool = True, track: bool = False) -> t.Any:
+        """Receive data on the channel."""
         assert self.socket is not None
         value = self.socket.recv(flags, copy=copy, track=track)
         if self.__on_recv:
@@ -83,6 +84,7 @@ class ZMQStream:
             self.socket = None
 
     def closed(self) -> bool:
+        """Check if the channel is closed."""
         if self.socket is None:
             return True
         if self.socket.closed:
