@@ -1,3 +1,4 @@
+import gc
 import os
 
 import pytest
@@ -11,4 +12,5 @@ pytest_plugins = ["pytest_jupyter", "pytest_jupyter.jupyter_client"]
 
 @pytest.fixture(autouse=True)
 def setup_environ(jp_environ):
-    pass
+    yield
+    gc.collect()
