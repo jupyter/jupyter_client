@@ -130,8 +130,7 @@ filterwarnings= [
   # Fail on warnings
   "error",
   # from python-dateutil
-  "ignore:datetime.datetime.utcfromtimestamp:DeprecationWarning",
-  "ignore:datetime.datetime.utcnow:DeprecationWarning",
+  "ignore:datetime.datetime.utc:DeprecationWarning",
 ]
 
 [tool.coverage.report]

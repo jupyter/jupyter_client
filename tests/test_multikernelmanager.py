@@ -82,6 +82,7 @@ class TestKernelManager(TestCase):
         km.shutdown_kernel(kid, now=True)
         assert kid not in km, f"{kid} not in {km}"
         kc.stop_channels()
+        km.context.destroy()
 
     def _run_cinfo(self, km, transport, ip):
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -285,13 +286,16 @@ class TestAsyncKernelManager:
         await fut
         assert kid in km.list_kernel_ids()
         k = km.get_kernel(kid)
+        kc = k.client()
         assert isinstance(k, AsyncKernelManager)
         await km.shutdown_kernel(kid, now=True)
         assert kid not in km, f"{kid} not in {km}"
+        kc.stop_channels()
+        km.context.destroy()
 
     async def _run_cinfo(self, km, transport, ip):
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
-        km.get_kernel(kid)
+        k = km.get_kernel(kid)
         cinfo = km.get_connection_info(kid)
         assert transport == cinfo["transport"]
         assert ip == cinfo["ip"]
@@ -305,8 +309,10 @@ class TestAsyncKernelManager:
         assert "hb_port" in cinfo
         stream = km.connect_hb(kid)
         stream.close()
+        kc = k.client()
         await km.shutdown_kernel(kid, now=True)
         assert kid not in km
+        kc.stop_channels()
 
     async def test_tcp_lifecycle(self):
         await self.raw_tcp_lifecycle()
