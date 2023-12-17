@@ -66,8 +66,8 @@ docs = [
 ]
 
 [project.scripts]
-jupyter-kernelspec = "jupyter_client.kernelspecapp:KernelSpecApp.launch_instance"
-jupyter-run = "jupyter_client.runapp:RunApp.launch_instance"
+jupyter-kernelspec = "jupyter_client.kernelspecapp:main"
+jupyter-run = "jupyter_client.runapp:main"
 jupyter-kernel = "jupyter_client.kernelapp:main"
 
 [project.entry-points."jupyter_client.kernel_provisioners"]
