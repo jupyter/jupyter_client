@@ -106,7 +106,7 @@ class KernelApp(JupyterApp):
         """
         # TODO: if there is a global loop running, use that.
         # TODO: handle windows and loop_factory.
-        asyncio.run(cls._inner_launch_instance(cls, argv, **kwargs))
+        asyncio.run(cls._inner_launch_instance(argv, **kwargs))
 
 
 main = KernelApp.launch_instance
