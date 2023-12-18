@@ -13,6 +13,7 @@ from traitlets import Unicode
 from . import __version__
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
 from .manager import AsyncKernelManager
+from .utils import get_event_loop
 
 
 class KernelApp(JupyterApp):
@@ -33,7 +34,7 @@ class KernelApp(JupyterApp):
         config=True
     )
 
-    def initialize(self, argv: t.Union[str, t.Sequence[str], None] = None) -> None:
+    async def initialize(self, argv: t.Union[str, t.Sequence[str], None] = None) -> None:
         """Initialize the application."""
         super().initialize(argv)
 
@@ -90,7 +91,7 @@ class KernelApp(JupyterApp):
 
     # TODO: move these to JupyterApp.
     @classmethod
-    async def _inner_launch_instance(cls, argv=None, **kwargs):
+    async def _async_launch_instance(cls, argv=None, **kwargs):
         """Launch the instance from inside an event loop."""
         app = cls.instance(**kwargs)
         # Allow there to be a synchronous or asynchronous init method.
@@ -104,9 +105,9 @@ class KernelApp(JupyterApp):
 
         If a global instance already exists, this reinitializes and starts it
         """
-        # TODO: if there is a global loop running, use that.
-        # TODO: handle windows and loop_factory.
-        asyncio.run(cls._inner_launch_instance(argv, **kwargs))
+        loop = get_event_loop()
+        coro = cls._async_launch_instance(argv, **kwargs)
+        loop.run_until_complete(coro)
 
 
 main = KernelApp.launch_instance
