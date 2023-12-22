@@ -407,6 +407,7 @@ class TestParallel:
         km.shutdown_kernel()
         assert km.context.closed
         kc.stop_channels()
+        km.context.destroy()
 
 
 class TestAsyncKernelManager:
