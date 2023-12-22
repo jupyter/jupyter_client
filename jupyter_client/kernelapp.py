@@ -34,7 +34,7 @@ class KernelApp(JupyterApp):
         config=True
     )
 
-    async def initialize(self, argv: t.Union[str, t.Sequence[str], None] = None) -> None:
+    async def initialize(self, argv: t.Union[str, t.Sequence[str], None] = None) -> None:  # type:ignore[override]
         """Initialize the application."""
         super().initialize(argv)
 
@@ -44,7 +44,7 @@ class KernelApp(JupyterApp):
         )
         self.km = AsyncKernelManager(kernel_name=self.kernel_name, config=self.config)
         self._record_started()
-        self._stopped_fut = asyncio.Future()
+        self._stopped_fut: asyncio.Future[None] = asyncio.Future()
         self._running = None
 
     def setup_signals(self) -> None:
@@ -76,7 +76,7 @@ class KernelApp(JupyterApp):
             with open(fn, "wb"):
                 pass
 
-    async def start(self):
+    async def start_async(self) -> None:  # type:ignore[override]
         self.log.info("Starting kernel %r", self.kernel_name)
         km = self.km
         try:

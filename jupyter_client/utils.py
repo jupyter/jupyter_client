@@ -9,7 +9,7 @@ import asyncio
 import os
 import sys
 import warnings
-from typing import Callable, Sequence
+from typing import Sequence
 
 from jupyter_core.utils import ensure_async, run_sync  # noqa: F401  # noqa: F401
 
@@ -110,21 +110,3 @@ def get_event_loop() -> asyncio.AbstractEventLoop:
                 loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
     return loop
-
-
-def run_in_event_loop(fn: Callable) -> None:
-    """Run the given function after invoking asyncio.run"""
-
-    async def inner():
-        fn()
-
-    def cb():
-        if sys.version_info >= (3, 12) and sys.platform == "win32":
-            loop_factory = asyncio.WindowsSelectorEventLoopPolicy()
-            asyncio.run(inner(), loop_factory=loop_factory)
-            return
-        if sys.platform == "win32":
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        asyncio.run(inner())
-
-    return cb
