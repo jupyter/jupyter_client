@@ -129,6 +129,7 @@ timeout_method = "thread"
 filterwarnings= [
   # Fail on warnings
   "error",
+  "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
   # from python-dateutil
   "ignore:datetime.datetime.utc:DeprecationWarning",
 ]

@@ -340,10 +340,6 @@ class TestParallel:
             future2.result()
 
     @pytest.mark.timeout(TIMEOUT)
-    @pytest.mark.skipif(
-        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
-        reason='"Bad file descriptor" error',
-    )
     def test_start_parallel_process_kernels(self, config, install_kernel):
         if config.KernelManager.transport == "ipc":  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")
@@ -356,10 +352,6 @@ class TestParallel:
             future1.result()
 
     @pytest.mark.timeout(TIMEOUT)
-    @pytest.mark.skipif(
-        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
-        reason='"Bad file descriptor" error',
-    )
     def test_start_sequence_process_kernels(self, config, install_kernel):
         if config.KernelManager.transport == "ipc":  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")
