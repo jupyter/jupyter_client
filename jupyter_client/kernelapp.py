@@ -76,7 +76,7 @@ class KernelApp(JupyterApp):
             with open(fn, "wb"):
                 pass
 
-    async def start_async(self) -> None:  # type:ignore[override]
+    async def start(self) -> None:  # type:ignore[override]
         self.log.info("Starting kernel %r", self.kernel_name)
         km = self.km
         try:
