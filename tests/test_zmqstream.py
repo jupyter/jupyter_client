@@ -29,24 +29,30 @@ async def test_zqmstream():
     sock1, sock2 = create_bound_pair(context)
     stream1 = ZMQStream(sock1)
     stream2 = ZMQStream(sock2)
-    future = Future()
+    future1 = Future()
 
-    def on_recv(msg):
-        future.set_result(msg)
+    def on_recv1(msg):
+        future1.set_result(msg)
 
-    stream1.on_recv(on_recv)
+    stream1.on_recv(on_recv1)
     stream2.send(b"ping")
-    msg = await future
+    msg = await future1
     assert msg == b"ping"
-    future = Future()
+    future2 = Future()
+    future3 = Future()
 
     def on_send():
-        future.set_result(None)
+        future2.set_result(None)
+
+    def on_recv2(msg):
+        future3.set_result(msg)
 
     stream1.on_send(on_send)
+    stream2.on_recv(on_recv2)
     stream1.send(b"pong")
-    await future
-    msg = stream2.recv()
+    await future2
+
+    msg = await future3
     assert msg == b"pong"
     stream1.close()
     stream2.close()

@@ -228,8 +228,8 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
         if self.autorestart and self._restarter is not None:
             self._restarter.stop()
 
-    connect_shell = as_zmqstream(KernelManager.connect_shell)  # type:ignore[assignment]
-    connect_control = as_zmqstream(KernelManager.connect_control)  # type:ignore[assignment]
-    connect_iopub = as_zmqstream(KernelManager.connect_iopub)  # type:ignore[assignment]
-    connect_stdin = as_zmqstream(KernelManager.connect_stdin)  # type:ignore[assignment]
-    connect_hb = as_zmqstream(KernelManager.connect_hb)  # type:ignore[assignment]
+    connect_shell = as_zmqstream(AsyncKernelManager.connect_shell)  # type:ignore[assignment]
+    connect_control = as_zmqstream(AsyncKernelManager.connect_control)  # type:ignore[assignment]
+    connect_iopub = as_zmqstream(AsyncKernelManager.connect_iopub)  # type:ignore[assignment]
+    connect_stdin = as_zmqstream(AsyncKernelManager.connect_stdin)  # type:ignore[assignment]
+    connect_hb = as_zmqstream(AsyncKernelManager.connect_hb)  # type:ignore[assignment]
