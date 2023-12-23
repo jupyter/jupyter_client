@@ -3,11 +3,13 @@
 # Distributed under the terms of the Modified BSD License.
 import asyncio
 import concurrent.futures
+import gc
 import json
 import os
 import signal
 import sys
 import time
+import warnings
 from subprocess import PIPE
 
 import pytest
@@ -339,6 +341,10 @@ class TestParallel:
             future1.result()
             future2.result()
 
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            gc.collect()
+
     @pytest.mark.timeout(TIMEOUT)
     def test_start_parallel_process_kernels(self, config, install_kernel):
         if config.KernelManager.transport == "ipc":  # FIXME
@@ -399,7 +405,6 @@ class TestParallel:
         km.shutdown_kernel()
         assert km.context.closed
         kc.stop_channels()
-        km.context.destroy()
 
 
 class TestAsyncKernelManager:
