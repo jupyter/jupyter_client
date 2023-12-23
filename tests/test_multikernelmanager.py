@@ -237,6 +237,38 @@ class TestKernelManager(TestCase):
         assert kid not in km, f"{kid} not in {km}"
 
 
+async def test_sync_stream_on_recv():
+    mkm = TestKernelManager._get_tcp_km()
+    kid = mkm.start_kernel(stdout=PIPE, stderr=PIPE)
+    stream = mkm.connect_iopub(kid)
+
+    km = mkm.get_kernel(kid)
+    client = km.client()
+    session = km.session
+    called = False
+
+    def record_activity(msg_list):
+        nonlocal called
+        """Record an IOPub message arriving from a kernel"""
+        idents, fed_msg_list = session.feed_identities(msg_list)
+        msg = session.deserialize(fed_msg_list, content=False)
+
+        msg_type = msg["header"]["msg_type"]
+        stream.send(msg)
+        called = True
+
+    stream.on_recv(record_activity)
+    while True:
+        client.kernel_info()
+        await asyncio.sleep(1)
+        if called:
+            break
+
+    client.stop_channels()
+    km.shutdown_kernel(now=True)
+    km.context.destroy()
+
+
 class TestAsyncKernelManager:
     # static so picklable for multiprocessing on Windows
     @staticmethod
@@ -569,3 +601,34 @@ class TestAsyncKernelManager:
         assert kernel_id in km.list_kernel_ids()
         await ensure_future(km.shutdown_kernel(kernel_id))
         assert kernel_id not in km.list_kernel_ids()
+
+    async def test_stream_on_recv(self):
+        mkm = self._get_tcp_km()
+        kid = await mkm.start_kernel(stdout=PIPE, stderr=PIPE)
+        stream = mkm.connect_iopub(kid)
+
+        km = mkm.get_kernel(kid)
+        client = km.client()
+        session = km.session
+        called = False
+
+        def record_activity(msg_list):
+            nonlocal called
+            """Record an IOPub message arriving from a kernel"""
+            idents, fed_msg_list = session.feed_identities(msg_list)
+            msg = session.deserialize(fed_msg_list, content=False)
+
+            msg_type = msg["header"]["msg_type"]
+            stream.send(msg)
+            called = True
+
+        stream.on_recv(record_activity)
+        while True:
+            await client.kernel_info(reply=True)
+            if called:
+                break
+            await asyncio.sleep(0.1)
+
+        client.stop_channels()
+        await km.shutdown_kernel(now=True)
+        km.context.destroy()

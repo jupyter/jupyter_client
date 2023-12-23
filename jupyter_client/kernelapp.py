@@ -7,7 +7,6 @@ import typing as t
 import uuid
 
 from jupyter_core.application import JupyterApp, base_flags
-from jupyter_core.utils import ensure_async
 from traitlets import Unicode
 
 from . import __version__
@@ -34,7 +33,7 @@ class KernelApp(JupyterApp):
         config=True
     )
 
-    async def initialize(self, argv: t.Union[str, t.Sequence[str], None] = None) -> None:  # type:ignore[override]
+    async def initialize_async(self, argv: t.Union[str, t.Sequence[str], None] = None) -> None:
         """Initialize the application."""
         super().initialize(argv)
 
@@ -44,7 +43,7 @@ class KernelApp(JupyterApp):
         )
         self.km = AsyncKernelManager(kernel_name=self.kernel_name, config=self.config)
         self._record_started()
-        self._stopped_fut: asyncio.Future[None] = asyncio.Future()
+        self._stopped_fut: asyncio.Future[int] = asyncio.Future()
         self._running = None
 
     def setup_signals(self) -> None:
@@ -76,7 +75,7 @@ class KernelApp(JupyterApp):
             with open(fn, "wb"):
                 pass
 
-    async def start(self) -> None:  # type:ignore[override]
+    async def start_async(self) -> None:
         self.log.info("Starting kernel %r", self.kernel_name)
         km = self.km
         try:
@@ -91,16 +90,16 @@ class KernelApp(JupyterApp):
 
     # TODO: move these to JupyterApp.
     @classmethod
-    async def _async_launch_instance(cls, argv=None, **kwargs):
+    async def _async_launch_instance(cls, argv: t.Any = None, **kwargs: t.Any) -> None:
         """Launch the instance from inside an event loop."""
         app = cls.instance(**kwargs)
         # Allow there to be a synchronous or asynchronous init method.
-        await ensure_async(app.initialize(argv))
+        await app.initialize_async(argv)
         # Allow there to be a synchronous or asynchronous start method.
-        await ensure_async(app.start())
+        await app.start_async()
 
     @classmethod
-    def launch_instance(cls, argv=None, **kwargs):
+    def launch_instance(cls, argv: t.Any = None, **kwargs: t.Any) -> None:
         """Launch a global instance of this Application
 
         If a global instance already exists, this reinitializes and starts it

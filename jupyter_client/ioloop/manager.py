@@ -62,13 +62,13 @@ class ZMQStream:
         self.__send_queue.put((msg, kwargs))
         self.__start_polling()
 
-    def recv(self, flags: int = 0, copy: bool = True, track: bool = False) -> t.Any:
+    def __recv(self) -> t.Any:
         """Receive data on the channel."""
         assert self.socket is not None
-        value = self.socket.recv(flags, copy=copy, track=track)
+        msg_list = self.socket.recv_multipart(zmq.NOBLOCK, copy=self.__recv_copy)
         if self.__on_recv:
-            self.__on_recv(value)
-        return value
+            self.__on_recv(msg_list)
+        return msg_list
 
     def flush(self) -> None:
         """This is a no-op, for backwards compatibility."""
@@ -103,7 +103,7 @@ class ZMQStream:
             mask |= zmq.POLLOUT
         poll_result = self.socket.poll(0.1, mask)
         if poll_result == zmq.POLLIN:
-            self.recv(zmq.NOBLOCK, copy=self.__recv_copy)
+            self.__recv()
         elif poll_result == zmq.POLLOUT:
             self.__handle_send()
         if self.__polling:

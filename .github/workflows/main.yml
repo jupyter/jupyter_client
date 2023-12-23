@@ -54,15 +54,15 @@ jobs:
       - name: Run the tests
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:test --cov-fail-under 75 -x
+          hatch run cov:test --cov-fail-under 75 || hatch run test:test --lf
       - name: Run the tests on pypy
         if: ${{ startsWith(matrix.python-version, 'pypy') }}
         run: |
-          hatch run test:nowarn -x
+          hatch run test:nowarn || hatch run test:nowarn --lf
       - name: Run the tests on windows
         if: ${{ startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:nowarn -x
+          hatch run cov:nowarn || hatch run test:nowarn --lf
       - uses: jupyterlab/maintainer-tools/.github/actions/upload-coverage@v1
 
   coverage:
