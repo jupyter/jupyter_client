@@ -36,8 +36,8 @@ async def test_zqmstream():
 
     stream1.on_recv(on_recv1)
     stream2.send(b"ping")
-    msg = await future1
-    assert msg == b"ping"
+    msg_list = await future1
+    assert msg_list == [b"ping"]
     future2 = Future()
     future3 = Future()
 
@@ -52,8 +52,8 @@ async def test_zqmstream():
     stream1.send(b"pong")
     await future2
 
-    msg = await future3
-    assert msg == b"pong"
+    msg_list = await future3
+    assert msg_list == [b"pong"]
     stream1.close()
     stream2.close()
     context.term()
