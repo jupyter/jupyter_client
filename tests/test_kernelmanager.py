@@ -321,6 +321,14 @@ class TestKernelManager:
         assert km_subclass.context.closed
 
 
+@pytest.fixture
+def cleanup_parallel():
+    yield
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        gc.collect()
+
+
 class TestParallel:
     @pytest.mark.timeout(TIMEOUT)
     def test_start_sequence_kernels(self, config, install_kernel):
@@ -330,7 +338,7 @@ class TestParallel:
         self._run_signaltest_lifecycle(config)
 
     @pytest.mark.timeout(TIMEOUT + 10)
-    def test_start_parallel_thread_kernels(self, config, install_kernel):
+    def test_start_parallel_thread_kernels(self, config, install_kernel, cleanup_parallel):
         if config.KernelManager.transport == "ipc":  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
@@ -341,12 +349,8 @@ class TestParallel:
             future1.result()
             future2.result()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            gc.collect()
-
     @pytest.mark.timeout(TIMEOUT)
-    def test_start_parallel_process_kernels(self, config, install_kernel):
+    def test_start_parallel_process_kernels(self, config, install_kernel, cleanup_parallel):
         if config.KernelManager.transport == "ipc":  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
@@ -358,7 +362,7 @@ class TestParallel:
             future1.result()
 
     @pytest.mark.timeout(TIMEOUT)
-    def test_start_sequence_process_kernels(self, config, install_kernel):
+    def test_start_sequence_process_kernels(self, config, install_kernel, cleanup_parallel):
         if config.KernelManager.transport == "ipc":  # FIXME
             pytest.skip("IPC transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
