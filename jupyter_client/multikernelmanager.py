@@ -226,7 +226,7 @@ class MultiKernelManager(LoggingConfigurable):
             self._kernels[kernel_id].update_env(env=env)
 
     async def _add_kernel_when_ready(
-        self, kernel_id: str, km: KernelManager, kernel_awaitable: t.Awaitable
+        self, kernel_id: str, km: KernelManager, kernel_awaitable: t.Awaitable[t.Any]
     ) -> None:
         try:
             await kernel_awaitable
@@ -236,7 +236,7 @@ class MultiKernelManager(LoggingConfigurable):
             self.log.exception(e)
 
     async def _remove_kernel_when_ready(
-        self, kernel_id: str, kernel_awaitable: t.Awaitable
+        self, kernel_id: str, kernel_awaitable: t.Awaitable[t.Any]
     ) -> None:
         try:
             await kernel_awaitable
@@ -618,7 +618,7 @@ class AsyncMultiKernelManager(MultiKernelManager):
         self._created_context = True
         return zmq.asyncio.Context()
 
-    start_kernel: t.Callable[..., t.Awaitable] = MultiKernelManager._async_start_kernel  # type:ignore[assignment]
-    restart_kernel: t.Callable[..., t.Awaitable] = MultiKernelManager._async_restart_kernel  # type:ignore[assignment]
-    shutdown_kernel: t.Callable[..., t.Awaitable] = MultiKernelManager._async_shutdown_kernel  # type:ignore[assignment]
-    shutdown_all: t.Callable[..., t.Awaitable] = MultiKernelManager._async_shutdown_all  # type:ignore[assignment]
+    start_kernel = MultiKernelManager._async_start_kernel
+    restart_kernel = MultiKernelManager._async_restart_kernel
+    shutdown_kernel = MultiKernelManager._async_shutdown_kernel
+    shutdown_all = MultiKernelManager._async_shutdown_all

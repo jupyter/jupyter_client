@@ -733,20 +733,20 @@ class AsyncKernelManager(KernelManager):
         """Get a client for the manager."""
         return super().client(**kwargs)  # type:ignore[return-value]
 
-    _launch_kernel = KernelManager._async_launch_kernel  # type:ignore[assignment]
-    start_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_start_kernel  # type:ignore[assignment]
-    pre_start_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_pre_start_kernel  # type:ignore[assignment]
-    post_start_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_post_start_kernel  # type:ignore[assignment]
-    request_shutdown: t.Callable[..., t.Awaitable] = KernelManager._async_request_shutdown  # type:ignore[assignment]
-    finish_shutdown: t.Callable[..., t.Awaitable] = KernelManager._async_finish_shutdown  # type:ignore[assignment]
-    cleanup_resources: t.Callable[..., t.Awaitable] = KernelManager._async_cleanup_resources  # type:ignore[assignment]
-    shutdown_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_shutdown_kernel  # type:ignore[assignment]
-    restart_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_restart_kernel  # type:ignore[assignment]
-    _send_kernel_sigterm = KernelManager._async_send_kernel_sigterm  # type:ignore[assignment]
-    _kill_kernel = KernelManager._async_kill_kernel  # type:ignore[assignment]
-    interrupt_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_interrupt_kernel  # type:ignore[assignment]
-    signal_kernel: t.Callable[..., t.Awaitable] = KernelManager._async_signal_kernel  # type:ignore[assignment]
-    is_alive: t.Callable[..., t.Awaitable] = KernelManager._async_is_alive  # type:ignore[assignment]
+    _launch_kernel = KernelManager._async_launch_kernel
+    start_kernel = KernelManager._async_start_kernel
+    pre_start_kernel = KernelManager._async_pre_start_kernel
+    post_start_kernel = KernelManager._async_post_start_kernel
+    request_shutdown = KernelManager._async_request_shutdown
+    finish_shutdown = KernelManager._async_finish_shutdown
+    cleanup_resources = KernelManager._async_cleanup_resources
+    shutdown_kernel = KernelManager._async_shutdown_kernel
+    restart_kernel = KernelManager._async_restart_kernel
+    _send_kernel_sigterm = KernelManager._async_send_kernel_sigterm
+    _kill_kernel = KernelManager._async_kill_kernel
+    interrupt_kernel = KernelManager._async_interrupt_kernel
+    signal_kernel = KernelManager._async_signal_kernel
+    is_alive = KernelManager._async_is_alive
 
 
 KernelManagerABC.register(KernelManager)

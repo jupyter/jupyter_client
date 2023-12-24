@@ -44,8 +44,8 @@ class RunApp(JupyterApp, JupyterConsoleApp):  # type:ignore[misc]
     version = __version__
     name = "jupyter run"
     description = """Run Jupyter kernel code."""
-    flags = Dict(flags)  # type:ignore[assignment]
-    aliases = Dict(aliases)  # type:ignore[assignment]
+    flags = Dict(flags)
+    aliases = Dict(aliases)
     frontend_aliases = Any(frontend_aliases)
     frontend_flags = Any(frontend_flags)
     kernel_timeout = Float(

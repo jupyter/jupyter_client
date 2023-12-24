@@ -547,7 +547,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             See the connection_file spec for details.
         """
         self.transport = info.get("transport", self.transport)
-        self.ip = info.get("ip", self._ip_default())  # type:ignore[assignment]
+        self.ip = info.get("ip", self._ip_default())
 
         self._record_random_port_names()
         for name in port_names:
