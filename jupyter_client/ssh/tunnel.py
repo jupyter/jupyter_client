@@ -25,9 +25,9 @@ try:
 
         SSHException = paramiko.ssh_exception.SSHException
 except ImportError:
-    paramiko = None
+    paramiko = None  # type:ignore[assignment]
 
-    class SSHException(Exception):  # noqa: N818
+    class SSHException(Exception):  # type:ignore[assignment]  # noqa: N818
         pass
 
 else:
