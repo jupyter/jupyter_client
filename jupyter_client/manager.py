@@ -98,7 +98,7 @@ def in_pending_state(method: F) -> F:
     return t.cast(F, wrapper)
 
 
-class KernelManager(ConnectionFileMixin):
+class _KernelManagerBase(ConnectionFileMixin):
     """Manages a single kernel in a subprocess on this host.
 
     This version starts kernels with Popen.
@@ -357,8 +357,6 @@ class KernelManager(ConnectionFileMixin):
         # and write the connection file, if not already done.
         self._reconcile_connection_info(connection_info)
 
-    _launch_kernel = run_sync(_async_launch_kernel)
-
     # Control socket used for polite kernel shutdown
 
     def _connect_control_socket(self) -> None:
@@ -401,8 +399,6 @@ class KernelManager(ConnectionFileMixin):
         kernel_cmd = kw.pop("cmd")
         return kernel_cmd, kw
 
-    pre_start_kernel = run_sync(_async_pre_start_kernel)
-
     async def _async_post_start_kernel(self, **kw: t.Any) -> None:
         """Performs any post startup tasks relative to the kernel.
 
@@ -415,8 +411,6 @@ class KernelManager(ConnectionFileMixin):
         self._connect_control_socket()
         assert self.provisioner is not None
         await self.provisioner.post_launch(**kw)
-
-    post_start_kernel = run_sync(_async_post_start_kernel)
 
     @in_pending_state
     async def _async_start_kernel(self, **kw: t.Any) -> None:
@@ -439,8 +433,6 @@ class KernelManager(ConnectionFileMixin):
         await self._async_launch_kernel(kernel_cmd, **kw)
         await self._async_post_start_kernel(**kw)
 
-    start_kernel = run_sync(_async_start_kernel)
-
     async def _async_request_shutdown(self, restart: bool = False) -> None:
         """Send a shutdown request via control channel"""
         content = {"restart": restart}
@@ -451,8 +443,6 @@ class KernelManager(ConnectionFileMixin):
         assert self.provisioner is not None
         await self.provisioner.shutdown_requested(restart=restart)
         self._shutdown_status = _ShutdownStatus.ShutdownRequest
-
-    request_shutdown = run_sync(_async_request_shutdown)
 
     async def _async_finish_shutdown(
         self,
@@ -493,8 +483,6 @@ class KernelManager(ConnectionFileMixin):
                 assert self.provisioner is not None
                 await self.provisioner.wait()
 
-    finish_shutdown = run_sync(_async_finish_shutdown)
-
     async def _async_cleanup_resources(self, restart: bool = False) -> None:
         """Clean up resources when the kernel is shut down"""
         if not restart:
@@ -509,8 +497,6 @@ class KernelManager(ConnectionFileMixin):
 
         if self.provisioner:
             await self.provisioner.cleanup(restart=restart)
-
-    cleanup_resources = run_sync(_async_cleanup_resources)
 
     @in_pending_state
     async def _async_shutdown_kernel(self, now: bool = False, restart: bool = False) -> None:
@@ -551,8 +537,6 @@ class KernelManager(ConnectionFileMixin):
             await self._async_finish_shutdown(restart=restart)
 
         await self._async_cleanup_resources(restart=restart)
-
-    shutdown_kernel = run_sync(_async_shutdown_kernel)
 
     async def _async_restart_kernel(
         self, now: bool = False, newports: bool = False, **kw: t.Any
@@ -595,8 +579,6 @@ class KernelManager(ConnectionFileMixin):
         self._launch_args.update(kw)
         await self._async_start_kernel(**self._launch_args)
 
-    restart_kernel = run_sync(_async_restart_kernel)
-
     @property
     def owns_kernel(self) -> bool:
         return self._owns_kernel
@@ -611,8 +593,6 @@ class KernelManager(ConnectionFileMixin):
         if self.has_kernel:
             assert self.provisioner is not None
             await self.provisioner.terminate(restart=restart)
-
-    _send_kernel_sigterm = run_sync(_async_send_kernel_sigterm)
 
     async def _async_kill_kernel(self, restart: bool = False) -> None:
         """Kill the running kernel.
@@ -634,8 +614,6 @@ class KernelManager(ConnectionFileMixin):
                 # Process is no longer alive, wait and clear
                 if self.has_kernel:
                     await self.provisioner.wait()
-
-    _kill_kernel = run_sync(_async_kill_kernel)
 
     async def _async_interrupt_kernel(self) -> None:
         """Interrupts the kernel by sending it a signal.
@@ -668,8 +646,6 @@ class KernelManager(ConnectionFileMixin):
             msg = "Cannot interrupt kernel. No kernel is running!"
             raise RuntimeError(msg)
 
-    interrupt_kernel = run_sync(_async_interrupt_kernel)
-
     async def _async_signal_kernel(self, signum: int) -> None:
         """Sends a signal to the process group of the kernel (this
         usually includes the kernel and any subprocesses spawned by
@@ -685,8 +661,6 @@ class KernelManager(ConnectionFileMixin):
             msg = "Cannot signal kernel. No kernel is running!"
             raise RuntimeError(msg)
 
-    signal_kernel = run_sync(_async_signal_kernel)
-
     async def _async_is_alive(self) -> bool:
         """Is the kernel process still running?"""
         if not self.owns_kernel:
@@ -699,8 +673,6 @@ class KernelManager(ConnectionFileMixin):
                 return True
         return False
 
-    is_alive = run_sync(_async_is_alive)
-
     async def _async_wait(self, pollinterval: float = 0.1) -> None:
         # Use busy loop at 100ms intervals, polling until the process is
         # not alive.  If we find the process is no longer alive, complete
@@ -710,7 +682,24 @@ class KernelManager(ConnectionFileMixin):
             await asyncio.sleep(pollinterval)
 
 
-class AsyncKernelManager(KernelManager):
+class KernelManager(_KernelManagerBase):
+    _launch_kernel = run_sync(_KernelManagerBase._async_launch_kernel)
+    start_kernel = run_sync(_KernelManagerBase._async_start_kernel)
+    pre_start_kernel = run_sync(_KernelManagerBase._async_pre_start_kernel)
+    post_start_kernel = run_sync(_KernelManagerBase._async_post_start_kernel)
+    request_shutdown = run_sync(_KernelManagerBase._async_request_shutdown)
+    finish_shutdown = run_sync(_KernelManagerBase._async_finish_shutdown)
+    cleanup_resources = run_sync(_KernelManagerBase._async_cleanup_resources)
+    shutdown_kernel = run_sync(_KernelManagerBase._async_shutdown_kernel)
+    restart_kernel = run_sync(_KernelManagerBase._async_restart_kernel)
+    _send_kernel_sigterm = run_sync(_KernelManagerBase._async_send_kernel_sigterm)
+    _kill_kernel = run_sync(_KernelManagerBase._async_kill_kernel)
+    interrupt_kernel = run_sync(_KernelManagerBase._async_interrupt_kernel)
+    signal_kernel = run_sync(_KernelManagerBase._async_signal_kernel)
+    is_alive = run_sync(_KernelManagerBase._async_is_alive)
+
+
+class AsyncKernelManager(_KernelManagerBase):
     """An async kernel manager."""
 
     # the class to create with our `client` method
@@ -733,20 +722,20 @@ class AsyncKernelManager(KernelManager):
         """Get a client for the manager."""
         return super().client(**kwargs)  # type:ignore[return-value]
 
-    _launch_kernel = KernelManager._async_launch_kernel
-    start_kernel = KernelManager._async_start_kernel
-    pre_start_kernel = KernelManager._async_pre_start_kernel
-    post_start_kernel = KernelManager._async_post_start_kernel
-    request_shutdown = KernelManager._async_request_shutdown
-    finish_shutdown = KernelManager._async_finish_shutdown
-    cleanup_resources = KernelManager._async_cleanup_resources
-    shutdown_kernel = KernelManager._async_shutdown_kernel
-    restart_kernel = KernelManager._async_restart_kernel
-    _send_kernel_sigterm = KernelManager._async_send_kernel_sigterm
-    _kill_kernel = KernelManager._async_kill_kernel
-    interrupt_kernel = KernelManager._async_interrupt_kernel
-    signal_kernel = KernelManager._async_signal_kernel
-    is_alive = KernelManager._async_is_alive
+    _launch_kernel = _KernelManagerBase._async_launch_kernel
+    start_kernel = _KernelManagerBase._async_start_kernel
+    pre_start_kernel = _KernelManagerBase._async_pre_start_kernel
+    post_start_kernel = _KernelManagerBase._async_post_start_kernel
+    request_shutdown = _KernelManagerBase._async_request_shutdown
+    finish_shutdown = _KernelManagerBase._async_finish_shutdown
+    cleanup_resources = _KernelManagerBase._async_cleanup_resources
+    shutdown_kernel = _KernelManagerBase._async_shutdown_kernel
+    restart_kernel = _KernelManagerBase._async_restart_kernel
+    _send_kernel_sigterm = _KernelManagerBase._async_send_kernel_sigterm
+    _kill_kernel = _KernelManagerBase._async_kill_kernel
+    interrupt_kernel = _KernelManagerBase._async_interrupt_kernel
+    signal_kernel = _KernelManagerBase._async_signal_kernel
+    is_alive = _KernelManagerBase._async_is_alive
 
 
 KernelManagerABC.register(KernelManager)
