@@ -19,7 +19,7 @@ from traitlets.config.configurable import LoggingConfigurable
 class KernelRestarter(LoggingConfigurable):
     """Monitor and autorestart a kernel."""
 
-    kernel_manager = Instance("jupyter_client.KernelManager")
+    kernel_manager = Instance("jupyter_client.managerabc.KernelManagerABC")
 
     debug = Bool(
         False,

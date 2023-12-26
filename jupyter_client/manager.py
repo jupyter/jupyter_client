@@ -36,6 +36,7 @@ from . import kernelspec
 from .asynchronous import AsyncKernelClient
 from .blocking import BlockingKernelClient
 from .client import KernelClient
+from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
 from .managerabc import KernelManagerABC
 from .provisioning import KernelProvisionerBase
@@ -58,6 +59,7 @@ class _ShutdownStatus(Enum):
 
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
+KernelClientBound = t.TypeVar("KernelClientBound", bound=KernelClientABC)
 
 
 def _get_future() -> t.Union[Future, CFuture]:
@@ -98,7 +100,7 @@ def in_pending_state(method: F) -> F:
     return t.cast(F, wrapper)
 
 
-class _KernelManagerBase(ConnectionFileMixin):
+class _KernelManagerBase(ConnectionFileMixin, t.Generic[KernelClientBound]):
     """Manages a single kernel in a subprocess on this host.
 
     This version starts kernels with Popen.
@@ -126,18 +128,15 @@ class _KernelManagerBase(ConnectionFileMixin):
     _created_context: Bool = Bool(False)
 
     # The PyZMQ Context to use for communication with the kernel.
-    context: Instance = Instance(zmq.Context)
+    context: Instance
 
     @default("context")
     def _context_default(self) -> zmq.Context:
-        self._created_context = True
-        return zmq.Context()
+        raise NotImplementedError
 
     # the class to create with our `client` method
-    client_class: DottedObjectName = DottedObjectName(
-        "jupyter_client.blocking.BlockingKernelClient"
-    )
-    client_factory: Type = Type(klass=KernelClient)
+    client_class: DottedObjectName
+    client_factory: Type
 
     @default("client_factory")
     def _client_factory_default(self) -> Type:
@@ -260,7 +259,7 @@ class _KernelManagerBase(ConnectionFileMixin):
     # create a Client connected to our Kernel
     # --------------------------------------------------------------------------
 
-    def client(self, **kwargs: t.Any) -> BlockingKernelClient:
+    def client(self, **kwargs: t.Any) -> KernelClientBound:
         """Create a client configured to connect to our kernel"""
         kw: dict = {}
         kw.update(self.get_connection_info(session=True))
@@ -682,7 +681,23 @@ class _KernelManagerBase(ConnectionFileMixin):
             await asyncio.sleep(pollinterval)
 
 
-class KernelManager(_KernelManagerBase):
+class KernelManager(_KernelManagerBase[BlockingKernelClient]):
+    """A blocking kernel manager."""
+
+    # the class to create with our `client` method
+    client_class: DottedObjectName = DottedObjectName(
+        "jupyter_client.blocking.BlockingKernelClient"
+    )
+    client_factory: Type = Type(klass=KernelClient)
+
+    # The PyZMQ Context to use for communication with the kernel.
+    context: Instance = Instance(zmq.Context)
+
+    @default("context")
+    def _context_default(self) -> zmq.Context:
+        self._created_context = True
+        return zmq.Context()
+
     _launch_kernel = run_sync(_KernelManagerBase._async_launch_kernel)
     start_kernel = run_sync(_KernelManagerBase._async_start_kernel)
     pre_start_kernel = run_sync(_KernelManagerBase._async_pre_start_kernel)
@@ -699,7 +714,7 @@ class KernelManager(_KernelManagerBase):
     is_alive = run_sync(_KernelManagerBase._async_is_alive)
 
 
-class AsyncKernelManager(_KernelManagerBase):
+class AsyncKernelManager(_KernelManagerBase[AsyncKernelClient]):
     """An async kernel manager."""
 
     # the class to create with our `client` method
@@ -715,12 +730,6 @@ class AsyncKernelManager(_KernelManagerBase):
     def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True
         return zmq.asyncio.Context()
-
-    def client(  # type:ignore[override]
-        self, **kwargs: t.Any
-    ) -> AsyncKernelClient:
-        """Get a client for the manager."""
-        return super().client(**kwargs)  # type:ignore[return-value]
 
     _launch_kernel = _KernelManagerBase._async_launch_kernel
     start_kernel = _KernelManagerBase._async_start_kernel
@@ -739,6 +748,7 @@ class AsyncKernelManager(_KernelManagerBase):
 
 
 KernelManagerABC.register(KernelManager)
+KernelManagerABC.register(AsyncKernelManager)
 
 
 def start_new_kernel(
