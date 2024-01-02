@@ -18,7 +18,7 @@ def test_kernelspec_sub_apps(jp_kernel_dir):
     prefix = os.path.dirname(os.environ["JUPYTER_DATA_DIR"])
     kernel_dir = os.path.join(prefix, "share/jupyter/kernels")
     app.kernel_spec_manager.kernel_dirs.append(kernel_dir)
-    app.prefix = prefix = prefix
+    app.prefix = prefix
     app.initialize([str(jp_kernel_dir)])
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
