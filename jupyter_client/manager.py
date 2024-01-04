@@ -688,7 +688,7 @@ class KernelManager(_KernelManagerBase[BlockingKernelClient]):
     client_class: DottedObjectName = DottedObjectName(
         "jupyter_client.blocking.BlockingKernelClient"
     )
-    client_factory: Type = Type(klass=KernelClient)
+    client_factory: Type = Type(klass=BlockingKernelClient)
 
     # The PyZMQ Context to use for communication with the kernel.
     context: Instance = Instance(zmq.Context)
