@@ -1,9 +1,5 @@
-import asyncio
+import gc
 import os
-
-if os.name == "nt":
-    # TODO: move this logic into get_event_loop?
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type:ignore
 
 import pytest
 
@@ -16,4 +12,5 @@ pytest_plugins = ["pytest_jupyter", "pytest_jupyter.jupyter_client"]
 
 @pytest.fixture(autouse=True)
 def setup_environ(jp_environ):
-    pass
+    yield
+    gc.collect()

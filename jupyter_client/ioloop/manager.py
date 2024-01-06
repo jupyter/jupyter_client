@@ -4,10 +4,10 @@
 import asyncio
 import typing as t
 
+from jupyter_core.utils import ensure_event_loop
 from traitlets import Instance, Type
 
 from ..manager import AsyncKernelManager, KernelManager
-from ..utils import get_event_loop
 from .restarter import AsyncIOLoopKernelRestarter, IOLoopKernelRestarter
 
 
@@ -17,7 +17,7 @@ class IOLoopKernelManager(KernelManager):
     loop = Instance(asyncio.AbstractEventLoop)
 
     def _loop_default(self) -> asyncio.AbstractEventLoop:
-        return get_event_loop()
+        return ensure_event_loop()
 
     restarter_class = Type(
         default_value=IOLoopKernelRestarter,
@@ -52,7 +52,7 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
     loop = Instance(asyncio.AbstractEventLoop)
 
     def _loop_default(self) -> asyncio.AbstractEventLoop:
-        return get_event_loop()
+        return ensure_event_loop()
 
     restarter_class = Type(
         default_value=AsyncIOLoopKernelRestarter,
@@ -73,7 +73,7 @@ class AsyncIOLoopKernelManager(AsyncKernelManager):
         if self.autorestart and self.has_kernel:
             if self._restarter is None:
                 self._restarter = self.restarter_class(
-                    kernel_manager=self, loop=self.loop, parent=self, log=self.log
+                    kernel_manager=self, parent=self, log=self.log
                 )
             self._restarter.start()
 

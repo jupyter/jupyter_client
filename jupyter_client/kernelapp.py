@@ -5,9 +5,8 @@ import typing as t
 import uuid
 
 from jupyter_core.application import JupyterApp, base_flags
+from jupyter_core.utils import ensure_event_loop
 from traitlets import Unicode
-
-from jupyter_client.utils import get_event_loop
 
 from . import __version__
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
@@ -41,7 +40,7 @@ class KernelApp(JupyterApp):
             "connection_file", os.path.join(self.runtime_dir, cf_basename)
         )
         self.km = KernelManager(kernel_name=self.kernel_name, config=self.config)
-        self.loop = get_event_loop()
+        self.loop = ensure_event_loop()
         self.loop.call_soon(self._record_started)
 
     def setup_signals(self) -> None:

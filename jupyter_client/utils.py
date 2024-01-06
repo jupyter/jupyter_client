@@ -5,9 +5,7 @@ utils:
 """
 from __future__ import annotations
 
-import asyncio
 import os
-import warnings
 from typing import Sequence
 
 from jupyter_core.utils import ensure_async, run_sync  # noqa: F401  # noqa: F401
@@ -90,19 +88,3 @@ def _expand_path(s: str) -> str:
     if os.name == "nt":
         s = s.replace("IPYTHON_TEMP", "$\\")
     return s
-
-
-def get_event_loop() -> asyncio.AbstractEventLoop:
-    # Get the loop for this thread.
-    # In Python 3.12, a deprecation warning is raised, which
-    # may later turn into a RuntimeError.  We handle both
-    # cases.
-    # TODO: handle loop factory, and migrate to jupyter_core
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-    return loop

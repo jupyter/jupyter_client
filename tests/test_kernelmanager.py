@@ -140,6 +140,7 @@ class TestKernelManagerShutDownGracefully:
             expected = [expected]
 
         assert km._shutdown_status in expected
+        assert km.context.closed
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     @pytest.mark.parametrize(*parameters)
@@ -158,6 +159,7 @@ class TestKernelManagerShutDownGracefully:
             expected = [expected]
 
         assert km._shutdown_status in expected
+        assert km.context.closed
 
 
 class TestKernelManager:
@@ -231,12 +233,18 @@ class TestKernelManager:
                 break
         # verify that subprocesses were interrupted
         assert reply["user_expressions"]["poll"] == [-signal.SIGINT] * N
+        kc.stop_channels()
+        await km.shutdown_kernel(now=True)
+        assert km.context.closed
 
     async def test_start_new_kernel(self, install_kernel, jp_start_kernel):
         km, kc = await jp_start_kernel("signaltest")
         assert await km.is_alive()
         assert await kc.is_alive()
         assert km.context.closed is False
+        kc.stop_channels()
+        await km.shutdown_kernel(now=True)
+        assert km.context.closed
 
     async def _env_test_body(self, kc):
         async def execute(cmd):
