@@ -1,25 +1,26 @@
 """An application to launch a kernel by name in a local subprocess."""
+import asyncio
+import functools
 import os
 import signal
 import typing as t
 import uuid
 
-from jupyter_core.application import JupyterApp, base_flags
-from jupyter_core.utils import ensure_event_loop
+from jupyter_core.application import JupyterAsyncApp, base_flags
 from traitlets import Unicode
 
 from . import __version__
 from .kernelspec import NATIVE_KERNEL_NAME, KernelSpecManager
-from .manager import KernelManager
+from .manager import AsyncKernelManager
 
 
-class KernelApp(JupyterApp):
+class KernelApp(JupyterAsyncApp):
     """Launch a kernel by name in a local subprocess."""
 
     version = __version__
     description = "Run a kernel locally in a subprocess"
 
-    classes = [KernelManager, KernelSpecManager]
+    classes = [AsyncKernelManager, KernelSpecManager]
 
     aliases = {
         "kernel": "KernelApp.kernel_name",
@@ -31,7 +32,7 @@ class KernelApp(JupyterApp):
         config=True
     )
 
-    def initialize(self, argv: t.Union[str, t.Sequence[str], None] = None) -> None:
+    async def initialize_async(self, argv: t.Union[str, t.Sequence[str], None] = None) -> None:
         """Initialize the application."""
         super().initialize(argv)
 
@@ -39,26 +40,23 @@ class KernelApp(JupyterApp):
         self.config.setdefault("KernelManager", {}).setdefault(
             "connection_file", os.path.join(self.runtime_dir, cf_basename)
         )
-        self.km = KernelManager(kernel_name=self.kernel_name, config=self.config)
-        self.loop = ensure_event_loop()
-        self.loop.call_soon(self._record_started)
+        self.km = AsyncKernelManager(kernel_name=self.kernel_name, config=self.config)
+        await self._record_started()
+        self._stopped_fut: asyncio.Future[int] = asyncio.Future()
+        self._running = None
 
     def setup_signals(self) -> None:
         """Shutdown on SIGTERM or SIGINT (Ctrl-C)"""
         if os.name == "nt":
             return
 
-        def shutdown_handler(signo: int, frame: t.Any) -> None:
-            self.loop.add_callback_from_signal(self.shutdown, signo)
-
-        for sig in [signal.SIGTERM, signal.SIGINT]:
-            signal.signal(sig, shutdown_handler)
+        loop = asyncio.get_running_loop()
+        for signo in [signal.SIGTERM, signal.SIGINT]:
+            loop.add_signal_handler(signo, functools.partial(self.shutdown, signo))
 
     def shutdown(self, signo: int) -> None:
         """Shut down the application."""
-        self.log.info("Shutting down on signal %d", signo)
-        self.km.shutdown_kernel()
-        self.loop.stop()
+        self._stopped_fut.set_result(signo)
 
     def log_connection_info(self) -> None:
         """Log the connection info for the kernel."""
@@ -76,16 +74,18 @@ class KernelApp(JupyterApp):
             with open(fn, "wb"):
                 pass
 
-    def start(self) -> None:
-        """Start the application."""
+    async def start_async(self) -> None:
         self.log.info("Starting kernel %r", self.kernel_name)
+        km = self.km
         try:
-            self.km.start_kernel()
-            self.log_connection_info()
             self.setup_signals()
-            self.loop.run_forever()
+            self.log_connection_info()
+            await km.start_kernel()
+            stopped_sig = await self._stopped_fut
+            self.log.info("Shutting down on signal %d", stopped_sig)
+            await km.shutdown_kernel()
         finally:
-            self.km.cleanup_resources()
+            await km.cleanup_resources()
 
 
 main = KernelApp.launch_instance

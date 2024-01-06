@@ -87,7 +87,7 @@ def in_pending_state(method: F) -> F:
             out = await method(self, *args, **kwargs)
             # Add a small sleep to ensure tests can capture the state before done
             await asyncio.sleep(0.01)
-            if self.owns_kernel:
+            if self.owns_kernel and not self._ready.done():
                 self._ready.set_result(None)
             return out
         except Exception as e:

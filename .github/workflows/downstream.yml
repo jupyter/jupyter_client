@@ -61,6 +61,7 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: jupyter_server
+          test_command: pytest -vv -ras -W default --durations 10 --color=yes -x
 
   jupyter_kernel_test:
     runs-on: ubuntu-latest
@@ -73,7 +74,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
       - name: Setup conda ${{ matrix.python-version }}
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           activate-environment: jupyter_kernel_test
@@ -97,7 +98,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.9"
           architecture: "x64"
