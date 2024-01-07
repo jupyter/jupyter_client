@@ -76,7 +76,7 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: jupyter_server
-          test_command: pytest -vv -ras -W default --durations 10 --color=yes -x
+          test_command: pytest -vv -ras -W default --durations 10 --color=yes
 
   jupyter_kernel_test:
     runs-on: ubuntu-latest
