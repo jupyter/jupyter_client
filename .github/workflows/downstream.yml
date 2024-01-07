@@ -31,15 +31,30 @@ jobs:
           package_name: nbclient
           env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
 
-  papermill:
+  # papermill:
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 15
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+  #     - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+  #       with:
+  #         package_name: papermill
+
+  pytest_jupyter:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Run Test
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
-          package_name: papermill
+          package_name: pytest_jupyter
+          package_spec: pip install -e ".[test,client,server]"
 
   nbconvert:
     runs-on: ubuntu-latest
@@ -132,7 +147,8 @@ jobs:
     needs:
       - ipykernel
       - nbclient
-      - papermill
+      #- papermill
+      - pytest_jupyter
       - nbconvert
       - jupyter_server
       - jupyter_kernel_test
