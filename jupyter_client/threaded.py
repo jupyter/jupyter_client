@@ -16,7 +16,7 @@ from traitlets.log import get_logger
 from .channels import HBChannel
 from .client import KernelClient
 from .session import Session
-from .utils import get_event_loop
+from .utils import ensure_event_loop
 
 # Local imports
 # import ZMQError in top-level namespace, to avoid ugly attribute-error messages
@@ -54,7 +54,7 @@ class ThreadedZMQSocketChannel:
 
         self.socket = socket
         self.session = session
-        self.ioloop = loop or get_event_loop()
+        self.ioloop = loop or ensure_event_loop()
 
     _is_alive = False
 
