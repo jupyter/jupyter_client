@@ -3,6 +3,7 @@
 # Distributed under the terms of the Modified BSD License.
 import asyncio
 import os
+import pathlib
 import signal
 import sys
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
@@ -31,6 +32,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     pgid = None
     ip = None
     ports_cached = False
+    cwd = None
 
     @property
     def has_process(self) -> bool:
@@ -217,7 +219,17 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
 
         self.pid = self.process.pid
         self.pgid = pgid
+        self.cwd = kwargs.get('cwd', pathlib.Path.cwd())
         return self.connection_info
+
+    async def resolve_path(self, path_str: str) -> Optional[str]:
+        """Resolve path to given file."""
+        path = pathlib.Path(path_str).expanduser()
+        if path.is_absolute():
+            return path.as_posix()
+        if self.cwd:
+            return (pathlib.Path(self.cwd) / path).resolve().as_posix()
+        return None
 
     @staticmethod
     def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
