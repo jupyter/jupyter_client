@@ -219,7 +219,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
 
         self.pid = self.process.pid
         self.pgid = pgid
-        self.cwd = kwargs.get('cwd', pathlib.Path.cwd())
+        self.cwd = kwargs.get("cwd", pathlib.Path.cwd())
         return self.connection_info
 
     async def resolve_path(self, path_str: str) -> Optional[str]:
