@@ -208,6 +208,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
 
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
         """Launch a kernel with a command."""
+
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
@@ -225,10 +226,10 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     async def resolve_path(self, path_str: str) -> Optional[str]:
         """Resolve path to given file."""
         path = pathlib.Path(path_str).expanduser()
-        if path.is_absolute():
+        if not path.is_absolute() and self.cwd:
+            path = (pathlib.Path(self.cwd) / path).resolve()
+        if path.exists():
             return path.as_posix()
-        if self.cwd:
-            return (pathlib.Path(self.cwd) / path).resolve().as_posix()
         return None
 
     @staticmethod
