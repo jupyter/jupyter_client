@@ -13,6 +13,7 @@ import sys
 import typing as t
 import uuid
 import warnings
+from inspect import iscoroutinefunction
 
 from jupyter_core.application import base_aliases, base_flags
 from traitlets import CBool, CUnicode, Dict, List, Type, Unicode
@@ -149,7 +150,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
         to force a direct exit without any confirmation.""",
     )
 
-    def build_kernel_argv(self, argv: object = None) -> None:
+    def build_kernel_argv(self, argv: t.Any = None) -> None:
         """build argv to be passed to kernel subprocess
 
         Override in subclasses if any args should be passed to the kernel
@@ -311,6 +312,8 @@ class JupyterConsoleApp(ConnectionFileMixin):
             self.exit(1)  # type:ignore[attr-defined]
 
         self.kernel_manager = t.cast(KernelManager, self.kernel_manager)
+
+        assert not iscoroutinefunction(self.kernel_manager.start_kernel)
         self.kernel_manager.client_factory = self.kernel_client_class
         kwargs = {}
         kwargs["extra_arguments"] = self.kernel_argv
@@ -352,7 +355,7 @@ class JupyterConsoleApp(ConnectionFileMixin):
 
         self.kernel_client.start_channels()
 
-    def initialize(self, argv: object = None) -> None:
+    def initialize(self, argv: t.Any = None) -> None:
         """
         Classes which mix this class in should call:
                JupyterConsoleApp.initialize(self,argv)
