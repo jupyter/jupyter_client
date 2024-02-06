@@ -67,7 +67,7 @@ class RunApp(JupyterApp, JupyterConsoleApp):  # type:ignore[misc]
         self.filenames_to_run = self.extra_args[:]
 
     @catch_config_error
-    def initialize(self, argv: list[str] | None = None) -> None:  # type:ignore[override]
+    def initialize(self, argv: list[str] | None = None) -> None:
         """Initialize the app."""
         self.log.debug("jupyter run: initialize...")
         super().initialize(argv)
