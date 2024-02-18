@@ -14,6 +14,7 @@ from subprocess import PIPE
 
 import pytest
 from jupyter_core import paths
+from jupyter_core.utils import ensure_event_loop
 from traitlets.config.loader import Config
 
 from jupyter_client import AsyncKernelManager, KernelManager
@@ -417,6 +418,7 @@ class TestParallel:
         km.shutdown_kernel()
         assert km.context.closed
         kc.stop_channels()
+        ensure_event_loop().close()
 
 
 class TestAsyncKernelManager:
