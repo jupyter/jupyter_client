@@ -19,7 +19,7 @@ The following `loop` properties are now asyncio loops:
 - `jupyter_client.threaded.ThreadedKernelClient.ioloop`
 
 The `jupyter_client.kernelapp.KernelApp` class now subclasses
-`jupyter_core.application.JupyterAsyncApp`, and  performs its initialization
+`jupyter_core.application.JupyterAsyncApp`, and performs its initialization
 from within an asyncio loop.
 
 The following function was added as a shim to the `jupyter_core` utility:
