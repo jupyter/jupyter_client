@@ -1,17 +1,12 @@
 """An application to launch a kernel by name in a local subprocess."""
 import asyncio
 import functools
-import logging
 import os
 import signal
 import typing as t
 import uuid
 
 from jupyter_core.application import JupyterAsyncApp, base_flags
-from jupyter_core.paths import (
-    jupyter_runtime_dir,
-)
-from jupyter_core.utils import ensure_dir_exists
 from traitlets import Unicode
 
 from . import __version__
@@ -36,19 +31,6 @@ class KernelApp(JupyterAsyncApp):
     kernel_name = Unicode(NATIVE_KERNEL_NAME, help="The name of a kernel type to start").tag(
         config=True
     )
-
-    # TODO: remove after jupyter_core 5.7.1
-    runtime_dir = Unicode()
-
-    def _runtime_dir_default(self) -> str:
-        rd = jupyter_runtime_dir()
-        ensure_dir_exists(rd, mode=0o700)
-        return rd
-
-    def _log_level_default(self) -> int:
-        return logging.INFO
-
-    # END TODO
 
     async def initialize_async(self, argv: t.Union[str, t.Sequence[str], None] = None) -> None:
         """Initialize the application."""
