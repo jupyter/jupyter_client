@@ -237,6 +237,7 @@ class TestKernelManager(TestCase):
         assert kid not in km, f"{kid} not in {km}"
 
 
+@skip_win32
 async def test_sync_stream_on_recv():
     mkm = TestKernelManager._get_tcp_km()
     kid = mkm.start_kernel(stdout=PIPE, stderr=PIPE)
