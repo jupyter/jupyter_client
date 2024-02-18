@@ -86,7 +86,7 @@ class ThreadedZMQSocketChannel:
                 msg = f"Error closing socket {self.socket}: {e}"
                 log.warning(msg, RuntimeWarning, stacklevel=2)
 
-    def flush(self):
+    def flush(self) -> None:
         """Flush the channel."""
         pass
 
