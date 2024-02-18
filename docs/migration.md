@@ -1,5 +1,41 @@
 # Migration Guide
 
+## Jupyter Client 8.0 to 9.0
+
+Overall changes: removed direct usages of `tornado` in favor of `asyncio` loops.
+We are still using `zmq.eventloop.zmqstream.ZMQStream`, which uses `tornado`
+loops internally.
+
+### API Changes
+
+The following `loop` properties are now asyncio loops:
+
+- `jupyter_client.ioloop.manager.IOLoopKernelManager.loop`
+- `jupyter_client.ioloop.manager.AsyncIOLoopKernelManager.loop`
+- `jupyter_client.ioloop.restarter.IOLoopKernelRestarter.loop`
+- `jupyter_client.ioloop.restarter.AsyncIOLoopKernelRestarter.loop`
+- `jupyter_client.threaded.ThreadedZMQSocketChannel.loop`
+- `jupyter_client.threaded.IOLoopThread.ioloop`
+- `jupyter_client.threaded.ThreadedKernelClient.ioloop`
+
+The `jupyter_client.kernelapp.KernelApp` class now subclasses
+`jupyter_core.application.JupyterAsyncApp`, and  performs its initialization
+from within an asyncio loop.
+
+The following function was added as a shim to the `jupyter_core` utility:
+
+- `jupyter_client.utils.ensure_event_loop`
+
+## Jupyter Client 7.0 to 8.0
+
+The main goal of this release was to improve handling of asyncio and remove
+the need for `nest_asyncio`.
+
+### API Changes
+
+- `jupyter_client.asynchronous.client.AsyncKernelClient.context` is now a `zmq.asyncio.Context`
+- `jupyter_client.asynchronous.client.AsyncKernelClient.*_channel_class` are now instances of `jupyter_client.channels.AsyncZMQSocketChannel`
+
 ## Jupyter Client 6.0 to 7.0
 
 ### API Changes

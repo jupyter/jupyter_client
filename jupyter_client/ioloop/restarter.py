@@ -10,7 +10,8 @@ from __future__ import annotations
 import asyncio
 import time
 
-from jupyter_core.utils import ensure_async
+from jupyter_core.utils import ensure_async, ensure_event_loop
+from traitlets import Instance
 
 from ..restarter import KernelRestarter
 
@@ -20,6 +21,11 @@ class IOLoopKernelRestarter(KernelRestarter):
 
     _poll_task: asyncio.Task | None = None
     _running = False
+
+    loop = Instance(asyncio.AbstractEventLoop)  # type:ignore[type-abstract]
+
+    def _loop_default(self) -> asyncio.AbstractEventLoop:
+        return ensure_event_loop()
 
     def start(self) -> None:
         """Start the polling of the kernel."""

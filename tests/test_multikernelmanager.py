@@ -602,6 +602,7 @@ class TestAsyncKernelManager:
         await ensure_future(km.shutdown_kernel(kernel_id))
         assert kernel_id not in km.list_kernel_ids()
 
+    @skip_win32
     async def test_stream_on_recv(self):
         mkm = self._get_tcp_km()
         kid = await mkm.start_kernel(stdout=PIPE, stderr=PIPE)
