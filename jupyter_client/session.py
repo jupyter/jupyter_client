@@ -814,10 +814,10 @@ class Session(Configurable):
         if isinstance(stream, zmq.asyncio.Socket):
             assert stream is not None  # type:ignore[unreachable]
 
-            async def send_multipart(*args, **kwargs):
+            async def _send_multipart(*args, **kwargs):
                 return await stream.send_multipart(*args, **kwargs)
 
-            send_func = run_sync(send_multipart)
+            send_func = run_sync(_send_multipart)
         elif stream is not None:
             send_func = stream.send_multipart
 
@@ -861,7 +861,7 @@ class Session(Configurable):
         longest = max([len(s) for s in to_send])
         copy = longest < self.copy_threshold
 
-        if stream is not None and buffers and track and not copy:
+        if stream and buffers and track and not copy:
             # only really track when we are doing zero-copy buffers
             tracker = send_func(to_send, copy=False, track=True)
         elif stream:
@@ -916,10 +916,10 @@ class Session(Configurable):
         if isinstance(stream, zmq.asyncio.Socket):
             assert stream is not None
 
-            async def send_multipart(*args: t.Any, **kwargs: t.Any) -> None:
+            async def _send_multipart(*args: t.Any, **kwargs: t.Any) -> None:
                 await stream.send_multipart(*args, **kwargs)
 
-            send_func = run_sync(send_multipart)
+            send_func = run_sync(_send_multipart)
         else:
             send_func = stream.send_multipart
         send_func(to_send, flags, copy=copy)
@@ -949,10 +949,10 @@ class Session(Configurable):
 
         if isinstance(socket, zmq.asyncio.Socket):
 
-            async def recv_multipart(*args: t.Any, **kwargs: t.Any) -> t.Any:
+            async def _recv_multipart(*args: t.Any, **kwargs: t.Any) -> t.Any:
                 return await socket.recv_multipart(*args, **kwargs)
 
-            recv_func = run_sync(recv_multipart)
+            recv_func = run_sync(_recv_multipart)
         else:
             recv_func = socket.recv_multipart
 
