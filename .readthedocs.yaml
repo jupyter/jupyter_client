@@ -5,7 +5,7 @@ python:
   install:
     # install jupyter-client itself
     - method: pip
-      path: ".[docs]"
+      path: ".[doc]"
 build:
   os: ubuntu-22.04
   tools:
