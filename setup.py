@@ -79,14 +79,13 @@ setup_args = dict(
     python_requires='>=3.6.1',
     extras_require={
         'test': [
-            'async_generator',
             'ipykernel',
             'ipython',
             'jedi<0.18; python_version<="3.6"',
             'mock',
             'pytest-asyncio',
             'pytest-timeout',
-            'pytest',
+            'pytest<8',
             'mypy',
             'pre-commit',
         ],
