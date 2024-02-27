@@ -1,6 +1,7 @@
 """Basic ssh tunnel utilities, and convenience functions for tunneling
 zeromq connections.
 """
+
 # Copyright (C) 2010-2011  IPython Development Team
 # Copyright (C) 2011- PyZMQ Developers
 #
@@ -27,7 +28,6 @@ except ImportError:
 
     class SSHException(Exception):  # type: ignore
         pass
-
 
 else:
     from .forward import forward_tunnel

@@ -1,4 +1,5 @@
 """Tests for kernel connection utilities"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import json
@@ -84,7 +85,7 @@ def test_write_connection_file():
 
 
 def test_load_connection_file_session():
-    """test load_connection_file() after """
+    """test load_connection_file() after"""
     session = Session()
     app = DummyConsoleApp(session=Session())
     app.initialize(argv=[])
@@ -101,7 +102,7 @@ def test_load_connection_file_session():
 
 
 def test_load_connection_file_session_with_kn():
-    """test load_connection_file() after """
+    """test load_connection_file() after"""
     session = Session()
     app = DummyConsoleApp(session=Session())
     app.initialize(argv=[])

@@ -1,6 +1,7 @@
 """ Defines a KernelClient that provides thread-safe sockets with async callbacks on message
 replies.
 """
+
 import asyncio
 import atexit
 import errno

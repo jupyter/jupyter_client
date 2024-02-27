@@ -1,4 +1,5 @@
 """Tests for the notebook kernel and session manager."""
+
 import asyncio
 import concurrent.futures
 import sys
