@@ -1,4 +1,5 @@
 """Base classes to manage a Client's interaction with a running kernel"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
@@ -255,7 +256,7 @@ class ZMQSocketChannel(object):
         return self.session.deserialize(smsg)
 
     async def get_msg(self, timeout: t.Optional[float] = None) -> t.Dict[str, t.Any]:
-        """ Gets a message if there is one that is ready. """
+        """Gets a message if there is one that is ready."""
         if timeout is not None:
             timeout *= 1000  # seconds to ms
         assert self.socket is not None
@@ -268,7 +269,7 @@ class ZMQSocketChannel(object):
             raise Empty
 
     async def get_msgs(self) -> t.List[t.Dict[str, t.Any]]:
-        """ Get all messages that are currently ready. """
+        """Get all messages that are currently ready."""
         msgs = []
         while True:
             try:
@@ -278,7 +279,7 @@ class ZMQSocketChannel(object):
         return msgs
 
     async def msg_ready(self) -> bool:
-        """ Is there a message that has been received? """
+        """Is there a message that has been received?"""
         assert self.socket is not None
         return bool(await self.socket.poll(timeout=0))
 

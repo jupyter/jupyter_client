@@ -1,4 +1,5 @@
 """Client-side implementations of the Jupyter protocol"""
+
 from ._version import __version__  # noqa
 from ._version import protocol_version  # noqa
 from ._version import protocol_version_info  # noqa

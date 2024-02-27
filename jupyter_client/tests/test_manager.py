@@ -1,4 +1,5 @@
 """Tests for KernelManager"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
@@ -10,7 +11,7 @@ from jupyter_client.manager import KernelManager
 
 
 def test_connection_file_real_path():
-    """ Verify realpath is used when formatting connection file """
+    """Verify realpath is used when formatting connection file"""
     with mock.patch("os.path.realpath") as patched_realpath:
         patched_realpath.return_value = "foobar"
         km = KernelManager(
