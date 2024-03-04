@@ -184,3 +184,20 @@ To start the terminal console or the Qt console with a specific kernel::
 
 The notebook offers you the available kernels in a dropdown menu from the 'New'
 button.
+
+
+.. _packaging-kernels:
+
+Packaging
+=========
+
+To release your kernel as a Python package, we recommend following the pattern
+used in the :ref:`echo_kernel`, which uses the `hatch`_  build backend and
+a build file that creates the kernel directory with the ``kernel.json`` and
+kernel icons, which is included as ``shared-data``, ending up in the
+``share/jupyter/kernels/`` folder in the user's installed environment.
+See `pyproject.toml`_ and `hatch_build.py`_ for more details.
+
+.. _hatch: https://hatch.pypa.io/latest/
+.. _pyproject.toml: https://github.com/jupyter/echo_kernel/blob/main/pyproject.toml
+.. _hatch_build.py: https://github.com/jupyter/echo_kernel/blob/main/hatch_build.py
