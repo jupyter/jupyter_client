@@ -2,6 +2,34 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.6.1
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.0...8a3327ae58247be734d51f44c629354f0f600660))
+
+### Maintenance and upkeep improvements
+
+- Update Release Scripts [#1016](https://github.com/jupyter/jupyter_client/pull/1016) ([@blink1073](https://github.com/blink1073))
+- chore: update pre-commit hooks [#1008](https://github.com/jupyter/jupyter_client/pull/1008) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- chore: update pre-commit hooks [#1002](https://github.com/jupyter/jupyter_client/pull/1002) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Bump actions/setup-python from 4 to 5 [#1000](https://github.com/jupyter/jupyter_client/pull/1000) ([@dependabot](https://github.com/dependabot))
+- chore: update pre-commit hooks [#999](https://github.com/jupyter/jupyter_client/pull/999) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Bump conda-incubator/setup-miniconda from 2 to 3 [#998](https://github.com/jupyter/jupyter_client/pull/998) ([@dependabot](https://github.com/dependabot))
+- chore: update pre-commit hooks [#996](https://github.com/jupyter/jupyter_client/pull/996) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Documentation improvements
+
+- Fix docs reference [#1017](https://github.com/jupyter/jupyter_client/pull/1017) ([@blink1073](https://github.com/blink1073))
+- Add docs about packaging kernels [#1013](https://github.com/jupyter/jupyter_client/pull/1013) ([@blink1073](https://github.com/blink1073))
+- Clarify what a restart means [#966](https://github.com/jupyter/jupyter_client/pull/966) ([@mlucool](https://github.com/mlucool))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-11-06&to=2024-03-12&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-11-06..2024-03-12&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adependabot+updated%3A2023-11-06..2024-03-12&type=Issues) | [@mlucool](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Amlucool+updated%3A2023-11-06..2024-03-12&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-11-06..2024-03-12&type=Issues) | [@Zsailer](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AZsailer+updated%3A2023-11-06..2024-03-12&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.6.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.5.0...2d6f52bdf5266688c51f3270cd7e47bbd17c708c))
@@ -22,8 +50,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-10-25&to=2023-11-06&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-10-25..2023-11-06&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2023-10-25..2023-11-06&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2023-10-25..2023-11-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.5.0
 
