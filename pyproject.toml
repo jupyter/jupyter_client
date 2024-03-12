@@ -133,6 +133,8 @@ filterwarnings= [
   # from python-dateutil
   "ignore:datetime.datetime.utcfromtimestamp:DeprecationWarning",
   "ignore:datetime.datetime.utcnow:DeprecationWarning",
+  # ignore header dates warning
+  "ignore:.*extract_header_dates.*:DeprecationWarning",
 ]
 
 [tool.coverage.report]
