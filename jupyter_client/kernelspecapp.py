@@ -337,5 +337,4 @@ class KernelSpecApp(Application):
             return self.subapp.start()
 
 
-if __name__ == "__main__":
-    KernelSpecApp.launch_instance()
+main = KernelSpecApp.launch_instance

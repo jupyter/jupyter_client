@@ -21,10 +21,9 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
     "importlib_metadata>=4.8.3;python_version<\"3.10\"",
-    "jupyter_core>=4.12,!=5.0.*",
+    "jupyter_core>=5.7.1",
     "python-dateutil>=2.8.2",
-    "pyzmq>=23.0",
-    "tornado>=6.2",
+    "pyzmq>=25.1.2",
     "traitlets>=5.3",
 ]
 
@@ -67,8 +66,8 @@ docs = [
 ]
 
 [project.scripts]
-jupyter-kernelspec = "jupyter_client.kernelspecapp:KernelSpecApp.launch_instance"
-jupyter-run = "jupyter_client.runapp:RunApp.launch_instance"
+jupyter-kernelspec = "jupyter_client.kernelspecapp:main"
+jupyter-run = "jupyter_client.runapp:main"
 jupyter-kernel = "jupyter_client.kernelapp:main"
 
 [project.entry-points."jupyter_client.kernel_provisioners"]
@@ -130,9 +129,9 @@ timeout_method = "thread"
 filterwarnings= [
   # Fail on warnings
   "error",
+  "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
   # from python-dateutil
-  "ignore:datetime.datetime.utcfromtimestamp:DeprecationWarning",
-  "ignore:datetime.datetime.utcnow:DeprecationWarning",
+  "ignore:datetime.datetime.utc:DeprecationWarning",
 ]
 
 [tool.coverage.report]

@@ -293,6 +293,11 @@ class TestThreadedKernelClient(TestKernelClient):
         msg_id = kc.shutdown()
         self.assertIsInstance(msg_id, str)
 
+    def test_close_channel(self):
+        kc = self.kc
+        kc.iopub_channel.close()
+        assert not kc.iopub_channel.is_alive()
+
 
 def test_validate_string_dict():
     with pytest.raises(ValueError):

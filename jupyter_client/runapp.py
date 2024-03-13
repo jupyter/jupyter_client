@@ -122,7 +122,4 @@ class RunApp(JupyterApp, JupyterConsoleApp):  # type:ignore[misc]
                 raise Exception(msg)
 
 
-main = launch_new_instance = RunApp.launch_instance
-
-if __name__ == "__main__":
-    main()
+main = RunApp.launch_instance
