@@ -223,7 +223,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         self.cwd = kwargs.get("cwd", pathlib.Path.cwd())
         return self.connection_info
 
-    async def resolve_path(self, path_str: str) -> Optional[str]:
+    def resolve_path(self, path_str: str) -> Optional[str]:
         """Resolve path to given file."""
         path = pathlib.Path(path_str).expanduser()
         if not path.is_absolute() and self.cwd:
