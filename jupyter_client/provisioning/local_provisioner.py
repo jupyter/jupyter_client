@@ -3,6 +3,7 @@
 # Distributed under the terms of the Modified BSD License.
 import asyncio
 import os
+import pathlib
 import signal
 import sys
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
@@ -31,6 +32,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     pgid = None
     ip = None
     ports_cached = False
+    cwd = None
 
     @property
     def has_process(self) -> bool:
@@ -206,6 +208,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
 
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
         """Launch a kernel with a command."""
+
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
@@ -217,7 +220,17 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
 
         self.pid = self.process.pid
         self.pgid = pgid
+        self.cwd = kwargs.get("cwd", pathlib.Path.cwd())
         return self.connection_info
+
+    def resolve_path(self, path_str: str) -> Optional[str]:
+        """Resolve path to given file."""
+        path = pathlib.Path(path_str).expanduser()
+        if not path.is_absolute() and self.cwd:
+            path = (pathlib.Path(self.cwd) / path).resolve()
+        if path.exists():
+            return path.as_posix()
+        return None
 
     @staticmethod
     def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
