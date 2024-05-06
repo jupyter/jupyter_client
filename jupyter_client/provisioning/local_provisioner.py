@@ -155,6 +155,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                 lpc.return_port(port)
 
     async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
+        #
         """Perform any steps in preparation for kernel process launch.
 
         This includes applying additional substitutions to the kernel launch command and env.
@@ -166,6 +167,8 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         # This should be considered temporary until a better division of labor can be defined.
         km = self.parent
         if km:
+            if "custom_kernel_specs" in kwargs:
+               km.update_kernel_specs(kwargs["custom_kernel_specs"])
             if km.transport == "tcp" and not is_local_ip(km.ip):
                 msg = (
                     "Can only launch a kernel on a local interface. "
@@ -207,6 +210,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
         """Launch a kernel with a command."""
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
+        #
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
         if hasattr(os, "getpgid"):

@@ -300,6 +300,26 @@ class KernelManager(ConnectionFileMixin):
         ):
             self._launch_args["env"].update(env)  # type: ignore [unreachable]
 
+    def replace_spec_parameter(self, variable, value, spec):
+        regexp = r"\{"+variable+"\}"
+        pattern = re.compile(regexp)
+        return pattern.sub(pattern, value, spec)
+
+    def update_kernel_specs(self, custom_kernel_specs: dict[str, t.Any] = None)-> None:
+        assert self.kernel_spec is not None
+#go through custom kernel specs
+        for custom_kernel_spec, custom_kernel_spec_value in custom_kernel_specs.items():
+            #go through kernel specs
+            for kernel_spec, kernel_spec_value in self.kernel_spec:
+                 #if kernel spec is array then go through kernel this array
+                if isinstance(kernel_spec_value, list):
+                    for kernel_spec_item in kernel_spec:
+                        kernel_spec_item = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, kernel_spec_item)
+                else:
+                    kernel_spec_value = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, kernel_spec_value)
+        return self.kernel_spec
+
+
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """Replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
@@ -333,6 +353,8 @@ class KernelManager(ConnectionFileMixin):
             ns["resource_dir"] = self.kernel_spec.resource_dir
         assert isinstance(self._launch_args, dict)
 
+        print("----format_kernel_cmd---_launch_args---")
+        print(self._launch_args)
         ns.update(self._launch_args)
 
         pat = re.compile(r"\{([A-Za-z0-9_]+)\}")
@@ -391,6 +413,10 @@ class KernelManager(ConnectionFileMixin):
         # save kwargs for use in restart
         # assigning Traitlets Dicts to Dict make mypy unhappy but is ok
         self._launch_args = kw.copy()  # type:ignore [assignment]
+        print("------_async_pre_start_kernel---start---")
+        print(self._launch_args)
+        print("------_async_pre_start_kernel---end---")
+
         if self.provisioner is None:  # will not be None on restarts
             self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
                 self.kernel_id,
@@ -431,6 +457,7 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
+        #here?
         self._attempted_start = True
         kernel_cmd, kw = await self._async_pre_start_kernel(**kw)
 
