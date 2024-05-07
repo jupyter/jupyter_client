@@ -167,8 +167,8 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         # This should be considered temporary until a better division of labor can be defined.
         km = self.parent
         if km:
-            if "custom_kernel_specs" in kwargs:
-               km.update_kernel_specs(kwargs["custom_kernel_specs"])
+            #if "custom_kernel_specs" in kwargs:
+            #    self.kernel_spec = km.update_kernel_specs(kwargs["custom_kernel_specs"])
             if km.transport == "tcp" and not is_local_ip(km.ip):
                 msg = (
                     "Can only launch a kernel on a local interface. "
@@ -192,6 +192,9 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                 km.control_port = lpc.find_available_port(km.ip)
                 self.ports_cached = True
             if "env" in kwargs:
+                #update env if there is custom kernel specs variables for env
+                km.update_env(env=kwargs["env"])
+   
                 jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
                 km.write_connection_file(jupyter_session=jupyter_session)
             else:
@@ -210,7 +213,6 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
         """Launch a kernel with a command."""
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
-        #
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
         if hasattr(os, "getpgid"):

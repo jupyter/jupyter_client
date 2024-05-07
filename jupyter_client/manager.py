@@ -292,40 +292,59 @@ class KernelManager(ConnectionFileMixin):
 
         .. version-added: 8.5
         """
+        print("update_env ----- here- no multi")
         # Mypy think this is unreachable as it see _launch_args as Dict, not t.Dict
         if (
             isinstance(self._launch_args, dict)
             and "env" in self._launch_args
             and isinstance(self._launch_args["env"], dict)  # type: ignore [unreachable]
         ):
+            #check whether env have custom kernel spc variables
+            newEnv = {}
+            if self._launch_args["custom_kernel_specs"]:
+                for custom_kernel_spec, custom_kernel_spec_value in self._launch_args["custom_kernel_specs"].items():
+                    for env_key, env_item in env.items():
+                        kernel_spec_item = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, env_item)
+                        newEnv[env_key]=kernel_spec_item
+            if len(newEnv) > 0:
+                env = newEnv
             self._launch_args["env"].update(env)  # type: ignore [unreachable]
-
-    def replace_spec_parameter(self, variable, value, spec):
+        
+    
+    def replace_spec_parameter(self, variable, value, spec)->str:
         regexp = r"\{"+variable+"\}"
         pattern = re.compile(regexp)
-        return pattern.sub(pattern, value, spec)
+        return pattern.sub(value, spec)
+    
+    def clear_custom_kernel_variable(self, **kwargs: t.Any):
+        print("dfd")
+        new_argv = []
+        new_env = {}
 
-    def update_kernel_specs(self, custom_kernel_specs: dict[str, t.Any] = None)-> None:
-        assert self.kernel_spec is not None
-#go through custom kernel specs
-        for custom_kernel_spec, custom_kernel_spec_value in custom_kernel_specs.items():
-            #go through kernel specs
-            for kernel_spec, kernel_spec_value in self.kernel_spec:
-                 #if kernel spec is array then go through kernel this array
-                if isinstance(kernel_spec_value, list):
-                    for kernel_spec_item in kernel_spec:
-                        kernel_spec_item = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, kernel_spec_item)
-                else:
-                    kernel_spec_value = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, kernel_spec_value)
-        return self.kernel_spec
-
+        if "argv" in kwargs:
+             for argv_item in enumerate(kwargs["argv"]):
+                pattern = re.compile(r"\{([A-Za-z0-9_]+)\}")
+                matches = pattern.findall(argv_item)
+                if len(matches) == 0:
+                    new_argv.append(argv_item)
+        if "env" in kwargs:
+            for env_key, env_item in kwargs["env"].items():
+                pattern = re.compile(r"\{([A-Za-z0-9_]+)\}")
+                matches = pattern.findall(argv_item)
+                if len(matches) == 0:
+                    new_env[env_key] = env_item
+        return new_argv, new_env
 
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """Replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
         assert self.kernel_spec is not None
         cmd = self.kernel_spec.argv + extra_arguments
+        #if not self._launch_args["custom_kernel_specs"]:
+            #cmd = self.clear_custom_kernel_variable(cmd)
 
+        print("----extra_arguments----")
+        print(extra_arguments)
         if cmd and cmd[0] in {
             "python",
             "python%i" % sys.version_info[0],
@@ -349,6 +368,10 @@ class KernelManager(ConnectionFileMixin):
             "prefix": sys.prefix,
         }
 
+        #Updating ns if there is custom kernel specs variables
+        if self._launch_args["custom_kernel_specs"]:
+            for custom_kernel_spec_key, custom_kernel_spec_value in self._launch_args["custom_kernel_specs"].items():
+                ns[custom_kernel_spec_key] = custom_kernel_spec_value
         if self.kernel_spec:  # type:ignore[truthy-bool]
             ns["resource_dir"] = self.kernel_spec.resource_dir
         assert isinstance(self._launch_args, dict)
@@ -372,6 +395,7 @@ class KernelManager(ConnectionFileMixin):
         Note that provisioners can now be used to customize kernel environments
         and
         """
+        #
         assert self.provisioner is not None
         connection_info = await self.provisioner.launch_kernel(kernel_cmd, **kw)
         assert self.provisioner.has_process
@@ -413,9 +437,7 @@ class KernelManager(ConnectionFileMixin):
         # save kwargs for use in restart
         # assigning Traitlets Dicts to Dict make mypy unhappy but is ok
         self._launch_args = kw.copy()  # type:ignore [assignment]
-        print("------_async_pre_start_kernel---start---")
-        print(self._launch_args)
-        print("------_async_pre_start_kernel---end---")
+        #
 
         if self.provisioner is None:  # will not be None on restarts
             self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
