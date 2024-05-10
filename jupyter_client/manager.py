@@ -292,59 +292,72 @@ class KernelManager(ConnectionFileMixin):
 
         .. version-added: 8.5
         """
-        print("update_env ----- here- no multi")
+
         # Mypy think this is unreachable as it see _launch_args as Dict, not t.Dict
         if (
             isinstance(self._launch_args, dict)
             and "env" in self._launch_args
             and isinstance(self._launch_args["env"], dict)  # type: ignore [unreachable]
         ):
-            #check whether env have custom kernel spc variables
+            # check whether env has custom kernel spec variables
             newEnv = {}
             if self._launch_args["custom_kernel_specs"]:
                 for custom_kernel_spec, custom_kernel_spec_value in self._launch_args["custom_kernel_specs"].items():
                     for env_key, env_item in env.items():
                         kernel_spec_item = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, env_item)
                         newEnv[env_key]=kernel_spec_item
+            else:
+                # check whether there are custom kernel spec variables into kernel.json, 
+                # if yes but a user has not configured them,
+                # we should clean them
+                newEnv = self.clear_custom_kernel_parameters(env)
+          
             if len(newEnv) > 0:
                 env = newEnv
             self._launch_args["env"].update(env)  # type: ignore [unreachable]
         
     
     def replace_spec_parameter(self, variable, value, spec)->str:
-        regexp = r"\{"+variable+"\}"
+        regexp = r"\\{" + variable + "\\}"
         pattern = re.compile(regexp)
         return pattern.sub(value, spec)
     
-    def clear_custom_kernel_variable(self, **kwargs: t.Any):
-        print("dfd")
-        new_argv = []
-        new_env = {}
+    def check_existence_custom_kernel_spec(self, item:str):
+        pattern = re.compile(r"\{([A-Za-z0-9_]+)\}")
+        matches = pattern.findall(item)
+        isMatch = False
+        if len(matches) > 0:
+            isMatch = True
+        return isMatch
+    
+    # Clear kernel specs files if user has not configured them themselves
+    # we shoud return only that has not kernel custom variables
+    # if there are no metadata specification for custom kernel
 
-        if "argv" in kwargs:
-             for argv_item in enumerate(kwargs["argv"]):
-                pattern = re.compile(r"\{([A-Za-z0-9_]+)\}")
-                matches = pattern.findall(argv_item)
-                if len(matches) == 0:
-                    new_argv.append(argv_item)
-        if "env" in kwargs:
-            for env_key, env_item in kwargs["env"].items():
-                pattern = re.compile(r"\{([A-Za-z0-9_]+)\}")
-                matches = pattern.findall(argv_item)
-                if len(matches) == 0:
-                    new_env[env_key] = env_item
-        return new_argv, new_env
+    def clear_custom_kernel_parameters(self, kernel_parameters: t.Any)->t.Any:
+        clean_parameters = None
+        if isinstance(kernel_parameters, list):
+            clean_parameters = []
+            for argv_item in kernel_parameters:
+                isMatch = self.check_existence_custom_kernel_spec(argv_item)
+                if not isMatch:
+                    clean_parameters.append(argv_item)
+                    
+        elif isinstance(kernel_parameters, dict):
+            clean_parameters = {}
+            for env_key, env_item in kernel_parameters.items():
+                isMatch = self.check_existence_custom_kernel_spec(env_item)
+                if not isMatch:
+                    clean_parameters[env_key] = env_item
+        if len(clean_parameters) == 0:
+            clean_parameters = kernel_parameters
+        return clean_parameters
 
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """Replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
         assert self.kernel_spec is not None
         cmd = self.kernel_spec.argv + extra_arguments
-        #if not self._launch_args["custom_kernel_specs"]:
-            #cmd = self.clear_custom_kernel_variable(cmd)
-
-        print("----extra_arguments----")
-        print(extra_arguments)
         if cmd and cmd[0] in {
             "python",
             "python%i" % sys.version_info[0],
@@ -376,8 +389,6 @@ class KernelManager(ConnectionFileMixin):
             ns["resource_dir"] = self.kernel_spec.resource_dir
         assert isinstance(self._launch_args, dict)
 
-        print("----format_kernel_cmd---_launch_args---")
-        print(self._launch_args)
         ns.update(self._launch_args)
 
         pat = re.compile(r"\{([A-Za-z0-9_]+)\}")

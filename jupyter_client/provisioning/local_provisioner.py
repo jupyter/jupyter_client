@@ -208,6 +208,8 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
             extra_arguments = kwargs.pop("extra_arguments", [])
             kernel_cmd = self.kernel_spec.argv + extra_arguments
 
+        kernel_cmd = km.clear_custom_kernel_parameters(kernel_cmd)
+        print("cmd--------",kernel_cmd)
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
@@ -228,7 +230,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     @staticmethod
     def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """Remove any keyword arguments that Popen does not tolerate."""
-        keywords_to_scrub: List[str] = ["extra_arguments", "kernel_id"]
+        keywords_to_scrub: List[str] = ["extra_arguments", "kernel_id", "custom_kernel_specs"]
         scrubbed_kwargs = kwargs.copy()
         for kw in keywords_to_scrub:
             scrubbed_kwargs.pop(kw, None)
