@@ -303,9 +303,10 @@ class KernelManager(ConnectionFileMixin):
             newEnv = {}
             if self._launch_args["custom_kernel_specs"]:
                 for custom_kernel_spec, custom_kernel_spec_value in self._launch_args["custom_kernel_specs"].items():
-                    for env_key, env_item in env.items():
-                        kernel_spec_item = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, env_item)
-                        newEnv[env_key]=kernel_spec_item
+                    if custom_kernel_spec_value != "":
+                        for env_key, env_item in env.items():
+                            kernel_spec_item = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, env_item)
+                            newEnv[env_key]=kernel_spec_item
             else:
                 # check whether there are custom kernel spec variables into kernel.json, 
                 # if yes but a user has not configured them,
@@ -314,6 +315,8 @@ class KernelManager(ConnectionFileMixin):
           
             if len(newEnv) > 0:
                 env = newEnv
+            else:
+                env = self.clear_custom_kernel_parameters(env)
             self._launch_args["env"].update(env)  # type: ignore [unreachable]
         
     
@@ -384,7 +387,8 @@ class KernelManager(ConnectionFileMixin):
         #Updating ns if there is custom kernel specs variables
         if self._launch_args["custom_kernel_specs"]:
             for custom_kernel_spec_key, custom_kernel_spec_value in self._launch_args["custom_kernel_specs"].items():
-                ns[custom_kernel_spec_key] = custom_kernel_spec_value
+                if custom_kernel_spec_value != "":
+                    ns[custom_kernel_spec_key] = custom_kernel_spec_value
         if self.kernel_spec:  # type:ignore[truthy-bool]
             ns["resource_dir"] = self.kernel_spec.resource_dir
         assert isinstance(self._launch_args, dict)
@@ -645,6 +649,7 @@ class KernelManager(ConnectionFileMixin):
             msg = "Cannot restart the kernel. No previous call to 'start_kernel'."
             raise RuntimeError(msg)
 
+        print('££££?  REstart ----')
         # Stop currently running kernel.
         await self._async_shutdown_kernel(now=now, restart=True)
 
