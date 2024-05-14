@@ -220,7 +220,7 @@ class ZMQSocketChannel:
         ident, smsg = self.session.feed_identities(msg)
         return self.session.deserialize(smsg)
 
-    def get_msg(self, timeout: t.Optional[float] = None) -> t.Dict[str, t.Any]:
+    def get_msg(self, timeout: t.Optional[int] = None) -> t.Dict[str, t.Any]:
         """Gets a message if there is one that is ready."""
         assert self.socket is not None
         if timeout is not None:
