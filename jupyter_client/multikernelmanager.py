@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import os
 import socket
 import typing as t
@@ -252,6 +253,26 @@ class MultiKernelManager(LoggingConfigurable):
         this multikernelmanager is using pending kernels or not
         """
         return getattr(self, "use_pending_kernels", False)
+    
+    def validate(self, string)->str:
+       sanitazed_string = re.sub(r'[;&|]', '', string)
+       print('----sanitazed_string-------')
+       print(sanitazed_string)
+       match = re.match(r"'", sanitazed_string)
+       if match:
+           sanitazed_string = "'" + re.sub(r"'", "'\''", sanitazed_string) +"'"
+       else:
+            print('----does  not match-------')
+       return sanitazed_string
+    
+    def validate_kernel_parameters(self, kwargs: t.Any)-> None:
+        if "custom_kernel_specs" in kwargs:
+             for custom_kernel_spec, custom_kernel_spec_value in kwargs["custom_kernel_specs"].items():
+                 sanitazed_string = self.validate(custom_kernel_spec_value)
+                 if (sanitazed_string !=''):
+                     print('----sanitazed_string is not null------')
+                     kwargs["custom_kernel_specs"][custom_kernel_spec] = sanitazed_string
+        return kwargs            
 
     async def _async_start_kernel(self, *, kernel_name: str | None = None, **kwargs: t.Any) -> str:
         """Start a new kernel.
@@ -262,6 +283,12 @@ class MultiKernelManager(LoggingConfigurable):
         The kernel ID for the newly started kernel is returned.
         """
         #here
+        print("---kwargs--before")
+        print(kwargs)
+        print('----validate----')
+        kwargs = self.validate_kernel_parameters(kwargs)
+        print(kwargs)
+        print("---kwargs--after")
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         if not isinstance(km, KernelManager):
             self.log.warning(  # type:ignore[unreachable]
