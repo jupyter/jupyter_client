@@ -158,7 +158,11 @@ class KernelProvisionerBase(  # type:ignore[misc]
         env = kwargs.pop("env", os.environ).copy()
         # here!!!
         env.update(self.__apply_env_substitutions(env))
+        
         self._finalize_env(env)
+        
+        print('new env')
+        print(env)
         kwargs["env"] = env
 
         return kwargs
@@ -236,6 +240,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
             env.pop("PYTHONEXECUTABLE", None)
 
     def __apply_env_substitutions(self, substitution_values: Dict[str, str]) -> Dict[str, str]:
+        print('????')
         """
         Walks entries in the kernelspec's env stanza and applies substitutions from current env.
 

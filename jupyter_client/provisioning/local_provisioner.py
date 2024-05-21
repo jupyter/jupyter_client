@@ -167,8 +167,9 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         # This should be considered temporary until a better division of labor can be defined.
         km = self.parent
         if km:
-            #if "custom_kernel_specs" in kwargs:
-            #    self.kernel_spec = km.update_kernel_specs(kwargs["custom_kernel_specs"])
+            # Get default values from kernel.json file if there is a custom kernel
+            km.get_default_custom_kernel_specs_value()
+
             if km.transport == "tcp" and not is_local_ip(km.ip):
                 msg = (
                     "Can only launch a kernel on a local interface. "
@@ -209,13 +210,12 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
             kernel_cmd = self.kernel_spec.argv + extra_arguments
 
         kernel_cmd = km.clear_custom_kernel_parameters(kernel_cmd)
-
         print("cmd--------",kernel_cmd)
        
         if "custom_kernel_specs" in kwargs:
             del kwargs["custom_kernel_specs"]
-        print("--After deleting--kwargs----")
-        print(kwargs)
+        #print("--After deleting--kwargs----")
+        #print(kwargs)
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:

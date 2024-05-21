@@ -213,6 +213,9 @@ class MultiKernelManager(LoggingConfigurable):
             kernel_name=kernel_name,
             **constructor_kwargs,
         )
+        print('pre_start_kernel')
+        print('---km---')
+        print(km)
         return km, kernel_name, kernel_id
 
     def update_env(self, *, kernel_id: str, env: t.Dict[str, str]) -> None:
@@ -255,9 +258,9 @@ class MultiKernelManager(LoggingConfigurable):
         return getattr(self, "use_pending_kernels", False)
     
     def validate(self, string)->str:
-       sanitazed_string = re.sub(r'[;&|]', '', string)
-       print('----sanitazed_string-------')
-       print(sanitazed_string)
+       sanitazed_string = re.sub(r'[;&|$#]', '', string)
+       #print('----sanitazed_string-------')
+       #print(sanitazed_string)
        match = re.match(r"'", sanitazed_string)
        if match:
            sanitazed_string = "'" + re.sub(r"'", "'\''", sanitazed_string) +"'"
@@ -267,11 +270,13 @@ class MultiKernelManager(LoggingConfigurable):
     
     def validate_kernel_parameters(self, kwargs: t.Any)-> None:
         if "custom_kernel_specs" in kwargs:
-             for custom_kernel_spec, custom_kernel_spec_value in kwargs["custom_kernel_specs"].items():
-                 sanitazed_string = self.validate(custom_kernel_spec_value)
-                 if (sanitazed_string !=''):
-                     print('----sanitazed_string is not null------')
-                     kwargs["custom_kernel_specs"][custom_kernel_spec] = sanitazed_string
+             custom_kernel_specs =  kwargs.get("custom_kernel_specs")
+             if custom_kernel_specs is not None:
+                for custom_kernel_spec, custom_kernel_spec_value in kwargs["custom_kernel_specs"].items():
+                    sanitazed_string = self.validate(custom_kernel_spec_value)
+                    if (sanitazed_string !=''):
+                        print('----sanitazed_string is not null------')
+                        kwargs["custom_kernel_specs"][custom_kernel_spec] = sanitazed_string
         return kwargs            
 
     async def _async_start_kernel(self, *, kernel_name: str | None = None, **kwargs: t.Any) -> str:
@@ -283,12 +288,7 @@ class MultiKernelManager(LoggingConfigurable):
         The kernel ID for the newly started kernel is returned.
         """
         #here
-        print("---kwargs--before")
-        print(kwargs)
-        print('----validate----')
         kwargs = self.validate_kernel_parameters(kwargs)
-        print(kwargs)
-        print("---kwargs--after")
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         if not isinstance(km, KernelManager):
             self.log.warning(  # type:ignore[unreachable]
@@ -300,7 +300,7 @@ class MultiKernelManager(LoggingConfigurable):
 
 
         print("---_async_start_kernel--")
-        print("kwargs",kwargs)
+   
         starter = ensure_async(km.start_kernel(**kwargs))
         task = asyncio.create_task(self._add_kernel_when_ready(kernel_id, km, starter))
         self._pending_kernels[kernel_id] = task
