@@ -48,7 +48,7 @@ def kernel_method(f: t.Callable) -> t.Callable:
     return wrapped
 
 
-class MultiKernelManager(LoggingConfigurable):
+class _MultiKernelManagerBase(LoggingConfigurable):
     """A class for managing multiple kernels."""
 
     default_kernel_name = Unicode(
@@ -226,7 +226,7 @@ class MultiKernelManager(LoggingConfigurable):
             self._kernels[kernel_id].update_env(env=env)
 
     async def _add_kernel_when_ready(
-        self, kernel_id: str, km: KernelManager, kernel_awaitable: t.Awaitable
+        self, kernel_id: str, km: KernelManager, kernel_awaitable: t.Awaitable[t.Any]
     ) -> None:
         try:
             await kernel_awaitable
@@ -236,7 +236,7 @@ class MultiKernelManager(LoggingConfigurable):
             self.log.exception(e)
 
     async def _remove_kernel_when_ready(
-        self, kernel_id: str, kernel_awaitable: t.Awaitable
+        self, kernel_id: str, kernel_awaitable: t.Awaitable[t.Any]
     ) -> None:
         try:
             await kernel_awaitable
@@ -284,8 +284,6 @@ class MultiKernelManager(LoggingConfigurable):
 
         return kernel_id
 
-    start_kernel = run_sync(_async_start_kernel)
-
     async def _async_shutdown_kernel(
         self,
         kernel_id: str,
@@ -330,8 +328,6 @@ class MultiKernelManager(LoggingConfigurable):
             # raise an exception if one occurred during kernel shutdown.
             if km.ready.exception():
                 raise km.ready.exception()  # type: ignore[misc]
-
-    shutdown_kernel = run_sync(_async_shutdown_kernel)
 
     @kernel_method
     def request_shutdown(self, kernel_id: str, restart: bool | None = False) -> None:
@@ -378,8 +374,6 @@ class MultiKernelManager(LoggingConfigurable):
                 except Exception:
                     # Will have been logged in _add_kernel_when_ready
                     pass
-
-    shutdown_all = run_sync(_async_shutdown_all)
 
     def interrupt_kernel(self, kernel_id: str) -> None:
         """Interrupt (SIGINT) the kernel by its uuid.
@@ -434,8 +428,6 @@ class MultiKernelManager(LoggingConfigurable):
             raise RuntimeError(msg)
         await ensure_async(kernel.restart_kernel(now=now))
         self.log.info("Kernel restarted: %s", kernel_id)
-
-    restart_kernel = run_sync(_async_restart_kernel)
 
     @kernel_method
     def is_alive(self, kernel_id: str) -> bool:  # type:ignore[empty-body]
@@ -596,7 +588,14 @@ class MultiKernelManager(LoggingConfigurable):
         return str(uuid.uuid4())
 
 
-class AsyncMultiKernelManager(MultiKernelManager):
+class MultiKernelManager(_MultiKernelManagerBase):
+    start_kernel = run_sync(_MultiKernelManagerBase._async_start_kernel)
+    restart_kernel = run_sync(_MultiKernelManagerBase._async_restart_kernel)
+    shutdown_kernel = run_sync(_MultiKernelManagerBase._async_shutdown_kernel)
+    shutdown_all = run_sync(_MultiKernelManagerBase._async_shutdown_all)
+
+
+class AsyncMultiKernelManager(_MultiKernelManagerBase):
     kernel_manager_class = DottedObjectName(
         "jupyter_client.ioloop.AsyncIOLoopKernelManager",
         config=True,
@@ -618,7 +617,7 @@ class AsyncMultiKernelManager(MultiKernelManager):
         self._created_context = True
         return zmq.asyncio.Context()
 
-    start_kernel: t.Callable[..., t.Awaitable] = MultiKernelManager._async_start_kernel  # type:ignore[assignment]
-    restart_kernel: t.Callable[..., t.Awaitable] = MultiKernelManager._async_restart_kernel  # type:ignore[assignment]
-    shutdown_kernel: t.Callable[..., t.Awaitable] = MultiKernelManager._async_shutdown_kernel  # type:ignore[assignment]
-    shutdown_all: t.Callable[..., t.Awaitable] = MultiKernelManager._async_shutdown_all  # type:ignore[assignment]
+    start_kernel = _MultiKernelManagerBase._async_start_kernel
+    restart_kernel = _MultiKernelManagerBase._async_restart_kernel
+    shutdown_kernel = _MultiKernelManagerBase._async_shutdown_kernel
+    shutdown_all = _MultiKernelManagerBase._async_shutdown_all
