@@ -302,40 +302,46 @@ class KernelManager(ConnectionFileMixin):
             and isinstance(self._launch_args["env"], dict)  # type: ignore [unreachable]
         ):
             # check whether env has custom kernel spec variables
-            newEnv = {}
-            custom_kernel_dict = {}
+            env = self.update_custom_env_parameters(env=env)
+            print('yes')
+            print(env)
+
+            self._launch_args["env"].update(env)  # type: ignore [unreachable]
+
+    def update_custom_env_parameters(self, env: t.Dict[str, str]) -> t.Dict[str, str]:
+        newEnv = {}
+        custom_kernel_dict = {}
+        if self._launch_args["custom_kernel_specs"]:
+            custom_kernel_dict = self._launch_args["custom_kernel_specs"]
+            # check is custom kernel variables are full if not then we should take default ones
+            if self.custom_kernel_default_value:
+                for key, value in self.custom_kernel_default_value.items():
+                    if key not in custom_kernel_dict:
+                        custom_kernel_dict[key] = value
+        elif self.custom_kernel_default_value:
+            # if not but default values are present into a kernel.json file then we have to take them
+            custom_kernel_dict = self.custom_kernel_default_value
+        print('custom_kernel_dict')
+        print(custom_kernel_dict)
            
-            if self._launch_args["custom_kernel_specs"]:
-                custom_kernel_dict = self._launch_args["custom_kernel_specs"]
-                # check is custom kernel variables are full if not then we should take default ones
-                if self.custom_kernel_default_value:
-                    for key, value in self.custom_kernel_default_value.items():
-                        if key not in custom_kernel_dict:
-                            custom_kernel_dict[key] = value
-            elif self.custom_kernel_default_value:
-                # if not but default values are present into a kernel.json file then we have to take them
-                custom_kernel_dict = self.custom_kernel_default_value
-            print('custom_kernel_dict')
-            print(custom_kernel_dict)
-           
-            if len(custom_kernel_dict) > 0:
-                for custom_kernel_spec, custom_kernel_spec_value in custom_kernel_dict.items():
-                    for env_key, env_item in env.items():
-                        kernel_spec_item = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, env_item)
-                        newEnv[env_key]=kernel_spec_item
-            else:
+        if len(custom_kernel_dict) > 0:
+            for custom_kernel_spec, custom_kernel_spec_value in custom_kernel_dict.items():
+                for env_key, env_item in env.items():
+                    kernel_spec_item = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, env_item)
+                    newEnv[env_key]=kernel_spec_item
+        else:
                 # check whether there are custom kernel spec variables into kernel.json, 
                 # if yes but a user has not configured them and default ones are not present ,
                 # we should clean them
-                newEnv = self.clear_custom_kernel_parameters(env)
+            newEnv = self.clear_custom_kernel_parameters(env)
 
-            if len(newEnv) > 0:
-                env = self.clear_custom_kernel_parameters(newEnv)
-            else:
-                env = self.clear_custom_kernel_parameters(env)
-            print(env)
-            self._launch_args["env"].update(env)  # type: ignore [unreachable]
-        
+        if len(newEnv) > 0:
+            env = self.clear_custom_kernel_parameters(newEnv)
+        else:
+            env = self.clear_custom_kernel_parameters(env)
+        print('update_custom_env_parameters env')
+        print(env)
+        return env
     
     def replace_spec_parameter(self, variable, value, spec)->str:
         regexp = r"\{" + variable + "\\}"
@@ -517,8 +523,7 @@ class KernelManager(ConnectionFileMixin):
         # update env
         if "env" in kw:
            print('update!!!')
-           self.update_env(env=kw["env"])
-           kw["env"] = self._launch_args["env"]
+           kw["env"] = self.update_custom_env_parameters(env=kw["env"])
         kernel_cmd = kw.pop("cmd")
         if "custom_kernel_specs" in kw:
             del kw["custom_kernel_specs"]
