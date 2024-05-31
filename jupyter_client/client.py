@@ -344,7 +344,7 @@ class KernelClient(ConnectionFileMixin):
             or (self._control_channel and self.control_channel.is_alive())
         )
 
-    ioloop = None  # Overridden in subclasses that use pyzmq event loop
+    ioloop = None  # Overridden in subclasses that use asyncio event loop
 
     @property
     def shell_channel(self) -> t.Any:

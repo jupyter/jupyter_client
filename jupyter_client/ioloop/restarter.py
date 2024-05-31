@@ -5,10 +5,12 @@ restarts the kernel if it dies.
 """
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-import time
-import warnings
-from typing import Any
+from __future__ import annotations
 
+import asyncio
+import time
+
+from jupyter_core.utils import ensure_async, ensure_event_loop
 from traitlets import Instance
 
 from ..restarter import KernelRestarter
@@ -17,36 +19,32 @@ from ..restarter import KernelRestarter
 class IOLoopKernelRestarter(KernelRestarter):
     """Monitor and autorestart a kernel."""
 
-    loop = Instance("tornado.ioloop.IOLoop")
+    _poll_task: asyncio.Task | None = None
+    _running = False
 
-    def _loop_default(self) -> Any:
-        warnings.warn(
-            "IOLoopKernelRestarter.loop is deprecated in jupyter-client 5.2",
-            DeprecationWarning,
-            stacklevel=4,
-        )
-        from tornado import ioloop
+    loop = Instance(asyncio.AbstractEventLoop)  # type:ignore[type-abstract]
 
-        return ioloop.IOLoop.current()
-
-    _pcallback = None
+    def _loop_default(self) -> asyncio.AbstractEventLoop:
+        return ensure_event_loop()
 
     def start(self) -> None:
         """Start the polling of the kernel."""
-        if self._pcallback is None:
-            from tornado.ioloop import PeriodicCallback
+        if not self._poll_task:
+            assert self.parent is not None
+            assert isinstance(self.parent.loop, asyncio.AbstractEventLoop)
+            self._poll_task = self.parent.loop.create_task(self._poll_loop())
+            self._running = True
 
-            self._pcallback = PeriodicCallback(
-                self.poll,
-                1000 * self.time_to_dead,
-            )
-            self._pcallback.start()
+    async def _poll_loop(self) -> None:
+        while self._running:
+            await ensure_async(self.poll())  # type:ignore[func-returns-value]
+            await asyncio.sleep(0.01)
 
     def stop(self) -> None:
         """Stop the kernel polling."""
-        if self._pcallback is not None:
-            self._pcallback.stop()
-            self._pcallback = None
+        if self._poll_task is not None:
+            self._poll_task = None
+            self._running = False
 
 
 class AsyncIOLoopKernelRestarter(IOLoopKernelRestarter):
