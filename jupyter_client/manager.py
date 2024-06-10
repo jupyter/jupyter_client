@@ -301,6 +301,8 @@ class KernelManager(ConnectionFileMixin):
             and "env" in self._launch_args
             and isinstance(self._launch_args["env"], dict)  # type: ignore [unreachable]
         ):
+            print('update env -----------------------------------j')
+            print(self._launch_args["env"])
             # check whether env has custom kernel spec variables
             env = self.update_custom_env_parameters(env=env)
             print('yes')
@@ -323,6 +325,9 @@ class KernelManager(ConnectionFileMixin):
             custom_kernel_dict = self.custom_kernel_default_value
         print('custom_kernel_dict')
         print(custom_kernel_dict)
+
+        print('update_custom_env_parameters env before-----')
+        print(env)
            
         if len(custom_kernel_dict) > 0:
             for custom_kernel_spec, custom_kernel_spec_value in custom_kernel_dict.items():
@@ -339,7 +344,7 @@ class KernelManager(ConnectionFileMixin):
             env = self.clear_custom_kernel_parameters(newEnv)
         else:
             env = self.clear_custom_kernel_parameters(env)
-        print('update_custom_env_parameters env')
+        print('update_custom_env_parameters env after ---')
         print(env)
         return env
     
@@ -469,6 +474,8 @@ class KernelManager(ConnectionFileMixin):
         #
         assert self.provisioner is not None
         connection_info = await self.provisioner.launch_kernel(kernel_cmd, **kw)
+        print('connection_info')
+        print(connection_info)
         assert self.provisioner.has_process
         # Provisioner provides the connection information.  Load into kernel manager
         # and write the connection file, if not already done.
@@ -524,6 +531,8 @@ class KernelManager(ConnectionFileMixin):
         if "env" in kw:
            print('update!!!')
            kw["env"] = self.update_custom_env_parameters(env=kw["env"])
+           print('skw["env"]')
+           print(kw["env"])
         kernel_cmd = kw.pop("cmd")
         if "custom_kernel_specs" in kw:
             del kw["custom_kernel_specs"]

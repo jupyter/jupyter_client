@@ -288,6 +288,8 @@ class MultiKernelManager(LoggingConfigurable):
         The kernel ID for the newly started kernel is returned.
         """
         #here
+        print('----validate_kernel_parameters----')
+        print(kwargs)
         kwargs = self.validate_kernel_parameters(kwargs)
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         if not isinstance(km, KernelManager):
