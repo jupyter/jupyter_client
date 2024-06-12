@@ -160,9 +160,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
         env.update(self.__apply_env_substitutions(env))
         
         self._finalize_env(env)
-        
-        print('new env')
-        print(env)
+       
         kwargs["env"] = env
 
         return kwargs

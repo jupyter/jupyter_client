@@ -313,7 +313,7 @@ class KernelManager(ConnectionFileMixin):
     def update_custom_env_parameters(self, env: t.Dict[str, str]) -> t.Dict[str, str]:
         newEnv = {}
         custom_kernel_dict = {}
-        if self._launch_args["custom_kernel_specs"]:
+        if "custom_kernel_specs" in self._launch_args:
             custom_kernel_dict = self._launch_args["custom_kernel_specs"]
             # check is custom kernel variables are full if not then we should take default ones
             if self.custom_kernel_default_value:
@@ -325,9 +325,6 @@ class KernelManager(ConnectionFileMixin):
             custom_kernel_dict = self.custom_kernel_default_value
         print('custom_kernel_dict')
         print(custom_kernel_dict)
-
-        print('update_custom_env_parameters env before-----')
-        print(env)
            
         if len(custom_kernel_dict) > 0:
             for custom_kernel_spec, custom_kernel_spec_value in custom_kernel_dict.items():
@@ -344,8 +341,7 @@ class KernelManager(ConnectionFileMixin):
             env = self.clear_custom_kernel_parameters(newEnv)
         else:
             env = self.clear_custom_kernel_parameters(env)
-        print('update_custom_env_parameters env after ---')
-        print(env)
+
         return env
     
     def replace_spec_parameter(self, variable, value, spec)->str:
@@ -436,7 +432,7 @@ class KernelManager(ConnectionFileMixin):
 
         # Updating ns if there are custom kernel specs variables
         custom_kernel_dict = {}
-        if self._launch_args["custom_kernel_specs"]:
+        if "custom_kernel_specs" in self._launch_args:
             custom_kernel_dict = self._launch_args["custom_kernel_specs"]
             if self.custom_kernel_default_value:
                     for key, value in self.custom_kernel_default_value.items():
@@ -453,7 +449,8 @@ class KernelManager(ConnectionFileMixin):
         if self.kernel_spec:  # type:ignore[truthy-bool]
             ns["resource_dir"] = self.kernel_spec.resource_dir
         assert isinstance(self._launch_args, dict)
-
+        print('----ns[custom_kernel_spec_key]----')
+        print(ns)
         ns.update(self._launch_args)
 
         pat = re.compile(r"\{([A-Za-z0-9_]+)\}")
@@ -531,8 +528,8 @@ class KernelManager(ConnectionFileMixin):
         if "env" in kw:
            print('update!!!')
            kw["env"] = self.update_custom_env_parameters(env=kw["env"])
-           print('skw["env"]')
-           print(kw["env"])
+           #print('skw["env"]')
+           #print(kw["env"])
         kernel_cmd = kw.pop("cmd")
         if "custom_kernel_specs" in kw:
             del kw["custom_kernel_specs"]

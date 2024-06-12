@@ -194,6 +194,8 @@ class MultiKernelManager(LoggingConfigurable):
         self, kernel_name: str | None, kwargs: t.Any
     ) -> tuple[KernelManager, str, str]:
         # kwargs should be mutable, passing it as a dict argument.
+        print('----kwargs---')
+        print(kwargs)
         kernel_id = kwargs.pop("kernel_id", self.new_kernel_id(**kwargs))
         if kernel_id in self:
             raise DuplicateKernelError("Kernel already exists: %s" % kernel_id)
@@ -288,8 +290,8 @@ class MultiKernelManager(LoggingConfigurable):
         The kernel ID for the newly started kernel is returned.
         """
         #here
-        print('----validate_kernel_parameters----')
-        print(kwargs)
+        #print('----validate_kernel_parameters----')
+        #print(kwargs)
         kwargs = self.validate_kernel_parameters(kwargs)
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         if not isinstance(km, KernelManager):
