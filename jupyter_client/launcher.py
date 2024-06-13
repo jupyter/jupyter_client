@@ -63,8 +63,6 @@ def launch_kernel(
     if "custom_kernel_specs" in kw:
         del kw["custom_kernel_specs"]
 
-    print("----kw----")
-    print(kw)
     redirect_in = True
     _stdin = PIPE if stdin is None else stdin
 
@@ -80,8 +78,6 @@ def launch_kernel(
 
     env = env if (env is not None) else os.environ.copy()
 
-
-    print("launcher---------------")
 
     kwargs = kw.copy()
     main_args = {

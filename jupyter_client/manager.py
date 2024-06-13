@@ -400,8 +400,6 @@ class KernelManager(ConnectionFileMixin):
            for property_key, property_value in propetries:
                if "default" in property_value:
                    custom_kernel_default_value[property_key] = property_value["default"]
-        print("custom_kernel_default_value")
-        print(custom_kernel_default_value)
         self.custom_kernel_default_value = custom_kernel_default_value
 
 
@@ -506,7 +504,6 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        print("---_async_pre_start_kernel---")
         self.shutting_down = False
         self.kernel_id = self.kernel_id or kw.pop("kernel_id", str(uuid.uuid4()))
         # save kwargs for use in restart
@@ -520,7 +517,6 @@ class KernelManager(ConnectionFileMixin):
                 self.kernel_spec,
                 parent=self,
             )
-        print("---self.provisioner---")
         print(self.provisioner)
         kw = await self.provisioner.pre_launch(**kw)
         # update env
@@ -530,11 +526,7 @@ class KernelManager(ConnectionFileMixin):
         kernel_cmd = kw.pop("cmd")
         if "custom_kernel_specs" in kw:
             del kw["custom_kernel_specs"]
-       # if "custom_kernel_specs" in self._launch_args:
-       #     del self._launch_args['custom_kernel_specs']
 
-        #print("_async_pre_start_kernel- km---after deletinh")
-       # print(kw)
         return kernel_cmd, kw
 
     pre_start_kernel = run_sync(_async_pre_start_kernel)
@@ -675,20 +667,16 @@ class KernelManager(ConnectionFileMixin):
         self.stop_restarter()
 
         if self.has_kernel:
-            print("---self.has_kernel--")
             await self._async_interrupt_kernel()
 
         if now:
-            print("---_async_kill_kernel---")
             await self._async_kill_kernel()
         else:
-            print("---_async_request_shutdown---")
             await self._async_request_shutdown(restart=restart)
             # Don't send any additional kernel kill messages immediately, to give
             # the kernel a chance to properly execute shutdown actions. Wait for at
             # most 1s, checking every 0.1s.
             await self._async_finish_shutdown(restart=restart)
-        print("---_async_cleanup_resources---")
         await self._async_cleanup_resources(restart=restart)
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
@@ -728,12 +716,10 @@ class KernelManager(ConnectionFileMixin):
         await self._async_shutdown_kernel(now=now, restart=True)
 
         if newports:
-            print("---cleanup_random_ports---")
             self.cleanup_random_ports()
 
         # Start new kernel.
         self._launch_args.update(kw)
-        print("----self._launch_args---- after")
         print(self._launch_args)
         await self._async_start_kernel(**self._launch_args)
 

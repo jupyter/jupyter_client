@@ -154,7 +154,6 @@ class KernelProvisionerBase(  # type:ignore[misc]
         Returns the (potentially updated) keyword arguments that are passed to
         :meth:`launch_kernel()`.
         """
-        print("---provisiioning base---")
         env = kwargs.pop("env", os.environ).copy()
         # here!!!
         env.update(self.__apply_env_substitutions(env))

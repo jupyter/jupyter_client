@@ -214,8 +214,6 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
        
         if "custom_kernel_specs" in kwargs:
             del kwargs["custom_kernel_specs"]
-        #print("--After deleting--kwargs----")
-        #print(kwargs)
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:

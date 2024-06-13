@@ -223,7 +223,7 @@ class MultiKernelManager(LoggingConfigurable):
 
         .. version-added: 8.5
         """
-        print("update_env ----- here- multi")
+        
         if kernel_id in self:
             self._kernels[kernel_id].update_env(env=env)
 
@@ -290,8 +290,6 @@ class MultiKernelManager(LoggingConfigurable):
             )
         kwargs["kernel_id"] = kernel_id  # Make kernel_id available to manager and provisioner
 
-
-        print("---_async_start_kernel--")
    
         starter = ensure_async(km.start_kernel(**kwargs))
         task = asyncio.create_task(self._add_kernel_when_ready(kernel_id, km, starter))
