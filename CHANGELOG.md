@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.6.2
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.1...474093f4237744dee2af1c8929e2afe5354ef356))
+
+### Bugs fixed
+
+- Use non-blocking zmq Poller [#1023](https://github.com/jupyter/jupyter_client/pull/1023) ([@fcollonval](https://github.com/fcollonval))
+
+### Documentation improvements
+
+- use https url [#1021](https://github.com/jupyter/jupyter_client/pull/1021) ([@Carreau](https://github.com/Carreau))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2024-03-12&to=2024-05-23&type=c))
+
+[@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2024-03-12..2024-05-23&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afcollonval+updated%3A2024-03-12..2024-05-23&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.6.1
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.0...8a3327ae58247be734d51f44c629354f0f600660))
@@ -27,8 +47,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-11-06&to=2024-03-12&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-11-06..2024-03-12&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adependabot+updated%3A2023-11-06..2024-03-12&type=Issues) | [@mlucool](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Amlucool+updated%3A2023-11-06..2024-03-12&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-11-06..2024-03-12&type=Issues) | [@Zsailer](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AZsailer+updated%3A2023-11-06..2024-03-12&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.6.0
 

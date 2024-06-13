@@ -326,7 +326,7 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {"ipython": ("http://ipython.readthedocs.io/en/stable/", None)}
+intersphinx_mapping = {"ipython": ("https://ipython.readthedocs.io/en/stable/", None)}
 
 
 def setup(app: object) -> None:
