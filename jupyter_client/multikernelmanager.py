@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import asyncio
 import json
-import re
 import os
+import re
 import socket
 import typing as t
 import uuid
@@ -223,7 +223,7 @@ class MultiKernelManager(LoggingConfigurable):
 
         .. version-added: 8.5
         """
-        
+
         if kernel_id in self:
             self._kernels[kernel_id].update_env(env=env)
 
@@ -253,23 +253,25 @@ class MultiKernelManager(LoggingConfigurable):
         this multikernelmanager is using pending kernels or not
         """
         return getattr(self, "use_pending_kernels", False)
-    
-    def validate(self, string)->str:
-       sanitazed_string = re.sub(r'[;&|$#]', '', string)
-       match = re.match(r"'", sanitazed_string)
-       if match:
-           sanitazed_string = "'" + re.sub(r"'", "'\''", sanitazed_string) +"'"
-       return sanitazed_string
-    
-    def validate_kernel_parameters(self, kwargs: t.Any)-> None:
+
+    def validate(self, string) -> str:
+        sanitazed_string = re.sub(r"[;&|$#]", "", string)
+        match = re.match(r"'", sanitazed_string)
+        if match:
+            sanitazed_string = "'" + re.sub(r"'", "'''", sanitazed_string) + "'"
+        return sanitazed_string
+
+    def validate_kernel_parameters(self, kwargs: t.Any) -> None:
         if "custom_kernel_specs" in kwargs:
-             custom_kernel_specs =  kwargs.get("custom_kernel_specs")
-             if custom_kernel_specs is not None:
-                for custom_kernel_spec, custom_kernel_spec_value in kwargs["custom_kernel_specs"].items():
+            custom_kernel_specs = kwargs.get("custom_kernel_specs")
+            if custom_kernel_specs is not None:
+                for custom_kernel_spec, custom_kernel_spec_value in kwargs[
+                    "custom_kernel_specs"
+                ].items():
                     sanitazed_string = self.validate(custom_kernel_spec_value)
-                    if (sanitazed_string !=''):
+                    if sanitazed_string != "":
                         kwargs["custom_kernel_specs"][custom_kernel_spec] = sanitazed_string
-        return kwargs            
+        return kwargs
 
     async def _async_start_kernel(self, *, kernel_name: str | None = None, **kwargs: t.Any) -> str:
         """Start a new kernel.
@@ -290,7 +292,6 @@ class MultiKernelManager(LoggingConfigurable):
             )
         kwargs["kernel_id"] = kernel_id  # Make kernel_id available to manager and provisioner
 
-   
         starter = ensure_async(km.start_kernel(**kwargs))
         task = asyncio.create_task(self._add_kernel_when_ready(kernel_id, km, starter))
         self._pending_kernels[kernel_id] = task

@@ -195,7 +195,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
             if "env" in kwargs:
                 # update env if there is custom kernel specs variables for env
                 km.update_env(env=kwargs["env"])
-   
+
                 jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
                 km.write_connection_file(jupyter_session=jupyter_session)
             else:
@@ -210,8 +210,8 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
             kernel_cmd = self.kernel_spec.argv + extra_arguments
 
         kernel_cmd = km.clear_custom_kernel_parameters(kernel_cmd)
-        print("cmd--------",kernel_cmd)
-       
+        print("cmd--------", kernel_cmd)
+
         if "custom_kernel_specs" in kwargs:
             del kwargs["custom_kernel_specs"]
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)

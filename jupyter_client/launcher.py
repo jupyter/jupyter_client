@@ -78,7 +78,6 @@ def launch_kernel(
 
     env = env if (env is not None) else os.environ.copy()
 
-
     kwargs = kw.copy()
     main_args = {
         "stdin": _stdin,
