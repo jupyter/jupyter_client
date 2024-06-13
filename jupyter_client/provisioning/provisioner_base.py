@@ -238,7 +238,6 @@ class KernelProvisionerBase(  # type:ignore[misc]
             env.pop("PYTHONEXECUTABLE", None)
 
     def __apply_env_substitutions(self, substitution_values: Dict[str, str]) -> Dict[str, str]:
-        print('????')
         """
         Walks entries in the kernelspec's env stanza and applies substitutions from current env.
 

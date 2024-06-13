@@ -193,9 +193,8 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                 km.control_port = lpc.find_available_port(km.ip)
                 self.ports_cached = True
             if "env" in kwargs:
-                print('pre_launch update env ----')
-                #update env if there is custom kernel specs variables for env
-               # km.update_env(env=kwargs["env"])
+                # update env if there is custom kernel specs variables for env
+                km.update_env(env=kwargs["env"])
    
                 jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
                 km.write_connection_file(jupyter_session=jupyter_session)
@@ -222,7 +221,6 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
         """Launch a kernel with a command."""
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
-        print('local provisioner launch_kernel')
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
         if hasattr(os, "getpgid"):

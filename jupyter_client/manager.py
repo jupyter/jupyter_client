@@ -301,12 +301,17 @@ class KernelManager(ConnectionFileMixin):
             and "env" in self._launch_args
             and isinstance(self._launch_args["env"], dict)  # type: ignore [unreachable]
         ):
-            print('update env -----------------------------------j')
-            print(self._launch_args["env"])
+            # if self._launch_args["env"] has custom kernel variable for env but env does not have then we have to fill env with it
+            if "custom_kernel_specs" in self._launch_args:
+                 saved_env = self._launch_args.get("env", {}) 
+                 custom_kernel_dict = self._launch_args["custom_kernel_specs"]
+                 if isinstance(custom_kernel_dict, dict):
+                    for key, value in custom_kernel_dict.items():
+                        if key in saved_env and key not in env:
+                            env[key] = saved_env[key]
+
             # check whether env has custom kernel spec variables
             env = self.update_custom_env_parameters(env=env)
-            print('yes')
-            print(env)
 
             self._launch_args["env"].update(env)  # type: ignore [unreachable]
 
@@ -318,15 +323,13 @@ class KernelManager(ConnectionFileMixin):
             # check is custom kernel variables are full if not then we should take default ones
             if self.custom_kernel_default_value:
                 for key, value in self.custom_kernel_default_value.items():
-                    if key not in custom_kernel_dict:
+                    if isinstance(custom_kernel_dict, dict) and key not in custom_kernel_dict:
                         custom_kernel_dict[key] = value
         elif self.custom_kernel_default_value:
             # if not but default values are present into a kernel.json file then we have to take them
             custom_kernel_dict = self.custom_kernel_default_value
-        print('custom_kernel_dict')
-        print(custom_kernel_dict)
            
-        if len(custom_kernel_dict) > 0:
+        if isinstance(custom_kernel_dict, dict) and len(custom_kernel_dict) > 0:
             for custom_kernel_spec, custom_kernel_spec_value in custom_kernel_dict.items():
                 for env_key, env_item in env.items():
                     kernel_spec_item = self.replace_spec_parameter(custom_kernel_spec, custom_kernel_spec_value, env_item)
@@ -436,21 +439,19 @@ class KernelManager(ConnectionFileMixin):
             custom_kernel_dict = self._launch_args["custom_kernel_specs"]
             if self.custom_kernel_default_value:
                     for key, value in self.custom_kernel_default_value.items():
-                        if key not in custom_kernel_dict:
+                        if isinstance(custom_kernel_dict, dict) and key not in custom_kernel_dict:
                             custom_kernel_dict[key] = value
         elif self.custom_kernel_default_value:
             # if not but default values are present into a kernel.json file then we have to take them
             custom_kernel_dict = self.custom_kernel_default_value
 
-        if len(custom_kernel_dict) > 0:
+        if isinstance(custom_kernel_dict, dict) and len(custom_kernel_dict) > 0:
             for custom_kernel_spec_key, custom_kernel_spec_value in custom_kernel_dict.items():
                 ns[custom_kernel_spec_key] = custom_kernel_spec_value
 
         if self.kernel_spec:  # type:ignore[truthy-bool]
             ns["resource_dir"] = self.kernel_spec.resource_dir
         assert isinstance(self._launch_args, dict)
-        print('----ns[custom_kernel_spec_key]----')
-        print(ns)
         ns.update(self._launch_args)
 
         pat = re.compile(r"\{([A-Za-z0-9_]+)\}")
@@ -471,8 +472,6 @@ class KernelManager(ConnectionFileMixin):
         #
         assert self.provisioner is not None
         connection_info = await self.provisioner.launch_kernel(kernel_cmd, **kw)
-        print('connection_info')
-        print(connection_info)
         assert self.provisioner.has_process
         # Provisioner provides the connection information.  Load into kernel manager
         # and write the connection file, if not already done.
@@ -526,10 +525,8 @@ class KernelManager(ConnectionFileMixin):
         kw = await self.provisioner.pre_launch(**kw)
         # update env
         if "env" in kw:
-           print('update!!!')
            kw["env"] = self.update_custom_env_parameters(env=kw["env"])
-           #print('skw["env"]')
-           #print(kw["env"])
+           self._launch_args["env"].update(kw["env"])
         kernel_cmd = kw.pop("cmd")
         if "custom_kernel_specs" in kw:
             del kw["custom_kernel_specs"]
@@ -570,8 +567,6 @@ class KernelManager(ConnectionFileMixin):
              keyword arguments that are passed down to build the kernel_cmd
              and launching the kernel (e.g. Popen kwargs).
         """
-        #here?
-        print('Maybe--------------------')
         self._attempted_start = True
         kernel_cmd, kw = await self._async_pre_start_kernel(**kw)
 
@@ -729,9 +724,6 @@ class KernelManager(ConnectionFileMixin):
             msg = "Cannot restart the kernel. No previous call to 'start_kernel'."
             raise RuntimeError(msg)
 
-        print('££££?  REstart ----')
-        print("----self._launch_args---- before")
-        print(self._launch_args)
         # Stop currently running kernel.
         await self._async_shutdown_kernel(now=now, restart=True)
 

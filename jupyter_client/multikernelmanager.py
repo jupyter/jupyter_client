@@ -194,8 +194,6 @@ class MultiKernelManager(LoggingConfigurable):
         self, kernel_name: str | None, kwargs: t.Any
     ) -> tuple[KernelManager, str, str]:
         # kwargs should be mutable, passing it as a dict argument.
-        print('----kwargs---')
-        print(kwargs)
         kernel_id = kwargs.pop("kernel_id", self.new_kernel_id(**kwargs))
         if kernel_id in self:
             raise DuplicateKernelError("Kernel already exists: %s" % kernel_id)
@@ -215,9 +213,6 @@ class MultiKernelManager(LoggingConfigurable):
             kernel_name=kernel_name,
             **constructor_kwargs,
         )
-        print('pre_start_kernel')
-        print('---km---')
-        print(km)
         return km, kernel_name, kernel_id
 
     def update_env(self, *, kernel_id: str, env: t.Dict[str, str]) -> None:
@@ -261,13 +256,9 @@ class MultiKernelManager(LoggingConfigurable):
     
     def validate(self, string)->str:
        sanitazed_string = re.sub(r'[;&|$#]', '', string)
-       #print('----sanitazed_string-------')
-       #print(sanitazed_string)
        match = re.match(r"'", sanitazed_string)
        if match:
            sanitazed_string = "'" + re.sub(r"'", "'\''", sanitazed_string) +"'"
-       else:
-            print('----does  not match-------')
        return sanitazed_string
     
     def validate_kernel_parameters(self, kwargs: t.Any)-> None:
@@ -277,7 +268,6 @@ class MultiKernelManager(LoggingConfigurable):
                 for custom_kernel_spec, custom_kernel_spec_value in kwargs["custom_kernel_specs"].items():
                     sanitazed_string = self.validate(custom_kernel_spec_value)
                     if (sanitazed_string !=''):
-                        print('----sanitazed_string is not null------')
                         kwargs["custom_kernel_specs"][custom_kernel_spec] = sanitazed_string
         return kwargs            
 
@@ -289,9 +279,7 @@ class MultiKernelManager(LoggingConfigurable):
 
         The kernel ID for the newly started kernel is returned.
         """
-        #here
-        #print('----validate_kernel_parameters----')
-        #print(kwargs)
+
         kwargs = self.validate_kernel_parameters(kwargs)
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         if not isinstance(km, KernelManager):
