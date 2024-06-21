@@ -363,7 +363,7 @@ class KernelManager(ConnectionFileMixin):
         return isMatch
 
     # Clear kernel specs files if user has not configured them themselves
-    # we shoud return only that has not kernel custom variables
+    # we should return only that has not kernel custom variables
     # if there are no metadata specification for custom kernel
 
     def clear_custom_kernel_parameters(self, kernel_parameters: t.Any) -> t.Any:
@@ -515,7 +515,6 @@ class KernelManager(ConnectionFileMixin):
                 self.kernel_spec,
                 parent=self,
             )
-        print(self.provisioner)
         kw = await self.provisioner.pre_launch(**kw)
         # update env
         if "env" in kw:
@@ -558,7 +557,14 @@ class KernelManager(ConnectionFileMixin):
              and launching the kernel (e.g. Popen kwargs).
         """
         self._attempted_start = True
+        print('kw')
+        print(kw)
         kernel_cmd, kw = await self._async_pre_start_kernel(**kw)
+        print('kernel_cmd')
+        print(kernel_cmd)
+
+        print('self._launch_args')
+        print(self._launch_args)
 
         # launch the kernel subprocess
         self.log.debug("Starting kernel: %s", kernel_cmd)
@@ -718,6 +724,7 @@ class KernelManager(ConnectionFileMixin):
 
         # Start new kernel.
         self._launch_args.update(kw)
+        print('restart')
         print(self._launch_args)
         await self._async_start_kernel(**self._launch_args)
 
