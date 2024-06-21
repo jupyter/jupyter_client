@@ -557,13 +557,13 @@ class KernelManager(ConnectionFileMixin):
              and launching the kernel (e.g. Popen kwargs).
         """
         self._attempted_start = True
-        print('kw')
+        print("kw")
         print(kw)
         kernel_cmd, kw = await self._async_pre_start_kernel(**kw)
-        print('kernel_cmd')
+        print("kernel_cmd")
         print(kernel_cmd)
 
-        print('self._launch_args')
+        print("self._launch_args")
         print(self._launch_args)
 
         # launch the kernel subprocess
@@ -724,7 +724,7 @@ class KernelManager(ConnectionFileMixin):
 
         # Start new kernel.
         self._launch_args.update(kw)
-        print('restart')
+        print("restart")
         print(self._launch_args)
         await self._async_start_kernel(**self._launch_args)
 

@@ -281,12 +281,14 @@ class MultiKernelManager(LoggingConfigurable):
 
         The kernel ID for the newly started kernel is returned.
         """
-        
+
         if "custom_kernel_specs" in kwargs:
             custom_kernel_specs = kwargs.get("custom_kernel_specs")
-            if custom_kernel_specs is None or (isinstance(custom_kernel_specs, dict) and len(custom_kernel_specs) == 0):
+            if custom_kernel_specs is None or (
+                isinstance(custom_kernel_specs, dict) and len(custom_kernel_specs) == 0
+            ):
                 del kwargs["custom_kernel_specs"]
-        if hasattr(self, '_launch_args') and self._launch_args:
+        if hasattr(self, "_launch_args") and self._launch_args:
             if "custom_kernel_specs" in self._launch_args:
                 if "custom_kernel_specs" not in kwargs:
                     del self._launch_args["custom_kernel_specs"]
@@ -300,7 +302,7 @@ class MultiKernelManager(LoggingConfigurable):
                 )
             )
         kwargs["kernel_id"] = kernel_id  # Make kernel_id available to manager and provisioner
-        print('kwargs')
+        print("kwargs")
         print(kwargs)
         starter = ensure_async(km.start_kernel(**kwargs))
         task = asyncio.create_task(self._add_kernel_when_ready(kernel_id, km, starter))
