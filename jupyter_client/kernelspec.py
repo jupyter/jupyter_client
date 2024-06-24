@@ -231,8 +231,8 @@ class KernelSpecManager(LoggingConfigurable):
     def allow_parameterized_kernels(self, isParameterizedKernel):
         self.isParameterizedKernel = isParameterizedKernel
 
-    def _checkParameterizedKernel(self, kspec:KernelSpec)->KernelSpec:
-        print('kspec')
+    def _checkParameterizedKernel(self, kspec: KernelSpec) -> KernelSpec:
+        print("kspec")
         print(kspec)
         if not self.isParameterizedKernel:
             return kspec
@@ -257,7 +257,7 @@ class KernelSpecManager(LoggingConfigurable):
 
         if not KPF.instance(parent=self.parent).is_provisioner_available(kspec):
             raise NoSuchKernel(kernel_name)
-        
+
         kspec = self._checkParameterizedKernel(kspec)
 
         return kspec
