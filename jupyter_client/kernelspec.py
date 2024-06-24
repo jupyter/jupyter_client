@@ -228,6 +228,15 @@ class KernelSpecManager(LoggingConfigurable):
         return d
         # TODO: Caching?
 
+    def allow_parameterized_kernels(self, isParameterizedKernel):
+        self.isParameterizedKernel = isParameterizedKernel
+
+    def _checkParameterizedKernel(self, kspec:KernelSpec)->KernelSpec:
+        print('kspec')
+        print(kspec)
+        if not self.isParameterizedKernel:
+            return kspec
+
     def _get_kernel_spec_by_name(self, kernel_name: str, resource_dir: str) -> KernelSpec:
         """Returns a :class:`KernelSpec` instance for a given kernel_name
         and resource_dir.
@@ -248,6 +257,8 @@ class KernelSpecManager(LoggingConfigurable):
 
         if not KPF.instance(parent=self.parent).is_provisioner_available(kspec):
             raise NoSuchKernel(kernel_name)
+        
+        kspec = self._checkParameterizedKernel(kspec)
 
         return kspec
 
