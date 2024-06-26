@@ -231,7 +231,7 @@ class KernelSpecManager(LoggingConfigurable):
         # TODO: Caching?
 
     def allow_insecure_kernelspec_params(self, is_allowed_insecure_kernel_specs):
-        print('is_allowed_insecure_kernel_specs')
+        print("is_allowed_insecure_kernel_specs")
         print(is_allowed_insecure_kernel_specs)
         self._is_allowed_insecure_kernel_specs = is_allowed_insecure_kernel_specs
 
@@ -241,7 +241,7 @@ class KernelSpecManager(LoggingConfigurable):
         if self._is_allowed_insecure_kernel_specs == True:
             return kspec
         else:
-            print('yess')
+            print("yess")
             if (
                 kspec.metadata
                 and isinstance(kspec.metadata, dict)
@@ -250,9 +250,9 @@ class KernelSpecManager(LoggingConfigurable):
                 and "properties" in kspec.metadata["parameters"]
                 and isinstance(kspec.metadata["parameters"]["properties"], dict)
             ):
-                print('yesstart')
+                print("yesstart")
                 propetries = kspec.metadata["parameters"]["properties"].items()
-                print('propetries')
+                print("propetries")
                 print(propetries)
                 for property_key, property_value in propetries:
                     if "default" in property_value:
@@ -276,11 +276,9 @@ class KernelSpecManager(LoggingConfigurable):
 
         # check and replace env variables
         for env_key, env_item in env.items():
-            new_env_item = self.replace_spec_parameter(
-                kernel_variable, default_value, env_item
-            )
+            new_env_item = self.replace_spec_parameter(kernel_variable, default_value, env_item)
             new_env[env_key] = new_env_item
-            
+
         if len(new_env) > 0:
             kspec["env"] = new_env
 
