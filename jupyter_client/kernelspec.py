@@ -168,6 +168,8 @@ class KernelSpecManager(LoggingConfigurable):
         "whitelist": ("allowed_kernelspecs", "7.0"),
     }
 
+    _is_allowed_insecure_kernel_specs = False
+
     # Method copied from
     # https://github.com/jupyterhub/jupyterhub/blob/d1a85e53dccfc7b1dd81b0c1985d158cc6b61820/jupyterhub/auth.py#L143-L161
     @observe(*list(_deprecated_aliases))
@@ -228,15 +230,18 @@ class KernelSpecManager(LoggingConfigurable):
         return d
         # TODO: Caching?
 
-    def allow_parameterized_kernels(self, isParameterizedKernel):
-        self.isParameterizedKernel = isParameterizedKernel
+    def allow_insecure_kernelspec_params(self, is_allowed_insecure_kernel_specs):
+        print('is_allowed_insecure_kernel_specs')
+        print(is_allowed_insecure_kernel_specs)
+        self._is_allowed_insecure_kernel_specs = is_allowed_insecure_kernel_specs
 
-    def _checkParameterizedKernel(self, kspec: KernelSpec) -> KernelSpec:
+    def _check_parameterized_kernel(self, kspec: KernelSpec) -> KernelSpec:
         print("kspec")
-        print(kspec)
-        if self.isParameterizedKernel:
+        print(kspec.argv)
+        if self._is_allowed_insecure_kernel_specs == True:
             return kspec
         else:
+            print('yess')
             if (
                 kspec.metadata
                 and isinstance(kspec.metadata, dict)
@@ -245,7 +250,10 @@ class KernelSpecManager(LoggingConfigurable):
                 and "properties" in kspec.metadata["parameters"]
                 and isinstance(kspec.metadata["parameters"]["properties"], dict)
             ):
+                print('yesstart')
                 propetries = kspec.metadata["parameters"]["properties"].items()
+                print('propetries')
+                print(propetries)
                 for property_key, property_value in propetries:
                     if "default" in property_value:
                         kspec = self.replaceByDefault(kspec, property_key, property_value['default'])
@@ -263,6 +271,12 @@ class KernelSpecManager(LoggingConfigurable):
 
          env = kspec['env']
          argv = kspec['argv']
+
+         print('replaceByDefault env')
+         print(env)
+
+         print('replaceByDefault argv')
+         print(argv)
 
          # check and replace env variables
          for env_key, env_item in env.items():
@@ -305,7 +319,7 @@ class KernelSpecManager(LoggingConfigurable):
         if not KPF.instance(parent=self.parent).is_provisioner_available(kspec):
             raise NoSuchKernel(kernel_name)
 
-        kspec = self._checkParameterizedKernel(kspec)
+        kspec = self._check_parameterized_kernel(kspec)
 
         return kspec
 
