@@ -256,47 +256,42 @@ class KernelSpecManager(LoggingConfigurable):
                 print(propetries)
                 for property_key, property_value in propetries:
                     if "default" in property_value:
-                        kspec = self.replaceByDefault(kspec, property_key, property_value['default'])
+                        kspec = self.replaceByDefault(
+                            kspec, property_key, property_value["default"]
+                        )
             else:
                 return kspec
-            
+
     def replace_spec_parameter(self, variable, value, spec) -> str:
         regexp = r"\{" + variable + "\\}"
         pattern = re.compile(regexp)
         return pattern.sub(value, spec)
-    
+
     def replaceByDefault(self, kspec, kernel_variable, default_value):
-         new_env = {}
-         new_argv = []
+        new_env = {}
+        new_argv = []
 
-         env = kspec['env']
-         argv = kspec['argv']
+        env = kspec["env"]
+        argv = kspec["argv"]
 
-         print('replaceByDefault env')
-         print(env)
-
-         print('replaceByDefault argv')
-         print(argv)
-
-         # check and replace env variables
-         for env_key, env_item in env.items():
+        # check and replace env variables
+        for env_key, env_item in env.items():
             new_env_item = self.replace_spec_parameter(
                 kernel_variable, default_value, env_item
-                )
+            )
             new_env[env_key] = new_env_item
-         if len(new_env) > 0 :
-             kspec['env'] = new_env
+            
+        if len(new_env) > 0:
+            kspec["env"] = new_env
 
         # check and replace argv parameters
-         for argv_item in argv:
-            new_argv_item = self.replace_spec_parameter(
-                kernel_variable, default_value, argv_item
-                )
+        for argv_item in argv:
+            new_argv_item = self.replace_spec_parameter(kernel_variable, default_value, argv_item)
             new_argv.append(new_argv_item)
 
-         if len(new_argv)>0:
-            kspec['argv'] = new_argv
-         return kspec
+        if len(new_argv) > 0:
+            kspec["argv"] = new_argv
+        return kspec
 
     def _get_kernel_spec_by_name(self, kernel_name: str, resource_dir: str) -> KernelSpec:
         """Returns a :class:`KernelSpec` instance for a given kernel_name
