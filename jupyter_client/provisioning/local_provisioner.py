@@ -155,6 +155,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                 lpc.return_port(port)
 
     async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
+        #
         """Perform any steps in preparation for kernel process launch.
 
         This includes applying additional substitutions to the kernel launch command and env.
@@ -166,6 +167,9 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         # This should be considered temporary until a better division of labor can be defined.
         km = self.parent
         if km:
+            # Get default values from kernel.json file if there is a custom kernel
+            km.get_default_custom_kernel_specs_value()
+
             if km.transport == "tcp" and not is_local_ip(km.ip):
                 msg = (
                     "Can only launch a kernel on a local interface. "
@@ -189,6 +193,9 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                 km.control_port = lpc.find_available_port(km.ip)
                 self.ports_cached = True
             if "env" in kwargs:
+                # update env if there is custom kernel specs variables for env
+                km.update_env(env=kwargs["env"])
+
                 jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
                 km.write_connection_file(jupyter_session=jupyter_session)
             else:
@@ -202,6 +209,11 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
             extra_arguments = kwargs.pop("extra_arguments", [])
             kernel_cmd = self.kernel_spec.argv + extra_arguments
 
+        kernel_cmd = km.clear_custom_kernel_parameters(kernel_cmd)
+        print("cmd--------", kernel_cmd)
+
+        if "custom_kernel_specs" in kwargs:
+            del kwargs["custom_kernel_specs"]
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
     async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
@@ -222,7 +234,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     @staticmethod
     def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """Remove any keyword arguments that Popen does not tolerate."""
-        keywords_to_scrub: List[str] = ["extra_arguments", "kernel_id"]
+        keywords_to_scrub: List[str] = ["extra_arguments", "kernel_id", "custom_kernel_specs"]
         scrubbed_kwargs = kwargs.copy()
         for kw in keywords_to_scrub:
             scrubbed_kwargs.pop(kw, None)
