@@ -376,9 +376,7 @@ class KernelSpecManager(LoggingConfigurable):
         print()
         # check and replace env variables
         for env_key, env_item in env.items():
-            new_env_item = self.replace_spec_parameter(
-                kernel_variable, default_value, env_item
-            )
+            new_env_item = self.replace_spec_parameter(kernel_variable, default_value, env_item)
             new_env[env_key] = new_env_item
 
         if len(new_env) > 0:
