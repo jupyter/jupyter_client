@@ -240,13 +240,16 @@ class KernelSpecManager(LoggingConfigurable):
         print(kspec.argv)
         is_secure = self.check_kernel_is_secure(kspec=kspec)
         if is_secure == True:
+            print('---is_secure---')
             return kspec # a kernel spec is allowed
         else:
             if self._allow_insecure_kernelspec_params == True:
+                print('---_allow_insecure_kernelspec_params---')
                 return kspec # a kernel spec is allowed
             else:
+                print('---should default---')
                 kspec_data = self.check_kernel_custom_all_default_values(kspec=kspec)
-                if kspec_data.is_default == True:
+                if kspec_data.all_has_default == True:
                     return kspec_data.kspec # a kernel spec is modyfied and is allowed
     
     def check_kernel_is_secure(self, kspec):
@@ -262,21 +265,8 @@ class KernelSpecManager(LoggingConfigurable):
             counter_secure_kernel_variables = self.get_count_secure_kernel_variables(obj=kspec.metadata["parameters"], counter_secure_kernel_variables=0)
             print('counter_secure_kernel_variables')
             
-            env = None
-            argv = None
-            sum_argv_kernel_variables = 0
-            sum_env_kernel_variables = 0
-            if "env" in kspec:
-                env = kspec.env
-                sum_env_kernel_variables = self.get_count_all_kernel_variables(self, env)
-                print("sum_env_kernel_variables")
-                print(sum_env_kernel_variables)
-            if "argv" in kspec:
-                argv = kspec.argv
-                sum_argv_kernel_variables = self.get_count_all_kernel_variables(self, argv)
-                print("sum_argv_kernel_variables")
-                print(sum_argv_kernel_variables)
-            total_sum_kernel_variables = sum_env_kernel_variables + sum_argv_kernel_variables
+            total_sum_kernel_variables = self.get_argv_env_kernel_variables(kspec=kspec)
+           
             if counter_secure_kernel_variables == total_sum_kernel_variables:
                 is_secure = True
             else:
@@ -285,6 +275,27 @@ class KernelSpecManager(LoggingConfigurable):
             is_secure = True
         return is_secure
     
+    def get_argv_env_kernel_variables(self, kspec):
+        total_sum_kernel_variables = 0
+        env = None
+        argv = None
+        sum_argv_kernel_variables = 0
+        sum_env_kernel_variables = 0
+        if hasattr(kspec, 'env'):
+            env = kspec.env
+            sum_env_kernel_variables = self.get_count_all_kernel_variables(parameters=env)
+            print("sum_env_kernel_variables")
+            print(sum_env_kernel_variables)
+        if hasattr(kspec, 'argv'):
+            argv = kspec.argv
+            sum_argv_kernel_variables = self.get_count_all_kernel_variables(parameters=argv)
+            print("sum_argv_kernel_variables")
+            print(sum_argv_kernel_variables)
+        total_sum_kernel_variables = sum_env_kernel_variables + sum_argv_kernel_variables
+        print('total_sum_kernel_variables')
+        print(total_sum_kernel_variables)
+        return total_sum_kernel_variables
+
 
     def get_count_secure_kernel_variables(self, obj, counter_secure_kernel_variables):
          print('get_count_secure_kernel_variables')
@@ -298,14 +309,14 @@ class KernelSpecManager(LoggingConfigurable):
             print(propetries)
             if len(propetries) > 0:
                 for property_key, property_value in propetries:
-                    if property_value["enum"]:
+                    if property_value.get("enum"):
                         counter_secure_kernel_variables = counter_secure_kernel_variables + 1
                         print('if enum counter_secure_kernel_variables')
-                        print(propetries)
-                    elif property_value['type'] == 'object':
+                        print(counter_secure_kernel_variables)
+                    elif property_value.get("type") == 'object':
                         counter_secure_kernel_variables = self.get_count_secure_kernel_variables(obj=obj, counter_secure_kernel_variables=counter_secure_kernel_variables)
                         print('if object counter_secure_kernel_variables')
-                        print(propetries)
+                        print(counter_secure_kernel_variables)
          return counter_secure_kernel_variables
     
     def get_count_all_kernel_variables(self, parameters):
@@ -329,9 +340,12 @@ class KernelSpecManager(LoggingConfigurable):
          if match is None:
             pattern = re.compile(r"\{([A-Za-z0-9_]+)\}")
             match = pattern.match(string)
-            if match.group(1):
-                return True
-            else: 
+            if match:
+                if match.group(1):
+                    return True
+                else: 
+                    return False
+            else:
                 return False
          else: 
              return False
@@ -348,15 +362,33 @@ class KernelSpecManager(LoggingConfigurable):
         ):
             print('yesstart')
             propetries = kspec.metadata["parameters"]["properties"].items()
+            
+            new_kspec = {}
             print('propetries')
             print(propetries)
             for property_key, property_value in propetries:
                 if "default" in property_value:
-                    kspec = self.replaceByDefault(
+                    new_kspec = self.replaceByDefault(
                         kspec, property_key, property_value["default"]
                     )
+            total_sum_kernel_variables = self.get_argv_env_kernel_variables(kspec=new_kspec)
+            if total_sum_kernel_variables > 0:
+                result = {
+                    "kspec": kspec,
+                    "all_have_default" : False
+                }
+
+                return result
+            else: 
+                 result = {
+                    "kspec": new_kspec,
+                    "all_have_default" : True
+                }
         else:
-            return ""#
+            result = {
+                    "kspec": kspec,
+                    "all_have_default" : False
+            }
 
     def replace_spec_parameter(self, variable, value, spec) -> str:
         regexp = r"\{" + variable + "\\}"
@@ -366,29 +398,36 @@ class KernelSpecManager(LoggingConfigurable):
     def replaceByDefault(self, kspec, kernel_variable, default_value):
         new_env = {}
         new_argv = []
+        if hasattr(kspec, 'env'):
+            tmp_env = kspec.env.copy()
+            print('----tmp_env---')
+            print(tmp_env)
+            env = tmp_env.env
+            
+            
 
-        env = kspec.env
-        argv = kspec.argv
+            print('replaceByDefault env')
+            print(env)
+            # check and replace env variables
 
-        print('replaceByDefault env')
-        print(env)
-        print('replaceByDefault argv')
-        print()
-        # check and replace env variables
-        for env_key, env_item in env.items():
-            new_env_item = self.replace_spec_parameter(kernel_variable, default_value, env_item)
-            new_env[env_key] = new_env_item
+            for env_key, env_item in env.items():
+                new_env_item = self.replace_spec_parameter(kernel_variable, default_value, env_item)
+                new_env[env_key] = new_env_item
 
-        if len(new_env) > 0:
-            kspec["env"] = new_env
+            if len(new_env) > 0:
+                tmp_env.update(new_env)
+                kspec.env = tmp_env
 
         # check and replace argv parameters
-        for argv_item in argv:
-            new_argv_item = self.replace_spec_parameter(kernel_variable, default_value, argv_item)
-            new_argv.append(new_argv_item)
+        if hasattr(kspec, 'argv'):
+            argv = kspec.argv.copy()
+            for argv_item in argv:
+                new_argv_item = self.replace_spec_parameter(kernel_variable, default_value, argv_item)
+                new_argv.append(new_argv_item)
 
-        if len(new_argv) > 0:
-            kspec["argv"] = new_argv
+            if len(new_argv) > 0:
+                argv = new_argv
+                kspec.argv = new_argv
         return kspec
 
     def _get_kernel_spec_by_name(self, kernel_name: str, resource_dir: str) -> KernelSpec:
