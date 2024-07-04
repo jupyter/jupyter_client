@@ -254,10 +254,10 @@ class KernelSpecManager(LoggingConfigurable):
                 kspec.metadata = {}
                 kspec.metadata.update({'is_secure':False})
             if self._allow_insecure_kernelspec_params == True:
-                print('---_allow_insecure_kernelspec_params---')
-                return kspec # a kernel spec is allowed
+                print("---_allow_insecure_kernelspec_params---")
+                return kspec  # a kernel spec is allowed
             else:
-                print('---should default---')
+                print("---should default---")
                 kspec_data = self.check_kernel_custom_all_default_values(kspec=kspec)
                 print("kspec_data")
                 print(kspec_data)
@@ -284,7 +284,7 @@ class KernelSpecManager(LoggingConfigurable):
             counter_secure_kernel_variables = self.get_count_secure_kernel_variables(obj=kspec.metadata["parameters"], counter_secure_kernel_variables=0)
             
             total_sum_kernel_variables = self.get_argv_env_kernel_variables(kspec=kspec)
-           
+
             if counter_secure_kernel_variables == total_sum_kernel_variables:
                 is_secure = True
             else:
@@ -292,28 +292,27 @@ class KernelSpecManager(LoggingConfigurable):
         else:
             is_secure = True
         return is_secure
-    
+
     def get_argv_env_kernel_variables(self, kspec):
         total_sum_kernel_variables = 0
         env = None
         argv = None
         sum_argv_kernel_variables = 0
         sum_env_kernel_variables = 0
-        if hasattr(kspec, 'env'):
+        if hasattr(kspec, "env"):
             env = kspec.env
             sum_env_kernel_variables = self.get_count_all_kernel_variables(parameters=env)
             print("sum_env_kernel_variables")
             print(sum_env_kernel_variables)
-        if hasattr(kspec, 'argv'):
+        if hasattr(kspec, "argv"):
             argv = kspec.argv
             sum_argv_kernel_variables = self.get_count_all_kernel_variables(parameters=argv)
             print("sum_argv_kernel_variables")
             print(sum_argv_kernel_variables)
         total_sum_kernel_variables = sum_env_kernel_variables + sum_argv_kernel_variables
-        print('total_sum_kernel_variables')
+        print("total_sum_kernel_variables")
         print(total_sum_kernel_variables)
         return total_sum_kernel_variables
-
 
     def get_count_secure_kernel_variables(self, obj, counter_secure_kernel_variables):
         print("get_count_secure_kernel_variables")
@@ -346,7 +345,7 @@ class KernelSpecManager(LoggingConfigurable):
         print(counter_secure_kernel_variables)
 
         return counter_secure_kernel_variables
-    
+
     def get_count_all_kernel_variables(self, parameters):
         sum = 0
         if isinstance(parameters, list):
@@ -391,7 +390,7 @@ class KernelSpecManager(LoggingConfigurable):
         ):
             has_default = True
             propetries = kspec.metadata["parameters"]["properties"].items()
-            
+
             new_kspec = {}
             for property_key, property_value in propetries:
                 if "default" in property_value:
@@ -439,7 +438,7 @@ class KernelSpecManager(LoggingConfigurable):
     def replaceByDefault(self, kspec, kernel_variable, default_value):
         new_env = {}
         new_argv = []
-        if hasattr(kspec, 'env'):
+        if hasattr(kspec, "env"):
             tmp_env = kspec.env.copy()
             if 'env' in tmp_env:
                 print('----tmp_env---')
@@ -463,7 +462,9 @@ class KernelSpecManager(LoggingConfigurable):
         if hasattr(kspec, 'argv') and kspec.argv is not None:
             argv = kspec.argv.copy()
             for argv_item in argv:
-                new_argv_item = self.replace_spec_parameter(kernel_variable, default_value, argv_item)
+                new_argv_item = self.replace_spec_parameter(
+                    kernel_variable, default_value, argv_item
+                )
                 new_argv.append(new_argv_item)
 
             if len(new_argv) > 0:
