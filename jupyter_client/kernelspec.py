@@ -282,14 +282,16 @@ class KernelSpecManager(LoggingConfigurable):
             and "properties" in kspec.metadata["parameters"]
             and isinstance(kspec.metadata["parameters"]["properties"], dict)
         ):
-            counter_secure_kernel_variables = self.get_count_secure_kernel_variables(obj=kspec.metadata["parameters"], counter_secure_kernel_variables=0)
-            
+            counter_secure_kernel_variables = self.get_count_secure_kernel_variables(
+                obj=kspec.metadata["parameters"], counter_secure_kernel_variables=0
+            )
+
             if counter_secure_kernel_variables == total_sum_kernel_variables:
                 is_secure = True
             else:
                 is_secure = False
         else:
-            # check if there are kernel variables even metadata.parameters are empty 
+            # check if there are kernel variables even metadata.parameters are empty
             if total_sum_kernel_variables > 0:
                 is_secure = False
             else:
