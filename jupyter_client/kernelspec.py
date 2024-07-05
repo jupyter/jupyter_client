@@ -278,7 +278,7 @@ class KernelSpecManager(LoggingConfigurable):
             else:
                 is_secure = False
         else:
-            # check if there are kernel variables even metadata.parameters are empty 
+            # check if there are kernel variables even metadata.parameters are empty
             if total_sum_kernel_variables > 0:
                 is_secure = False
             else:
