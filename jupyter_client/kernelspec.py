@@ -269,8 +269,10 @@ class KernelSpecManager(LoggingConfigurable):
             and "properties" in kspec.metadata["parameters"]
             and isinstance(kspec.metadata["parameters"]["properties"], dict)
         ):
-            counter_secure_kernel_variables = self.get_count_secure_kernel_variables(obj=kspec.metadata["parameters"], counter_secure_kernel_variables=0)
-            if total_sum_kernel_variables>0:
+            counter_secure_kernel_variables = self.get_count_secure_kernel_variables(
+                obj=kspec.metadata["parameters"], counter_secure_kernel_variables=0
+            )
+            if total_sum_kernel_variables > 0:
                 if counter_secure_kernel_variables == total_sum_kernel_variables:
                     is_secure = True
                 else:
@@ -315,7 +317,7 @@ class KernelSpecManager(LoggingConfigurable):
                         else:
                             is_secure = False
                     elif property_value.get("type") == "array":
-                        print('Type of JSON Schema data is array and it is not supported now')
+                        print("Type of JSON Schema data is array and it is not supported now")
                         is_secure = False
                     elif property_value.get("enum"):
                         counter_secure_kernel_variables = counter_secure_kernel_variables + 1
