@@ -644,6 +644,12 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
 
+    def fork(self):
+        content = {}
+        msg = self.session.msg("fork", content)
+        self.shell_channel.send(msg)
+        return msg["header"]["msg_id"]
+
     def complete(self, code: str, cursor_pos: t.Optional[int] = None) -> str:
         """Tab complete text in the kernel's namespace.
 
