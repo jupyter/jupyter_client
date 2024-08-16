@@ -48,6 +48,7 @@ class SignalTestKernel(Kernel):
             reply["user_expressions"]["env"] = os.getenv("TEST_VARS", "")
         elif code == "sleep":
             import ipykernel
+
             if ipykernel.version_info < (7, 0):
                 # ipykernel before anyio.
                 try:
@@ -57,8 +58,8 @@ class SignalTestKernel(Kernel):
                 else:
                     reply["user_expressions"]["interrupted"] = False
             else:
-                # ipykernel after anyio.
-                from anyio import open_signal_receiver, create_task_group, sleep
+                # ipykernel after anyio.
+                from anyio import create_task_group, open_signal_receiver, sleep
 
                 async def signal_handler(cancel_scope, reply):
                     with open_signal_receiver(signal.SIGINT) as signals:
