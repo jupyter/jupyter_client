@@ -2,6 +2,34 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.6.3
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.2...7d7251f24ed42c34b9b6ebdf09a5d89c46450131))
+
+### Enhancements made
+
+- Support psutil for finding network addresses [#1033](https://github.com/jupyter/jupyter_client/pull/1033) ([@juliangilbey](https://github.com/juliangilbey))
+
+### Bugs fixed
+
+- use simpler isoparse from dateutil to parse ISO-8601 timestamps [#1032](https://github.com/jupyter/jupyter_client/pull/1032) ([@minrk](https://github.com/minrk))
+- Avoid a DeprecationWarning on Python 3.13+ [#1027](https://github.com/jupyter/jupyter_client/pull/1027) ([@hroncok](https://github.com/hroncok))
+
+### Maintenance and upkeep improvements
+
+- Fix docs check [#1038](https://github.com/jupyter/jupyter_client/pull/1038) ([@minrk](https://github.com/minrk))
+- fix invocation of pip for nbconvert downstream [#1037](https://github.com/jupyter/jupyter_client/pull/1037) ([@minrk](https://github.com/minrk))
+- test on python 3.13-dev [#1036](https://github.com/jupyter/jupyter_client/pull/1036) ([@andife](https://github.com/andife))
+- Support ipykernel's use of anyio in test_signal_kernel_subprocesses [#1034](https://github.com/jupyter/jupyter_client/pull/1034) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2024-05-23&to=2024-09-17&type=c))
+
+[@andife](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aandife+updated%3A2024-05-23..2024-09-17&type=Issues) | [@hroncok](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahroncok+updated%3A2024-05-23..2024-09-17&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aianthomas23+updated%3A2024-05-23..2024-09-17&type=Issues) | [@juliangilbey](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ajuliangilbey+updated%3A2024-05-23..2024-09-17&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2024-05-23..2024-09-17&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.6.2
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.1...474093f4237744dee2af1c8929e2afe5354ef356))
@@ -19,8 +47,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2024-03-12&to=2024-05-23&type=c))
 
 [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2024-03-12..2024-05-23&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afcollonval+updated%3A2024-03-12..2024-05-23&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.6.1
 
