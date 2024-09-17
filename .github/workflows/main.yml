@@ -79,7 +79,7 @@ jobs:
           fail_under: 78
 
   docs:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
@@ -89,8 +89,9 @@ jobs:
           # If this fails run `hatch run docs:api` locally
           # and commit.
           git status --porcelain
-          git status -s | grep "A" && exit 1
-          git status -s | grep "M" && exit 1
+          if git status -s | grep "^\s*[AM]"; then
+            exit 1
+          fi
           echo "API docs done"
       - run: hatch run docs:build
 
