@@ -134,7 +134,7 @@ filterwarnings= [
   "ignore:datetime.datetime.utcfromtimestamp:DeprecationWarning",
   "ignore:datetime.datetime.utcnow:DeprecationWarning",
   # from ipykernel 6 (fixed in 7)
-  "ignore:ipykernel.jsonutil:DeprecationWarning",
+  "ignore:Parsing dates:DeprecationWarning:ipykernel.jsonutil",
 ]
 
 [tool.coverage.report]
