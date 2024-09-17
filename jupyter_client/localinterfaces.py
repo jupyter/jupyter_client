@@ -153,7 +153,7 @@ def _load_ips_ipconfig() -> None:
 
 def _load_ips_psutil() -> None:
     """load ip addresses with netifaces"""
-    import psutil  # type: ignore[import-not-found]
+    import psutil
 
     global LOCALHOST
     local_ips = []
