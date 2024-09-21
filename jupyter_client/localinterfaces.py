@@ -87,7 +87,9 @@ def _populate_from_list(addrs: Sequence[str] | None) -> None:
     for ip in addrs:
         local_ips.append(ip)
         if not ip.startswith("127."):
-            public_ips.append(ip)
+            if not ip.startswith("169.254."):
+                # don't include link-local address in public_ips
+                public_ips.append(ip)
         elif not LOCALHOST:
             LOCALHOST = ip
 
@@ -168,6 +170,9 @@ def _load_ips_psutil() -> None:
                 addr = address_data.address
                 if not (iface.startswith("lo") or addr.startswith("127.")):
                     public_ips.append(addr)
+                elif addr.startswith("169.254."):
+                    # don't include link-local address in public_ips
+                    pass
                 elif not LOCALHOST:
                     LOCALHOST = addr
                 local_ips.append(addr)
@@ -198,6 +203,9 @@ def _load_ips_netifaces() -> None:
                 continue
             if not (iface.startswith("lo") or addr.startswith("127.")):
                 public_ips.append(addr)
+            elif addr.startswith("169.254."):
+                # don't include link-local address in public_ips
+                pass
             elif not LOCALHOST:
                 LOCALHOST = addr
             local_ips.append(addr)
