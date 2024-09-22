@@ -8,11 +8,11 @@ import re
 import socket
 import subprocess
 from subprocess import PIPE, Popen
-from typing import Any, Callable, Iterable, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence
 from warnings import warn
 
-LOCAL_IPS: list = []
-PUBLIC_IPS: list = []
+LOCAL_IPS: list[str] = []
+PUBLIC_IPS: list[str] = []
 
 LOCALHOST: str = ""
 
@@ -75,29 +75,34 @@ class NoIPAddresses(Exception):  # noqa
     pass
 
 
-def _populate_from_list(addrs: Sequence[str] | None) -> None:
+def _populate_from_list(addrs: Sequence[str]) -> None:
     """populate local and public IPs from flat list of all IPs"""
+    _populate_from_dict({"all": addrs})
+
+
+def _populate_from_dict(addrs: Mapping[str, Sequence[str]]) -> None:
+    """populate local and public IPs from dict of {'en0': 'ip'}"""
     if not addrs:
-        raise NoIPAddresses
+        raise NoIPAddresses()
 
     global LOCALHOST
     public_ips = []
     local_ips = []
 
-    for ip in addrs:
-        local_ips.append(ip)
-        if not ip.startswith("127."):
-            if not ip.startswith("169.254."):
+    for iface, ip_list in addrs.items():
+        for ip in ip_list:
+            local_ips.append(ip)
+            if not LOCALHOST and (iface.startswith("lo") or ip.startswith("127.")):
+                LOCALHOST = ip
+            if not iface.startswith("lo") and not ip.startswith(("127.", "169.254.")):
                 # don't include link-local address in public_ips
                 public_ips.append(ip)
-        elif not LOCALHOST:
-            LOCALHOST = ip
 
     if not LOCALHOST or LOCALHOST == "127.0.0.1":
         LOCALHOST = "127.0.0.1"
         local_ips.insert(0, LOCALHOST)
 
-    local_ips.extend(["0.0.0.0", ""])  # noqa
+    local_ips.extend(["0.0.0.0", ""])  # noqa: S104
 
     LOCAL_IPS[:] = _uniq_stable(local_ips)
     PUBLIC_IPS[:] = _uniq_stable(public_ips)
@@ -157,65 +162,38 @@ def _load_ips_psutil() -> None:
     """load ip addresses with netifaces"""
     import psutil
 
-    global LOCALHOST
-    local_ips = []
-    public_ips = []
+    addr_dict: dict[str, list[str]] = {}
 
     # dict of iface_name: address_list, eg
     # {"lo": [snicaddr(family=<AddressFamily.AF_INET>, address="127.0.0.1",
     #   ...), snicaddr(family=<AddressFamily.AF_INET6>, ...)]}
     for iface, ifaddresses in psutil.net_if_addrs().items():
-        for address_data in ifaddresses:
-            if address_data.family == socket.AF_INET:
-                addr = address_data.address
-                if not (iface.startswith("lo") or addr.startswith("127.")):
-                    public_ips.append(addr)
-                elif addr.startswith("169.254."):
-                    # don't include link-local address in public_ips
-                    pass
-                elif not LOCALHOST:
-                    LOCALHOST = addr
-                local_ips.append(addr)
-    if not LOCALHOST:
-        # we never found a loopback interface (can this ever happen?), assume common default
-        LOCALHOST = "127.0.0.1"
-        local_ips.insert(0, LOCALHOST)
-    local_ips.extend(["0.0.0.0", ""])  # noqa
-    LOCAL_IPS[:] = _uniq_stable(local_ips)
-    PUBLIC_IPS[:] = _uniq_stable(public_ips)
+        addr_dict[iface] = [
+            address_data.address
+            for address_data in ifaddresses
+            if address_data.family == socket.AF_INET
+        ]
+
+    _populate_from_dict(addr_dict)
 
 
 def _load_ips_netifaces() -> None:
     """load ip addresses with netifaces"""
     import netifaces  # type: ignore[import-not-found]
 
-    global LOCALHOST
-    local_ips = []
-    public_ips = []
+    addr_dict: dict[str, list[str]] = {}
 
     # list of iface names, 'lo0', 'eth0', etc.
     for iface in netifaces.interfaces():
         # list of ipv4 addrinfo dicts
+        addr_dict[iface] = []
+
         ipv4s = netifaces.ifaddresses(iface).get(netifaces.AF_INET, [])
         for entry in ipv4s:
             addr = entry.get("addr")
-            if not addr:
-                continue
-            if not (iface.startswith("lo") or addr.startswith("127.")):
-                public_ips.append(addr)
-            elif addr.startswith("169.254."):
-                # don't include link-local address in public_ips
-                pass
-            elif not LOCALHOST:
-                LOCALHOST = addr
-            local_ips.append(addr)
-    if not LOCALHOST:
-        # we never found a loopback interface (can this ever happen?), assume common default
-        LOCALHOST = "127.0.0.1"
-        local_ips.insert(0, LOCALHOST)
-    local_ips.extend(["0.0.0.0", ""])  # noqa
-    LOCAL_IPS[:] = _uniq_stable(local_ips)
-    PUBLIC_IPS[:] = _uniq_stable(public_ips)
+            if addr:
+                addr_dict[iface].append(addr)
+    _populate_from_dict(addr_dict)
 
 
 def _load_ips_gethostbyname() -> None:
