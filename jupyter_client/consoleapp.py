@@ -306,8 +306,11 @@ class JupyterConsoleApp(ConnectionFileMixin):
                 parent=self,
                 data_dir=self.data_dir,
             )
+            # access kernel_spec to ensure the NoSuchKernel error is raised
+            # if it's going to be
+            kernel_spec = self.kernel_manager.kernel_spec  # noqa: F841
         except NoSuchKernel:
-            self.log.critical("Could not find kernel %s", self.kernel_name)
+            self.log.critical("Could not find kernel %r", self.kernel_name)
             self.exit(1)  # type:ignore[attr-defined]
 
         self.kernel_manager = t.cast(KernelManager, self.kernel_manager)
