@@ -57,6 +57,7 @@ class BlockingKernelClient(KernelClient):
     _recv_reply = run_sync(KernelClient._async_recv_reply)
 
     # replies come on the shell channel
+    fork = reqrep(wrapped, KernelClient.fork)
     execute = reqrep(wrapped, KernelClient.execute)
     history = reqrep(wrapped, KernelClient.history)
     complete = reqrep(wrapped, KernelClient.complete)
