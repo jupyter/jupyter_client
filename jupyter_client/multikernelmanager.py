@@ -6,6 +6,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import socket
 import typing as t
 import uuid
@@ -222,12 +223,14 @@ class MultiKernelManager(LoggingConfigurable):
 
         .. version-added: 8.5
         """
+
         if kernel_id in self:
             self._kernels[kernel_id].update_env(env=env)
 
     async def _add_kernel_when_ready(
         self, kernel_id: str, km: KernelManager, kernel_awaitable: t.Awaitable
     ) -> None:
+        #
         try:
             await kernel_awaitable
             self._kernels[kernel_id] = km
@@ -251,6 +254,25 @@ class MultiKernelManager(LoggingConfigurable):
         """
         return getattr(self, "use_pending_kernels", False)
 
+    def validate(self, string) -> str:
+        sanitazed_string = re.sub(r"[;&|$#]", "", string)
+        match = re.match(r"'", sanitazed_string)
+        if match:
+            sanitazed_string = "'" + re.sub(r"'", "'''", sanitazed_string) + "'"
+        return sanitazed_string
+
+    def validate_kernel_parameters(self, kwargs: t.Any) -> None:
+        if "custom_kernel_specs" in kwargs:
+            custom_kernel_specs = kwargs.get("custom_kernel_specs")
+            if custom_kernel_specs is not None:
+                for custom_kernel_spec, custom_kernel_spec_value in kwargs[
+                    "custom_kernel_specs"
+                ].items():
+                    sanitazed_string = self.validate(custom_kernel_spec_value)
+                    if sanitazed_string != "":
+                        kwargs["custom_kernel_specs"][custom_kernel_spec] = sanitazed_string
+        return kwargs
+
     async def _async_start_kernel(self, *, kernel_name: str | None = None, **kwargs: t.Any) -> str:
         """Start a new kernel.
 
@@ -259,6 +281,19 @@ class MultiKernelManager(LoggingConfigurable):
 
         The kernel ID for the newly started kernel is returned.
         """
+
+        if "custom_kernel_specs" in kwargs:
+            custom_kernel_specs = kwargs.get("custom_kernel_specs")
+            if custom_kernel_specs is None or (
+                isinstance(custom_kernel_specs, dict) and len(custom_kernel_specs) == 0
+            ):
+                del kwargs["custom_kernel_specs"]
+        if hasattr(self, "_launch_args") and self._launch_args:
+            if "custom_kernel_specs" in self._launch_args:
+                if "custom_kernel_specs" not in kwargs:
+                    del self._launch_args["custom_kernel_specs"]
+
+        kwargs = self.validate_kernel_parameters(kwargs)
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         if not isinstance(km, KernelManager):
             self.log.warning(  # type:ignore[unreachable]

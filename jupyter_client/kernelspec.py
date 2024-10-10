@@ -168,6 +168,8 @@ class KernelSpecManager(LoggingConfigurable):
         "whitelist": ("allowed_kernelspecs", "7.0"),
     }
 
+    _allow_insecure_kernelspec_params = False
+
     # Method copied from
     # https://github.com/jupyterhub/jupyterhub/blob/d1a85e53dccfc7b1dd81b0c1985d158cc6b61820/jupyterhub/auth.py#L143-L161
     @observe(*list(_deprecated_aliases))
@@ -228,6 +230,207 @@ class KernelSpecManager(LoggingConfigurable):
         return d
         # TODO: Caching?
 
+    def allow_insecure_kernelspec_params(self, allow_insecure_kernelspec_params):
+        self._allow_insecure_kernelspec_params = allow_insecure_kernelspec_params
+
+    def _check_parameterized_kernel(self, kspec: KernelSpec) -> KernelSpec:
+        is_secure = self.check_kernel_is_secure(kspec=kspec)
+        if is_secure == True:
+            if kspec.metadata and isinstance(kspec.metadata, dict):
+                kspec.metadata.update({"is_secure": True})
+            else:
+                kspec.metadata = {}
+                kspec.metadata.update({"is_secure": True})
+            return kspec  # a kernel spec is allowed
+        else:
+            if kspec.metadata and isinstance(kspec.metadata, dict):
+                kspec.metadata.update({"is_secure": False})
+            else:
+                kspec.metadata = {}
+                kspec.metadata.update({"is_secure": False})
+            if self._allow_insecure_kernelspec_params == True:
+                return kspec  # a kernel spec is allowed
+            else:
+                kspec_data = self.check_kernel_custom_all_default_values(kspec=kspec)
+
+                if kspec_data["all_have_default"] == True:
+                    return kspec_data["kspec"]  # a kernel spec is modyfied and is allowed
+                else:
+                    return None
+
+    def check_kernel_is_secure(self, kspec):
+        is_secure = False
+        total_sum_kernel_variables = self.get_argv_env_kernel_variables(kspec=kspec)
+        if (
+            kspec.metadata
+            and isinstance(kspec.metadata, dict)
+            and "parameters" in kspec.metadata
+            and isinstance(kspec.metadata["parameters"], dict)
+            and "properties" in kspec.metadata["parameters"]
+            and isinstance(kspec.metadata["parameters"]["properties"], dict)
+        ):
+            counter_secure_kernel_variables = self.get_count_secure_kernel_variables(
+                obj=kspec.metadata["parameters"], counter_secure_kernel_variables=0
+            )
+            if total_sum_kernel_variables > 0:
+                if counter_secure_kernel_variables == total_sum_kernel_variables:
+                    is_secure = True
+                else:
+                    is_secure = False
+            else:
+                is_secure = False
+        else:
+            # check if there are kernel variables even metadata.parameters are empty
+            if total_sum_kernel_variables > 0:
+                is_secure = False
+            else:
+                is_secure = True
+        return is_secure
+
+    def get_argv_env_kernel_variables(self, kspec):
+        total_sum_kernel_variables = 0
+        env = None
+        argv = None
+        sum_argv_kernel_variables = 0
+        sum_env_kernel_variables = 0
+        if hasattr(kspec, "env"):
+            env = kspec.env
+            sum_env_kernel_variables = self.get_count_all_kernel_variables(parameters=env)
+        if hasattr(kspec, "argv"):
+            argv = kspec.argv
+            sum_argv_kernel_variables = self.get_count_all_kernel_variables(parameters=argv)
+        total_sum_kernel_variables = sum_env_kernel_variables + sum_argv_kernel_variables
+        return total_sum_kernel_variables
+
+    def get_count_secure_kernel_variables(self, obj, counter_secure_kernel_variables):
+        is_secure = True
+        if "properties" in obj:
+            propetries = obj["properties"].items()
+            if len(propetries) > 0:
+                for property_key, property_value in propetries:
+                    if (
+                        property_value.get("type") == "string"
+                        or property_value.get("type") == "null"
+                    ):
+                        if property_value.get("enum"):
+                            counter_secure_kernel_variables = counter_secure_kernel_variables + 1
+                        else:
+                            is_secure = False
+                    elif property_value.get("type") == "array":
+                        print("Type of JSON Schema data is array and it is not supported now")
+                        is_secure = False
+                    elif property_value.get("enum"):
+                        counter_secure_kernel_variables = counter_secure_kernel_variables + 1
+                    elif property_value.get("type") == "object":
+                        counter_secure_kernel_variables = self.get_count_secure_kernel_variables(
+                            obj=obj, counter_secure_kernel_variables=counter_secure_kernel_variables
+                        )
+
+        if is_secure == False:
+            counter_secure_kernel_variables = 0
+
+        return counter_secure_kernel_variables
+
+    def get_count_all_kernel_variables(self, parameters):
+        sum = 0
+        if isinstance(parameters, list):
+            for argv_item in parameters:
+                is_variable = self.has_variable(argv_item)
+                if is_variable:
+                    sum = sum + 1
+        elif isinstance(parameters, dict):
+            for env_key, env_item in parameters.items():
+                is_variable = self.has_variable(env_item)
+                if is_variable:
+                    sum = sum + 1
+        return sum
+
+    def has_variable(self, string: str):
+        pattern = re.compile(r"\{connection_file\}")
+        match = pattern.match(string)
+        if match is None:
+            pattern = re.compile(r"\{([A-Za-z0-9_]+)\}")
+            matches = pattern.findall(string)
+            if len(matches) > 0:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def check_kernel_custom_all_default_values(self, kspec):
+        if (
+            kspec.metadata
+            and isinstance(kspec.metadata, dict)
+            and "parameters" in kspec.metadata
+            and isinstance(kspec.metadata["parameters"], dict)
+            and "properties" in kspec.metadata["parameters"]
+            and isinstance(kspec.metadata["parameters"]["properties"], dict)
+        ):
+            has_default = True
+            propetries = kspec.metadata["parameters"]["properties"].items()
+
+            new_kspec = {}
+            for property_key, property_value in propetries:
+                if "default" in property_value:
+                    new_kspec = self.replaceByDefault(
+                        kspec, property_key, property_value["default"]
+                    )
+                else:
+                    has_default = False
+
+            if has_default == False:
+                result = {"kspec": kspec, "all_have_default": False}
+            else:
+                # check if there is anything after replacing
+                total_sum_kernel_variables = self.get_argv_env_kernel_variables(kspec=new_kspec)
+
+                if total_sum_kernel_variables > 0:
+                    result = {"kspec": kspec, "all_have_default": False}
+                else:
+                    result = {"kspec": new_kspec, "all_have_default": True}
+        else:
+            result = {"kspec": kspec, "all_have_default": False}
+        return result
+
+    def replace_spec_parameter(self, variable, value, spec) -> str:
+        regexp = r"\{" + variable + "\\}"
+        pattern = re.compile(regexp)
+        return pattern.sub(value, spec)
+
+    def replaceByDefault(self, kspec, kernel_variable, default_value):
+        new_env = {}
+        new_argv = []
+        if hasattr(kspec, "env"):
+            tmp_env = kspec.env.copy()
+            if "env" in tmp_env:
+                env = tmp_env.env
+                # check and replace env variables
+
+                for env_key, env_item in env.items():
+                    new_env_item = self.replace_spec_parameter(
+                        kernel_variable, default_value, env_item
+                    )
+                    new_env[env_key] = new_env_item
+
+                if len(new_env) > 0:
+                    tmp_env.update(new_env)
+                    kspec.env = tmp_env
+
+        # check and replace argv parameters
+        if hasattr(kspec, "argv") and kspec.argv is not None:
+            argv = kspec.argv.copy()
+            for argv_item in argv:
+                new_argv_item = self.replace_spec_parameter(
+                    kernel_variable, default_value, argv_item
+                )
+                new_argv.append(new_argv_item)
+
+            if len(new_argv) > 0:
+                argv = new_argv
+                kspec.argv = new_argv
+        return kspec
+
     def _get_kernel_spec_by_name(self, kernel_name: str, resource_dir: str) -> KernelSpec:
         """Returns a :class:`KernelSpec` instance for a given kernel_name
         and resource_dir.
@@ -249,7 +452,12 @@ class KernelSpecManager(LoggingConfigurable):
         if not KPF.instance(parent=self.parent).is_provisioner_available(kspec):
             raise NoSuchKernel(kernel_name)
 
-        return kspec
+        kspec = self._check_parameterized_kernel(kspec)
+
+        if kspec is not None:
+            return kspec
+        else:
+            return None
 
     def _find_spec_directory(self, kernel_name: str) -> str | None:
         """Find the resource directory of a named kernel spec"""
@@ -309,8 +517,8 @@ class KernelSpecManager(LoggingConfigurable):
                     # which may have overridden find_kernel_specs
                     # and get_kernel_spec, but not the newer get_all_specs
                     spec = self.get_kernel_spec(kname)
-
-                res[kname] = {"resource_dir": resource_dir, "spec": spec.to_dict()}
+                if spec != None:
+                    res[kname] = {"resource_dir": resource_dir, "spec": spec.to_dict()}
             except NoSuchKernel:
                 pass  # The appropriate warning has already been logged
             except Exception:

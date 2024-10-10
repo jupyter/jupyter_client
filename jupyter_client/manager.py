@@ -228,6 +228,8 @@ class KernelManager(ConnectionFileMixin):
 
     shutting_down: bool = False
 
+    custom_kernel_default_value: dict = {}
+
     def __del__(self) -> None:
         self._close_control_socket()
         self.cleanup_connection_file()
@@ -292,20 +294,118 @@ class KernelManager(ConnectionFileMixin):
 
         .. version-added: 8.5
         """
+
         # Mypy think this is unreachable as it see _launch_args as Dict, not t.Dict
         if (
             isinstance(self._launch_args, dict)
             and "env" in self._launch_args
             and isinstance(self._launch_args["env"], dict)  # type: ignore [unreachable]
         ):
+            # if self._launch_args["env"] has custom kernel variable for env but env does not have then we have to fill env with it
+            if "custom_kernel_specs" in self._launch_args:
+                saved_env = self._launch_args.get("env", {})
+                custom_kernel_dict = self._launch_args["custom_kernel_specs"]
+                if isinstance(custom_kernel_dict, dict):
+                    for key, value in custom_kernel_dict.items():
+                        if key in saved_env and key not in env:
+                            env[key] = saved_env[key]
+
+            # check whether env has custom kernel spec variables
+            env = self.update_custom_env_parameters(env=env)
+
             self._launch_args["env"].update(env)  # type: ignore [unreachable]
+
+    def update_custom_env_parameters(self, env: t.Dict[str, str]) -> t.Dict[str, str]:
+        newEnv = {}
+        custom_kernel_dict = {}
+        if "custom_kernel_specs" in self._launch_args:
+            custom_kernel_dict = self._launch_args["custom_kernel_specs"]
+            # check is custom kernel variables are full if not then we should take default ones
+            if self.custom_kernel_default_value:
+                for key, value in self.custom_kernel_default_value.items():
+                    if isinstance(custom_kernel_dict, dict) and key not in custom_kernel_dict:
+                        custom_kernel_dict[key] = value
+        elif self.custom_kernel_default_value:
+            # if not but default values are present into a kernel.json file then we have to take them
+            custom_kernel_dict = self.custom_kernel_default_value
+
+        if isinstance(custom_kernel_dict, dict) and len(custom_kernel_dict) > 0:
+            for custom_kernel_spec, custom_kernel_spec_value in custom_kernel_dict.items():
+                for env_key, env_item in env.items():
+                    kernel_spec_item = self.replace_spec_parameter(
+                        custom_kernel_spec, custom_kernel_spec_value, env_item
+                    )
+                    newEnv[env_key] = kernel_spec_item
+        else:
+            # check whether there are custom kernel spec variables into kernel.json,
+            # if yes but a user has not configured them and default ones are not present ,
+            # we should clean them
+            newEnv = self.clear_custom_kernel_parameters(env)
+
+        if len(newEnv) > 0:
+            env = self.clear_custom_kernel_parameters(newEnv)
+        else:
+            env = self.clear_custom_kernel_parameters(env)
+
+        return env
+
+    def replace_spec_parameter(self, variable, value, spec) -> str:
+        regexp = r"\{" + variable + "\\}"
+        pattern = re.compile(regexp)
+        return pattern.sub(value, spec)
+
+    def check_existence_custom_kernel_spec(self, item: str):
+        pattern = re.compile(r"\{([A-Za-z0-9_]+)\}")
+        matches = pattern.findall(item)
+        isMatch = False
+        if len(matches) > 0:
+            isMatch = True
+        return isMatch
+
+    # Clear kernel specs files if user has not configured them themselves
+    # we should return only that has not kernel custom variables
+    # if there are no metadata specification for custom kernel
+
+    def clear_custom_kernel_parameters(self, kernel_parameters: t.Any) -> t.Any:
+        clean_parameters = None
+        if isinstance(kernel_parameters, list):
+            clean_parameters = []
+            for argv_item in kernel_parameters:
+                isMatch = self.check_existence_custom_kernel_spec(argv_item)
+                if not isMatch:
+                    clean_parameters.append(argv_item)
+        elif isinstance(kernel_parameters, dict):
+            clean_parameters = {}
+            for env_key, env_item in kernel_parameters.items():
+                isMatch = self.check_existence_custom_kernel_spec(env_item)
+                if not isMatch:
+                    clean_parameters[env_key] = env_item
+        if len(clean_parameters) == 0:
+            clean_parameters = kernel_parameters
+        return clean_parameters
+
+    def get_default_custom_kernel_specs_value(self):
+        assert self.kernel_spec is not None
+        custom_kernel_default_value = {}
+        if (
+            self.kernel_spec.metadata
+            and isinstance(self.kernel_spec.metadata, dict)
+            and "parameters" in self.kernel_spec.metadata
+            and isinstance(self.kernel_spec.metadata["parameters"], dict)
+            and "properties" in self.kernel_spec.metadata["parameters"]
+            and isinstance(self.kernel_spec.metadata["parameters"]["properties"], dict)
+        ):
+            propetries = self.kernel_spec.metadata["parameters"]["properties"].items()
+            for property_key, property_value in propetries:
+                if "default" in property_value:
+                    custom_kernel_default_value[property_key] = property_value["default"]
+        self.custom_kernel_default_value = custom_kernel_default_value
 
     def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
         """Replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
         assert self.kernel_spec is not None
         cmd = self.kernel_spec.argv + extra_arguments
-
         if cmd and cmd[0] in {
             "python",
             "python%i" % sys.version_info[0],
@@ -329,10 +429,25 @@ class KernelManager(ConnectionFileMixin):
             "prefix": sys.prefix,
         }
 
+        # Updating ns if there are custom kernel specs variables
+        custom_kernel_dict = {}
+        if "custom_kernel_specs" in self._launch_args:
+            custom_kernel_dict = self._launch_args["custom_kernel_specs"]
+            if self.custom_kernel_default_value:
+                for key, value in self.custom_kernel_default_value.items():
+                    if isinstance(custom_kernel_dict, dict) and key not in custom_kernel_dict:
+                        custom_kernel_dict[key] = value
+        elif self.custom_kernel_default_value:
+            # if not but default values are present into a kernel.json file then we have to take them
+            custom_kernel_dict = self.custom_kernel_default_value
+
+        if isinstance(custom_kernel_dict, dict) and len(custom_kernel_dict) > 0:
+            for custom_kernel_spec_key, custom_kernel_spec_value in custom_kernel_dict.items():
+                ns[custom_kernel_spec_key] = custom_kernel_spec_value
+
         if self.kernel_spec:  # type:ignore[truthy-bool]
             ns["resource_dir"] = self.kernel_spec.resource_dir
         assert isinstance(self._launch_args, dict)
-
         ns.update(self._launch_args)
 
         pat = re.compile(r"\{([A-Za-z0-9_]+)\}")
@@ -350,6 +465,7 @@ class KernelManager(ConnectionFileMixin):
         Note that provisioners can now be used to customize kernel environments
         and
         """
+        #
         assert self.provisioner is not None
         connection_info = await self.provisioner.launch_kernel(kernel_cmd, **kw)
         assert self.provisioner.has_process
@@ -391,6 +507,8 @@ class KernelManager(ConnectionFileMixin):
         # save kwargs for use in restart
         # assigning Traitlets Dicts to Dict make mypy unhappy but is ok
         self._launch_args = kw.copy()  # type:ignore [assignment]
+        #
+
         if self.provisioner is None:  # will not be None on restarts
             self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
                 self.kernel_id,
@@ -398,7 +516,14 @@ class KernelManager(ConnectionFileMixin):
                 parent=self,
             )
         kw = await self.provisioner.pre_launch(**kw)
+        # update env
+        if "env" in kw:
+            kw["env"] = self.update_custom_env_parameters(env=kw["env"])
+            self._launch_args["env"].update(kw["env"])
         kernel_cmd = kw.pop("cmd")
+        if "custom_kernel_specs" in kw:
+            del kw["custom_kernel_specs"]
+
         return kernel_cmd, kw
 
     pre_start_kernel = run_sync(_async_pre_start_kernel)
@@ -432,6 +557,7 @@ class KernelManager(ConnectionFileMixin):
              and launching the kernel (e.g. Popen kwargs).
         """
         self._attempted_start = True
+
         kernel_cmd, kw = await self._async_pre_start_kernel(**kw)
 
         # launch the kernel subprocess
@@ -549,7 +675,6 @@ class KernelManager(ConnectionFileMixin):
             # the kernel a chance to properly execute shutdown actions. Wait for at
             # most 1s, checking every 0.1s.
             await self._async_finish_shutdown(restart=restart)
-
         await self._async_cleanup_resources(restart=restart)
 
     shutdown_kernel = run_sync(_async_shutdown_kernel)
@@ -593,6 +718,7 @@ class KernelManager(ConnectionFileMixin):
 
         # Start new kernel.
         self._launch_args.update(kw)
+
         await self._async_start_kernel(**self._launch_args)
 
     restart_kernel = run_sync(_async_restart_kernel)
