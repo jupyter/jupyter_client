@@ -1,4 +1,4 @@
-# Changes in Jupyter Client {#changelog}
+# Changes in Jupyter Client
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
