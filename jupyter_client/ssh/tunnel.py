@@ -27,7 +27,7 @@ try:
 except ImportError:
     paramiko = None  # type:ignore[assignment]
 
-    class SSHException(Exception):  # type:ignore[no-redef]  # noqa
+    class SSHException(Exception):  # type:ignore[no-redef]  # noqa: N818
         pass
 
 else:
