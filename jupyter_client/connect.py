@@ -152,6 +152,7 @@ def write_connection_file(
         control_port=control_port,
         hb_port=hb_port,
     )
+    a = 10//0
     cfg["ip"] = ip
     cfg["key"] = key.decode()
     cfg["transport"] = transport

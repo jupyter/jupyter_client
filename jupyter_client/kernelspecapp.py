@@ -44,6 +44,7 @@ class ListKernelSpecs(JupyterApp):
     def start(self):
         paths = self.kernel_spec_manager.find_kernel_specs()
         specs = self.kernel_spec_manager.get_all_specs()
+        return
         if not self.json_output:
             if not specs:
                 print("No kernels available")

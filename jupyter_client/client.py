@@ -203,7 +203,7 @@ class KernelClient(ConnectionFileMixin):
                 if channel == "control":
                     reply = await self._async_get_control_msg(timeout=timeout)
                 else:
-                    reply = await self._async_get_shell_msg(timeout=timeout)
+                    reply = await self._async_ll_msg(timeout=timeout)
             except Empty as e:
                 raise TimeoutError("Timeout waiting for reply") from e
             if reply["parent_header"].get("msg_id") != msg_id:
