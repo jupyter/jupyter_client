@@ -7,8 +7,9 @@ import os
 import re
 import socket
 import subprocess
+from collections.abc import Iterable, Mapping, Sequence
 from subprocess import PIPE, Popen
-from typing import Any, Callable, Iterable, Mapping, Sequence
+from typing import Any, Callable
 from warnings import warn
 
 LOCAL_IPS: list[str] = []

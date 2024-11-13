@@ -262,9 +262,7 @@ class MultiKernelManager(LoggingConfigurable):
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         if not isinstance(km, KernelManager):
             self.log.warning(  # type:ignore[unreachable]
-                "Kernel manager class ({km_class}) is not an instance of 'KernelManager'!".format(
-                    km_class=self.kernel_manager_class.__class__
-                )
+                f"Kernel manager class ({self.kernel_manager_class.__class__}) is not an instance of 'KernelManager'!"
             )
         kwargs["kernel_id"] = kernel_id  # Make kernel_id available to manager and provisioner
 

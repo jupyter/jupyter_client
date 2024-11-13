@@ -7,7 +7,7 @@ import time
 from concurrent.futures import Future
 from functools import partial
 from threading import Thread
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import zmq
 from tornado.ioloop import IOLoop
@@ -118,7 +118,7 @@ class ThreadedZMQSocketChannel:
                 pass
             self.socket = None
 
-    def send(self, msg: Dict[str, Any]) -> None:
+    def send(self, msg: dict[str, Any]) -> None:
         """Queue a message to be sent from the IOLoop's thread.
 
         Parameters
@@ -136,7 +136,7 @@ class ThreadedZMQSocketChannel:
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)
 
-    def _handle_recv(self, msg_list: List) -> None:
+    def _handle_recv(self, msg_list: list) -> None:
         """Callback for stream.on_recv.
 
         Unpacks message, and calls handlers with it.
@@ -150,7 +150,7 @@ class ThreadedZMQSocketChannel:
             self._inspect(msg)  # type:ignore[unreachable]
         self.call_handlers(msg)
 
-    def call_handlers(self, msg: Dict[str, Any]) -> None:
+    def call_handlers(self, msg: dict[str, Any]) -> None:
         """This method is called in the ioloop thread when a message arrives.
 
         Subclasses should override this method to handle incoming messages.
@@ -322,7 +322,7 @@ class ThreadedKernelClient(KernelClient):
 
         super().start_channels(shell, iopub, stdin, hb, control)
 
-    def _check_kernel_info_reply(self, msg: Dict[str, Any]) -> None:
+    def _check_kernel_info_reply(self, msg: dict[str, Any]) -> None:
         """This is run in the ioloop thread when the kernel info reply is received"""
         if msg["msg_type"] == "kernel_info_reply":
             self._handle_kernel_info_reply(msg)

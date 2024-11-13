@@ -6,7 +6,7 @@ utils:
 from __future__ import annotations
 
 import os
-from typing import Sequence
+from collections.abc import Sequence
 
 from jupyter_core.utils import ensure_async, run_sync  # noqa: F401  # noqa: F401
 

@@ -1,6 +1,6 @@
 """The version information for jupyter client."""
 import re
-from typing import List, Union
+from typing import Union
 
 __version__ = "8.6.3"
 
@@ -8,7 +8,7 @@ __version__ = "8.6.3"
 pattern = r"(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)(?P<rest>.*)"
 match = re.match(pattern, __version__)
 if match:
-    parts: List[Union[int, str]] = [int(match[part]) for part in ["major", "minor", "patch"]]
+    parts: list[Union[int, str]] = [int(match[part]) for part in ["major", "minor", "patch"]]
     if match["rest"]:
         parts.append(match["rest"])
 else:

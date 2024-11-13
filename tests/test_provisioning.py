@@ -7,7 +7,7 @@ import os
 import signal
 import sys
 from subprocess import PIPE
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import pytest
 from jupyter_core import paths
@@ -93,7 +93,7 @@ class CustomTestProvisioner(KernelProvisionerBase):  # type:ignore
         if self.process:
             self.process.terminate()
 
-    async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
+    async def pre_launch(self, **kwargs: Any) -> dict[str, Any]:
         km = self.parent
         if km:
             # save kwargs for use in restart
@@ -112,7 +112,7 @@ class CustomTestProvisioner(KernelProvisionerBase):  # type:ignore
             return await super().pre_launch(cmd=kernel_cmd, **kwargs)
         return {}
 
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
+    async def launch_kernel(self, cmd: list[str], **kwargs: Any) -> KernelConnectionInfo:
         scrubbed_kwargs = kwargs
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
@@ -200,7 +200,7 @@ initial_provisioner_map = {
 }
 
 
-def mock_get_all_provisioners() -> List[EntryPoint]:
+def mock_get_all_provisioners() -> list[EntryPoint]:
     result = []
     for name, epstr in initial_provisioner_map.items():
         result.append(EntryPoint(name, epstr, KernelProvisionerFactory.GROUP_NAME))

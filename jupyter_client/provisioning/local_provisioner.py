@@ -5,7 +5,7 @@ import asyncio
 import os
 import signal
 import sys
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
@@ -154,7 +154,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                     assert isinstance(port, int)
                 lpc.return_port(port)
 
-    async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
+    async def pre_launch(self, **kwargs: Any) -> dict[str, Any]:
         """Perform any steps in preparation for kernel process launch.
 
         This includes applying additional substitutions to the kernel launch command and env.
@@ -204,7 +204,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
 
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
+    async def launch_kernel(self, cmd: list[str], **kwargs: Any) -> KernelConnectionInfo:
         """Launch a kernel with a command."""
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
@@ -220,21 +220,21 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         return self.connection_info
 
     @staticmethod
-    def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def _scrub_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
         """Remove any keyword arguments that Popen does not tolerate."""
-        keywords_to_scrub: List[str] = ["extra_arguments", "kernel_id"]
+        keywords_to_scrub: list[str] = ["extra_arguments", "kernel_id"]
         scrubbed_kwargs = kwargs.copy()
         for kw in keywords_to_scrub:
             scrubbed_kwargs.pop(kw, None)
         return scrubbed_kwargs
 
-    async def get_provisioner_info(self) -> Dict:
+    async def get_provisioner_info(self) -> dict:
         """Captures the base information necessary for persistence relative to this instance."""
         provisioner_info = await super().get_provisioner_info()
         provisioner_info.update({"pid": self.pid, "pgid": self.pgid, "ip": self.ip})
         return provisioner_info
 
-    async def load_provisioner_info(self, provisioner_info: Dict) -> None:
+    async def load_provisioner_info(self, provisioner_info: dict) -> None:
         """Loads the base information necessary for persistence relative to this instance."""
         await super().load_provisioner_info(provisioner_info)
         self.pid = provisioner_info["pid"]
