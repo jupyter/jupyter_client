@@ -5,17 +5,17 @@ import os
 import sys
 import warnings
 from subprocess import PIPE, Popen
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from traitlets.log import get_logger
 
 
 def launch_kernel(
-    cmd: List[str],
+    cmd: list[str],
     stdin: Optional[int] = None,
     stdout: Optional[int] = None,
     stderr: Optional[int] = None,
-    env: Optional[Dict[str, str]] = None,
+    env: Optional[dict[str, str]] = None,
     independent: bool = False,
     cwd: Optional[str] = None,
     **kw: Any,
@@ -65,6 +65,8 @@ def launch_kernel(
     # If this process in running on pythonw, we know that stdin, stdout, and
     # stderr are all invalid.
     redirect_out = sys.executable.endswith("pythonw.exe")
+    _stdout: Any
+    _stderr: Any
     if redirect_out:
         blackhole = open(os.devnull, "w")  # noqa
         _stdout = blackhole if stdout is None else stdout

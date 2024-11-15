@@ -39,18 +39,17 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version:
-          - "3.8"
-          - "3.12"
-          - "3.13-dev"
+          - "3.9"
+          - "3.13"
         include:
           - os: windows-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "pypy-3.10"
+          - os: ubuntu-latest
             python-version: "3.11"
-          - os: ubuntu-latest
-            python-version: "pypy-3.9"
-          - os: ubuntu-latest
-            python-version: "3.10"
           - os: macos-latest
-            python-version: "3.9"
+            python-version: "3.10"
     steps:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1

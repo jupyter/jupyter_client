@@ -241,7 +241,7 @@ class KernelClient(ConnectionFileMixin):
         prompt = getpass if content.get("password", False) else input
 
         try:
-            raw_data = prompt(content["prompt"])  # type:ignore[operator]
+            raw_data = prompt(content["prompt"])
         except EOFError:
             # turn EOFError into EOF character
             raw_data = "\x04"
