@@ -118,6 +118,8 @@ so that frontends can label the various messages in a meaningful way.
         "msg_type": str,
         # the message protocol version
         "version": "5.0",
+        # Optional subshell_id
+        "subshell_id": str | None,
     }
 
 .. note::
@@ -139,6 +141,11 @@ so that frontends can label the various messages in a meaningful way.
     from the kernel have a different kernel session id than prior to the disconnect,
     the client should assume that the kernel was restarted.
 
+    The ``subshell_id`` is only used in shell messages of kernels that support
+    subshells (:ref:`kernel_subshells`). If it is not included or is ``None`` then the
+    shell message is handled by the parent subshell (main shell), if it is a string
+    subshell id then it is handled by the subshell with that id.
+
 .. versionchanged:: 5.0
 
     ``version`` key added to the header.
@@ -149,6 +156,10 @@ so that frontends can label the various messages in a meaningful way.
     but it has always been in the canonical implementation,
     so implementers are strongly encouraged to include it.
     It will be mandatory in 5.1.
+
+.. versionchanged:: 5.5
+
+    ``subshell_id`` added to the header.
 
 Parent header
 -------------
@@ -997,7 +1008,8 @@ Message type: ``kernel_info_reply``::
         'banner': str,
 
         # A boolean flag which tells if the kernel supports debugging in the notebook.
-        # Default is False
+        # Default is False.
+        # Deprecated as replaced by 'supported_features'=['debugger'] (see below).
         'debugger': bool,
 
         # Optional: A list of dictionaries, each with keys 'text' and 'url'.
@@ -1005,6 +1017,11 @@ Message type: ``kernel_info_reply``::
         'help_links': [
             {'text': str, 'url': str}
         ],
+
+        # Optional: A list of optional features such as 'debugger' and
+        # 'kernel subshells'. Introduced by Jupyter Enhancement Proposal 92
+        # https://github.com/jupyter/enhancement-proposals/pull/92
+        'supported_features': [str]
     }
 
 Refer to the lists of available `Pygments lexers <http://pygments.org/docs/lexers/>`_
@@ -1030,6 +1047,10 @@ and `codemirror modes <http://codemirror.net/mode/index.html>`_ for those fields
 .. versionchanged:: 5.0
 
     ``language`` moved to ``language_info.name``
+
+.. versionchanged:: 5.5
+
+    ``supported_features`` added and ``debugger`` deprecated.
 
 Messages on the Control (ROUTER/DEALER) channel
 ===============================================
@@ -1309,6 +1330,86 @@ of the debugger to the ``global`` scope to inspect it after debug session.
             'type': str,
             'variablesReference': int
         }
+    }
+
+.. versionadded:: 5.5
+
+.. _kernel_subshells:
+
+Kernel subshells
+----------------
+
+Kernel subshells are separate threads of execution within the same kernel process that
+were introduced by
+`Jupyter Enhancement Proposal 91 <https://github.com/jupyter/enhancement-proposals/pull/91>`_.
+Kernels supporting subshells must return ``'supported_features'=['kernel subshells']``
+in :ref:`kernel info <msging_kernel_info>` reply messages.
+
+Create subshell
+~~~~~~~~~~~~~~~
+
+In a kernel that supports subshells, this creates a new subshell (running in a separate thread)
+and returns its unique id. In a kernel that does not support subshells an error is logged and
+no reply is sent.
+
+Message type: ``create_subshell_request``::
+
+    content = {
+    }
+
+Message type: ``create_subshell_reply``::
+
+    content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status' : 'ok',
+
+        # The id of the subshell, unique within the kernel.
+        'subshell_id': str,
+    }
+
+.. versionadded:: 5.5
+
+Delete subshell
+~~~~~~~~~~~~~~~
+
+In a kernel that supports subshells, this deletes a subshell identified by its unique id.
+In a kernel that does not support subshells an error is logged and no reply is sent.
+
+Message type: ``delete_subshell_request``::
+
+    content = {
+        # The id of the subshell.
+        'subshell_id': str
+    }
+
+Message type: ``delete_subshell_reply``::
+
+    content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status': 'ok',
+    }
+
+.. versionadded:: 5.5
+
+List subshell
+~~~~~~~~~~~~~
+
+In a kernel that supports subshells, this returns a list of the ids of all subshells that exist
+in that kernel. In a kernel that does not support subshells an error is logged and no reply is sent.
+
+Message type: ``list_subshell_request``::
+
+    content = {
+    }
+
+Message type: ``list_subshell_reply``::
+
+    content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status': 'ok',
+
+        # A list of subshell ids.
+        'subshell_id': [str]
     }
 
 .. versionadded:: 5.5
@@ -1755,6 +1856,10 @@ Changelog
 
 - Added ``debug_request/reply`` messages
 - Added ``debug_event`` message
+- Added ``supported_features`` in :ref:`kernel info <msging_kernel_info>` reply messages.
+- Deprecated ``debugger`` in :ref:`kernel info <msging_kernel_info>` reply messages as
+  replaced with ``supported_features``.
+- Added ``create_subshell``, ``delete_subshell`` and ``list_subshell`` messages.
 
 5.4
 ---
