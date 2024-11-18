@@ -282,3 +282,6 @@ exclude = ["docs", "test"]
 
 [tool.repo-review]
 ignore = ["GH102"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
