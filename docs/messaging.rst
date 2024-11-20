@@ -97,7 +97,7 @@ Message Header
 --------------
 
 The message ``header`` contains information about the message,
-such as unique identifiers for the originating session and the actual message id,
+such as unique identifiers for the originating session and the actual message ID,
 the type of message, the version of the Jupyter protocol,
 and the date the message was created.
 In addition, there is a username field, e.g. for the process that generated the
@@ -124,27 +124,27 @@ so that frontends can label the various messages in a meaningful way.
 
 .. note::
 
-    The ``session`` id in a message header identifies a unique entity with state,
+    The ``session`` ID in a message header identifies a unique entity with state,
     such as a kernel process or client process.
 
-    A client session id, in message headers from a client, should be unique among
+    A client session ID, in message headers from a client, should be unique among
     all clients connected to a kernel. When a client reconnects to a kernel, it
-    should use the same client session id in its message headers. When a client
-    restarts, it should generate a new client session id.
+    should use the same client session ID in its message headers. When a client
+    restarts, it should generate a new client session ID.
 
-    A kernel session id, in message headers from a kernel, should identify a
-    particular kernel process. If a kernel is restarted, the kernel session id
+    A kernel session ID, in message headers from a kernel, should identify a
+    particular kernel process. If a kernel is restarted, the kernel session ID
     should be regenerated.
 
-    The session id in a message header can be used to identify the sending entity.
+    The session ID in a message header can be used to identify the sending entity.
     For example, if a client disconnects and reconnects to a kernel, and messages
-    from the kernel have a different kernel session id than prior to the disconnect,
+    from the kernel have a different kernel session ID than prior to the disconnect,
     the client should assume that the kernel was restarted.
 
     The ``subshell_id`` is only used in shell messages of kernels that support
     subshells (:ref:`kernel_subshells`). If it is not included or is ``None`` then the
     shell message is handled by the parent subshell (main shell), if it is a string
-    subshell id then it is handled by the subshell with that id.
+    subshell ID then it is handled by the subshell with that ID.
 
 .. versionchanged:: 5.0
 
@@ -924,7 +924,7 @@ Message type: ``comm_info_reply``::
         # 'ok' if the request succeeded or 'error', with error information as in all other replies.
         'status' : 'ok',
 
-        # A dictionary of the comms, indexed by uuids.
+        # A dictionary of the comms, indexed by UUIDs.
         'comms': {
             comm_id: {
                 'target_name': str,
@@ -1349,7 +1349,7 @@ Create subshell
 ~~~~~~~~~~~~~~~
 
 In a kernel that supports subshells, this creates a new subshell (running in a separate thread)
-and returns its unique id. In a kernel that does not support subshells an error is logged and
+and returns its unique ID. In a kernel that does not support subshells an error is logged and
 no reply is sent.
 
 Message type: ``create_subshell_request``::
@@ -1363,7 +1363,7 @@ Message type: ``create_subshell_reply``::
         # 'ok' if the request succeeded or 'error', with error information as in all other replies.
         'status' : 'ok',
 
-        # The id of the subshell, unique within the kernel.
+        # The ID of the subshell, unique within the kernel.
         'subshell_id': str,
     }
 
@@ -1372,13 +1372,13 @@ Message type: ``create_subshell_reply``::
 Delete subshell
 ~~~~~~~~~~~~~~~
 
-In a kernel that supports subshells, this deletes a subshell identified by its unique id.
+In a kernel that supports subshells, this deletes a subshell identified by its unique ID.
 In a kernel that does not support subshells an error is logged and no reply is sent.
 
 Message type: ``delete_subshell_request``::
 
     content = {
-        # The id of the subshell.
+        # The ID of the subshell.
         'subshell_id': str
     }
 
@@ -1394,7 +1394,7 @@ Message type: ``delete_subshell_reply``::
 List subshell
 ~~~~~~~~~~~~~
 
-In a kernel that supports subshells, this returns a list of the ids of all subshells that exist
+In a kernel that supports subshells, this returns a list of the IDs of all subshells that exist
 in that kernel. In a kernel that does not support subshells an error is logged and no reply is sent.
 
 Message type: ``list_subshell_request``::
@@ -1408,7 +1408,7 @@ Message type: ``list_subshell_reply``::
         # 'ok' if the request succeeded or 'error', with error information as in all other replies.
         'status': 'ok',
 
-        # A list of subshell ids.
+        # A list of subshell IDs.
         'subshell_id': [str]
     }
 
