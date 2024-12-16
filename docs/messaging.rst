@@ -1342,7 +1342,7 @@ Kernel subshells
 Kernel subshells are separate threads of execution within the same kernel process that
 were introduced by
 `Jupyter Enhancement Proposal 91 <https://github.com/jupyter/enhancement-proposals/pull/91>`_.
-Kernels supporting subshells must return ``'supported_features'=['kernel subshells']``
+Kernels supporting subshells must include ``'kernel subshells'`` in ``'supported_features'``
 in :ref:`kernel info <msging_kernel_info>` reply messages.
 
 Create subshell
