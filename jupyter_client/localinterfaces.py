@@ -160,7 +160,7 @@ def _load_ips_ipconfig() -> None:
 
 
 def _load_ips_psutil() -> None:
-    """load ip addresses with netifaces"""
+    """load ip addresses with psutil"""
     import psutil
 
     addr_dict: dict[str, list[str]] = {}
