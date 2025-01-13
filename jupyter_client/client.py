@@ -3,7 +3,9 @@
 # Distributed under the terms of the Modified BSD License.
 import asyncio
 import inspect
+import re
 import sys
+import textwrap
 import time
 import typing as t
 from functools import partial
@@ -35,6 +37,23 @@ def validate_string_dict(dct: t.Dict[str, str]) -> None:
             raise ValueError("value %r in dict must be a string" % v)
 
 
+def get_docstring_indent(doc: str) -> str:
+    # Python 3.13 dedents docstrings automatically.
+    # In this module, the docstring indent is the indent of the
+    # first non-blank line after the initial line, which is returned
+    # as a whitespace string.
+    # This is not a general method for determining the indent of a docstring!
+    # See the source code of textwrap.dedent() for that.
+    doclines = doc.split("\n")
+    for line in doclines[1:]:
+        if re.match(r"\s*$", line):
+            continue
+        linematch = re.match(r"(\s*)\S", line)
+        return linematch.group(1)
+    # If there was no content in the docstring beyond the initial line
+    return ""
+
+
 def reqrep(wrapped: t.Callable, meth: t.Callable, channel: str = "shell") -> t.Callable:
     wrapped = wrapped(meth, channel)
     if not meth.__doc__:
@@ -42,31 +61,34 @@ def reqrep(wrapped: t.Callable, meth: t.Callable, channel: str = "shell") -> t.C
         # so don't bother building the wrapped docstring
         return wrapped
 
-    basedoc, _ = meth.__doc__.split("Returns\n", 1)
-    parts = [basedoc.strip()]
-    if "Parameters" not in basedoc:
-        parts.append(
-            """
+    params_header = """\
         Parameters
         ----------
         """
-        )
-    parts.append(
-        """
-        reply: bool (default: False)
+    returns_doc = """\
+        reply : bool (default: False)
             Whether to wait for and return reply
-        timeout: float or None (default: None)
+
+        timeout : float or None (default: None)
             Timeout to use when waiting for a reply
 
         Returns
         -------
-        msg_id: str
+        msg_id : str
             The msg_id of the request sent, if reply=False (default)
-        reply: dict
+
+        reply : dict
             The reply message for this request, if reply=True
-    """
-    )
-    wrapped.__doc__ = "\n".join(parts)
+        """
+
+    basedoc, _ = meth.__doc__.split("Returns\n", 1)
+    parts = [basedoc.strip()]
+    indent = get_docstring_indent(basedoc)
+    if "Parameters" not in basedoc:
+        parts.append(textwrap.indent(textwrap.dedent(params_header), indent))
+    parts.append(textwrap.indent(textwrap.dedent(returns_doc), indent))
+
+    wrapped.__doc__ = "\n\n".join(parts)
     return wrapped
 
 
