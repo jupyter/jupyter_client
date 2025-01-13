@@ -49,6 +49,7 @@ def get_docstring_indent(doc: str) -> str:
         if re.match(r"\s*$", line):
             continue
         linematch = re.match(r"(\s*)\S", line)
+        assert linematch is not None
         return linematch.group(1)
     # If there was no content in the docstring beyond the initial line
     return ""
