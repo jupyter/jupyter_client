@@ -38,6 +38,11 @@ def test_kernelspec_sub_apps(jp_kernel_dir):
     specs = app3.start()
     assert specs and "echo" not in specs
 
+    app4 = ListKernelSpecs(missing_kernels=True)
+    app4.kernel_spec_manager.kernel_dirs.append(kernel_dir)
+    specs = app4.start()
+    assert specs is None
+
 
 def test_kernelspec_app():
     app = KernelSpecApp()
