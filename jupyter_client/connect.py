@@ -623,12 +623,12 @@ class ConnectionFileMixin(LoggingConfigurable):
             key = "key"
             val1 = conn1.get(key)
             val2 = conn2.get(key)
-        
+
             if isinstance(val1, str) and isinstance(val2, bytes):
                 conn1[key] = val1.encode("utf-8")
             elif isinstance(val1, bytes) and isinstance(val2, str):
                 conn2[key] = val2.encode("utf-8")
-        
+
         pertinent_keys = [
             "key",
             "ip",
