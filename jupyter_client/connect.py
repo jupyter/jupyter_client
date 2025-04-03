@@ -616,10 +616,10 @@ class ConnectionFileMixin(LoggingConfigurable):
         """Compares pertinent keys of connection info data. Returns True if equivalent, False otherwise."""
 
         def _normalize_connection_info_keys(conn1, conn2):
-        """
-        Ensure 'key' values in both conn1 and conn2 are bytes before comparison.
-        Modifies conn1 and conn2 in-place.
-        """
+            """
+            Ensure 'key' values in both conn1 and conn2 are bytes before comparison.
+            Modifies conn1 and conn2 in-place.
+            """
             key = "key"
             val1 = conn1.get(key)
             val2 = conn2.get(key)
