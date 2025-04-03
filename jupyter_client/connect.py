@@ -615,6 +615,20 @@ class ConnectionFileMixin(LoggingConfigurable):
     def _equal_connections(conn1: KernelConnectionInfo, conn2: KernelConnectionInfo) -> bool:
         """Compares pertinent keys of connection info data. Returns True if equivalent, False otherwise."""
 
+        def _normalize_connection_info_keys(conn1, conn2):
+        """
+        Ensure 'key' values in both conn1 and conn2 are bytes before comparison.
+        Modifies conn1 and conn2 in-place.
+        """
+            key = "key"
+            val1 = conn1.get(key)
+            val2 = conn2.get(key)
+        
+            if isinstance(val1, str) and isinstance(val2, bytes):
+                conn1[key] = val1.encode("utf-8")
+            elif isinstance(val1, bytes) and isinstance(val2, str):
+                conn2[key] = val2.encode("utf-8")
+        
         pertinent_keys = [
             "key",
             "ip",
@@ -627,6 +641,7 @@ class ConnectionFileMixin(LoggingConfigurable):
             "signature_scheme",
         ]
 
+        _normalize_connection_info_keys(conn1, conn2)
         return all(conn1.get(key) == conn2.get(key) for key in pertinent_keys)
 
     # --------------------------------------------------------------------------
