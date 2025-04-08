@@ -8,7 +8,7 @@ import types
 import warnings
 from binascii import b2a_base64
 from collections.abc import Iterable
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Any, Optional, Union
 
 from dateutil.parser import isoparse as _dateutil_parse
@@ -109,7 +109,7 @@ def json_default(obj: Any) -> Any:
     if isinstance(obj, datetime):
         obj = _ensure_tzinfo(obj)
         return obj.isoformat().replace("+00:00", "Z")
-    
+
     if isinstance(obj, date):
         return obj.isoformat()
 
