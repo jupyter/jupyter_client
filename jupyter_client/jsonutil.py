@@ -8,7 +8,7 @@ import types
 import warnings
 from binascii import b2a_base64
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Optional, Union
 
 from dateutil.parser import isoparse as _dateutil_parse
@@ -110,6 +110,9 @@ def json_default(obj: Any) -> Any:
         obj = _ensure_tzinfo(obj)
         return obj.isoformat().replace("+00:00", "Z")
 
+    if isinstance(obj, date):
+        return obj.isoformat()
+
     if isinstance(obj, bytes):
         return b2a_base64(obj, newline=False).decode("ascii")
 
@@ -185,7 +188,7 @@ def json_clean(obj: Any) -> Any:
             out[str(k)] = json_clean(v)
         return out
 
-    if isinstance(obj, datetime):
+    if isinstance(obj, (datetime, date)):
         return obj.strftime(ISO8601)
 
     # we don't understand it, it's probably an unserializable object
