@@ -372,16 +372,18 @@ class KernelSpecApp(Application):
 def _limit_to_missing(
     paths: dict[str, str], specs: dict[str, t.Any]
 ) -> tuple[dict[str, str], dict[str, t.Any]]:
-    specs_: dict[str, t.Any] = {
-        k: v
-        for k, v in specs.items()
-        # If have kernel installed from current environment
-        # Probably not the best way to do this, but it works in edge cases I've run into.
-        if (prog := v["spec"]["argv"][0]) != "python" and not Path(prog).exists()
-    }
+    from shutil import which
 
-    paths_: dict[str, str] = {k: v for k, v in paths.items() if k in specs_}
-    return paths_, specs_
+    missing: dict[str, t.Any] = {}
+    for name, data in specs.items():
+        exe = data["spec"]["argv"][0]
+        # if exe exists or is on the path, keep it
+        if Path(exe).exists() or which(exe):
+            continue
+        missing[name] = data
+
+    paths_: dict[str, str] = {k: v for k, v in paths.items() if k in missing}
+    return paths_, missing
 
 
 if __name__ == "__main__":
