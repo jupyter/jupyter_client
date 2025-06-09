@@ -132,16 +132,11 @@ except ModuleNotFoundError:
     _default_packer_unpacker = "json", "json"
     _default_pack_unpack = (json_packer, json_unpacker)
 else:
+    import functools
 
-    def orjson_packer(obj: t.Any) -> bytes:
-        """Convert a json object to a bytes using orjson with a fallback to json_packer."""
-        try:
-            return orjson.dumps(
-                obj, default=json_default, option=orjson.OPT_NAIVE_UTC | orjson.OPT_UTC_Z
-            )
-        except (TypeError, ValueError):
-            return json_packer(obj)
-
+    orjson_packer = functools.partial(
+        orjson.dumps, default=json_default, option=orjson.OPT_NAIVE_UTC | orjson.OPT_UTC_Z
+    )
     orjson_unpacker = orjson.loads
     _default_packer_unpacker = "orjson", "orjson"
     _default_pack_unpack = (orjson_packer, orjson_unpacker)
