@@ -10,6 +10,7 @@ import warnings
 from datetime import datetime
 from unittest import mock
 
+import dateutil.parser
 import pytest
 import zmq
 from dateutil.tz import tzlocal
@@ -542,7 +543,7 @@ def test_serialize_objects(packer, pack, unpack, description, data):
     if (description == "infinite") and (packer in ["pickle", "msgpack"]):
         assert math.isinf(unpacked)
     elif description == "datetime":
-        assert data_in == datetime.fromisoformat(unpacked)
+        assert data_in == dateutil.parser.isoparse(unpacked)
     else:
         assert unpacked in data_out_options
 
