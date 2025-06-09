@@ -524,12 +524,16 @@ def test_squash_unicode():
     assert ss.squash_unicode("hi") == b"hi"
 
 
+_sample_time = datetime(2021, 4, 1, 12, tzinfo=tzlocal())
+_sample_time_string = ss.json_default(_sample_time)
+
+
 @pytest.mark.parametrize(
     ["description", "data"],
     [
         ("dict", [{"a": 1}, [{"a": 1}]]),
         ("infinite", [math.inf, ["inf", None]]),
-        ("datetime", [datetime(2021, 4, 1, 12, tzinfo=tzlocal()), ["2021-04-01T12:00:00+11:00"]]),
+        ("datetime", [_sample_time, [_sample_time_string]]),
     ],
 )
 @pytest.mark.parametrize(["packer", "pack", "unpack"], serializers)

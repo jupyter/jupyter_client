@@ -393,28 +393,21 @@ class Session(Configurable):
 
     @observe("packer", "unpacker")
     def _packer_unpacker_changed(self, change: t.Any) -> None:
-        new = change["new"]
-        new_ = new.lower()
-        if new_ == "orjson" and orjson:
-            self.pack = orjson_packer
-            self.unpack = orjson_unpacker
-            self.packer = self.unpacker = new
-        elif new_ in ["json", "orjson"]:
-            self.pack = json_packer
-            self.unpack = json_unpacker
-            self.packer = self.unpacker = new
-        elif new_ == "pickle":
-            self.pack = pickle_packer
-            self.unpack = pickle_unpacker
-            self.packer = self.unpacker = new
-        elif new_ == "msgpack":
-            self.pack = msgpack_packer
-            self.unpack = msgpack_unpacker
-            self.packer = self.unpacker = new
+        new = change["new"].lower()
+        if new == "orjson" and orjson:
+            self.pack, self.unpack = orjson_packer, orjson_unpacker
+        elif new == "json" or new == "orjson":
+            self.pack, self.unpack = json_packer, json_unpacker
+        elif new == "pickle":
+            self.pack, self.unpack = pickle_packer, pickle_unpacker
+        elif new == "msgpack" and msgpack:
+            self.pack, self.unpack = msgpack_packer, msgpack_unpacker
         else:
-            obj = import_item(str(new))
+            obj = import_item(str(change["new"]))
             name = "pack" if change["name"] == "packer" else "unpack"
             self.set_trait(name, obj)
+            return
+        self.packer = self.unpacker = change["new"]
 
     session = CUnicode("", config=True, help="""The UUID identifying this session.""")
 
