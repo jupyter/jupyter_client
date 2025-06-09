@@ -47,6 +47,8 @@ serializers = [
 ]
 if ss.orjson:
     serializers.append(("orjson", ss.orjson_packer, ss.orjson_unpacker))
+if ss.msgpack:
+    serializers.append(("msgpack", ss.msgpack_packer, ss.msgpack_unpacker))
 
 
 @pytest.mark.usefixtures("no_copy_threshold")
@@ -537,7 +539,7 @@ def test_serialize_objects(packer, pack, unpack, description, data):
         warnings.simplefilter("ignore")
         value = pack(data_in)
     unpacked = unpack(value)
-    if (description == "infinite") and (packer == "pickle"):
+    if (description == "infinite") and (packer in ["pickle", "msgpack"]):
         assert math.isinf(unpacked)
         return
     assert unpacked in data_out_options
@@ -552,7 +554,7 @@ def test_cannot_serialize(session, packer, pack, unpack):
 
 @pytest.mark.parametrize("mode", ["packer", "unpacker"])
 @pytest.mark.parametrize(["packer", "pack", "unpack"], serializers)
-def test_packer_unpacker(session, packer, pack, unpack, mode):
+def test_pack_unpack(session, packer, pack, unpack, mode):
     s: ss.Session = session
     s.set_trait(mode, packer)
     assert s.pack is pack

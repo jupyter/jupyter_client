@@ -9,7 +9,7 @@
 ### Enhancements made
 
 - Support psutil for finding network addresses [#1033](https://github.com/jupyter/jupyter_client/pull/1033) ([@juliangilbey](https://github.com/juliangilbey))
-- Add new functions `orjson_packer` and `orjson_unpacker`.
+- Add new functions `orjson_packer`, `orjson_unpacker`, `msgpack_packer` and `msgpack_unpacker`
 
 ### Bugs fixed
 

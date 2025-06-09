@@ -12,6 +12,7 @@ Sessions.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
 
+import functools
 import hashlib
 import hmac
 import json
@@ -132,14 +133,21 @@ except ModuleNotFoundError:
     _default_packer_unpacker = "json", "json"
     _default_pack_unpack = (json_packer, json_unpacker)
 else:
-    import functools
-
     orjson_packer = functools.partial(
         orjson.dumps, default=json_default, option=orjson.OPT_NAIVE_UTC | orjson.OPT_UTC_Z
     )
     orjson_unpacker = orjson.loads
     _default_packer_unpacker = "orjson", "orjson"
     _default_pack_unpack = (orjson_packer, orjson_unpacker)
+
+try:
+    import msgpack  # type:ignore[import-not-found]
+
+except ModuleNotFoundError:
+    msgpack = None
+else:
+    msgpack_packer = functools.partial(msgpack.packb, default=json_default)
+    msgpack_unpacker = msgpack.unpackb
 
 
 def pickle_packer(o: t.Any) -> bytes:
@@ -331,7 +339,7 @@ class Session(Configurable):
 
     debug : bool
         whether to trigger extra debugging statements
-    packer/unpacker : str : 'json', 'pickle' or import_string
+    packer/unpacker : str : 'orjson', 'json', 'pickle', 'msgpack' or import_string
         importstrings for methods to serialize message parts.  If just
         'json' or 'pickle', predefined JSON and pickle packers will be used.
         Otherwise, the entire importstring must be used.
@@ -398,6 +406,10 @@ class Session(Configurable):
         elif new_ == "pickle":
             self.pack = pickle_packer
             self.unpack = pickle_unpacker
+            self.packer = self.unpacker = new
+        elif new_ == "msgpack":
+            self.pack = msgpack_packer
+            self.unpack = msgpack_unpacker
             self.packer = self.unpacker = new
         else:
             obj = import_item(str(new))
@@ -523,7 +535,7 @@ class Session(Configurable):
 
         debug : bool
             whether to trigger extra debugging statements
-        packer/unpacker : str : 'json', 'pickle' or import_string
+        packer/unpacker : str : 'orjson', 'json', 'pickle', 'msgpack' or import_string
             importstrings for methods to serialize message parts.  If just
             'json' or 'pickle', predefined JSON and pickle packers will be used.
             Otherwise, the entire importstring must be used.
