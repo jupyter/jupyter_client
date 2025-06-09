@@ -14,6 +14,7 @@ import pytest
 import zmq
 from dateutil.tz import tzlocal
 from tornado import ioloop
+from traitlets import TraitError
 from zmq.eventloop.zmqstream import ZMQStream
 
 from jupyter_client import jsonutil
@@ -40,6 +41,14 @@ def session():
     return ss.Session()
 
 
+serializers = [
+    ("json", ss.json_packer, ss.json_unpacker),
+    ("pickle", ss.pickle_packer, ss.pickle_unpacker),
+]
+if ss.orjson:
+    serializers.append(("orjson", ss.orjson_packer, ss.orjson_unpacker))
+
+
 @pytest.mark.usefixtures("no_copy_threshold")
 class TestSession:
     def assertEqual(self, a, b):
@@ -63,7 +72,11 @@ class TestSession:
         self.assertEqual(msg["header"]["msg_type"], "execute")
         self.assertEqual(msg["msg_type"], "execute")
 
-    def test_serialize(self, session):
+    @pytest.mark.parametrize(["packer", "pack", "unpack"], serializers)
+    def test_serialize(self, session, packer, pack, unpack):
+        session.packer = packer
+        assert session.pack is pack
+        assert session.unpack is unpack
         msg = session.msg("execute", content=dict(a=10, b=1.1))
         msg_list = session.serialize(msg, ident=b"foo")
         ident, msg_list = session.feed_identities(msg_list)
@@ -233,16 +246,16 @@ class TestSession:
     def test_args(self, session):
         """initialization arguments for Session"""
         s = session
-        self.assertTrue(s.pack is ss.default_packer)
-        self.assertTrue(s.unpack is ss.default_unpacker)
+        assert s.pack is ss._default_pack_unpack[0]
+        assert s.unpack is ss._default_pack_unpack[1]
         self.assertEqual(s.username, os.environ.get("USER", "username"))
 
         s = ss.Session()
         self.assertEqual(s.username, os.environ.get("USER", "username"))
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TraitError):
             ss.Session(pack="hi")
-        with pytest.raises(TypeError):
+        with pytest.raises(TraitError):
             ss.Session(unpack="hi")
         u = str(uuid.uuid4())
         s = ss.Session(username="carrot", session=u)
@@ -490,11 +503,6 @@ class TestSession:
         B.close()
         ctx.term()
 
-    def test_set_packer(self, session):
-        s = session
-        s.packer = "json"
-        s.unpacker = "json"
-
     def test_clone(self, session):
         s = session
         s._add_digest("initial")
@@ -514,14 +522,43 @@ def test_squash_unicode():
     assert ss.squash_unicode("hi") == b"hi"
 
 
-def test_json_packer():
-    ss.json_packer(dict(a=1))
-    with pytest.raises(ValueError):
-        ss.json_packer(dict(a=ss.Session()))
-    ss.json_packer(dict(a=datetime(2021, 4, 1, 12, tzinfo=tzlocal())))
+@pytest.mark.parametrize(
+    ["description", "data"],
+    [
+        ("dict", [{"a": 1}, [{"a": 1}]]),
+        ("infinite", [math.inf, ["inf", None]]),
+        ("datetime", [datetime(2021, 4, 1, 12, tzinfo=tzlocal()), ["2021-04-01T12:00:00+11:00"]]),
+    ],
+)
+@pytest.mark.parametrize(["packer", "pack", "unpack"], serializers)
+def test_serialize_objects(packer, pack, unpack, description, data):
+    data_in, data_out_options = data
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        ss.json_packer(dict(a=math.inf))
+        value = pack(data_in)
+    unpacked = unpack(value)
+    if (description == "infinite") and (packer == "pickle"):
+        assert math.isinf(unpacked)
+        return
+    assert unpacked in data_out_options
+
+
+@pytest.mark.parametrize(["packer", "pack", "unpack"], serializers)
+def test_cannot_serialize(session, packer, pack, unpack):
+    data = {"a": session}
+    with pytest.raises((TypeError, ValueError)):
+        pack(data)
+
+
+@pytest.mark.parametrize("mode", ["packer", "unpacker"])
+@pytest.mark.parametrize(["packer", "pack", "unpack"], serializers)
+def test_packer_unpacker(session, packer, pack, unpack, mode):
+    s: ss.Session = session
+    s.set_trait(mode, packer)
+    assert s.pack is pack
+    assert s.unpack is unpack
+    mode_reverse = "unpacker" if mode == "packer" else "packer"
+    assert getattr(s, mode_reverse) == packer
 
 
 def test_message_cls():
