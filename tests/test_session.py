@@ -8,6 +8,7 @@ import platform
 import uuid
 import warnings
 from datetime import datetime
+from pickle import PicklingError
 from unittest import mock
 
 import dateutil.parser
@@ -551,7 +552,7 @@ def test_serialize_objects(packer, pack, unpack, description, data):
 @pytest.mark.parametrize(["packer", "pack", "unpack"], serializers)
 def test_cannot_serialize(session, packer, pack, unpack):
     data = {"a": session}
-    with pytest.raises((TypeError, ValueError)):
+    with pytest.raises((TypeError, ValueError, PicklingError)):
         pack(data)
 
 
