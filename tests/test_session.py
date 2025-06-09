@@ -524,16 +524,12 @@ def test_squash_unicode():
     assert ss.squash_unicode("hi") == b"hi"
 
 
-_sample_time = datetime(2021, 4, 1, 12, tzinfo=tzlocal())
-_sample_time_string = ss.json_default(_sample_time)
-
-
 @pytest.mark.parametrize(
     ["description", "data"],
     [
         ("dict", [{"a": 1}, [{"a": 1}]]),
         ("infinite", [math.inf, ["inf", None]]),
-        ("datetime", [_sample_time, [_sample_time_string]]),
+        ("datetime", [datetime(2021, 4, 1, 12, tzinfo=tzlocal()), []]),
     ],
 )
 @pytest.mark.parametrize(["packer", "pack", "unpack"], serializers)
@@ -545,8 +541,10 @@ def test_serialize_objects(packer, pack, unpack, description, data):
     unpacked = unpack(value)
     if (description == "infinite") and (packer in ["pickle", "msgpack"]):
         assert math.isinf(unpacked)
-        return
-    assert unpacked in data_out_options
+    elif description == "datetime":
+        assert data_in == datetime.fromisoformat(unpacked)
+    else:
+        assert unpacked in data_out_options
 
 
 @pytest.mark.parametrize(["packer", "pack", "unpack"], serializers)
