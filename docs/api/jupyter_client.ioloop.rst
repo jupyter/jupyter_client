@@ -7,19 +7,19 @@ Submodules
 
 .. automodule:: jupyter_client.ioloop.manager
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 .. automodule:: jupyter_client.ioloop.restarter
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: jupyter_client.ioloop
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
