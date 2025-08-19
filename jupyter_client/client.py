@@ -568,10 +568,10 @@ class KernelClient(ConnectionFileMixin):
             if msg["header"]["msg_type"] == "status":
                 state = msg["content"]["execution_state"]
                 # allow to stop
-                if state == 'busy':
-                    can_stop = True                
+                if state == "busy":
+                    can_stop = True
                 # stop on idle
-                if state == 'idle' and can_stop:
+                if state == "idle" and can_stop:
                     break
 
         # output is done, get the reply
