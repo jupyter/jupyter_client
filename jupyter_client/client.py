@@ -540,6 +540,7 @@ class KernelClient(ConnectionFileMixin):
             stdin_socket = None
 
         # wait for output and redisplay it
+        can_stop = False
         while True:
             if timeout is not None:
                 timeout = max(0, deadline - time.monotonic())
@@ -564,12 +565,14 @@ class KernelClient(ConnectionFileMixin):
                 continue
             output_hook(msg)
 
-            # stop on idle
-            if (
-                msg["header"]["msg_type"] == "status"
-                and msg["content"]["execution_state"] == "idle"
-            ):
-                break
+            state = msg["content"]["execution_state"]
+            if msg["header"]["msg_type"] == "status":
+                # allow to stop
+                if state == 'busy':
+                    can_stop = True                
+                # stop on idle
+                if state == 'idle' and can_stop:
+                    break
 
         # output is done, get the reply
         if timeout is not None:
