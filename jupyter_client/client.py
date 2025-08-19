@@ -565,8 +565,8 @@ class KernelClient(ConnectionFileMixin):
                 continue
             output_hook(msg)
 
-            state = msg["content"]["execution_state"]
             if msg["header"]["msg_type"] == "status":
+                state = msg["content"]["execution_state"]
                 # allow to stop
                 if state == 'busy':
                     can_stop = True                
