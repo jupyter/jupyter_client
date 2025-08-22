@@ -81,7 +81,7 @@ class SignalTestKernel(Kernel):
 
 
 class SignalTestApp(IPKernelApp):
-    kernel_class = SignalTestKernel  # type:ignore[assignment]
+    kernel_class = SignalTestKernel
 
     def init_io(self):
         # Overridden to disable stdout/stderr capture
