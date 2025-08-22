@@ -47,7 +47,7 @@ Source = "https://github.com/jupyter/jupyter_client"
 [project.optional-dependencies]
 test = [
     "coverage",
-    "ipykernel>=6.14",
+    "ipykernel @ https://github.com/davidbrochart/ipykernel/archive/zmq_anyio.zip",
     "mypy",
     "paramiko; sys_platform == 'win32'",
     "pre-commit",
@@ -282,3 +282,6 @@ exclude = ["docs", "test"]
 
 [tool.repo-review]
 ignore = ["GH102"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
