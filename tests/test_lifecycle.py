@@ -1,15 +1,12 @@
 """
 Unit tests for jupyter_client.lifecycle module
 """
-import pytest
 from unittest.mock import Mock
+
+import pytest
 from traitlets import HasTraits
 
-from jupyter_client.lifecycle import (
-    LifecycleState,
-    KernelManagerStateMixin,
-    state_transition
-)
+from jupyter_client.lifecycle import KernelManagerStateMixin, LifecycleState, state_transition
 
 
 class TestLifecycleState:
@@ -29,7 +26,7 @@ class TestLifecycleState:
         """Test that enum inherits from str and behaves like strings"""
         assert isinstance(LifecycleState.UNKNOWN, str)
         assert LifecycleState.UNKNOWN == "unknown"
-        assert "unknown" == LifecycleState.UNKNOWN
+        assert LifecycleState.UNKNOWN == "unknown"
         # Note: str() returns the enum name, but direct comparison works
         assert LifecycleState.STARTING == "starting"
 
@@ -45,6 +42,7 @@ class TestStateTransitionDecorator:
 
     def test_sync_method_success(self):
         """Test state transition decorator with sync method - success case"""
+
         class TestManager(HasTraits):
             lifecycle_state = LifecycleState.UNKNOWN
 
@@ -60,6 +58,7 @@ class TestStateTransitionDecorator:
 
     def test_sync_method_failure(self):
         """Test state transition decorator with sync method - failure case"""
+
         class TestManager(HasTraits):
             lifecycle_state = LifecycleState.UNKNOWN
 
@@ -77,6 +76,7 @@ class TestStateTransitionDecorator:
     @pytest.mark.asyncio
     async def test_async_method_success(self):
         """Test state transition decorator with async method - success case"""
+
         class TestManager(HasTraits):
             lifecycle_state = LifecycleState.UNKNOWN
 
@@ -93,6 +93,7 @@ class TestStateTransitionDecorator:
     @pytest.mark.asyncio
     async def test_async_method_failure(self):
         """Test state transition decorator with async method - failure case"""
+
         class TestManager(HasTraits):
             lifecycle_state = LifecycleState.UNKNOWN
 
@@ -140,6 +141,7 @@ class TestKernelManagerStateMixin:
 
     def test_mixin_initialization(self):
         """Test that mixin initializes with correct default state"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             pass
 
@@ -148,6 +150,7 @@ class TestKernelManagerStateMixin:
 
     def test_state_properties(self):
         """Test state check properties"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             pass
 
@@ -181,6 +184,7 @@ class TestKernelManagerStateMixin:
 
     def test_set_lifecycle_state(self):
         """Test manual state setting"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             pass
 
@@ -192,6 +196,7 @@ class TestKernelManagerStateMixin:
 
     def test_lifecycle_state_observer(self):
         """Test that state changes are logged"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             def __init__(self):
                 super().__init__()
@@ -212,6 +217,7 @@ class TestKernelManagerStateMixin:
 
     def test_automatic_method_wrapping_start_kernel(self):
         """Test that start_kernel is automatically wrapped with state transitions"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             def start_kernel(self):
                 return "kernel_started"
@@ -227,6 +233,7 @@ class TestKernelManagerStateMixin:
     @pytest.mark.asyncio
     async def test_automatic_method_wrapping_async_start_kernel(self):
         """Test that async start_kernel is automatically wrapped"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             async def start_kernel(self):
                 return "async_kernel_started"
@@ -241,6 +248,7 @@ class TestKernelManagerStateMixin:
 
     def test_automatic_method_wrapping_restart_kernel(self):
         """Test that restart_kernel is automatically wrapped"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             def restart_kernel(self):
                 return "kernel_restarted"
@@ -255,6 +263,7 @@ class TestKernelManagerStateMixin:
 
     def test_automatic_method_wrapping_shutdown_kernel(self):
         """Test that shutdown_kernel is automatically wrapped"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             def shutdown_kernel(self):
                 return "kernel_shutdown"
@@ -269,6 +278,7 @@ class TestKernelManagerStateMixin:
 
     def test_method_wrapping_failure_handling(self):
         """Test that method failures set state to UNKNOWN"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             def start_kernel(self):
                 raise Exception("Start failed")
@@ -282,6 +292,7 @@ class TestKernelManagerStateMixin:
 
     def test_mixin_with_inheritance(self):
         """Test that mixin works correctly with complex inheritance"""
+
         class BaseManager(HasTraits):
             def base_method(self):
                 return "base"
@@ -315,6 +326,7 @@ class TestKernelManagerStateMixin:
 
     def test_mixin_without_kernel_methods(self):
         """Test that mixin works even when kernel methods don't exist"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             def some_other_method(self):
                 return "other"
@@ -326,6 +338,7 @@ class TestKernelManagerStateMixin:
 
     def test_state_transitions_complete_lifecycle(self):
         """Test a complete kernel lifecycle with state transitions"""
+
         class TestManager(KernelManagerStateMixin, HasTraits):
             def start_kernel(self):
                 return "started"
@@ -395,6 +408,7 @@ class TestJupyterClientIntegration:
 
         # Test restart
         import asyncio
+
         async def test_restart():
             result = await manager.restart_kernel()
             assert result["kernel_id"] == "test-kernel-123"

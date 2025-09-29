@@ -149,6 +149,7 @@ def state_transition(start_state: LifecycleState, end_state: LifecycleState):
     >>> result = manager.start_kernel()
     >>> assert manager.lifecycle_state == LifecycleState.STARTED
     """
+
     def decorator(method: Callable) -> Callable:
         @wraps(method)
         async def async_wrapper(self, *args, **kwargs):
@@ -244,11 +245,10 @@ class KernelManagerStateMixin(HasTraits):
     """
 
     lifecycle_state = Unicode(
-        default_value=LifecycleState.UNKNOWN,
-        help="The current lifecycle state of the kernel"
+        default_value=LifecycleState.UNKNOWN, help="The current lifecycle state of the kernel"
     ).tag(config=True)
 
-    @observe('lifecycle_state')
+    @observe("lifecycle_state")
     def _lifecycle_state_changed(self, change):
         """Log lifecycle state changes for debugging.
 
@@ -258,10 +258,10 @@ class KernelManagerStateMixin(HasTraits):
             The change notification dict from traitlets containing
             'old' and 'new' values
         """
-        old_state = change['old']
-        new_state = change['new']
-        kernel_id = getattr(self, 'kernel_id', 'unknown')
-        if hasattr(self, 'log'):
+        old_state = change["old"]
+        new_state = change["new"]
+        kernel_id = getattr(self, "kernel_id", "unknown")
+        if hasattr(self, "log"):
             self.log.debug(f"Kernel {kernel_id} state changed: {old_state} -> {new_state}")
 
     def __init_subclass__(cls, **kwargs):
@@ -279,28 +279,25 @@ class KernelManagerStateMixin(HasTraits):
         super().__init_subclass__(**kwargs)
 
         # Wrap start_kernel method if it exists
-        if hasattr(cls, 'start_kernel'):
+        if hasattr(cls, "start_kernel"):
             original_start = cls.start_kernel
-            cls.start_kernel = state_transition(
-                LifecycleState.STARTING,
-                LifecycleState.STARTED
-            )(original_start)
+            cls.start_kernel = state_transition(LifecycleState.STARTING, LifecycleState.STARTED)(
+                original_start
+            )
 
         # Wrap restart_kernel method if it exists
-        if hasattr(cls, 'restart_kernel'):
+        if hasattr(cls, "restart_kernel"):
             original_restart = cls.restart_kernel
             cls.restart_kernel = state_transition(
-                LifecycleState.RESTARTING,
-                LifecycleState.RESTARTED
+                LifecycleState.RESTARTING, LifecycleState.RESTARTED
             )(original_restart)
 
         # Wrap shutdown_kernel method if it exists
-        if hasattr(cls, 'shutdown_kernel'):
+        if hasattr(cls, "shutdown_kernel"):
             original_shutdown = cls.shutdown_kernel
-            cls.shutdown_kernel = state_transition(
-                LifecycleState.TERMINATING,
-                LifecycleState.DEAD
-            )(original_shutdown)
+            cls.shutdown_kernel = state_transition(LifecycleState.TERMINATING, LifecycleState.DEAD)(
+                original_shutdown
+            )
 
     # State checking properties
 

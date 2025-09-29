@@ -10,8 +10,10 @@ To add lifecycle state tracking to a kernel manager, simply inherit from `Kernel
 from jupyter_client.lifecycle import KernelManagerStateMixin
 from jupyter_client.manager import KernelManager
 
+
 class StatefulKernelManager(KernelManagerStateMixin, KernelManager):
     pass
+
 
 # The mixin automatically tracks state during kernel operations
 manager = StatefulKernelManager()
@@ -19,7 +21,7 @@ print(manager.lifecycle_state)  # "unknown"
 
 await manager.start_kernel()
 print(manager.lifecycle_state)  # "started"
-print(manager.is_started)       # True
+print(manager.is_started)  # True
 ```
 
 ## Core Components
@@ -55,6 +57,7 @@ print(state)  # "started"
 The `KernelManagerStateMixin` class provides automatic state tracking for kernel managers. It uses the `__init_subclass__` hook to automatically wrap kernel management methods with state transition decorators.
 
 Key features:
+
 - Automatic method wrapping for `start_kernel`, `restart_kernel`, and `shutdown_kernel`
 - Support for both synchronous and asynchronous methods
 - Automatic error handling (failed operations reset state to UNKNOWN)
@@ -67,14 +70,15 @@ class MyKernelManager(KernelManagerStateMixin, SomeBaseManager):
         # Your start logic here
         pass
 
+
 manager = MyKernelManager()
 
 # State checking properties
-print(manager.is_unknown)     # True
-print(manager.is_started)     # False
+print(manager.is_unknown)  # True
+print(manager.is_started)  # False
 
 manager.start_kernel()
-print(manager.is_started)     # True
+print(manager.is_started)  # True
 ```
 
 ### state_transition Decorator
@@ -83,6 +87,7 @@ For custom state management scenarios, you can use the `state_transition` decora
 
 ```python
 from jupyter_client.lifecycle import state_transition, LifecycleState
+
 
 class CustomManager:
     lifecycle_state = LifecycleState.UNKNOWN
@@ -103,8 +108,8 @@ class CustomManager:
 The state machine handles these automatic transitions:
 
 1. **start_kernel**: `unknown` → `starting` → `started` (or `unknown` on failure)
-2. **restart_kernel**: `*` → `restarting` → `restarted` (or `unknown` on failure)
-3. **shutdown_kernel**: `*` → `terminating` → `dead` (or `unknown` on failure)
+1. **restart_kernel**: `*` → `restarting` → `restarted` (or `unknown` on failure)
+1. **shutdown_kernel**: `*` → `terminating` → `dead` (or `unknown` on failure)
 
 ```mermaid
 graph LR
@@ -172,6 +177,7 @@ class FailingKernelManager(KernelManagerStateMixin):
     def start_kernel(self):
         raise RuntimeError("Start failed")
 
+
 manager = FailingKernelManager()
 try:
     manager.start_kernel()
@@ -189,6 +195,6 @@ if manager.is_unknown:
 ## Best Practices
 
 1. **Use state checking properties**: Prefer `manager.is_started` over `manager.lifecycle_state == "started"`
-2. **Handle UNKNOWN states**: Always have logic to handle when state is UNKNOWN after failures
-3. **Test state transitions**: Include state assertions in your kernel manager tests
-4. **Don't override mixin methods**: Avoid overriding the state checking properties or internal methods
+1. **Handle UNKNOWN states**: Always have logic to handle when state is UNKNOWN after failures
+1. **Test state transitions**: Include state assertions in your kernel manager tests
+1. **Don't override mixin methods**: Avoid overriding the state checking properties or internal methods
