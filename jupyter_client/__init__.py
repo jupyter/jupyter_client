@@ -5,6 +5,7 @@ from .blocking import BlockingKernelClient
 from .client import KernelClient
 from .connect import *  # noqa
 from .launcher import *  # noqa
+from .lifecycle import KernelManagerStateMixin, LifecycleState, state_transition
 from .manager import AsyncKernelManager, KernelManager, run_kernel
 from .multikernelmanager import AsyncMultiKernelManager, MultiKernelManager
 from .provisioning import KernelProvisionerBase, LocalProvisioner
