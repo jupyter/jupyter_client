@@ -34,7 +34,7 @@ def create_interrupt_event() -> Any:
 
     return ctypes.windll.kernel32.CreateEventA(  # type:ignore[attr-defined]
         sa_p,
-        False,
+        True,
         False,
         "",  # lpEventAttributes  # bManualReset  # bInitialState
     )  # lpName
