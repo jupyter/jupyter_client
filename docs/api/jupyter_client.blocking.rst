@@ -7,13 +7,13 @@ Submodules
 
 .. automodule:: jupyter_client.blocking.client
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: jupyter_client.blocking
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

@@ -1329,9 +1329,6 @@ GitHub](https://github.com/jupyter/jupyter_client/milestones/4.2)
 
 ### 4.1.0
 
-[4.1.0 on
-GitHub](https://github.com/jupyter/jupyter_client/milestones/4.1)
-
 Highlights:
 
 - Setuptools fixes for `jupyter kernelspec`
