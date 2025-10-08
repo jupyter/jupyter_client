@@ -16,5 +16,5 @@ else:
 version_info = tuple(parts)
 
 
-protocol_version_info = (5, 3)
+protocol_version_info = (5, 4)
 protocol_version = "%i.%i" % protocol_version_info
