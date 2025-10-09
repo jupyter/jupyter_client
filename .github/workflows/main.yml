@@ -39,7 +39,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version:
-          - "3.9"
+          - "3.10"
           - "3.14"
           - "3.14t"
         include:
