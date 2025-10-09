@@ -31,16 +31,6 @@ jobs:
           package_name: nbclient
           env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
 
-  papermill:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
-        with:
-          package_name: papermill
-
   nbconvert:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -77,6 +67,7 @@ jobs:
         with:
           auto-update-conda: true
           activate-environment: jupyter_kernel_test
+          miniforge-variant: Mambaforge
           python-version: ${{ matrix.python-version }}
 
       - name: Test jupyter_kernel_test
