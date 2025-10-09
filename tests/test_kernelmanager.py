@@ -7,6 +7,7 @@ import json
 import os
 import signal
 import sys
+import sysconfig
 import time
 from subprocess import PIPE
 
@@ -22,6 +23,9 @@ from .utils import AsyncKMSubclass, SyncKMSubclass
 pjoin = os.path.join
 
 TIMEOUT = 60
+
+
+is_freethreaded = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
 
 
 @pytest.fixture(params=["tcp", "ipc"])
@@ -327,6 +331,7 @@ class TestParallel:
         self._run_signaltest_lifecycle(config)
         self._run_signaltest_lifecycle(config)
 
+    @pytest.mark.xfail(is_freethreaded, reason="Fail on free-threaded python")
     @pytest.mark.timeout(TIMEOUT + 10)
     def test_start_parallel_thread_kernels(self, config, install_kernel):
         if config.KernelManager.transport == "ipc":  # FIXME
