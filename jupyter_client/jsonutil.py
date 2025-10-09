@@ -74,7 +74,7 @@ def extract_dates(obj: Any) -> Any:
         for k, v in obj.items():
             new_obj[k] = extract_dates(v)
         obj = new_obj
-    elif isinstance(obj, (list, tuple)):
+    elif isinstance(obj, list | tuple):
         obj = [extract_dates(o) for o in obj]
     elif isinstance(obj, str):
         obj = parse_date(obj)
@@ -87,7 +87,7 @@ def squash_dates(obj: Any) -> Any:
         obj = dict(obj)  # don't clobber
         for k, v in obj.items():
             obj[k] = squash_dates(v)
-    elif isinstance(obj, (list, tuple)):
+    elif isinstance(obj, list | tuple):
         obj = [squash_dates(o) for o in obj]
     elif isinstance(obj, datetime):
         obj = obj.isoformat()
@@ -188,7 +188,7 @@ def json_clean(obj: Any) -> Any:
             out[str(k)] = json_clean(v)
         return out
 
-    if isinstance(obj, (datetime, date)):
+    if isinstance(obj, datetime | date):
         return obj.strftime(ISO8601)
 
     # we don't understand it, it's probably an unserializable object

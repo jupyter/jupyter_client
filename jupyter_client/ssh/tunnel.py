@@ -438,9 +438,9 @@ else:
 
 
 __all__ = [
-    "tunnel_connection",
-    "ssh_tunnel",
     "openssh_tunnel",
     "paramiko_tunnel",
+    "ssh_tunnel",
     "try_passwordless_ssh",
+    "tunnel_connection",
 ]
