@@ -169,10 +169,6 @@ class TestKernelManager(TestCase):
             future2.result()
 
     @pytest.mark.skipif(
-        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
-        reason='"Bad file descriptor" error',
-    )
-    @pytest.mark.skipif(
         sys.platform == "linux",
         reason="Kernel refuses to start in process pool",
     )
