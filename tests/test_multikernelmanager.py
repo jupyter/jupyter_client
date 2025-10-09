@@ -3,6 +3,7 @@ import asyncio
 import concurrent.futures
 import os
 import sys
+import sysconfig
 import uuid
 from asyncio import ensure_future
 from subprocess import PIPE
@@ -27,6 +28,8 @@ from .utils import (
 )
 
 TIMEOUT = 30
+
+is_freethreaded = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
 
 
 async def now(awaitable):
@@ -155,6 +158,7 @@ class TestKernelManager(TestCase):
         self.test_tcp_lifecycle()
         loop.close()
 
+    @pytest.mark.skipif(is_freethreaded, reason="Fail on free-threaded python")
     def test_start_parallel_thread_kernels(self):
         self.test_tcp_lifecycle()
 
