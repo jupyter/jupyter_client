@@ -242,6 +242,8 @@ ignore = [
   "UP006",
   # non-pep604-annotation
   "UP007",
+  #UP031 Use format specifiers instead of percent format,
+  "UP031"
 
 ]
 unfixable = [
