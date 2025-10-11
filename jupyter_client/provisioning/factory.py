@@ -1,4 +1,5 @@
 """Kernel Provisioner Classes"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import glob
@@ -192,5 +193,5 @@ class KernelProvisionerFactory(SingletonConfigurable):
             return EntryPoint(
                 "local-provisioner", "jupyter_client.provisioning", "LocalProvisioner"
             )
-
-        raise
+        err_message = "Was unable to find a provisioner"
+        raise RuntimeError(err_message)

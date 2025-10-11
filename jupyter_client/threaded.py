@@ -1,13 +1,14 @@
-""" Defines a KernelClient that provides thread-safe sockets with async callbacks on message
+"""Defines a KernelClient that provides thread-safe sockets with async callbacks on message
 replies.
 """
+
 import asyncio
 import atexit
 import time
 from concurrent.futures import Future
 from functools import partial
 from threading import Thread
-from typing import Any, Optional
+from typing import Any
 
 import zmq
 from tornado.ioloop import IOLoop
@@ -35,9 +36,9 @@ class ThreadedZMQSocketChannel:
 
     def __init__(
         self,
-        socket: Optional[zmq.Socket],
-        session: Optional[Session],
-        loop: Optional[IOLoop],
+        socket: zmq.Socket | None,
+        session: Session | None,
+        loop: IOLoop | None,
     ) -> None:
         """Create a channel.
 
@@ -143,7 +144,7 @@ class ThreadedZMQSocketChannel:
         """
         assert self.ioloop is not None
         assert self.session is not None
-        ident, smsg = self.session.feed_identities(msg_list)
+        _ident, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)
         # let client inspect messages
         if self._inspect:
@@ -298,7 +299,7 @@ class ThreadedKernelClient(KernelClient):
     """A KernelClient that provides thread-safe sockets with async callbacks on message replies."""
 
     @property
-    def ioloop(self) -> Optional[IOLoop]:  # type:ignore[override]
+    def ioloop(self) -> IOLoop | None:  # type:ignore[override]
         if self.ioloop_thread:
             return self.ioloop_thread.ioloop
         return None

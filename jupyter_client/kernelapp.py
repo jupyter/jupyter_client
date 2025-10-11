@@ -1,4 +1,5 @@
 """An application to launch a kernel by name in a local subprocess."""
+
 import os
 import signal
 import typing as t

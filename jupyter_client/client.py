@@ -1,4 +1,5 @@
 """Base class to manage the interaction with a running kernel"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
@@ -154,7 +155,7 @@ class KernelClient(ConnectionFileMixin):
         """Get a message from the control channel"""
         return await ensure_async(self.control_channel.get_msg(*args, **kwargs))
 
-    async def _async_wait_for_ready(self, timeout: t.Optional[float] = None) -> None:
+    async def _async_wait_for_ready(self, timeout: float | None = None) -> None:
         """Waits for a response when a client is blocked
 
         - Sets future time for timeout
@@ -214,7 +215,7 @@ class KernelClient(ConnectionFileMixin):
                 break
 
     async def _async_recv_reply(
-        self, msg_id: str, timeout: t.Optional[float] = None, channel: str = "shell"
+        self, msg_id: str, timeout: float | None = None, channel: str = "shell"
     ) -> t.Dict[str, t.Any]:
         """Receive and return the reply for a given request"""
         if timeout is not None:
@@ -426,12 +427,12 @@ class KernelClient(ConnectionFileMixin):
         code: str,
         silent: bool = False,
         store_history: bool = True,
-        user_expressions: t.Optional[t.Dict[str, t.Any]] = None,
-        allow_stdin: t.Optional[bool] = None,
+        user_expressions: t.Dict[str, t.Any] | None = None,
+        allow_stdin: bool | None = None,
         stop_on_error: bool = True,
-        timeout: t.Optional[float] = None,
-        output_hook: t.Optional[t.Callable] = None,
-        stdin_hook: t.Optional[t.Callable] = None,
+        timeout: float | None = None,
+        output_hook: t.Callable | None = None,
+        stdin_hook: t.Callable | None = None,
     ) -> t.Dict[str, t.Any]:
         """Execute code in the kernel interactively
 
@@ -582,8 +583,8 @@ class KernelClient(ConnectionFileMixin):
         code: str,
         silent: bool = False,
         store_history: bool = True,
-        user_expressions: t.Optional[t.Dict[str, t.Any]] = None,
-        allow_stdin: t.Optional[bool] = None,
+        user_expressions: t.Dict[str, t.Any] | None = None,
+        allow_stdin: bool | None = None,
         stop_on_error: bool = True,
     ) -> str:
         """Execute code in the kernel.
@@ -644,7 +645,7 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
 
-    def complete(self, code: str, cursor_pos: t.Optional[int] = None) -> str:
+    def complete(self, code: str, cursor_pos: int | None = None) -> str:
         """Tab complete text in the kernel's namespace.
 
         Parameters
@@ -667,7 +668,7 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
 
-    def inspect(self, code: str, cursor_pos: t.Optional[int] = None, detail_level: int = 0) -> str:
+    def inspect(self, code: str, cursor_pos: int | None = None, detail_level: int = 0) -> str:
         """Get metadata information about an object in the kernel's namespace.
 
         It is up to the kernel to determine the appropriate object to inspect.
@@ -755,7 +756,7 @@ class KernelClient(ConnectionFileMixin):
         self.shell_channel.send(msg)
         return msg["header"]["msg_id"]
 
-    def comm_info(self, target_name: t.Optional[str] = None) -> str:
+    def comm_info(self, target_name: str | None = None) -> str:
         """Request comm info
 
         Returns

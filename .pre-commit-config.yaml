@@ -25,7 +25,7 @@ repos:
     hooks:
       - id: check-github-workflows
 
-  - repo: https://github.com/executablebooks/mdformat
+  - repo: https://github.com/hukkin/mdformat
     rev: 0.7.22
     hooks:
       - id: mdformat
@@ -42,7 +42,7 @@ repos:
       - id: mypy
         files: jupyter_client
         stages: [manual]
-        args: ["--install-types", "--non-interactive", "--python-version=3.9"]
+        args: ["--install-types", "--non-interactive"]
         additional_dependencies:
           ["traitlets>=5.13", "ipykernel>=6.26", "jupyter_core>=5.3.2"]
 
@@ -68,7 +68,7 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.0
     hooks:
-      - id: ruff
+      - id: ruff-check
         types_or: [python, jupyter]
         args: ["--fix", "--show-fixes"]
       - id: ruff-format

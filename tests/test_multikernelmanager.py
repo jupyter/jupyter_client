@@ -1,4 +1,5 @@
 """Tests for the notebook kernel and session manager."""
+
 import asyncio
 import concurrent.futures
 import os
@@ -249,7 +250,7 @@ class TestKernelManager(TestCase):
         def record_activity(msg_list):
             nonlocal called
             """Record an IOPub message arriving from a kernel"""
-            idents, fed_msg_list = session.feed_identities(msg_list)
+            _idents, fed_msg_list = session.feed_identities(msg_list)
             msg = session.deserialize(fed_msg_list, content=False)
 
             msg_type = msg["header"]["msg_type"]
@@ -628,7 +629,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         def record_activity(msg_list):
             nonlocal called
             """Record an IOPub message arriving from a kernel"""
-            idents, fed_msg_list = session.feed_identities(msg_list)
+            _idents, fed_msg_list = session.feed_identities(msg_list)
             msg = session.deserialize(fed_msg_list, content=False)
 
             msg_type = msg["header"]["msg_type"]
