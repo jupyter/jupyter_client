@@ -1,9 +1,10 @@
-""" A minimal application base mixin for all ZMQ based IPython frontends.
+"""A minimal application base mixin for all ZMQ based IPython frontends.
 
 This is not a complete console app, as subprocess will not be able to receive
 input, there is no real readline support, among other limitations. This is a
 refactoring of what used to be the IPython/qt/console/qtconsoleapp.py
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import atexit

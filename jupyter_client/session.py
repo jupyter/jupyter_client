@@ -8,6 +8,7 @@ Also defined here are utilities for working with Sessions:
 Sessions.
 * A Message object for convenience that allows attribute-access to the msg dict.
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations

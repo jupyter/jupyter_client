@@ -1,4 +1,5 @@
 """Utilities to manipulate JSON objects."""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import math
@@ -9,7 +10,7 @@ import warnings
 from binascii import b2a_base64
 from collections.abc import Iterable
 from datetime import date, datetime
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 from dateutil.parser import isoparse as _dateutil_parse
 from dateutil.tz import tzlocal
@@ -51,7 +52,7 @@ def _ensure_tzinfo(dt: datetime) -> datetime:
     return dt
 
 
-def parse_date(s: Optional[str]) -> Optional[Union[str, datetime]]:
+def parse_date(s: str | None) -> Union[str, datetime] | None:
     """parse an ISO8601 date string
 
     If it is None or not a valid ISO8601 timestamp,

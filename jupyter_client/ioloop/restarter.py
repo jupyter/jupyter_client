@@ -3,6 +3,7 @@
 This watches a kernel's state using KernelManager.is_alive and auto
 restarts the kernel if it dies.
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import time

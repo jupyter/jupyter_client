@@ -1,4 +1,5 @@
 """Test Provisioning"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
@@ -7,7 +8,7 @@ import os
 import signal
 import sys
 from subprocess import PIPE
-from typing import Any, Optional
+from typing import Any
 
 import pytest
 from jupyter_core import paths
@@ -46,13 +47,13 @@ class CustomTestProvisioner(KernelProvisionerBase):  # type:ignore
     def has_process(self) -> bool:
         return self.process is not None
 
-    async def poll(self) -> Optional[int]:
+    async def poll(self) -> int | None:
         ret = 0
         if self.process:
             ret = self.process.poll()
         return ret
 
-    async def wait(self) -> Optional[int]:
+    async def wait(self) -> int | None:
         ret = 0
         if self.process:
             while await self.poll() is None:
@@ -134,7 +135,7 @@ class NewTestProvisioner(CustomTestProvisioner):  # type:ignore
     pass
 
 
-def build_kernelspec(name: str, provisioner: Optional[str] = None) -> None:
+def build_kernelspec(name: str, provisioner: str | None = None) -> None:
     spec: dict = {
         "argv": [
             sys.executable,
