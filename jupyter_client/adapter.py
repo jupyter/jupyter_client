@@ -1,4 +1,5 @@
 """Adapters for Jupyter msg spec versions."""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import json
@@ -194,7 +195,7 @@ class V5toV4(Adapter):
         content = msg["content"]
         code = content["code"]
         cursor_pos = content["cursor_pos"]
-        line, _ = code_to_line(code, cursor_pos)
+        _line, _ = code_to_line(code, cursor_pos)
 
         new_content = msg["content"] = {}
         new_content["oname"] = extract_oname_v4(code, cursor_pos)

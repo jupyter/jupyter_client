@@ -1,16 +1,13 @@
 """Kernel Provisioner Classes"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import glob
-import sys
-from os import getenv, path
-from typing import Any
 
 # See compatibility note on `group` keyword in https://docs.python.org/3/library/importlib.metadata.html#entry-points
-if sys.version_info < (3, 10):  # pragma: no cover
-    from importlib_metadata import EntryPoint, entry_points  # type:ignore[import-not-found]
-else:  # pragma: no cover
-    from importlib.metadata import EntryPoint, entry_points
+from importlib.metadata import EntryPoint, entry_points
+from os import getenv, path
+from typing import Any
 
 from traitlets.config import SingletonConfigurable, Unicode, default
 
@@ -196,5 +193,5 @@ class KernelProvisionerFactory(SingletonConfigurable):
             return EntryPoint(
                 "local-provisioner", "jupyter_client.provisioning", "LocalProvisioner"
             )
-
-        raise
+        err_message = "Was unable to find a provisioner"
+        raise RuntimeError(err_message)

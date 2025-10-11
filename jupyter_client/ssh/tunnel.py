@@ -1,6 +1,7 @@
 """Basic ssh tunnel utilities, and convenience functions for tunneling
 zeromq connections.
 """
+
 # Copyright (C) 2010-2011  IPython Development Team
 # Copyright (C) 2011- PyZMQ Developers
 #
@@ -438,9 +439,9 @@ else:
 
 
 __all__ = [
-    "tunnel_connection",
-    "ssh_tunnel",
     "openssh_tunnel",
     "paramiko_tunnel",
+    "ssh_tunnel",
     "try_passwordless_ssh",
+    "tunnel_connection",
 ]

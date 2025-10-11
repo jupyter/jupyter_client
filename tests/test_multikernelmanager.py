@@ -1,8 +1,10 @@
 """Tests for the notebook kernel and session manager."""
+
 import asyncio
 import concurrent.futures
 import os
 import sys
+import sysconfig
 import uuid
 from asyncio import ensure_future
 from subprocess import PIPE
@@ -27,6 +29,8 @@ from .utils import (
 )
 
 TIMEOUT = 30
+
+is_freethreaded = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
 
 
 async def now(awaitable):
@@ -155,6 +159,7 @@ class TestKernelManager(TestCase):
         self.test_tcp_lifecycle()
         loop.close()
 
+    @pytest.mark.skipif(is_freethreaded, reason="Fail on free-threaded python")
     def test_start_parallel_thread_kernels(self):
         self.test_tcp_lifecycle()
 
@@ -164,10 +169,6 @@ class TestKernelManager(TestCase):
             future1.result()
             future2.result()
 
-    @pytest.mark.skipif(
-        (sys.platform == "darwin") and (sys.version_info >= (3, 6)) and (sys.version_info < (3, 8)),
-        reason='"Bad file descriptor" error',
-    )
     @pytest.mark.skipif(
         sys.platform == "linux",
         reason="Kernel refuses to start in process pool",
@@ -249,7 +250,7 @@ class TestKernelManager(TestCase):
         def record_activity(msg_list):
             nonlocal called
             """Record an IOPub message arriving from a kernel"""
-            idents, fed_msg_list = session.feed_identities(msg_list)
+            _idents, fed_msg_list = session.feed_identities(msg_list)
             msg = session.deserialize(fed_msg_list, content=False)
 
             msg_type = msg["header"]["msg_type"]
@@ -628,7 +629,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         def record_activity(msg_list):
             nonlocal called
             """Record an IOPub message arriving from a kernel"""
-            idents, fed_msg_list = session.feed_identities(msg_list)
+            _idents, fed_msg_list = session.feed_identities(msg_list)
             msg = session.deserialize(fed_msg_list, content=False)
 
             msg_type = msg["header"]["msg_type"]

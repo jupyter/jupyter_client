@@ -1,4 +1,5 @@
 """Abstract base class for kernel clients"""
+
 # -----------------------------------------------------------------------------
 #  Copyright (c) The Jupyter Development Team
 #

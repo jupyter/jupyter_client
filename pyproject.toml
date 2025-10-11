@@ -18,12 +18,11 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3"
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "importlib_metadata>=4.8.3;python_version<\"3.10\"",
     "jupyter_core>=4.12,!=5.0.*",
     "python-dateutil>=2.8.2",
-    "pyzmq>=23.0",
+    "pyzmq>=25.0",
     "tornado>=6.2",
     "traitlets>=5.3",
 ]
@@ -51,7 +50,7 @@ test = [
     "mypy",
     "paramiko; sys_platform == 'win32'",
     "pre-commit",
-    "pytest<8.2.0",
+    "pytest",
     "pytest-jupyter[client]>=0.4.1",
     "pytest-cov",
     "pytest-timeout",
@@ -160,7 +159,7 @@ source = ["jupyter_client"]
 
 [tool.mypy]
 files = "jupyter_client"
-python_version = "3.8"
+python_version = "3.10"
 strict = true
 disallow_any_generics = false
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
@@ -242,6 +241,11 @@ ignore = [
   "UP006",
   # non-pep604-annotation
   "UP007",
+  #UP031 Use format specifiers instead of percent format,
+  "UP031",
+  # `import` should be at the top-level of a file
+  "PLC0415"
+
 
 ]
 unfixable = [

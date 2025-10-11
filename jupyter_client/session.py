@@ -8,6 +8,7 @@ Also defined here are utilities for working with Sessions:
 Sessions.
 * A Message object for convenience that allows attribute-access to the msg dict.
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
@@ -814,7 +815,7 @@ class Session(Configurable):
             assert stream is not None  # type:ignore[unreachable]
             stream = zmq.Socket.shadow(stream.underlying)
 
-        if isinstance(msg_or_type, (Message, dict)):
+        if isinstance(msg_or_type, Message | dict):
             # We got a Message or message dict, not a msg_type so don't
             # build a new Message.
             msg = msg_or_type

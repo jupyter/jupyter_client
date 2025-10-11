@@ -1,9 +1,10 @@
 """Kernel Provisioner Classes"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
 from abc import ABC, ABCMeta, abstractmethod
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 from traitlets.config import Instance, LoggingConfigurable, Unicode
 
@@ -45,7 +46,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
         pass
 
     @abstractmethod
-    async def poll(self) -> Optional[int]:
+    async def poll(self) -> int | None:
         """
         Checks if kernel process is still running.
 
@@ -55,7 +56,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
         pass
 
     @abstractmethod
-    async def wait(self) -> Optional[int]:
+    async def wait(self) -> int | None:
         """
         Waits for kernel process to terminate.
 

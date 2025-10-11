@@ -1,4 +1,5 @@
 """Client-side implementations of the Jupyter protocol"""
+
 from ._version import __version__, protocol_version, protocol_version_info, version_info
 from .asynchronous import AsyncKernelClient
 from .blocking import BlockingKernelClient
