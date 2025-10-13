@@ -342,6 +342,7 @@ class TestParallel:
             future1.result()
             future2.result()
 
+    @pytest.mark.skipif(sys.version_info > (3, 14), reason="Zmq closing socket issues on 3.14+")
     @pytest.mark.timeout(TIMEOUT)
     def test_start_parallel_process_kernels(self, config, install_kernel):
         if config.KernelManager.transport == "ipc":  # FIXME
