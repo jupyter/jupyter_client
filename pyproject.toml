@@ -46,6 +46,7 @@ Source = "https://github.com/jupyter/jupyter_client"
 
 [project.optional-dependencies]
 test = [
+    "anyio",
     "coverage",
     "ipykernel>=6.14",
     "mypy",
