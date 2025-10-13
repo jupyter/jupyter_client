@@ -15,7 +15,7 @@ class KernelProvisionerMeta(ABCMeta, type(LoggingConfigurable)):  # type: ignore
     pass
 
 
-class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisionerMeta):
+class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisionerMeta):  # type: ignore[metaclass]
     """
     Abstract base class defining methods for KernelProvisioner classes.
 

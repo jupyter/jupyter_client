@@ -17,6 +17,7 @@ import sys
 import warnings
 from getpass import getpass, getuser
 from multiprocessing import Process
+from types import ModuleType
 from typing import Any, cast
 
 try:
@@ -34,6 +35,7 @@ except ImportError:
 else:
     from .forward import forward_tunnel
 
+pexpect: ModuleType | None
 try:
     import pexpect
 except ImportError:
@@ -303,6 +305,7 @@ def openssh_tunnel(
 
 
 def _stop_tunnel(cmd: Any) -> None:
+    assert pexpect is not None
     pexpect.run(cmd)
 
 

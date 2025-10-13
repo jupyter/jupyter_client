@@ -49,11 +49,11 @@ class BlockingKernelClient(KernelClient):
     wait_for_ready = run_sync(KernelClient._async_wait_for_ready)
 
     # The classes to use for the various channels
-    shell_channel_class = Type(ZMQSocketChannel)
-    iopub_channel_class = Type(ZMQSocketChannel)
-    stdin_channel_class = Type(ZMQSocketChannel)
-    hb_channel_class = Type(HBChannel)
-    control_channel_class = Type(ZMQSocketChannel)
+    shell_channel_class = Type(ZMQSocketChannel)  # type:ignore[assignment]
+    iopub_channel_class = Type(ZMQSocketChannel)  # type:ignore[assignment]
+    stdin_channel_class = Type(ZMQSocketChannel)  # type:ignore[assignment]
+    hb_channel_class = Type(HBChannel)  # type:ignore[assignment]
+    control_channel_class = Type(ZMQSocketChannel)  # type:ignore[assignment]
 
     _recv_reply = run_sync(KernelClient._async_recv_reply)
 

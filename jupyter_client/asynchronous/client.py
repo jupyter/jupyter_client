@@ -34,7 +34,7 @@ class AsyncKernelClient(KernelClient):
     raising :exc:`queue.Empty` if no message arrives within ``timeout`` seconds.
     """
 
-    context = Instance(zmq.asyncio.Context)
+    context = Instance(zmq.asyncio.Context)  # type:ignore[assignment]
 
     def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True
@@ -52,11 +52,11 @@ class AsyncKernelClient(KernelClient):
     wait_for_ready = KernelClient._async_wait_for_ready
 
     # The classes to use for the various channels
-    shell_channel_class = Type(AsyncZMQSocketChannel)
-    iopub_channel_class = Type(AsyncZMQSocketChannel)
-    stdin_channel_class = Type(AsyncZMQSocketChannel)
-    hb_channel_class = Type(HBChannel)
-    control_channel_class = Type(AsyncZMQSocketChannel)
+    shell_channel_class = Type(AsyncZMQSocketChannel)  # type:ignore[assignment]
+    iopub_channel_class = Type(AsyncZMQSocketChannel)  # type:ignore[assignment]
+    stdin_channel_class = Type(AsyncZMQSocketChannel)  # type:ignore[assignment]
+    hb_channel_class = Type(HBChannel)  # type:ignore[assignment]
+    control_channel_class = Type(AsyncZMQSocketChannel)  # type:ignore[assignment]
 
     _recv_reply = KernelClient._async_recv_reply
 

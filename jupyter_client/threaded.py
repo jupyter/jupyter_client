@@ -335,11 +335,11 @@ class ThreadedKernelClient(KernelClient):
         if self.ioloop_thread and self.ioloop_thread.is_alive():
             self.ioloop_thread.stop()
 
-    iopub_channel_class = Type(ThreadedZMQSocketChannel)
-    shell_channel_class = Type(ThreadedZMQSocketChannel)
-    stdin_channel_class = Type(ThreadedZMQSocketChannel)
-    hb_channel_class = Type(HBChannel)
-    control_channel_class = Type(ThreadedZMQSocketChannel)
+    iopub_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[assignment]
+    shell_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[assignment]
+    stdin_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[assignment]
+    hb_channel_class = Type(HBChannel)  # type:ignore[assignment]
+    control_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[assignment]
 
     def is_alive(self) -> bool:
         """Is the kernel process still running?"""

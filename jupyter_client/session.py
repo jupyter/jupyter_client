@@ -759,7 +759,7 @@ class Session(Configurable):
         content: dict[str, t.Any] | None = None,
         parent: dict[str, t.Any] | None = None,
         ident: bytes | list[bytes] | None = None,
-        buffers: list[bytes] | None = None,
+        buffers: list[bytes | memoryview[bytes]] | None = None,
         track: bool = False,
         header: dict[str, t.Any] | None = None,
         metadata: dict[str, t.Any] | None = None,
@@ -844,6 +844,7 @@ class Session(Configurable):
                     raise TypeError(emsg) from e
             # memoryview.contiguous is new in 3.3,
             # just skip the check on Python 2
+            assert hasattr(view, "contiguous"), "We should only be on python 3.9+ now"
             if hasattr(view, "contiguous") and not view.contiguous:
                 # zmq requires memoryviews to be contiguous
                 raise ValueError("Buffer %i (%r) is not contiguous" % (idx, buf))
@@ -851,7 +852,7 @@ class Session(Configurable):
         if self.adapt_version:
             msg = adapt(msg, self.adapt_version)
         to_send = self.serialize(msg, ident)
-        to_send.extend(buffers)
+        to_send.extend(buffers)  # type: ignore[arg-type]
         longest = max([len(s) for s in to_send])
         copy = longest < self.copy_threshold
 
