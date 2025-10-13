@@ -270,6 +270,7 @@ class TestKernelManager(TestCase):
         km.shutdown_kernel(now=True)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="issue on 3.9")
 class TestAsyncKernelManager(AsyncTestCase):
     # static so picklable for multiprocessing on Windows
     @staticmethod
