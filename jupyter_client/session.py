@@ -812,7 +812,7 @@ class Session(Configurable):
             track = False
 
         if isinstance(stream, zmq.asyncio.Socket):
-            assert stream is not None  # type:ignore[unreachable]
+            assert stream is not None
             stream = zmq.Socket.shadow(stream.underlying)
 
         if isinstance(msg_or_type, Message | dict):

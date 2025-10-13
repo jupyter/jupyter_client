@@ -391,7 +391,7 @@ class KernelManager(ConnectionFileMixin):
         self.kernel_id = self.kernel_id or kw.pop("kernel_id", str(uuid.uuid4()))
         # save kwargs for use in restart
         # assigning Traitlets Dicts to Dict make mypy unhappy but is ok
-        self._launch_args = kw.copy()  # type:ignore [assignment]
+        self._launch_args = kw.copy()
         if self.provisioner is None:  # will not be None on restarts
             self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
                 self.kernel_id,

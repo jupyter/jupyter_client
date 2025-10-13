@@ -181,7 +181,7 @@ def _load_ips_psutil() -> None:
 
 def _load_ips_netifaces() -> None:
     """load ip addresses with netifaces"""
-    import netifaces  # type: ignore[import-not-found]
+    import netifaces
 
     addr_dict: dict[str, list[str]] = {}
 
