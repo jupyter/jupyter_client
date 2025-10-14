@@ -810,10 +810,6 @@ class Session(Configurable):
             # ZMQStreams and dummy sockets do not support tracking.
             track = False
 
-        if isinstance(stream, zmq.asyncio.Socket):
-            assert stream is not None  # type:ignore[unreachable]
-            stream = zmq.Socket.shadow(stream.underlying)
-
         if isinstance(msg_or_type, (Message, dict)):
             # We got a Message or message dict, not a msg_type so don't
             # build a new Message.
