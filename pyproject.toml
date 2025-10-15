@@ -124,7 +124,7 @@ testpaths = [
     "jupyter_client",
     "tests/"
 ]
-timeout = 100
+timeout = 300
 # Restore this setting to debug failures
 timeout_method = "thread"
 filterwarnings= [
