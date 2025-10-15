@@ -58,6 +58,8 @@ jobs:
         if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
         run: |
           hatch run cov:test --cov-fail-under 75
+        env:
+          PYTHONTRACEMALLOC: "10"
       - name: Run the tests on pypy
         if: ${{ startsWith(matrix.python-version, 'pypy') }}
         run: |

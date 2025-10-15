@@ -87,7 +87,7 @@ api = "sphinx-apidoc -o docs/api -f -E jupyter_client"
 [tool.hatch.envs.test]
 features = ["test"]
 [tool.hatch.envs.test.scripts]
-test = "python -m pytest -vv {args}"
+test = "python -m pytest -W default -vv {args}"
 nowarn = "test -W default {args}"
 
 [tool.hatch.envs.cov]
