@@ -132,6 +132,12 @@ jobs:
         with:
           dependency_type: minimum
           python_version: "3.10"
+
+      - name: show env
+        run: |
+          hatch -e test run python -VV
+          hatch -e test run pip freeze
+
       - name: Run the unit tests
         run: |
           hatch -vv run test:nowarn
