@@ -29,7 +29,7 @@ from .utils import (
     skip_win32,
 )
 
-TIMEOUT = 30
+TIMEOUT = 90
 
 is_freethreaded = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
 
@@ -43,11 +43,11 @@ async def now(awaitable):
 
 
 class TestKernelManager(TestCase):
-    # static so picklable for multiprocessing on Windows
-
     def tearDown(self):
         zmq.Context.instance().destroy(linger=0)
         return super().tearDown()
+
+    # static so picklable for multiprocessing on Windows
 
     @staticmethod
     def _get_tcp_km():

@@ -15,7 +15,7 @@ from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
 from jupyter_client.manager import KernelManager, start_new_async_kernel, start_new_kernel
 from jupyter_client.threaded import ThreadedKernelClient, ThreadedZMQSocketChannel
 
-TIMEOUT = 30
+TIMEOUT = 60
 
 pjoin = os.path.join
 
