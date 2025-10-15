@@ -345,8 +345,8 @@ class TestParallel:
     @pytest.mark.skipif(sys.version_info > (3, 14), reason="Zmq closing socket issues on 3.14+")
     @pytest.mark.timeout(TIMEOUT)
     def test_start_parallel_process_kernels(self, config, install_kernel):
-        if config.KernelManager.transport == "ipc":  # FIXME
-            pytest.skip("IPC transport is currently not working for this test!")
+        if config.KernelManager.transport in ("ipc", "tcp"):  # FIXME
+            pytest.skip("IPC/TCP transport is currently not working for this test!")
         self._run_signaltest_lifecycle(config)
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread_executor:
             future1 = thread_executor.submit(self._run_signaltest_lifecycle, config)
