@@ -334,6 +334,9 @@ class KernelClient(ConnectionFileMixin):
         if self.control_channel.is_alive():
             self.control_channel.stop()
 
+        if self._created_context and not self.context.closed:
+            self.context.destroy()
+
     @property
     def channels_running(self) -> bool:
         """Are any of the channels created and running?"""
