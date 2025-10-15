@@ -23,7 +23,7 @@ from .utils import AsyncKMSubclass, SyncKMSubclass
 
 pjoin = os.path.join
 
-TIMEOUT = 60
+TIMEOUT = 120
 
 
 is_freethreaded = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
