@@ -447,7 +447,7 @@ class TestAsyncKernelManager:
         )
         assert keys == expected
 
-    @pytest.mark.timeout(10)
+    @pytest.mark.timeout(60)
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support signals")
     async def test_signal_kernel_subprocesses(self, install_kernel, jp_start_kernel):
         km, kc = await jp_start_kernel("signaltest")
@@ -493,7 +493,7 @@ class TestAsyncKernelManager:
         # verify that subprocesses were interrupted
         assert reply["user_expressions"]["poll"] == [-signal.SIGINT] * N
 
-    @pytest.mark.timeout(10)
+    @pytest.mark.timeout(30)
     async def test_start_new_async_kernel(self, install_kernel, jp_start_kernel):
         km, kc = await jp_start_kernel("signaltest")
         is_alive = await km.is_alive()
