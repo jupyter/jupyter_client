@@ -52,7 +52,7 @@ test = [
     "paramiko; sys_platform == 'win32'",
     "pre-commit",
     "pytest",
-    "pytest-jupyter[client]>=0.4.1",
+    "pytest-jupyter[client]>=0.6.2",
     "pytest-cov",
     "pytest-timeout",
 ]
