@@ -11,6 +11,7 @@ from subprocess import PIPE
 from unittest import TestCase
 
 import pytest
+import zmq
 from jupyter_core import paths
 from tornado.testing import AsyncTestCase, gen_test
 from traitlets.config.loader import Config
@@ -43,6 +44,11 @@ async def now(awaitable):
 
 class TestKernelManager(TestCase):
     # static so picklable for multiprocessing on Windows
+
+    def tearDown(self):
+        zmq.Context.instance().destroy(linger=0)
+        return super().tearDown()
+
     @staticmethod
     def _get_tcp_km():
         c = Config()
@@ -265,13 +271,16 @@ class TestKernelManager(TestCase):
             time.sleep(0.1)
             if called:
                 break
-
+        stream.close()
         client.stop_channels()
         km.shutdown_kernel(now=True)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 10), reason="issue on 3.9")
 class TestAsyncKernelManager(AsyncTestCase):
+    def tearDown(self):
+        zmq.Context.instance().destroy(linger=0)
+        return super().tearDown()
+
     # static so picklable for multiprocessing on Windows
     @staticmethod
     def _get_tcp_km():
@@ -616,7 +625,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         await ensure_future(km.shutdown_kernel(kernel_id))
         assert kernel_id not in km.list_kernel_ids()
 
-    @gen_test
+    @gen_test(timeout=10)
     async def test_stream_on_recv(self):
         mkm = self._get_tcp_km()
         kid = await mkm.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -645,4 +654,5 @@ class TestAsyncKernelManager(AsyncTestCase):
             await asyncio.sleep(0.1)
 
         client.stop_channels()
+        stream.close()
         await km.shutdown_kernel(now=True)
