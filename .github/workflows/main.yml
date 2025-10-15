@@ -58,11 +58,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
+      - name: make hatch use our Python
+        run: |
+          echo "HATCH_PYTHON=$(which python3)" >> $GITHUB_ENV
+
       - name: disable warnings on pypy or windows
         if: ${{ startsWith(matrix.python-version, 'pypy') || startsWith(matrix.os, 'windows') }}
         run: |
           echo "PYTEST_ADDOPTS=${PYTEST_ADDOPTS:-} -W default" >> $GITHUB_ENV
-        shell: bash
 
       - name: disable coverage on pypy
         if: ${{ startsWith(matrix.python-version, 'pypy') }}
