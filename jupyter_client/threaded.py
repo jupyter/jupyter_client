@@ -263,8 +263,10 @@ class IOLoopThread(Thread):
             self._start_future.set_exception(e)
         else:
             self._start_future.set_result(None)
-
-        loop.run_until_complete(self._async_run())
+        try:
+            loop.run_until_complete(self._async_run())
+        finally:
+            loop.close()
 
     async def _async_run(self) -> None:
         """Run forever (until self._exiting is set)"""

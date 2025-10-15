@@ -403,6 +403,8 @@ class TestParallel:
         km.shutdown_kernel()
         assert km.context.closed
         kc.stop_channels()
+        # close the event loop
+        asyncio.get_event_loop().close()
 
 
 class TestAsyncKernelManager:
