@@ -127,7 +127,7 @@ class KernelClient(ConnectionFileMixin):
             else:
                 if self.log:
                     self.log.debug("Destroying zmq context for %s", self)
-                self.context.destroy()
+                self.context.destroy(linger=100)
         try:
             super_del = super().__del__  # type:ignore[misc]
         except AttributeError:
@@ -335,7 +335,7 @@ class KernelClient(ConnectionFileMixin):
             self.control_channel.stop()
 
         if self._created_context and not self.context.closed:
-            self.context.destroy()
+            self.context.destroy(linger=100)
 
     @property
     def channels_running(self) -> bool:
