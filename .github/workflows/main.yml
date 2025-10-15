@@ -13,6 +13,9 @@ defaults:
   run:
     shell: bash -eux {0}
 
+env:
+  HATCH_ENV: "cov"
+
 jobs:
   check_release:
     runs-on: ubuntu-latest
@@ -54,20 +57,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - name: Run the tests
-        if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
+
+      - name: disable warnings on pypy or windows
+        if: ${{ startsWith(matrix.python-version, 'pypy') || startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:test --cov-fail-under 75
-        env:
-          PYTHONTRACEMALLOC: "10"
-      - name: Run the tests on pypy
+          echo "PYTEST_ADDOPTS=${PYTEST_ADDOPTS:-} -W default" >> $GITHUB_ENV
+        shell: bash
+
+      - name: disable coverage on pypy
         if: ${{ startsWith(matrix.python-version, 'pypy') }}
         run: |
-          hatch run test:nowarn || hatch run test:nowarn --lf
-      - name: Run the tests on windows
-        if: ${{ startsWith(matrix.os, 'windows') }}
+          echo "HATCH_ENV=test" >> $GITHUB_ENV
+
+      - name: show env
         run: |
-          hatch run cov:nowarn || hatch run test:nowarn --lf
+          hatch -e ${HATCH_ENV} run python -VV
+          hatch -e ${HATCH_ENV} run pip freeze
+
+      - name: Run the tests
+        run: |
+          hatch run ${HATCH_ENV}:test
+        env:
+          PYTHONTRACEMALLOC: "10"
+
       - uses: jupyterlab/maintainer-tools/.github/actions/upload-coverage@v1
 
   coverage:
@@ -122,7 +134,7 @@ jobs:
           python_version: "3.10"
       - name: Run the unit tests
         run: |
-          hatch -vv run test:nowarn || hatch run test:nowarn --lf
+          hatch -vv run test:nowarn
 
   test_prereleases:
     name: Test Prereleases
@@ -135,7 +147,7 @@ jobs:
           dependency_type: pre
       - name: Run the tests
         run: |
-          hatch run test:nowarn || hatch run test:nowarn --lf
+          hatch run test:nowarn
 
   make_sdist:
     name: Make SDist
@@ -155,4 +167,4 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - uses: jupyterlab/maintainer-tools/.github/actions/test-sdist@v1
         with:
-          test_command: pytest -vv || pytest -vv --lf
+          test_command: pytest -vv
