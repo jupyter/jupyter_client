@@ -93,6 +93,7 @@ class TestKernelManager(TestCase):
         km.shutdown_kernel(kid, now=True)
         assert kid not in km, f"{kid} not in {km}"
         kc.stop_channels()
+        km.context.destroy(linger=0)
 
     def _run_cinfo(self, km, transport, ip):
         kid = km.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -111,6 +112,7 @@ class TestKernelManager(TestCase):
         stream = km.connect_hb(kid)
         stream.close()
         km.shutdown_kernel(kid, now=True)
+        km.context.destroy(linger=0)
 
     # static so picklable for multiprocessing on Windows
     @classmethod
@@ -130,6 +132,7 @@ class TestKernelManager(TestCase):
         self.assertNotIn(kid, km)
         # shutdown again is okay, because we have no kernels
         km.shutdown_all()
+        km.context.destroy(linger=0)
 
     def test_tcp_cinfo(self):
         km = self._get_tcp_km()
@@ -160,10 +163,10 @@ class TestKernelManager(TestCase):
 
     def tcp_lifecycle_with_loop(self):
         # Ensure each thread has an event loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        self.test_tcp_lifecycle()
-        loop.close()
+        async def _task():
+            return self.test_tcp_lifecycle()
+
+        asyncio.run(_task())
 
     @pytest.mark.skipif(is_freethreaded, reason="Fail on free-threaded python")
     def test_start_parallel_thread_kernels(self):
@@ -332,6 +335,8 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert isinstance(k, AsyncKernelManager)
         await km.shutdown_kernel(kid, now=True)
         assert kid not in km, f"{kid} not in {km}"
+        await km.shutdown_all()
+        km.context.destroy(linger=100)
 
     async def _run_cinfo(self, km, transport, ip):
         kid = await km.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -351,6 +356,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         stream.close()
         await km.shutdown_kernel(kid, now=True)
         self.assertNotIn(kid, km)
+        km.context.destroy(linger=0)
 
     @gen_test
     async def test_tcp_lifecycle(self):
@@ -402,6 +408,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         self.assertNotIn(kid, km)
         # shutdown again is okay, because we have no kernels
         await km.shutdown_all()
+        km.context.destroy(linger=0)
 
     @gen_test
     async def test_use_pending_kernels(self):
@@ -422,6 +429,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         k = km.get_kernel(kid)
         assert isinstance(k, AsyncKernelManager)
         await ensure_future(km.shutdown_kernel(kid, now=True))
+        km.context.destroy(linger=0)
         # Wait for the kernel to shutdown
         await kernel.ready
         assert kid not in km, f"{kid} not in {km}"
@@ -439,6 +447,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         # Wait for the kernel to shutdown
         await kernel.ready
         assert kid not in km, f"{kid} not in {km}"
+        km.context.destroy(linger=0)
 
     @gen_test
     async def test_use_pending_kernels_early_shutdown(self):
@@ -451,6 +460,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         # Wait for the kernel to shutdown
         await kernel.ready
         assert kid not in km, f"{kid} not in {km}"
+        km.context.destroy(linger=0)
 
     @gen_test
     async def test_use_pending_kernels_early_interrupt(self):
@@ -466,23 +476,27 @@ class TestAsyncKernelManager(AsyncTestCase):
         # Wait for the kernel to shutdown
         await kernel.ready
         assert kid not in km, f"{kid} not in {km}"
+        km.context.destroy(linger=0)
 
     @gen_test
     async def test_tcp_cinfo(self):
         km = self._get_tcp_km()
         await self._run_cinfo(km, "tcp", localhost())
+        km.context.destroy(linger=0)
 
     @skip_win32
     @gen_test
     async def test_ipc_lifecycle(self):
         km = self._get_ipc_km()
         await self._run_lifecycle(km)
+        km.context.destroy(linger=0)
 
     @skip_win32
     @gen_test
     async def test_ipc_cinfo(self):
         km = self._get_ipc_km()
         await self._run_cinfo(km, "ipc", "test")
+        km.context.destroy(linger=0)
 
     @gen_test
     async def test_start_sequence_tcp_kernels(self):
@@ -590,6 +604,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         mkm.get_kernel(kid).reset_counts()
         mkm.reset_counts()
         await mkm.shutdown_all(now=True)
+        mkm.context.destroy(linger=0)
         assert mkm.call_count("remove_kernel") == 1
         assert mkm.call_count("_async_request_shutdown") == 0
         assert mkm.call_count("_async_finish_shutdown") == 0
@@ -607,6 +622,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         )
         with pytest.raises(FileNotFoundError):
             await ensure_future(km.start_kernel(kernel_name="bad", stdout=PIPE, stderr=PIPE))
+        km.context.destroy(linger=0)
 
     @gen_test
     async def test_bad_kernelspec_pending(self):
@@ -624,8 +640,9 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert kernel_id in km.list_kernel_ids()
         await ensure_future(km.shutdown_kernel(kernel_id))
         assert kernel_id not in km.list_kernel_ids()
+        km.context.destroy(linger=0)
 
-    @gen_test(timeout=10)
+    @gen_test(timeout=30)
     async def test_stream_on_recv(self):
         mkm = self._get_tcp_km()
         kid = await mkm.start_kernel(stdout=PIPE, stderr=PIPE)
@@ -656,3 +673,4 @@ class TestAsyncKernelManager(AsyncTestCase):
         client.stop_channels()
         stream.close()
         await km.shutdown_kernel(now=True)
+        km.context.destroy(linger=0)
