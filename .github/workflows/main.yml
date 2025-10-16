@@ -173,3 +173,20 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/test-sdist@v1
         with:
           test_command: pytest -vv
+
+  tests_check: # This job does nothing and is only used for the branch protection
+    if: always()
+    needs:
+      - coverage
+      - docs
+      - lint
+      - check_links
+      - test_minimum_verisons
+      - test_prereleases
+      - test_sdist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
