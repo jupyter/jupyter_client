@@ -124,7 +124,7 @@ class MultiKernelManager(LoggingConfigurable):
         if self._created_context and self.context and not self.context.closed:
             if self.log:
                 self.log.debug("Destroying zmq context for %s", self)
-            self.context.destroy()
+            self.context.destroy(linger=1000)
         try:
             super_del = super().__del__  # type:ignore[misc]
         except AttributeError:
