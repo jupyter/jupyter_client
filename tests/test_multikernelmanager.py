@@ -642,7 +642,7 @@ class TestAsyncKernelManager(AsyncTestCase):
         assert kernel_id not in km.list_kernel_ids()
         km.context.destroy(linger=0)
 
-    @gen_test(timeout=30)
+    @gen_test(timeout=TIMEOUT)
     async def test_stream_on_recv(self):
         mkm = self._get_tcp_km()
         kid = await mkm.start_kernel(stdout=PIPE, stderr=PIPE)
