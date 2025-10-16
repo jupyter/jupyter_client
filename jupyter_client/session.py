@@ -620,7 +620,7 @@ class Session(Configurable):
             unpacked = unpack(packed)
             assert unpacked == msg_list
         except Exception as e:
-            msg = f"unpacker '{self.unpacker}' could not handle output from packer '{self.packer}': {e}"
+            msg = f"unpacker {self.unpacker!r} could not handle output from packer {self.packer!r}: {e}"
             raise ValueError(msg) from e
 
         # check datetime support
