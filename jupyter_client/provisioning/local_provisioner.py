@@ -1,11 +1,12 @@
 """Kernel Provisioner Classes"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
 import os
 import signal
 import sys
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
@@ -13,7 +14,7 @@ from ..localinterfaces import is_local_ip, local_ips
 from .provisioner_base import KernelProvisionerBase
 
 
-class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
+class LocalProvisioner(KernelProvisionerBase):
     """
     :class:`LocalProvisioner` is a concrete class of ABC :py:class:`KernelProvisionerBase`
     and is the out-of-box default implementation used when no kernel provisioner is
@@ -36,14 +37,14 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     def has_process(self) -> bool:
         return self.process is not None
 
-    async def poll(self) -> Optional[int]:
+    async def poll(self) -> int | None:
         """Poll the provisioner."""
         ret = 0
         if self.process:
             ret = self.process.poll()  # type:ignore[unreachable]
         return ret
 
-    async def wait(self) -> Optional[int]:
+    async def wait(self) -> int | None:
         """Wait for the provisioner process."""
         ret = 0
         if self.process:
@@ -128,14 +129,19 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         # has already terminated. Ignore it.
         if sys.platform == "win32":
             if os_error.winerror != 5:
-                raise
+                err_message = f"Invalid Error, expecting error number to be 5, got {os_error}"
+                raise ValueError(err_message)
+
         # On Unix, we may get an ESRCH error (or ProcessLookupError instance) if
         # the process has already terminated. Ignore it.
         else:
             from errno import ESRCH
 
             if not isinstance(os_error, ProcessLookupError) or os_error.errno != ESRCH:
-                raise
+                err_message = (
+                    f"Invalid Error, expecting ProcessLookupError or ESRCH, got {os_error}"
+                )
+                raise ValueError(err_message)
 
     async def cleanup(self, restart: bool = False) -> None:
         """Clean up the resources used by the provisioner and optionally restart."""

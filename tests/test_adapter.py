@@ -1,4 +1,5 @@
 """Tests for adapting Jupyter msg spec versions"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import copy
@@ -101,7 +102,7 @@ class V4toV5TestCase(AdapterTest):
                 "payload": [{"source": "page", "text": "blah"}],
             },
         )
-        v4, v5 = self.adapt(msg)
+        _v4, v5 = self.adapt(msg)
         v5c = v5["content"]
         self.assertNotIn("user_variables", v5c)
         self.assertEqual(v5c["user_expressions"], {"a": 1, "a+a": 2})

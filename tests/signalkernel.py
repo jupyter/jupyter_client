@@ -1,4 +1,5 @@
 """Test kernel for signalling subprocesses"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
@@ -30,7 +31,7 @@ class SignalTestKernel(Kernel):
         if os.environ.get("NO_SHUTDOWN_REPLY") != "1":
             await super().shutdown_request(stream, ident, parent)
 
-    async def do_execute(
+    def do_execute(
         self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
     ):
         code = code.strip()
@@ -47,31 +48,12 @@ class SignalTestKernel(Kernel):
         elif code == "env":
             reply["user_expressions"]["env"] = os.getenv("TEST_VARS", "")
         elif code == "sleep":
-            import ipykernel
-
-            if ipykernel.version_info < (7, 0):
-                # ipykernel before anyio.
-                try:
-                    time.sleep(10)
-                except KeyboardInterrupt:
-                    reply["user_expressions"]["interrupted"] = True
-                else:
-                    reply["user_expressions"]["interrupted"] = False
+            try:
+                time.sleep(10)
+            except KeyboardInterrupt:
+                reply["user_expressions"]["interrupted"] = True
             else:
-                # ipykernel after anyio.
-                from anyio import create_task_group, open_signal_receiver, sleep
-
-                async def signal_handler(cancel_scope, reply):
-                    with open_signal_receiver(signal.SIGINT) as signals:
-                        async for _ in signals:
-                            reply["user_expressions"]["interrupted"] = True
-                            cancel_scope.cancel()
-                            return
-
                 reply["user_expressions"]["interrupted"] = False
-                async with create_task_group() as tg:
-                    tg.start_soon(signal_handler, tg.cancel_scope, reply)
-                    tg.start_soon(sleep, 10)
         else:
             reply["status"] = "error"
             reply["ename"] = "Error"

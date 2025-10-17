@@ -1,4 +1,5 @@
 """A Jupyter console app to run files."""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
@@ -37,14 +38,14 @@ frontend_aliases = set(frontend_aliases_dict.keys())
 frontend_flags = set(frontend_flags_dict.keys())
 
 
-class RunApp(JupyterApp, JupyterConsoleApp):  # type:ignore[misc]
+class RunApp(JupyterApp, JupyterConsoleApp):
     """An Jupyter Console app to run files."""
 
     version = __version__
     name = "jupyter run"
     description = """Run Jupyter kernel code."""
-    flags = Dict(flags)  # type:ignore[assignment]
-    aliases = Dict(aliases)  # type:ignore[assignment]
+    flags = Dict(flags)
+    aliases = Dict(aliases)
     frontend_aliases = Any(frontend_aliases)
     frontend_flags = Any(frontend_flags)
     kernel_timeout = Float(

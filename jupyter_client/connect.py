@@ -3,6 +3,7 @@
 The :class:`ConnectionFileMixin` class in this module encapsulates the logic
 related to writing and reading connections files.
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
@@ -293,7 +294,7 @@ def tunnel_to_kernel(
     else:
         password = getpass("SSH Password for %s: " % sshserver)
 
-    for lp, rp in zip(lports, rports):
+    for lp, rp in zip(lports, rports, strict=False):
         tunnel.ssh_tunnel(lp, rp, sshserver, remote_ip, sshkey, password)
 
     return tuple(lports)
@@ -717,9 +718,9 @@ class LocalPortCache(SingletonConfigurable):
 
 
 __all__ = [
-    "write_connection_file",
-    "find_connection_file",
-    "tunnel_to_kernel",
     "KernelConnectionInfo",
     "LocalPortCache",
+    "find_connection_file",
+    "tunnel_to_kernel",
+    "write_connection_file",
 ]

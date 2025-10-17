@@ -1,4 +1,5 @@
 """test building messages with Session"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import hmac
@@ -63,7 +64,7 @@ class TestSession:
     def test_msg(self, session):
         """message format"""
         msg = session.msg("execute")
-        thekeys = set("header parent_header metadata content msg_type msg_id".split())
+        thekeys = {"header", "parent_header", "metadata", "content", "msg_type", "msg_id"}
         s = set(msg.keys())
         self.assertEqual(s, thekeys)
         self.assertTrue(isinstance(msg["content"], dict))
