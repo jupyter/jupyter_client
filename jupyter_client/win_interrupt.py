@@ -39,6 +39,7 @@ def create_interrupt_event() -> Any:
         manual_reset = False
         try:
             from ipykernel.parentpoller import ParentPollerWindows
+
             if hasattr(ParentPollerWindows, "reset_event"):
                 manual_reset = True
         except ImportError:
