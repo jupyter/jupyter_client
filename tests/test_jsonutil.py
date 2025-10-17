@@ -1,4 +1,5 @@
 """Test suite for our JSON utilities."""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import datetime
@@ -166,7 +167,7 @@ def test_json_default():
         (True, None),
         (False, None),
         (None, None),
-        ({"key": b"\xFF"}, {"key": "/w=="}),
+        ({"key": b"\xff"}, {"key": "/w=="}),
         # Containers
         ([1, 2], None),
         ((1, 2), [1, 2]),

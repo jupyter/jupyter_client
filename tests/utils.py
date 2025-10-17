@@ -1,6 +1,5 @@
-"""Testing utils for jupyter_client tests
+"""Testing utils for jupyter_client tests"""
 
-"""
 import json
 import os
 import sys
