@@ -1,10 +1,8 @@
-"""Testing utils for jupyter_client tests
+"""Testing utils for jupyter_client tests"""
 
-"""
 import json
 import os
 import sys
-from typing import Dict
 
 import pytest
 
@@ -41,7 +39,7 @@ def install_kernel(kernels_dir, argv=None, name="test", display_name=None):
 
 
 class RecordCallMixin:
-    method_calls: Dict[str, int]
+    method_calls: dict[str, int]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -1,4 +1,5 @@
 """Apps for managing kernel specs."""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
@@ -8,6 +9,7 @@ import json
 import os.path
 import sys
 import typing as t
+from pathlib import Path
 
 from jupyter_core.application import JupyterApp, base_aliases, base_flags
 from traitlets import Bool, Dict, Instance, List, Unicode
@@ -29,11 +31,19 @@ class ListKernelSpecs(JupyterApp):
         help="output spec name and location as machine-readable json.",
         config=True,
     )
-
+    missing_kernels = Bool(
+        False,
+        help="List only specs with missing interpreters.",
+        config=True,
+    )
     flags = {
         "json": (
             {"ListKernelSpecs": {"json_output": True}},
             "output spec name and location as machine-readable json.",
+        ),
+        "missing": (
+            {"ListKernelSpecs": {"missing_kernels": True}},
+            "output only missing kernels",
         ),
         "debug": base_flags["debug"],
     }
@@ -45,6 +55,10 @@ class ListKernelSpecs(JupyterApp):
         """Start the application."""
         paths = self.kernel_spec_manager.find_kernel_specs()
         specs = self.kernel_spec_manager.get_all_specs()
+
+        if self.missing_kernels:
+            paths, specs = _limit_to_missing(paths, specs)
+
         if not self.json_output:
             if not specs:
                 print("No kernels available")
@@ -177,6 +191,11 @@ class RemoveKernelSpec(JupyterApp):
 
     force = Bool(False, config=True, help="""Force removal, don't prompt for confirmation.""")
     spec_names = List(Unicode())
+    missing_kernels = Bool(
+        False,
+        help="Remove missing specs.",
+        config=True,
+    )
 
     kernel_spec_manager = Instance(KernelSpecManager)
 
@@ -185,6 +204,10 @@ class RemoveKernelSpec(JupyterApp):
 
     flags = {
         "f": ({"RemoveKernelSpec": {"force": True}}, force.help),
+        "missing": (
+            {"RemoveKernelSpec": {"missing_kernels": True}},
+            "remove missing kernels",
+        ),
     }
     flags.update(JupyterApp.flags)
 
@@ -195,12 +218,22 @@ class RemoveKernelSpec(JupyterApp):
         if self.extra_args:
             self.spec_names = sorted(set(self.extra_args))  # remove duplicates
         else:
-            self.exit("No kernelspec specified.")
+            self.spec_names = []
 
     def start(self) -> None:
         """Start the application."""
         self.kernel_spec_manager.ensure_native_kernel = False
         spec_paths = self.kernel_spec_manager.find_kernel_specs()
+
+        if self.missing_kernels:
+            _, spec = _limit_to_missing(
+                spec_paths,
+                self.kernel_spec_manager.get_all_specs(),
+            )
+
+            # append missing kernels
+            self.spec_names = sorted(set(self.spec_names + list(spec)))
+
         missing = set(self.spec_names).difference(set(spec_paths))
         if missing:
             self.exit("Couldn't find kernel spec(s): %s" % ", ".join(missing))
@@ -335,6 +368,23 @@ class KernelSpecApp(Application):
             self.exit(1)
         else:
             return self.subapp.start()
+
+
+def _limit_to_missing(
+    paths: dict[str, str], specs: dict[str, t.Any]
+) -> tuple[dict[str, str], dict[str, t.Any]]:
+    from shutil import which
+
+    missing: dict[str, t.Any] = {}
+    for name, data in specs.items():
+        exe = data["spec"]["argv"][0]
+        # if exe exists or is on the path, keep it
+        if Path(exe).exists() or which(exe):
+            continue
+        missing[name] = data
+
+    paths_: dict[str, str] = {k: v for k, v in paths.items() if k in missing}
+    return paths_, missing
 
 
 if __name__ == "__main__":

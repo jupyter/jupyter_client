@@ -1,6 +1,78 @@
-# Changes in Jupyter Client {#changelog}
+# Changes in Jupyter Client
 
 <!-- <START NEW CHANGELOG ENTRY> -->
+
+## 8.6.3
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.2...7d7251f24ed42c34b9b6ebdf09a5d89c46450131))
+
+### Enhancements made
+
+- Support psutil for finding network addresses [#1033](https://github.com/jupyter/jupyter_client/pull/1033) ([@juliangilbey](https://github.com/juliangilbey))
+
+### Bugs fixed
+
+- use simpler isoparse from dateutil to parse ISO-8601 timestamps [#1032](https://github.com/jupyter/jupyter_client/pull/1032) ([@minrk](https://github.com/minrk))
+- Avoid a DeprecationWarning on Python 3.13+ [#1027](https://github.com/jupyter/jupyter_client/pull/1027) ([@hroncok](https://github.com/hroncok))
+
+### Maintenance and upkeep improvements
+
+- Fix docs check [#1038](https://github.com/jupyter/jupyter_client/pull/1038) ([@minrk](https://github.com/minrk))
+- fix invocation of pip for nbconvert downstream [#1037](https://github.com/jupyter/jupyter_client/pull/1037) ([@minrk](https://github.com/minrk))
+- test on python 3.13-dev [#1036](https://github.com/jupyter/jupyter_client/pull/1036) ([@andife](https://github.com/andife))
+- Support ipykernel's use of anyio in test_signal_kernel_subprocesses [#1034](https://github.com/jupyter/jupyter_client/pull/1034) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2024-05-23&to=2024-09-17&type=c))
+
+[@andife](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aandife+updated%3A2024-05-23..2024-09-17&type=Issues) | [@hroncok](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahroncok+updated%3A2024-05-23..2024-09-17&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aianthomas23+updated%3A2024-05-23..2024-09-17&type=Issues) | [@juliangilbey](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ajuliangilbey+updated%3A2024-05-23..2024-09-17&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2024-05-23..2024-09-17&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
+## 8.6.2
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.1...474093f4237744dee2af1c8929e2afe5354ef356))
+
+### Bugs fixed
+
+- Use non-blocking zmq Poller [#1023](https://github.com/jupyter/jupyter_client/pull/1023) ([@fcollonval](https://github.com/fcollonval))
+
+### Documentation improvements
+
+- use https url [#1021](https://github.com/jupyter/jupyter_client/pull/1021) ([@Carreau](https://github.com/Carreau))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2024-03-12&to=2024-05-23&type=c))
+
+[@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2024-03-12..2024-05-23&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afcollonval+updated%3A2024-03-12..2024-05-23&type=Issues)
+
+## 8.6.1
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.0...8a3327ae58247be734d51f44c629354f0f600660))
+
+### Maintenance and upkeep improvements
+
+- Update Release Scripts [#1016](https://github.com/jupyter/jupyter_client/pull/1016) ([@blink1073](https://github.com/blink1073))
+- chore: update pre-commit hooks [#1008](https://github.com/jupyter/jupyter_client/pull/1008) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- chore: update pre-commit hooks [#1002](https://github.com/jupyter/jupyter_client/pull/1002) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Bump actions/setup-python from 4 to 5 [#1000](https://github.com/jupyter/jupyter_client/pull/1000) ([@dependabot](https://github.com/dependabot))
+- chore: update pre-commit hooks [#999](https://github.com/jupyter/jupyter_client/pull/999) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Bump conda-incubator/setup-miniconda from 2 to 3 [#998](https://github.com/jupyter/jupyter_client/pull/998) ([@dependabot](https://github.com/dependabot))
+- chore: update pre-commit hooks [#996](https://github.com/jupyter/jupyter_client/pull/996) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Documentation improvements
+
+- Fix docs reference [#1017](https://github.com/jupyter/jupyter_client/pull/1017) ([@blink1073](https://github.com/blink1073))
+- Add docs about packaging kernels [#1013](https://github.com/jupyter/jupyter_client/pull/1013) ([@blink1073](https://github.com/blink1073))
+- Clarify what a restart means [#966](https://github.com/jupyter/jupyter_client/pull/966) ([@mlucool](https://github.com/mlucool))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-11-06&to=2024-03-12&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-11-06..2024-03-12&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adependabot+updated%3A2023-11-06..2024-03-12&type=Issues) | [@mlucool](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Amlucool+updated%3A2023-11-06..2024-03-12&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Apre-commit-ci+updated%3A2023-11-06..2024-03-12&type=Issues) | [@Zsailer](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AZsailer+updated%3A2023-11-06..2024-03-12&type=Issues)
 
 ## 8.6.0
 
@@ -22,8 +94,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2023-10-25&to=2023-11-06&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2023-10-25..2023-11-06&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2023-10-25..2023-11-06&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2023-10-25..2023-11-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.5.0
 
@@ -446,16 +516,16 @@ No merged PRs
 
 ### Maintenance and upkeep improvements
 
-- \[pre-commit.ci\] pre-commit autoupdate [#824](https://github.com/jupyter/jupyter_client/pull/824) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#821](https://github.com/jupyter/jupyter_client/pull/821) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#820](https://github.com/jupyter/jupyter_client/pull/820) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#818](https://github.com/jupyter/jupyter_client/pull/818) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#816](https://github.com/jupyter/jupyter_client/pull/816) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#815](https://github.com/jupyter/jupyter_client/pull/815) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#812](https://github.com/jupyter/jupyter_client/pull/812) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#810](https://github.com/jupyter/jupyter_client/pull/810) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#809](https://github.com/jupyter/jupyter_client/pull/809) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#807](https://github.com/jupyter/jupyter_client/pull/807) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#824](https://github.com/jupyter/jupyter_client/pull/824) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#821](https://github.com/jupyter/jupyter_client/pull/821) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#820](https://github.com/jupyter/jupyter_client/pull/820) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#818](https://github.com/jupyter/jupyter_client/pull/818) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#816](https://github.com/jupyter/jupyter_client/pull/816) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#815](https://github.com/jupyter/jupyter_client/pull/815) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#812](https://github.com/jupyter/jupyter_client/pull/812) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#810](https://github.com/jupyter/jupyter_client/pull/810) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#809](https://github.com/jupyter/jupyter_client/pull/809) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#807](https://github.com/jupyter/jupyter_client/pull/807) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -474,7 +544,7 @@ No merged PRs
 ### Maintenance and upkeep improvements
 
 - Fix sphinx 5.0 support [#804](https://github.com/jupyter/jupyter_client/pull/804) ([@blink1073](https://github.com/blink1073))
-- \[pre-commit.ci\] pre-commit autoupdate [#799](https://github.com/jupyter/jupyter_client/pull/799) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#799](https://github.com/jupyter/jupyter_client/pull/799) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -506,9 +576,9 @@ No merged PRs
 
 ### Maintenance and upkeep improvements
 
-- \[pre-commit.ci\] pre-commit autoupdate [#792](https://github.com/jupyter/jupyter_client/pull/792) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#792](https://github.com/jupyter/jupyter_client/pull/792) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Use hatch backend [#789](https://github.com/jupyter/jupyter_client/pull/789) ([@blink1073](https://github.com/blink1073))
-- \[pre-commit.ci\] pre-commit autoupdate [#788](https://github.com/jupyter/jupyter_client/pull/788) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#788](https://github.com/jupyter/jupyter_client/pull/788) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Use flit build backend [#781](https://github.com/jupyter/jupyter_client/pull/781) ([@blink1073](https://github.com/blink1073))
 
 ### Contributors to this release
@@ -529,7 +599,7 @@ No merged PRs
 ### Maintenance and upkeep improvements
 
 - Allow bot PRs to be automatically labeled [#784](https://github.com/jupyter/jupyter_client/pull/784) ([@blink1073](https://github.com/blink1073))
-- \[pre-commit.ci\] pre-commit autoupdate [#783](https://github.com/jupyter/jupyter_client/pull/783) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#783](https://github.com/jupyter/jupyter_client/pull/783) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -547,8 +617,8 @@ No merged PRs
 
 ### Maintenance and upkeep improvements
 
-- \[pre-commit.ci\] pre-commit autoupdate [#773](https://github.com/jupyter/jupyter_client/pull/773) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#770](https://github.com/jupyter/jupyter_client/pull/770) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#773](https://github.com/jupyter/jupyter_client/pull/773) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#770](https://github.com/jupyter/jupyter_client/pull/770) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Improve mypy config [#769](https://github.com/jupyter/jupyter_client/pull/769) ([@blink1073](https://github.com/blink1073))
 - Clean up pre-commit [#768](https://github.com/jupyter/jupyter_client/pull/768) ([@blink1073](https://github.com/blink1073))
 
@@ -565,7 +635,7 @@ No merged PRs
 ### Maintenance and upkeep improvements
 
 - Include py.typed file [#766](https://github.com/jupyter/jupyter_client/pull/766) ([@blink1073](https://github.com/blink1073))
-- \[pre-commit.ci\] pre-commit autoupdate [#765](https://github.com/jupyter/jupyter_client/pull/765) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#765](https://github.com/jupyter/jupyter_client/pull/765) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - More Cleanup [#764](https://github.com/jupyter/jupyter_client/pull/764) ([@blink1073](https://github.com/blink1073))
 
 ### Contributors to this release
@@ -643,7 +713,7 @@ No merged PRs
 
 ### Documentation improvements
 
-- \[DOC\] improve kernel provisioner doc [#730](https://github.com/jupyter/jupyter_client/pull/730) ([@abzymeinsjtu](https://github.com/abzymeinsjtu))
+- [DOC] improve kernel provisioner doc [#730](https://github.com/jupyter/jupyter_client/pull/730) ([@abzymeinsjtu](https://github.com/abzymeinsjtu))
 - add changelog for message spec [#525](https://github.com/jupyter/jupyter_client/pull/525) ([@minrk](https://github.com/minrk))
 
 ### Contributors to this release
@@ -1258,9 +1328,6 @@ GitHub](https://github.com/jupyter/jupyter_client/milestones/4.2)
 ## 4.1
 
 ### 4.1.0
-
-[4.1.0 on
-GitHub](https://github.com/jupyter/jupyter_client/milestones/4.1)
 
 Highlights:
 

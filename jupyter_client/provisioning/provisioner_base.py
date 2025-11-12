@@ -1,9 +1,10 @@
 """Kernel Provisioner Classes"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
 from abc import ABC, ABCMeta, abstractmethod
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Union
 
 from traitlets.config import Instance, LoggingConfigurable, Unicode
 
@@ -14,9 +15,7 @@ class KernelProvisionerMeta(ABCMeta, type(LoggingConfigurable)):  # type: ignore
     pass
 
 
-class KernelProvisionerBase(  # type:ignore[misc]
-    ABC, LoggingConfigurable, metaclass=KernelProvisionerMeta
-):
+class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisionerMeta):  # type: ignore[metaclass]
     """
     Abstract base class defining methods for KernelProvisioner classes.
 
@@ -45,7 +44,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
         pass
 
     @abstractmethod
-    async def poll(self) -> Optional[int]:
+    async def poll(self) -> int | None:
         """
         Checks if kernel process is still running.
 
@@ -55,7 +54,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
         pass
 
     @abstractmethod
-    async def wait(self) -> Optional[int]:
+    async def wait(self) -> int | None:
         """
         Waits for kernel process to terminate.
 
@@ -103,7 +102,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
         pass
 
     @abstractmethod
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
+    async def launch_kernel(self, cmd: list[str], **kwargs: Any) -> KernelConnectionInfo:
         """
         Launch the kernel process and return its connection information.
 
@@ -136,7 +135,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
         """
         pass
 
-    async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
+    async def pre_launch(self, **kwargs: Any) -> dict[str, Any]:
         """
         Perform any steps in preparation for kernel process launch.
 
@@ -170,7 +169,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
         """
         pass
 
-    async def get_provisioner_info(self) -> Dict[str, Any]:
+    async def get_provisioner_info(self) -> dict[str, Any]:
         """
         Captures the base information necessary for persistence relative to this instance.
 
@@ -180,12 +179,12 @@ class KernelProvisionerBase(  # type:ignore[misc]
 
         NOTE: The superclass method must always be called first to ensure proper serialization.
         """
-        provisioner_info: Dict[str, Any] = {}
+        provisioner_info: dict[str, Any] = {}
         provisioner_info["kernel_id"] = self.kernel_id
         provisioner_info["connection_info"] = self.connection_info
         return provisioner_info
 
-    async def load_provisioner_info(self, provisioner_info: Dict) -> None:
+    async def load_provisioner_info(self, provisioner_info: dict) -> None:
         """
         Loads the base information necessary for persistence relative to this instance.
 
@@ -219,7 +218,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
         """
         return recommended
 
-    def _finalize_env(self, env: Dict[str, str]) -> None:
+    def _finalize_env(self, env: dict[str, str]) -> None:
         """
         Ensures env is appropriate prior to launch.
 
@@ -233,7 +232,7 @@ class KernelProvisionerBase(  # type:ignore[misc]
             # If set, it can bork all the things.
             env.pop("PYTHONEXECUTABLE", None)
 
-    def __apply_env_substitutions(self, substitution_values: Dict[str, str]) -> Dict[str, str]:
+    def __apply_env_substitutions(self, substitution_values: dict[str, str]) -> dict[str, str]:
         """
         Walks entries in the kernelspec's env stanza and applies substitutions from current env.
 
