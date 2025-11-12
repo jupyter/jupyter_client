@@ -439,7 +439,7 @@ class Session(Configurable):
 
     @default("extract_header_dates")
     def _extract_header_dates_default(self):
-        msg = """Session.extract_header_dates = True is deprecated in jupyter-client 8.6
+        msg = """Session.extract_header_dates = True is deprecated in jupyter-client 8.7
 
         set cfg.Session.extract_header_dates = False
         or JUPYTER_SESSION_EXTRACT_HEADER_DATES=0
