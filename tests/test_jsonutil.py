@@ -180,6 +180,7 @@ def test_json_default():
         (MyFloat(), 3.14),
         (MyInt(), 389),
         (datetime.date(2025, 4, 8), "2025-04-08"),
+        (datetime.timedelta(days=2, minutes=1, seconds=10), "2 days, 0:01:10"),
     ]
 
     for val, jval in pairs:
