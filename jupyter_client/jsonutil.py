@@ -9,7 +9,7 @@ import types
 import warnings
 from binascii import b2a_base64
 from collections.abc import Iterable
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any, Union
 
 from dateutil.parser import isoparse as _dateutil_parse
@@ -126,6 +126,9 @@ def json_default(obj: Any) -> Any:
     if isinstance(obj, numbers.Real):
         return float(obj)
 
+    if isinstance(obj, timedelta):
+        return str(obj)
+
     raise TypeError("%r is not JSON serializable" % obj)
 
 
@@ -191,6 +194,9 @@ def json_clean(obj: Any) -> Any:
 
     if isinstance(obj, datetime | date):
         return obj.strftime(ISO8601)
+
+    if isinstance(obj, timedelta):
+        return str(obj)
 
     # we don't understand it, it's probably an unserializable object
     raise ValueError("Can't clean for JSON: %r" % obj)
