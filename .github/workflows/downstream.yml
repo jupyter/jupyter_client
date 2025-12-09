@@ -114,10 +114,10 @@ jobs:
 
       - name: Test qtconsole
         shell: bash -l {0}
-        # Skip flaky test_scroll[False] - times out waiting for shell prompt in CI
+        # Skip test_scroll - teardown races with IOLoop shutdown cause TimeoutError in flush()
         run: |
           cd ${GITHUB_WORKSPACE}/../qtconsole
-          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes --deselect qtconsole/tests/test_00_console_widget.py::test_scroll[False] qtconsole
+          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes --deselect qtconsole/tests/test_00_console_widget.py::test_scroll qtconsole
 
   downstreams_check: # This job does nothing and is only used for the branch protection
     if: always()
