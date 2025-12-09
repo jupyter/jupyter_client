@@ -62,13 +62,13 @@ jobs:
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
-      - name: Setup conda ${{ matrix.python-version }}
+      - name: Setup conda
         uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           activate-environment: jupyter_kernel_test
-          miniforge-variant: Mambaforge
-          python-version: ${{ matrix.python-version }}
+          miniforge-version: latest
+          python-version: "3.10"
 
       - name: Test jupyter_kernel_test
         shell: bash -l {0}
