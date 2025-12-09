@@ -134,7 +134,9 @@ except ModuleNotFoundError:
     orjson_packer, orjson_unpacker = json_packer, json_unpacker
 else:
 
-    def orjson_packer(obj: t.Any, *, options=orjson.OPT_NAIVE_UTC | orjson.OPT_UTC_Z) -> bytes:
+    def orjson_packer(
+        obj: t.Any, *, options: int | None = orjson.OPT_NAIVE_UTC | orjson.OPT_UTC_Z
+    ) -> bytes:
         """Convert a json object to a bytes using orjson with fallback to json_packer."""
         try:
             return orjson.dumps(obj, default=json_default, options=options)
