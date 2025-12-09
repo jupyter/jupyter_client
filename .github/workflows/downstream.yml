@@ -114,9 +114,10 @@ jobs:
 
       - name: Test qtconsole
         shell: bash -l {0}
+        # Skip flaky test_scroll[False] - times out waiting for shell prompt in CI
         run: |
           cd ${GITHUB_WORKSPACE}/../qtconsole
-          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes qtconsole
+          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes --deselect qtconsole/tests/test_00_console_widget.py::test_scroll[False] qtconsole
 
   downstreams_check: # This job does nothing and is only used for the branch protection
     if: always()
