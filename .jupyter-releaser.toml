@@ -1,5 +1,6 @@
 [options]
 python-packages = ["."]
+version-cmd = "python -c \"from jupyter_client._version import __version__; print(__version__)\""
 
 [hooks]
 before-bump-version = ["pip install hatch"]
