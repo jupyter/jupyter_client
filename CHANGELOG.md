@@ -2,6 +2,46 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.7.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.3...7b4340d29da062cc2386fa218f645c7e80eb800f))
+
+### Enhancements made
+
+- allow configuring client_class and client_factory [#1081](https://github.com/jupyter/jupyter_client/pull/1081) ([@rgbkrk](https://github.com/rgbkrk))
+- Support date serialization in messages [#1060](https://github.com/jupyter/jupyter_client/pull/1060) ([@sebwills](https://github.com/sebwills))
+- feat: added `--missing` flag to list and remove subcommands [#1056](https://github.com/jupyter/jupyter_client/pull/1056) ([@wpk-nist-gov](https://github.com/wpk-nist-gov))
+- Set protocol version to 5.4 [#1054](https://github.com/jupyter/jupyter_client/pull/1054) ([@JamesWrigley](https://github.com/JamesWrigley))
+
+### Bugs fixed
+
+- don't include link-local addresses (169.254) in public_ips [#1040](https://github.com/jupyter/jupyter_client/pull/1040) ([@minrk](https://github.com/minrk))
+- jupyter-run: avoid traceback for NoSuchKernel [#994](https://github.com/jupyter/jupyter_client/pull/994) ([@minrk](https://github.com/minrk))
+
+### Maintenance and upkeep improvements
+
+- upgrade pypy [#1082](https://github.com/jupyter/jupyter_client/pull/1082) ([@rgbkrk](https://github.com/rgbkrk))
+- Some tests import anyio (depending on ipykernel version). [#1078](https://github.com/jupyter/jupyter_client/pull/1078) ([@Carreau](https://github.com/Carreau))
+- Drop 3.9, Start testing on 3.14 and 3.14-free-threaded, get tests passing again [#1076](https://github.com/jupyter/jupyter_client/pull/1076) ([@Carreau](https://github.com/Carreau))
+- Attempt to fix CI [#1068](https://github.com/jupyter/jupyter_client/pull/1068) ([@ianthomas23](https://github.com/ianthomas23))
+- Revert test changes of PR 1034 [#1067](https://github.com/jupyter/jupyter_client/pull/1067) ([@ianthomas23](https://github.com/ianthomas23))
+- Drop Python 3.8, update Python versions in tests [#1044](https://github.com/jupyter/jupyter_client/pull/1044) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Documentation improvements
+
+- [Docs] Use extension:filetype mapping in sphinx configuration [#1075](https://github.com/jupyter/jupyter_client/pull/1075) ([@Carreau](https://github.com/Carreau))
+- Update \_load_ips_psutil() docstring [#1050](https://github.com/jupyter/jupyter_client/pull/1050) ([@cben](https://github.com/cben))
+- Add messaging docs for optional features and kernel subshells [#1045](https://github.com/jupyter/jupyter_client/pull/1045) ([@ianthomas23](https://github.com/ianthomas23))
+- Clean changelog heading [#965](https://github.com/jupyter/jupyter_client/pull/965) ([@krassowski](https://github.com/krassowski))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2024-09-17&to=2025-12-09&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2024-09-17..2025-12-09&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2024-09-17..2025-12-09&type=Issues) | [@cben](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Acben+updated%3A2024-09-17..2025-12-09&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2024-09-17..2025-12-09&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aianthomas23+updated%3A2024-09-17..2025-12-09&type=Issues) | [@JamesWrigley](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AJamesWrigley+updated%3A2024-09-17..2025-12-09&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2024-09-17..2025-12-09&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akrassowski+updated%3A2024-09-17..2025-12-09&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2024-09-17..2025-12-09&type=Issues) | [@rgbkrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Argbkrk+updated%3A2024-09-17..2025-12-09&type=Issues) | [@sebwills](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Asebwills+updated%3A2024-09-17..2025-12-09&type=Issues) | [@takluyver](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Atakluyver+updated%3A2024-09-17..2025-12-09&type=Issues) | [@tmaxwell-anthropic](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Atmaxwell-anthropic+updated%3A2024-09-17..2025-12-09&type=Issues) | [@wpk-nist-gov](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Awpk-nist-gov+updated%3A2024-09-17..2025-12-09&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.6.3
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.2...7d7251f24ed42c34b9b6ebdf09a5d89c46450131))
@@ -27,8 +67,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2024-05-23&to=2024-09-17&type=c))
 
 [@andife](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aandife+updated%3A2024-05-23..2024-09-17&type=Issues) | [@hroncok](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahroncok+updated%3A2024-05-23..2024-09-17&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aianthomas23+updated%3A2024-05-23..2024-09-17&type=Issues) | [@juliangilbey](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ajuliangilbey+updated%3A2024-05-23..2024-09-17&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2024-05-23..2024-09-17&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.6.2
 
