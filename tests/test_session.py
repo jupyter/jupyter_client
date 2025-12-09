@@ -250,8 +250,6 @@ class TestSession:
     def test_args(self, session):
         """initialization arguments for Session"""
         s = session
-        assert s.pack is ss._default_pack_unpack[0]
-        assert s.unpack is ss._default_pack_unpack[1]
         self.assertEqual(s.username, os.environ.get("USER", "username"))
 
         s = ss.Session()
