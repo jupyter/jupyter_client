@@ -19,6 +19,8 @@ env:
 jobs:
   check_release:
     runs-on: ubuntu-latest
+    env:
+      HATCH_ENV: ""
     steps:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
