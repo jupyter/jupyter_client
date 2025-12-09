@@ -121,7 +121,6 @@ jobs:
     needs:
       - ipykernel
       - nbclient
-      - papermill
       - nbconvert
       - jupyter_server
       - jupyter_kernel_test
