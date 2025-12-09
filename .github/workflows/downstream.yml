@@ -127,7 +127,7 @@ jobs:
       - nbconvert
       - jupyter_server
       - jupyter_kernel_test
-      # qtconsole removed - too flaky in CI (GUI + async kernel tests)
+      - qtconsole
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
