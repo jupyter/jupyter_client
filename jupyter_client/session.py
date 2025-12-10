@@ -135,11 +135,11 @@ except ModuleNotFoundError:
 else:
 
     def orjson_packer(
-        obj: t.Any, *, options: int | None = orjson.OPT_NAIVE_UTC | orjson.OPT_UTC_Z
+        obj: t.Any, *, option: int | None = orjson.OPT_NAIVE_UTC | orjson.OPT_UTC_Z
     ) -> bytes:
         """Convert a json object to a bytes using orjson with fallback to json_packer."""
         try:
-            return orjson.dumps(obj, default=json_default, options=options)
+            return orjson.dumps(obj, default=json_default, option=option)
         except Exception:
             pass
         return json_packer(obj)
