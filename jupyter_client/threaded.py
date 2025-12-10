@@ -214,7 +214,13 @@ class ThreadedZMQSocketChannel:
 
     def _flush(self) -> None:
         """Callback for :method:`self.flush`."""
-        assert self.stream is not None
+        # Race condition: flush() checks stream validity then schedules this
+        # callback on the ioloop thread. Between scheduling and execution,
+        # stop_channels() may close the stream (e.g., during teardown).
+        # Handle gracefully rather than asserting, since this is an expected
+        # edge case during shutdown, not a programming error.
+        if self.stream is None or self.stream.closed():
+            return
         self.stream.flush()
         self._flushed = True
 
