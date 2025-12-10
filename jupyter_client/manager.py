@@ -280,7 +280,7 @@ class KernelManager(ConnectionFileMixin):
     # Kernel management
     # --------------------------------------------------------------------------
 
-    def resolve_path(self, path: str) -> t.Optional[str]:
+    def resolve_path(self, path: str) -> str | None:
         """Resolve path to given file."""
         assert self.provisioner is not None
         return self.provisioner.resolve_path(path)
