@@ -1,4 +1,5 @@
 """Utilities to manipulate JSON objects."""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import math
@@ -8,10 +9,10 @@ import types
 import warnings
 from binascii import b2a_base64
 from collections.abc import Iterable
-from datetime import datetime
-from typing import Any, Optional, Union
+from datetime import date, datetime
+from typing import Any, Union
 
-from dateutil.parser import parse as _dateutil_parse
+from dateutil.parser import isoparse as _dateutil_parse
 from dateutil.tz import tzlocal
 
 next_attr_name = "__next__"  # Not sure what downstream library uses this, but left it to be safe
@@ -28,7 +29,7 @@ ISO8601_PAT = re.compile(
 
 # holy crap, strptime is not threadsafe.
 # Calling it once at import seems to help.
-datetime.strptime("1", "%d")  # noqa
+datetime.strptime("2000-01-01", "%Y-%m-%d")  # noqa
 
 # -----------------------------------------------------------------------------
 # Classes and functions
@@ -51,7 +52,7 @@ def _ensure_tzinfo(dt: datetime) -> datetime:
     return dt
 
 
-def parse_date(s: Optional[str]) -> Optional[Union[str, datetime]]:
+def parse_date(s: str | None) -> Union[str, datetime] | None:
     """parse an ISO8601 date string
 
     If it is None or not a valid ISO8601 timestamp,
@@ -74,7 +75,7 @@ def extract_dates(obj: Any) -> Any:
         for k, v in obj.items():
             new_obj[k] = extract_dates(v)
         obj = new_obj
-    elif isinstance(obj, (list, tuple)):
+    elif isinstance(obj, list | tuple):
         obj = [extract_dates(o) for o in obj]
     elif isinstance(obj, str):
         obj = parse_date(obj)
@@ -87,7 +88,7 @@ def squash_dates(obj: Any) -> Any:
         obj = dict(obj)  # don't clobber
         for k, v in obj.items():
             obj[k] = squash_dates(v)
-    elif isinstance(obj, (list, tuple)):
+    elif isinstance(obj, list | tuple):
         obj = [squash_dates(o) for o in obj]
     elif isinstance(obj, datetime):
         obj = obj.isoformat()
@@ -109,6 +110,9 @@ def json_default(obj: Any) -> Any:
     if isinstance(obj, datetime):
         obj = _ensure_tzinfo(obj)
         return obj.isoformat().replace("+00:00", "Z")
+
+    if isinstance(obj, date):
+        return obj.isoformat()
 
     if isinstance(obj, bytes):
         return b2a_base64(obj, newline=False).decode("ascii")
@@ -185,7 +189,7 @@ def json_clean(obj: Any) -> Any:
             out[str(k)] = json_clean(v)
         return out
 
-    if isinstance(obj, datetime):
+    if isinstance(obj, datetime | date):
         return obj.strftime(ISO8601)
 
     # we don't understand it, it's probably an unserializable object

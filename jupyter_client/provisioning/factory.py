@@ -1,16 +1,13 @@
 """Kernel Provisioner Classes"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import glob
-import sys
-from os import getenv, path
-from typing import Any, Dict, List
 
 # See compatibility note on `group` keyword in https://docs.python.org/3/library/importlib.metadata.html#entry-points
-if sys.version_info < (3, 10):  # pragma: no cover
-    from importlib_metadata import EntryPoint, entry_points  # type:ignore[import-not-found]
-else:  # pragma: no cover
-    from importlib.metadata import EntryPoint, entry_points
+from importlib.metadata import EntryPoint, entry_points
+from os import getenv, path
+from typing import Any
 
 from traitlets.config import SingletonConfigurable, Unicode, default
 
@@ -33,7 +30,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
     """
 
     GROUP_NAME = "jupyter_client.kernel_provisioners"
-    provisioners: Dict[str, EntryPoint] = {}
+    provisioners: dict[str, EntryPoint] = {}
 
     default_provisioner_name_env = "JUPYTER_DEFAULT_PROVISIONER_NAME"
     default_provisioner_name = Unicode(
@@ -122,7 +119,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
                 is_available = False
         return is_available
 
-    def _get_provisioner_config(self, kernel_spec: Any) -> Dict[str, Any]:
+    def _get_provisioner_config(self, kernel_spec: Any) -> dict[str, Any]:
         """
         Return the kernel_provisioner stanza from the kernel_spec.
 
@@ -151,7 +148,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
             return env_provisioner  # Return what we found (plus config stanza if necessary)
         return {"provisioner_name": self.default_provisioner_name, "config": {}}
 
-    def get_provisioner_entries(self) -> Dict[str, str]:
+    def get_provisioner_entries(self) -> dict[str, str]:
         """
         Returns a dictionary of provisioner entries.
 
@@ -164,7 +161,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         return entries
 
     @staticmethod
-    def _get_all_provisioners() -> List[EntryPoint]:
+    def _get_all_provisioners() -> list[EntryPoint]:
         """Wrapper around entry_points (to fetch the set of provisioners) - primarily to facilitate testing."""
         return entry_points(group=KernelProvisionerFactory.GROUP_NAME)
 
@@ -196,5 +193,5 @@ class KernelProvisionerFactory(SingletonConfigurable):
             return EntryPoint(
                 "local-provisioner", "jupyter_client.provisioning", "LocalProvisioner"
             )
-
-        raise
+        err_message = "Was unable to find a provisioner"
+        raise RuntimeError(err_message)

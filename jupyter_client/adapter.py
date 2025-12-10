@@ -1,14 +1,15 @@
 """Adapters for Jupyter msg spec versions."""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import json
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from ._version import protocol_version_info
 
 
-def code_to_line(code: str, cursor_pos: int) -> Tuple[str, int]:
+def code_to_line(code: str, cursor_pos: int) -> tuple[str, int]:
     """Turn a multiline code block and cursor position into a single line
     and new cursor position.
 
@@ -59,17 +60,17 @@ class Adapter:
     Override message_type(msg) methods to create adapters.
     """
 
-    msg_type_map: Dict[str, str] = {}
+    msg_type_map: dict[str, str] = {}
 
-    def update_header(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def update_header(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Update the header."""
         return msg
 
-    def update_metadata(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def update_metadata(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Update the metadata."""
         return msg
 
-    def update_msg_type(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def update_msg_type(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Update the message type."""
         header = msg["header"]
         msg_type = header["msg_type"]
@@ -77,14 +78,14 @@ class Adapter:
             msg["msg_type"] = header["msg_type"] = self.msg_type_map[msg_type]
         return msg
 
-    def handle_reply_status_error(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def handle_reply_status_error(self, msg: dict[str, Any]) -> dict[str, Any]:
         """This will be called *instead of* the regular handler
 
         on any reply with status != ok
         """
         return msg
 
-    def __call__(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def __call__(self, msg: dict[str, Any]) -> dict[str, Any]:
         msg = self.update_header(msg)
         msg = self.update_metadata(msg)
         msg = self.update_msg_type(msg)
@@ -100,7 +101,7 @@ class Adapter:
         return handler(msg)
 
 
-def _version_str_to_list(version: str) -> List[int]:
+def _version_str_to_list(version: str) -> list[int]:
     """convert a version string to a list of ints
 
     non-int segments are excluded
@@ -127,7 +128,7 @@ class V5toV4(Adapter):
         "inspect_reply": "object_info_reply",
     }
 
-    def update_header(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def update_header(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Update the header."""
         msg["header"].pop("version", None)
         msg["parent_header"].pop("version", None)
@@ -135,7 +136,7 @@ class V5toV4(Adapter):
 
     # shell channel
 
-    def kernel_info_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def kernel_info_reply(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle a kernel info reply."""
         v4c = {}
         content = msg["content"]
@@ -152,20 +153,20 @@ class V5toV4(Adapter):
         msg["content"] = v4c
         return msg
 
-    def execute_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_request(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle an execute request."""
         content = msg["content"]
         content.setdefault("user_variables", [])
         return msg
 
-    def execute_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_reply(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle an execute reply."""
         content = msg["content"]
         content.setdefault("user_variables", {})
         # TODO: handle payloads
         return msg
 
-    def complete_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def complete_request(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle a complete request."""
         content = msg["content"]
         code = content["code"]
@@ -179,7 +180,7 @@ class V5toV4(Adapter):
         new_content["cursor_pos"] = cursor_pos
         return msg
 
-    def complete_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def complete_reply(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle a complete reply."""
         content = msg["content"]
         cursor_start = content.pop("cursor_start")
@@ -189,32 +190,32 @@ class V5toV4(Adapter):
         content.pop("metadata", None)
         return msg
 
-    def object_info_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def object_info_request(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle an object info request."""
         content = msg["content"]
         code = content["code"]
         cursor_pos = content["cursor_pos"]
-        line, _ = code_to_line(code, cursor_pos)
+        _line, _ = code_to_line(code, cursor_pos)
 
         new_content = msg["content"] = {}
         new_content["oname"] = extract_oname_v4(code, cursor_pos)
         new_content["detail_level"] = content["detail_level"]
         return msg
 
-    def object_info_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def object_info_reply(self, msg: dict[str, Any]) -> dict[str, Any]:
         """inspect_reply can't be easily backward compatible"""
         msg["content"] = {"found": False, "oname": "unknown"}
         return msg
 
     # iopub channel
 
-    def stream(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def stream(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle a stream message."""
         content = msg["content"]
         content["data"] = content.pop("text")
         return msg
 
-    def display_data(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def display_data(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle a display data message."""
         content = msg["content"]
         content.setdefault("source", "display")
@@ -229,7 +230,7 @@ class V5toV4(Adapter):
 
     # stdin channel
 
-    def input_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def input_request(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle an input request."""
         msg["content"].pop("password", None)
         return msg
@@ -243,7 +244,7 @@ class V4toV5(Adapter):
     # invert message renames above
     msg_type_map = {v: k for k, v in V5toV4.msg_type_map.items()}
 
-    def update_header(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def update_header(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Update the header."""
         msg["header"]["version"] = self.version
         if msg["parent_header"]:
@@ -252,7 +253,7 @@ class V4toV5(Adapter):
 
     # shell channel
 
-    def kernel_info_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def kernel_info_reply(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle a kernel info reply."""
         content = msg["content"]
         for key in ("protocol_version", "ipython_version"):
@@ -275,7 +276,7 @@ class V4toV5(Adapter):
         content["banner"] = ""
         return msg
 
-    def execute_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_request(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle an execute request."""
         content = msg["content"]
         user_variables = content.pop("user_variables", [])
@@ -284,7 +285,7 @@ class V4toV5(Adapter):
             user_expressions[v] = v
         return msg
 
-    def execute_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_reply(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle an execute reply."""
         content = msg["content"]
         user_expressions = content.setdefault("user_expressions", {})
@@ -301,7 +302,7 @@ class V4toV5(Adapter):
 
         return msg
 
-    def complete_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def complete_request(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle a complete request."""
         old_content = msg["content"]
 
@@ -310,7 +311,7 @@ class V4toV5(Adapter):
         new_content["cursor_pos"] = old_content["cursor_pos"]
         return msg
 
-    def complete_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def complete_reply(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle a complete reply."""
         # complete_reply needs more context than we have to get cursor_start and end.
         # use special end=null to indicate current cursor position and negative offset
@@ -328,7 +329,7 @@ class V4toV5(Adapter):
         new_content["metadata"] = {}
         return msg
 
-    def inspect_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def inspect_request(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle an inspect request."""
         content = msg["content"]
         name = content["oname"]
@@ -339,7 +340,7 @@ class V4toV5(Adapter):
         new_content["detail_level"] = content["detail_level"]
         return msg
 
-    def inspect_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def inspect_reply(self, msg: dict[str, Any]) -> dict[str, Any]:
         """inspect_reply can't be easily backward compatible"""
         content = msg["content"]
         new_content = msg["content"] = {"status": "ok"}
@@ -363,13 +364,13 @@ class V4toV5(Adapter):
 
     # iopub channel
 
-    def stream(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def stream(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle a stream message."""
         content = msg["content"]
         content["text"] = content.pop("data")
         return msg
 
-    def display_data(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def display_data(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle display data."""
         content = msg["content"]
         content.pop("source", None)
@@ -384,13 +385,13 @@ class V4toV5(Adapter):
 
     # stdin channel
 
-    def input_request(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+    def input_request(self, msg: dict[str, Any]) -> dict[str, Any]:
         """Handle an input request."""
         msg["content"].setdefault("password", False)
         return msg
 
 
-def adapt(msg: Dict[str, Any], to_version: int = protocol_version_info[0]) -> Dict[str, Any]:
+def adapt(msg: dict[str, Any], to_version: int = protocol_version_info[0]) -> dict[str, Any]:
     """Adapt a single message to a target version
 
     Parameters

@@ -1,4 +1,5 @@
 """A kernel manager for multiple kernels"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
@@ -123,7 +124,7 @@ class MultiKernelManager(LoggingConfigurable):
         if self._created_context and self.context and not self.context.closed:
             if self.log:
                 self.log.debug("Destroying zmq context for %s", self)
-            self.context.destroy()
+            self.context.destroy(linger=1000)
         try:
             super_del = super().__del__  # type:ignore[misc]
         except AttributeError:
@@ -262,9 +263,7 @@ class MultiKernelManager(LoggingConfigurable):
         km, kernel_name, kernel_id = self.pre_start_kernel(kernel_name, kwargs)
         if not isinstance(km, KernelManager):
             self.log.warning(  # type:ignore[unreachable]
-                "Kernel manager class ({km_class}) is not an instance of 'KernelManager'!".format(
-                    km_class=self.kernel_manager_class.__class__
-                )
+                f"Kernel manager class ({self.kernel_manager_class.__class__}) is not an instance of 'KernelManager'!"
             )
         kwargs["kernel_id"] = kernel_id  # Make kernel_id available to manager and provisioner
 

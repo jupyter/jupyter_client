@@ -1,12 +1,12 @@
 """A Jupyter console app to run files."""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
 
-import queue
+import atexit
 import signal
 import sys
-import time
 import typing as t
 
 from jupyter_core.application import JupyterApp, base_aliases, base_flags
@@ -38,14 +38,14 @@ frontend_aliases = set(frontend_aliases_dict.keys())
 frontend_flags = set(frontend_flags_dict.keys())
 
 
-class RunApp(JupyterApp, JupyterConsoleApp):  # type:ignore[misc]
+class RunApp(JupyterApp, JupyterConsoleApp):
     """An Jupyter Console app to run files."""
 
     version = __version__
     name = "jupyter run"
     description = """Run Jupyter kernel code."""
-    flags = Dict(flags)  # type:ignore[assignment]
-    aliases = Dict(aliases)  # type:ignore[assignment]
+    flags = Dict(flags)
+    aliases = Dict(aliases)
     frontend_aliases = Any(frontend_aliases)
     frontend_flags = Any(frontend_flags)
     kernel_timeout = Float(
@@ -73,7 +73,8 @@ class RunApp(JupyterApp, JupyterConsoleApp):  # type:ignore[misc]
         super().initialize(argv)
         JupyterConsoleApp.initialize(self)
         signal.signal(signal.SIGINT, self.handle_sigint)
-        self.init_kernel_info()
+        if self.kernel_manager:
+            atexit.register(self.kernel_manager.shutdown_kernel)
 
     def handle_sigint(self, *args: t.Any) -> None:
         """Handle SIGINT."""
@@ -82,28 +83,11 @@ class RunApp(JupyterApp, JupyterConsoleApp):  # type:ignore[misc]
         else:
             self.log.error("Cannot interrupt kernels we didn't start.\n")
 
-    def init_kernel_info(self) -> None:
-        """Wait for a kernel to be ready, and store kernel info"""
-        timeout = self.kernel_timeout
-        tic = time.time()
-        self.kernel_client.hb_channel.unpause()
-        msg_id = self.kernel_client.kernel_info()
-        while True:
-            try:
-                reply = self.kernel_client.get_shell_msg(timeout=1)
-            except queue.Empty as e:
-                if (time.time() - tic) > timeout:
-                    msg = "Kernel didn't respond to kernel_info_request"
-                    raise RuntimeError(msg) from e
-            else:
-                if reply["parent_header"].get("msg_id") == msg_id:
-                    self.kernel_info = reply["content"]
-                    return
-
     def start(self) -> None:
         """Start the application."""
         self.log.debug("jupyter run: starting...")
         super().start()
+        self.kernel_client.wait_for_ready(timeout=self.kernel_timeout)
         if self.filenames_to_run:
             for filename in self.filenames_to_run:
                 self.log.debug("jupyter run: executing `%s`", filename)
@@ -112,8 +96,10 @@ class RunApp(JupyterApp, JupyterConsoleApp):  # type:ignore[misc]
                     reply = self.kernel_client.execute_interactive(code, timeout=OUTPUT_TIMEOUT)
                     return_code = 0 if reply["content"]["status"] == "ok" else 1
                     if return_code:
-                        raise Exception("jupyter-run error running '%s'" % filename)
+                        msg = f"jupyter-run error running '{filename}'"
+                        raise Exception(msg)
         else:
+            self.log.debug("jupyter run: executing from stdin")
             code = sys.stdin.read()
             reply = self.kernel_client.execute_interactive(code, timeout=OUTPUT_TIMEOUT)
             return_code = 0 if reply["content"]["status"] == "ok" else 1

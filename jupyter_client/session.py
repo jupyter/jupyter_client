@@ -8,6 +8,7 @@ Also defined here are utilities for working with Sessions:
 Sessions.
 * A Message object for convenience that allows attribute-access to the msg dict.
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
@@ -758,7 +759,7 @@ class Session(Configurable):
         content: dict[str, t.Any] | None = None,
         parent: dict[str, t.Any] | None = None,
         ident: bytes | list[bytes] | None = None,
-        buffers: list[bytes] | None = None,
+        buffers: list[bytes | memoryview[bytes]] | None = None,
         track: bool = False,
         header: dict[str, t.Any] | None = None,
         metadata: dict[str, t.Any] | None = None,
@@ -811,10 +812,10 @@ class Session(Configurable):
             track = False
 
         if isinstance(stream, zmq.asyncio.Socket):
-            assert stream is not None  # type:ignore[unreachable]
+            assert stream is not None
             stream = zmq.Socket.shadow(stream.underlying)
 
-        if isinstance(msg_or_type, (Message, dict)):
+        if isinstance(msg_or_type, Message | dict):
             # We got a Message or message dict, not a msg_type so don't
             # build a new Message.
             msg = msg_or_type
@@ -841,16 +842,14 @@ class Session(Configurable):
                 except TypeError as e:
                     emsg = "Buffer objects must support the buffer protocol."
                     raise TypeError(emsg) from e
-            # memoryview.contiguous is new in 3.3,
-            # just skip the check on Python 2
-            if hasattr(view, "contiguous") and not view.contiguous:
+            if not view.contiguous:
                 # zmq requires memoryviews to be contiguous
                 raise ValueError("Buffer %i (%r) is not contiguous" % (idx, buf))
 
         if self.adapt_version:
             msg = adapt(msg, self.adapt_version)
         to_send = self.serialize(msg, ident)
-        to_send.extend(buffers)
+        to_send.extend(buffers)  # type: ignore[arg-type]
         longest = max([len(s) for s in to_send])
         copy = longest < self.copy_threshold
 

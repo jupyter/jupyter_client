@@ -3,6 +3,7 @@
 The child needs to explicitly listen for this - see
 ipykernel.parentpoller.ParentPollerWindows for a Python implementation.
 """
+
 import ctypes
 from typing import Any
 

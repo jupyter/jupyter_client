@@ -3,6 +3,7 @@
 The :class:`ConnectionFileMixin` class in this module encapsulates the logic
 related to writing and reading connections files.
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
@@ -16,7 +17,7 @@ import stat
 import tempfile
 import warnings
 from getpass import getpass
-from typing import TYPE_CHECKING, Any, Dict, Union, cast
+from typing import TYPE_CHECKING, Any, Union, cast
 
 import zmq
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
     from .session import Session
 
 # Define custom type for kernel connection info
-KernelConnectionInfo = Dict[str, Union[int, str, bytes]]
+KernelConnectionInfo = dict[str, Union[int, str, bytes]]
 
 
 def write_connection_file(
@@ -275,7 +276,7 @@ def tunnel_to_kernel(
         with open(connection_info) as f:
             connection_info = json.loads(f.read())
 
-    cf = cast(Dict[str, Any], connection_info)
+    cf = cast(dict[str, Any], connection_info)
 
     lports = tunnel.select_random_ports(5)
     rports = (
@@ -293,7 +294,7 @@ def tunnel_to_kernel(
     else:
         password = getpass("SSH Password for %s: " % sshserver)
 
-    for lp, rp in zip(lports, rports):
+    for lp, rp in zip(lports, rports, strict=False):
         tunnel.ssh_tunnel(lp, rp, sshserver, remote_ip, sshkey, password)
 
     return tuple(lports)
@@ -717,9 +718,9 @@ class LocalPortCache(SingletonConfigurable):
 
 
 __all__ = [
-    "write_connection_file",
-    "find_connection_file",
-    "tunnel_to_kernel",
     "KernelConnectionInfo",
     "LocalPortCache",
+    "find_connection_file",
+    "tunnel_to_kernel",
+    "write_connection_file",
 ]

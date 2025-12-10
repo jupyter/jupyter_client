@@ -1,13 +1,14 @@
-""" Defines a KernelClient that provides thread-safe sockets with async callbacks on message
+"""Defines a KernelClient that provides thread-safe sockets with async callbacks on message
 replies.
 """
+
 import asyncio
 import atexit
 import time
 from concurrent.futures import Future
 from functools import partial
 from threading import Thread
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import zmq
 from tornado.ioloop import IOLoop
@@ -35,9 +36,9 @@ class ThreadedZMQSocketChannel:
 
     def __init__(
         self,
-        socket: Optional[zmq.Socket],
-        session: Optional[Session],
-        loop: Optional[IOLoop],
+        socket: zmq.Socket | None,
+        session: Session | None,
+        loop: IOLoop | None,
     ) -> None:
         """Create a channel.
 
@@ -118,7 +119,7 @@ class ThreadedZMQSocketChannel:
                 pass
             self.socket = None
 
-    def send(self, msg: Dict[str, Any]) -> None:
+    def send(self, msg: dict[str, Any]) -> None:
         """Queue a message to be sent from the IOLoop's thread.
 
         Parameters
@@ -136,21 +137,21 @@ class ThreadedZMQSocketChannel:
         assert self.ioloop is not None
         self.ioloop.add_callback(thread_send)
 
-    def _handle_recv(self, msg_list: List) -> None:
+    def _handle_recv(self, msg_list: list) -> None:
         """Callback for stream.on_recv.
 
         Unpacks message, and calls handlers with it.
         """
         assert self.ioloop is not None
         assert self.session is not None
-        ident, smsg = self.session.feed_identities(msg_list)
+        _ident, smsg = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(smsg)
         # let client inspect messages
         if self._inspect:
             self._inspect(msg)  # type:ignore[unreachable]
         self.call_handlers(msg)
 
-    def call_handlers(self, msg: Dict[str, Any]) -> None:
+    def call_handlers(self, msg: dict[str, Any]) -> None:
         """This method is called in the ioloop thread when a message arrives.
 
         Subclasses should override this method to handle incoming messages.
@@ -262,8 +263,10 @@ class IOLoopThread(Thread):
             self._start_future.set_exception(e)
         else:
             self._start_future.set_result(None)
-
-        loop.run_until_complete(self._async_run())
+        try:
+            loop.run_until_complete(self._async_run())
+        finally:
+            loop.close()
 
     async def _async_run(self) -> None:
         """Run forever (until self._exiting is set)"""
@@ -298,7 +301,7 @@ class ThreadedKernelClient(KernelClient):
     """A KernelClient that provides thread-safe sockets with async callbacks on message replies."""
 
     @property
-    def ioloop(self) -> Optional[IOLoop]:  # type:ignore[override]
+    def ioloop(self) -> IOLoop | None:  # type:ignore[override]
         if self.ioloop_thread:
             return self.ioloop_thread.ioloop
         return None
@@ -322,7 +325,7 @@ class ThreadedKernelClient(KernelClient):
 
         super().start_channels(shell, iopub, stdin, hb, control)
 
-    def _check_kernel_info_reply(self, msg: Dict[str, Any]) -> None:
+    def _check_kernel_info_reply(self, msg: dict[str, Any]) -> None:
         """This is run in the ioloop thread when the kernel info reply is received"""
         if msg["msg_type"] == "kernel_info_reply":
             self._handle_kernel_info_reply(msg)
@@ -334,11 +337,11 @@ class ThreadedKernelClient(KernelClient):
         if self.ioloop_thread and self.ioloop_thread.is_alive():
             self.ioloop_thread.stop()
 
-    iopub_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[arg-type]
-    shell_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[arg-type]
-    stdin_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[arg-type]
-    hb_channel_class = Type(HBChannel)  # type:ignore[arg-type]
-    control_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[arg-type]
+    iopub_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[assignment]
+    shell_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[assignment]
+    stdin_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[assignment]
+    hb_channel_class = Type(HBChannel)  # type:ignore[assignment]
+    control_channel_class = Type(ThreadedZMQSocketChannel)  # type:ignore[assignment]
 
     def is_alive(self) -> bool:
         """Is the kernel process still running?"""

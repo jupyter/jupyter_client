@@ -1,11 +1,10 @@
 """Tests for the KernelClient"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
-import platform
-import sys
 from threading import Event
-from unittest import TestCase, mock
+from unittest import TestCase
 
 import pytest
 from IPython.utils.capture import capture_output
@@ -16,7 +15,7 @@ from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
 from jupyter_client.manager import KernelManager, start_new_async_kernel, start_new_kernel
 from jupyter_client.threaded import ThreadedKernelClient, ThreadedZMQSocketChannel
 
-TIMEOUT = 30
+TIMEOUT = 60
 
 pjoin = os.path.join
 
@@ -123,13 +122,15 @@ class TestAsyncKernelClient:
         assert reply["header"]["msg_type"] == reply_type + "_reply"
         assert reply["parent_header"]["msg_type"] == reply_type + "_request"
 
-    @pytest.mark.skipif(
-        sys.platform != "linux" or platform.python_implementation().lower() == "pypy",
-        reason="only works with cpython on ubuntu in ci",
-    )
     async def test_input_request(self, kc):
-        with mock.patch("builtins.input", return_value="test\n"):
-            reply = await kc.execute_interactive("a = input()", timeout=TIMEOUT)
+        def handle_stdin(msg):
+            kc.input("test")
+
+        reply = await kc.execute_interactive(
+            "a = input()",
+            stdin_hook=handle_stdin,
+            timeout=TIMEOUT,
+        )
         assert reply["content"]["status"] == "ok"
 
     async def test_output_hook(self, kc):

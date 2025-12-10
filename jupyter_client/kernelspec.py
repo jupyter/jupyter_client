@@ -1,4 +1,5 @@
 """Tools for managing kernel specs"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
@@ -281,7 +282,6 @@ class KernelSpecManager(LoggingConfigurable):
 
         resource_dir = self._find_spec_directory(kernel_name.lower())
         if resource_dir is None:
-            self.log.warning("Kernelspec name %s cannot be found!", kernel_name)
             raise NoSuchKernel(kernel_name)
 
         return self._get_kernel_spec_by_name(kernel_name, resource_dir)
