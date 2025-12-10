@@ -114,10 +114,9 @@ jobs:
 
       - name: Test qtconsole
         shell: bash -l {0}
-        # Skip flaky test_scroll[False] - times out waiting for shell prompt in CI
         run: |
           cd ${GITHUB_WORKSPACE}/../qtconsole
-          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes --deselect qtconsole/tests/test_00_console_widget.py::test_scroll[False] qtconsole
+          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes qtconsole
 
   downstreams_check: # This job does nothing and is only used for the branch protection
     if: always()
@@ -127,7 +126,7 @@ jobs:
       - nbconvert
       - jupyter_server
       - jupyter_kernel_test
-      # qtconsole removed - too flaky in CI (GUI + async kernel tests)
+      - qtconsole
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
