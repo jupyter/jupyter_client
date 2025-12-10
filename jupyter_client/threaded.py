@@ -230,6 +230,13 @@ class IOLoopThread(Thread):
         super().__init__()
         self.daemon = True
 
+        # Instance variable to track exit state for this specific thread.
+        # The class variable _exiting is used by _notice_exit for interpreter shutdown.
+        # Without this instance variable, stopping one IOLoopThread sets the class-level
+        # _exiting = True, causing all subsequent IOLoopThread instances to exit immediately
+        # in _async_run(). This breaks sequential kernel usage (e.g., qtconsole tests).
+        self._exiting = False
+
     @staticmethod
     @atexit.register
     def _notice_exit() -> None:
