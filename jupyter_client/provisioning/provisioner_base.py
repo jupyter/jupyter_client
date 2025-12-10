@@ -218,6 +218,21 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         """
         return recommended
 
+    def resolve_path(self, path: str) -> str | None:
+        """
+        Returns the path resolved relative to kernel working directory.
+
+        For example, path `my_code.py` for a kernel started in `/tmp/`
+        should result in `/tmp/my_code.py`, while path `~/test.py` for
+        a kernel started in `/home/my_user/` should resolve to the
+        (fully specified) `/home/my_user/test.py` path.
+
+        The provisioner may choose not to resolve any paths, or restrict
+        the resolution to paths local to the kernel working directory
+        to prevent path traversal and exposure of file system layout.
+        """
+        return None
+
     def _finalize_env(self, env: dict[str, str]) -> None:
         """
         Ensures env is appropriate prior to launch.

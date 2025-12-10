@@ -280,6 +280,11 @@ class KernelManager(ConnectionFileMixin):
     # Kernel management
     # --------------------------------------------------------------------------
 
+    def resolve_path(self, path: str) -> str | None:
+        """Resolve path to given file."""
+        assert self.provisioner is not None
+        return self.provisioner.resolve_path(path)
+
     def update_env(self, *, env: t.Dict[str, str]) -> None:
         """
         Allow to update the environment of a kernel manager.
