@@ -333,6 +333,19 @@ class ThreadedKernelClient(KernelClient):
 
     def stop_channels(self) -> None:
         """Stop the channels on the client."""
+        # Close channel streams while ioloop is still running
+        # This must happen before stopping the ioloop thread, otherwise
+        # the ZMQ streams can't be properly unregistered from the event loop
+        if self.ioloop_thread and self.ioloop_thread.is_alive():
+            if self._shell_channel is not None:
+                self._shell_channel.close()
+            if self._iopub_channel is not None:
+                self._iopub_channel.close()
+            if self._stdin_channel is not None:
+                self._stdin_channel.close()
+            if self._control_channel is not None:
+                self._control_channel.close()
+
         super().stop_channels()
         if self.ioloop_thread and self.ioloop_thread.is_alive():
             self.ioloop_thread.stop()
