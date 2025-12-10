@@ -143,6 +143,11 @@ jobs:
         run: |
           hatch -vv run test:nowarn
 
+      - name: Run the unit tests with orjson installed
+        run: |
+          hatch -e test run pip install orjson
+          hatch -vv run test:nowarn
+
   test_prereleases:
     name: Test Prereleases
     timeout-minutes: 10
