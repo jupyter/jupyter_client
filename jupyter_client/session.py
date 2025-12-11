@@ -16,6 +16,7 @@ from __future__ import annotations
 import functools
 import hashlib
 import hmac
+import importlib.util
 import json
 import logging
 import os
@@ -127,12 +128,13 @@ def json_unpacker(s: str | bytes) -> t.Any:
     return json.loads(s)
 
 
-try:
+orjson = None
+orjson_packer, orjson_unpacker = json_packer, json_unpacker
+
+if importlib.util.find_spec("orjson"):
     import orjson
-except ModuleNotFoundError:
-    orjson = None
-    orjson_packer, orjson_unpacker = json_packer, json_unpacker
-else:
+
+    assert orjson
 
     def orjson_packer(
         obj: t.Any, *, option: int | None = orjson.OPT_NAIVE_UTC | orjson.OPT_UTC_Z
@@ -141,16 +143,14 @@ else:
         try:
             return orjson.dumps(obj, default=json_default, option=option)
         except Exception:
-            pass
-        return json_packer(obj)
+            return json_packer(obj)
 
     def orjson_unpacker(s: str | bytes) -> t.Any:
         """Convert a json bytes or string to an object using orjson with fallback to json_unpacker."""
         try:
-            orjson.loads(s)
+            return orjson.loads(s)
         except Exception:
-            pass
-        return json_unpacker(s)
+            return json_unpacker(s)
 
 
 try:
