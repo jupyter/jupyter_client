@@ -128,7 +128,7 @@ def json_unpacker(s: str | bytes) -> t.Any:
 
 
 try:
-    import orjson  # type:ignore[import-not-found]
+    import orjson
 except ModuleNotFoundError:
     orjson = None
     orjson_packer, orjson_unpacker = json_packer, json_unpacker
@@ -154,7 +154,7 @@ else:
 
 
 try:
-    import msgpack  # type:ignore[import-not-found]
+    import msgpack
 
 except ModuleNotFoundError:
     msgpack = None
