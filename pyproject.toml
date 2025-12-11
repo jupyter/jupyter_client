@@ -97,12 +97,6 @@ dependencies = ["coverage[toml]", "pytest-cov"]
 test = "python -m pytest -vv --cov jupyter_client --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"
 
-[tool.hatch.envs.typing]
-dependencies = ["pre-commit"]
-detached = true
-[tool.hatch.envs.typing.scripts]
-test = "pre-commit run --all-files --hook-stage manual mypy"
-
 [tool.hatch.envs.lint]
 dependencies = ["pre-commit"]
 detached = true
