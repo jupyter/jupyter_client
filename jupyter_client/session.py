@@ -128,20 +128,20 @@ def json_unpacker(s: str | bytes) -> t.Any:
     return json.loads(s)
 
 
-orjson = None
-orjson_packer, orjson_unpacker = json_packer, json_unpacker
-
-if importlib.util.find_spec("orjson"):
+try:
     import orjson
-
-    assert orjson
+except ModuleNotFoundError:
+    has_orjson = False
+    orjson_packer, orjson_unpacker = json_packer, json_unpacker
+else:
+    has_orjson = True
 
     def orjson_packer(
         obj: t.Any, *, option: int | None = orjson.OPT_NAIVE_UTC | orjson.OPT_UTC_Z
     ) -> bytes:
         """Convert a json object to a bytes using orjson with fallback to json_packer."""
         try:
-            return orjson.dumps(obj, default=json_default, option=option)
+            return orjson.dumps(obj, default=json_default, options=option)
         except Exception:
             return json_packer(obj)
 
@@ -155,10 +155,10 @@ if importlib.util.find_spec("orjson"):
 
 try:
     import msgpack
-
 except ModuleNotFoundError:
-    msgpack = None
+    has_msgpack = False
 else:
+    has_msgpack = True
     msgpack_packer = functools.partial(msgpack.packb, default=json_default)
     msgpack_unpacker = msgpack.unpackb
 
@@ -389,31 +389,31 @@ class Session(Configurable):
 
     # serialization traits:
     packer = DottedObjectName(
-        "orjson" if orjson else "json",
+        "orjson" if has_orjson else "json",
         config=True,
         help="""The name of the packer for serializing messages.
             Should be one of 'json', 'pickle', or an import name
             for a custom callable serializer.""",
     )
     unpacker = DottedObjectName(
-        "orjson" if orjson else "json",
+        "orjson" if has_orjson else "json",
         config=True,
         help="""The name of the unpacker for unserializing messages.
         Only used with custom functions for `packer`.""",
     )
-    pack = Callable(orjson_packer if orjson else json_packer)  # the actual packer function
-    unpack = Callable(orjson_unpacker if orjson else json_unpacker)  # the actual unpacker function
+    pack = Callable(orjson_packer if has_orjson else json_packer)  # the actual packer function
+    unpack = Callable(orjson_unpacker if has_orjson else json_unpacker)  # the actual unpacker function
 
     @observe("packer", "unpacker")
     def _packer_unpacker_changed(self, change: t.Any) -> None:
         new = change["new"].lower()
-        if new == "orjson" and orjson:
+        if new == "orjson" and has_orjson:
             self.pack, self.unpack = orjson_packer, orjson_unpacker
         elif new == "json" or new == "orjson":
             self.pack, self.unpack = json_packer, json_unpacker
         elif new == "pickle":
             self.pack, self.unpack = pickle_packer, pickle_unpacker
-        elif new == "msgpack" and msgpack:
+        elif new == "msgpack" and has_msgpack:
             self.pack, self.unpack = msgpack_packer, msgpack_unpacker
         else:
             obj = import_item(str(change["new"]))
