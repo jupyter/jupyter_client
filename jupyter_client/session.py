@@ -402,7 +402,9 @@ class Session(Configurable):
         Only used with custom functions for `packer`.""",
     )
     pack = Callable(orjson_packer if has_orjson else json_packer)  # the actual packer function
-    unpack = Callable(orjson_unpacker if has_orjson else json_unpacker)  # the actual unpacker function
+    unpack = Callable(
+        orjson_unpacker if has_orjson else json_unpacker
+    )  # the actual unpacker function
 
     @observe("packer", "unpacker")
     def _packer_unpacker_changed(self, change: t.Any) -> None:
