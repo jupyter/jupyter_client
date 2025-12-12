@@ -126,7 +126,7 @@ jobs:
   test_minimum_verisons:
     name: Test Minimum Versions
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
@@ -141,6 +141,11 @@ jobs:
 
       - name: Run the unit tests
         run: |
+          hatch -vv run test:nowarn
+
+      - name: Run the unit tests with orjson installed
+        run: |
+          hatch -e test run pip install orjson
           hatch -vv run test:nowarn
 
   test_prereleases:

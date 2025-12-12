@@ -55,6 +55,7 @@ test = [
     "pytest-jupyter[client]>=0.6.2",
     "pytest-cov",
     "pytest-timeout",
+    "msgpack"
 ]
 docs = [
     "ipykernel",
@@ -65,6 +66,7 @@ docs = [
     "sphinxcontrib-spelling",
     "sphinx-autodoc-typehints",
 ]
+orjson = ["orjson"] # When orjson is installed it will be used for faster pack and unpack
 
 [project.scripts]
 jupyter-kernelspec = "jupyter_client.kernelspecapp:KernelSpecApp.launch_instance"
