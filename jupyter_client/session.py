@@ -16,7 +16,6 @@ from __future__ import annotations
 import functools
 import hashlib
 import hmac
-import importlib.util
 import json
 import logging
 import os
@@ -141,7 +140,7 @@ else:
     ) -> bytes:
         """Convert a json object to a bytes using orjson with fallback to json_packer."""
         try:
-            return orjson.dumps(obj, default=json_default, options=option)
+            return orjson.dumps(obj, default=json_default, option=option)
         except Exception:
             return json_packer(obj)
 

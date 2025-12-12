@@ -47,9 +47,9 @@ serializers = [
     ("json", ss.json_packer, ss.json_unpacker),
     ("pickle", ss.pickle_packer, ss.pickle_unpacker),
 ]
-if ss.orjson:
+if ss.has_orjson:
     serializers.append(("orjson", ss.orjson_packer, ss.orjson_unpacker))
-if ss.msgpack:
+if ss.has_msgpack:
     serializers.append(("msgpack", ss.msgpack_packer, ss.msgpack_unpacker))
 
 
