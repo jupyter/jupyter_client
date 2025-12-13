@@ -30,8 +30,8 @@ repos:
     hooks:
       - id: mdformat
 
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v4.0.0-alpha.8"
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: "v3.7.3"
     hooks:
       - id: prettier
         types_or: [yaml, html, json]
@@ -42,13 +42,18 @@ repos:
       - id: mypy
         files: jupyter_client
         stages: [manual]
-        args: ["--install-types", "--non-interactive"]
+        args: []
         additional_dependencies:
           - traitlets>=5.13
           - ipykernel>=6.26
           - jupyter_core>=5.3.2
           - orjson>=3.11.4
           - msgpack-types
+          - types-pexpect
+          - types-paramiko
+          - types-netifaces
+          - types-psutil
+          - types-python-dateutil
 
   - repo: https://github.com/adamchainz/blacken-docs
     rev: "1.20.0"
@@ -73,13 +78,10 @@ repos:
     rev: v0.14.0
     hooks:
       - id: ruff-check
-        types_or: [python, jupyter]
         args: ["--fix", "--show-fixes"]
       - id: ruff-format
-        types_or: [python, jupyter]
 
   - repo: https://github.com/scientific-python/cookie
     rev: "2025.10.01"
     hooks:
       - id: sp-repo-review
-        additional_dependencies: ["repo-review[cli]"]
