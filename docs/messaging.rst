@@ -84,6 +84,9 @@ kernel has dedicated sockets for the following functions:
 5. **Heartbeat**: This socket allows for simple bytestring messages to be sent
    between the frontend and the kernel to ensure that they are still connected.
 
+.. versionchanged:: 5.5
+   The **IOPub** PUB socket is replaced with an XPUB socket.
+
 The actual format of the messages allowed on each of these channels is
 specified below.  Messages are dicts of dicts with string keys and values that
 are reasonably representable in JSON.
@@ -1416,8 +1419,39 @@ Message type: ``list_subshell_reply``::
 
 .. versionadded:: 5.5
 
-Messages on the IOPub (PUB/SUB) channel
-=======================================
+Messages on the IOPub (XPUB/SUB) channel
+========================================
+
+Welcome message
+---------------
+
+This message is sent to a client SUB socket the first time it connects to the
+XPUB kernel socket, to notify the client that the connection is established.
+
+message type: ``iopub_welcome``::
+
+    content = {
+        # The topic the SUB has subscribed to. Can be empty string if
+        # the client has subscribed to all topics.
+        'subscription' : str,
+    }
+
+.. note::
+
+   This message has no parent header.
+
+.. note::
+
+   Welcome messages do not and cannot identify the client whose subscription is being received.
+   Receiving an iopub_welcome message with your subscription does not mean it is in response to
+   your own subscription. However, receiving a message does mean that a matching subscription has
+   been registered for your client, otherwise no message will be received. So if only one
+   subscription is registered, as is normally the case, receiving any welcome message is sufficient
+   to indicate that your client's subscription is fully established. The gist is that receiving a
+   welcome message is a sufficient condition to establish the subscription-propagation event, and
+   additional welcome messages should be expected and ignored.
+
+.. versionadded:: 5.5
 
 Streams (stdout,  stderr, etc)
 ------------------------------
@@ -1856,7 +1890,8 @@ Changelog
 5.5 (draft)
 -----------
 
-- Added ``debug_request/reply`` and ``debug_event`` messages
+- Added ``debug_request/reply`` and ``debug_event`` messages.
+- Replaced **IOPUB** PUB socket with an XPUB socket.
 - Added ``supported_features`` in :ref:`kernel info <msging_kernel_info>` reply messages.
 - Deprecated ``debugger`` in :ref:`kernel info <msging_kernel_info>` reply messages as
   replaced with ``supported_features``.
