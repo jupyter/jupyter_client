@@ -1152,6 +1152,8 @@ Debug request
 This message type is used with debugging kernels to request specific actions
 to be performed by the debugger such as adding a breakpoint or stepping into
 a code.
+Kernels supporting subshells must include ``'debugger'`` in ``'supported_features'``
+in :ref:`kernel info <msging_kernel_info>` reply messages.
 
 Message type: ``debug_request``::
 
