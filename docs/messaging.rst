@@ -1139,6 +1139,13 @@ Message type: ``interrupt_reply``::
 
 .. versionadded:: 5.3
 
+Kernel info
+-----------
+
+This is the same :ref:`kernel info <msging_kernel_info>` message as that received on the Shell channel.
+
+.. versionadded:: 5.5
+
 Debug request
 -------------
 
@@ -1892,6 +1899,7 @@ Changelog
 
 - Added ``debug_request/reply`` and ``debug_event`` messages.
 - Replaced **IOPUB** PUB socket with an XPUB socket.
+- Added support for :ref: `kernel info <msging_kernel_info` request on the Control channel.
 - Added ``supported_features`` in :ref:`kernel info <msging_kernel_info>` reply messages.
 - Deprecated ``debugger`` in :ref:`kernel info <msging_kernel_info>` reply messages as
   replaced with ``supported_features``.
