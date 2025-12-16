@@ -1158,6 +1158,8 @@ specification of the ``Request`` and ``Response`` messages from the
 Debug requests and replies are sent over the ``control`` channel to prevent
 queuing behind execution requests.
 
+.. versionadded:: 5.5
+
 Additions to the DAP
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -1854,8 +1856,7 @@ Changelog
 5.5 (draft)
 -----------
 
-- Added ``debug_request/reply`` messages
-- Added ``debug_event`` message
+- Added ``debug_request/reply`` and ``debug_event`` messages
 - Added ``supported_features`` in :ref:`kernel info <msging_kernel_info>` reply messages.
 - Deprecated ``debugger`` in :ref:`kernel info <msging_kernel_info>` reply messages as
   replaced with ``supported_features``.
