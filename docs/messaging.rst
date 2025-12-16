@@ -1210,6 +1210,8 @@ debugger to which breakpoints can be added.
           }
      }
 
+.. versionadded:: 5.5
+
 debugInfo
 #########
 
@@ -1245,10 +1247,13 @@ whether the debugger is currently stopped). The ``debugInfo`` request is a DAP
               'stoppedThreads' : list(int),  # threads in which the debugger is currently in a stopped state
               'richRendering' : bool,  # whether the debugger supports rich rendering of variables
               'exceptionPaths' : list(str),  # exception names used to match leaves or nodes in a tree of exception
+              'copyToGlobals' : bool, # whether the debugger supports supports the copyToGlobals request
           }
       }
 
   The ``source_breakpoint`` schema is specified by the Debug Adapter Protocol.
+
+.. versionadded:: 5.5
 
 inspectVariables
 ################
@@ -1281,6 +1286,8 @@ argument.
           }
       }
 
+.. versionadded:: 5.5
+
 richInspectVariables
 ####################
 
@@ -1311,11 +1318,15 @@ variable that has been defined in the kernel.
           }
       }
 
+.. versionadded:: 5.5
+
 copyToGlobals
 #############
 
 The ``copyToGlobals`` request allows to copy a variable from the local variable panel
 of the debugger to the ``global`` scope to inspect it after debug session.
+The support for this request is optional and should be indicated to the client via
+the ``copyToGlobals`` boolean field in the debugInfo reply.
 
   Content of the ``copyToGlobals`` request::
 
@@ -1906,6 +1917,7 @@ Changelog
 - Deprecated ``debugger`` in :ref:`kernel info <msging_kernel_info>` reply messages as
   replaced with ``supported_features``.
 - Added ``create_subshell``, ``delete_subshell`` and ``list_subshell`` messages.
+- Added ``copyToGlobals`` debug request
 
 5.4
 ---
