@@ -84,6 +84,11 @@ kernel has dedicated sockets for the following functions:
 5. **Heartbeat**: This socket allows for simple bytestring messages to be sent
    between the frontend and the kernel to ensure that they are still connected.
 
+.. versionchanged:: 5.5
+   The **IOPub** PUB socket is replaced with an XPUB socket,
+   to enable the ``iopub_welcome`` message.
+   There is no other difference between kernel PUB and XPUB sockets from the client perspective.
+
 The actual format of the messages allowed on each of these channels is
 specified below.  Messages are dicts of dicts with string keys and values that
 are reasonably representable in JSON.
@@ -1136,12 +1141,21 @@ Message type: ``interrupt_reply``::
 
 .. versionadded:: 5.3
 
+Kernel info
+-----------
+
+This is the same :ref:`kernel info <msging_kernel_info>` message as that received on the Shell channel.
+
+.. versionadded:: 5.5
+
 Debug request
 -------------
 
 This message type is used with debugging kernels to request specific actions
 to be performed by the debugger such as adding a breakpoint or stepping into
 a code.
+Kernels supporting subshells must include ``'debugger'`` in ``'supported_features'``
+in :ref:`kernel info <msging_kernel_info>` reply messages.
 
 Message type: ``debug_request``::
 
@@ -1157,6 +1171,8 @@ specification of the ``Request`` and ``Response`` messages from the
 
 Debug requests and replies are sent over the ``control`` channel to prevent
 queuing behind execution requests.
+
+.. versionadded:: 5.5
 
 Additions to the DAP
 ~~~~~~~~~~~~~~~~~~~~
@@ -1196,6 +1212,8 @@ debugger to which breakpoints can be added.
           }
      }
 
+.. versionadded:: 5.5
+
 debugInfo
 #########
 
@@ -1231,10 +1249,13 @@ whether the debugger is currently stopped). The ``debugInfo`` request is a DAP
               'stoppedThreads' : list(int),  # threads in which the debugger is currently in a stopped state
               'richRendering' : bool,  # whether the debugger supports rich rendering of variables
               'exceptionPaths' : list(str),  # exception names used to match leaves or nodes in a tree of exception
+              'copyToGlobals' : bool, # whether the debugger supports supports the copyToGlobals request
           }
       }
 
   The ``source_breakpoint`` schema is specified by the Debug Adapter Protocol.
+
+.. versionadded:: 5.5
 
 inspectVariables
 ################
@@ -1267,6 +1288,8 @@ argument.
           }
       }
 
+.. versionadded:: 5.5
+
 richInspectVariables
 ####################
 
@@ -1297,11 +1320,15 @@ variable that has been defined in the kernel.
           }
       }
 
+.. versionadded:: 5.5
+
 copyToGlobals
 #############
 
 The ``copyToGlobals`` request allows to copy a variable from the local variable panel
 of the debugger to the ``global`` scope to inspect it after debug session.
+The support for this request is optional and should be indicated to the client via
+the ``copyToGlobals`` boolean field in the debugInfo reply.
 
   Content of the ``copyToGlobals`` request::
 
@@ -1414,8 +1441,39 @@ Message type: ``list_subshell_reply``::
 
 .. versionadded:: 5.5
 
-Messages on the IOPub (PUB/SUB) channel
-=======================================
+Messages on the IOPub (XPUB/SUB) channel
+========================================
+
+Welcome message
+---------------
+
+This message is sent to a client SUB socket the first time it connects to the
+XPUB kernel socket, to notify the client that the connection is established.
+
+message type: ``iopub_welcome``::
+
+    content = {
+        # The topic the SUB has subscribed to. Can be empty string if
+        # the client has subscribed to all topics.
+        'subscription' : str,
+    }
+
+.. note::
+
+   This message has no parent header.
+
+.. note::
+
+   Welcome messages do not and cannot identify the client whose subscription is being received.
+   Receiving an iopub_welcome message with your subscription does not mean it is in response to
+   your own subscription. However, receiving a message does mean that a matching subscription has
+   been registered for your client, otherwise no message will be received. So if only one
+   subscription is registered, as is normally the case, receiving any welcome message is sufficient
+   to indicate that your client's subscription is fully established. The gist is that receiving a
+   welcome message is a sufficient condition to establish the subscription-propagation event, and
+   additional welcome messages should be expected and ignored.
+
+.. versionadded:: 5.5
 
 Streams (stdout,  stderr, etc)
 ------------------------------
@@ -1854,12 +1912,14 @@ Changelog
 5.5 (draft)
 -----------
 
-- Added ``debug_request/reply`` messages
-- Added ``debug_event`` message
+- Added ``debug_request/reply`` and ``debug_event`` messages.
+- Replaced **IOPUB** PUB socket with an XPUB socket.
+- Added support for :ref:`kernel info <msging_kernel_info>` request on the Control channel.
 - Added ``supported_features`` in :ref:`kernel info <msging_kernel_info>` reply messages.
 - Deprecated ``debugger`` in :ref:`kernel info <msging_kernel_info>` reply messages as
   replaced with ``supported_features``.
 - Added ``create_subshell``, ``delete_subshell`` and ``list_subshell`` messages.
+- Added ``copyToGlobals`` debug request
 
 5.4
 ---
