@@ -30,6 +30,7 @@ class KernelSpec(HasTraits):
     mimetype = Unicode()
     display_name = Unicode()
     language = Unicode()
+    kernel_protocol_version = Unicode()
     env = Dict()
     resource_dir = Unicode()
     interrupt_mode = CaselessStrEnum(["message", "signal"], default_value="signal")
@@ -55,6 +56,7 @@ class KernelSpec(HasTraits):
             "language": self.language,
             "interrupt_mode": self.interrupt_mode,
             "metadata": self.metadata,
+            "kernel_protocol_version": self.kernel_protocol_version,
         }
 
         return d
