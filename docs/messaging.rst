@@ -85,7 +85,9 @@ kernel has dedicated sockets for the following functions:
    between the frontend and the kernel to ensure that they are still connected.
 
 .. versionchanged:: 5.5
-   The **IOPub** PUB socket is replaced with an XPUB socket.
+   The **IOPub** PUB socket is replaced with an XPUB socket,
+   to enable the `iopub_welcome` message.
+   There is no other difference between kernel PUB and XPUB sockets from the client perspective.
 
 The actual format of the messages allowed on each of these channels is
 specified below.  Messages are dicts of dicts with string keys and values that
