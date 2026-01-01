@@ -21,7 +21,7 @@ Versioning
 
 The Jupyter message specification is versioned independently of the packages
 that use it.
-The current version of the specification is 5.4.
+The current version of the specification is 5.5.
 
 .. note::
    *New in* and *Changed in* messages in this document refer to versions of the
@@ -1909,8 +1909,8 @@ just like an execute request.
 Changelog
 =========
 
-5.5 (draft)
------------
+5.5
+---
 
 - Added ``debug_request/reply`` and ``debug_event`` messages.
 - Replaced **IOPUB** PUB socket with an XPUB socket.
