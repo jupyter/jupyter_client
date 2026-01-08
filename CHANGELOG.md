@@ -2,6 +2,41 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.8.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.7.0...523294fc6cb9be685fa25129067a06348edaaab6))
+
+### Enhancements made
+
+- Added kernel_protocol_version to kernelspec [#1097](https://github.com/jupyter/jupyter_client/pull/1097) ([@JohanMabille](https://github.com/JohanMabille), [@SylvainCorlay](https://github.com/SylvainCorlay))
+- Faster message serialization [#1064](https://github.com/jupyter/jupyter_client/pull/1064) ([@fleming79](https://github.com/fleming79), [@Carreau](https://github.com/Carreau), [@henryiii](https://github.com/henryiii), [@krassowski](https://github.com/krassowski), [@minrk](https://github.com/minrk), [@rgbkrk](https://github.com/rgbkrk))
+- Path resolution by kernel manager and providers [#1005](https://github.com/jupyter/jupyter_client/pull/1005) ([@krassowski](https://github.com/krassowski), [@rgbkrk](https://github.com/rgbkrk))
+
+### Maintenance and upkeep improvements
+
+- chore: update some parts of the pre-commit [#1093](https://github.com/jupyter/jupyter_client/pull/1093) ([@henryiii](https://github.com/henryiii), [@minrk](https://github.com/minrk), [@rgbkrk](https://github.com/rgbkrk))
+- Fix flaky client tests by waiting for first request's reply [#1091](https://github.com/jupyter/jupyter_client/pull/1091) ([@rgbkrk](https://github.com/rgbkrk))
+- Re-enable qtconsole in downstream checks [#1090](https://github.com/jupyter/jupyter_client/pull/1090) ([@rgbkrk](https://github.com/rgbkrk))
+- Fix channel cleanup by closing streams before stopping ioloop thread [#1089](https://github.com/jupyter/jupyter_client/pull/1089) ([@rgbkrk](https://github.com/rgbkrk))
+- Fix downstream workflow [#1087](https://github.com/jupyter/jupyter_client/pull/1087) ([@rgbkrk](https://github.com/rgbkrk))
+- Skip mypy on PyPy to avoid librt compilation issues [#1086](https://github.com/jupyter/jupyter_client/pull/1086) ([@rgbkrk](https://github.com/rgbkrk))
+
+### Documentation improvements
+
+- Upgrade to version 5.5 [#1096](https://github.com/jupyter/jupyter_client/pull/1096) ([@JohanMabille](https://github.com/JohanMabille), [@SylvainCorlay](https://github.com/SylvainCorlay))
+- Update messaging spec [#1095](https://github.com/jupyter/jupyter_client/pull/1095) ([@JohanMabille](https://github.com/JohanMabille), [@minrk](https://github.com/minrk), [@rgbkrk](https://github.com/rgbkrk))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2025-12-09&to=2026-01-08&type=c))
+
+@Carreau ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2025-12-09..2026-01-08&type=Issues)) | @ccordoba12 ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2025-12-09..2026-01-08&type=Issues)) | @fleming79 ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afleming79+updated%3A2025-12-09..2026-01-08&type=Issues)) | @henryiii ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahenryiii+updated%3A2025-12-09..2026-01-08&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AJohanMabille+updated%3A2025-12-09..2026-01-08&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akrassowski+updated%3A2025-12-09..2026-01-08&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2025-12-09..2026-01-08&type=Issues)) | @rgbkrk ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Argbkrk+updated%3A2025-12-09..2026-01-08&type=Issues)) | @SylvainCorlay ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ASylvainCorlay+updated%3A2025-12-09..2026-01-08&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.7.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.6.3...7b4340d29da062cc2386fa218f645c7e80eb800f))
@@ -39,8 +74,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2024-09-17&to=2025-12-09&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ablink1073+updated%3A2024-09-17..2025-12-09&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2024-09-17..2025-12-09&type=Issues) | [@cben](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Acben+updated%3A2024-09-17..2025-12-09&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Adavidbrochart+updated%3A2024-09-17..2025-12-09&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aianthomas23+updated%3A2024-09-17..2025-12-09&type=Issues) | [@JamesWrigley](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AJamesWrigley+updated%3A2024-09-17..2025-12-09&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akevin-bates+updated%3A2024-09-17..2025-12-09&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akrassowski+updated%3A2024-09-17..2025-12-09&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2024-09-17..2025-12-09&type=Issues) | [@rgbkrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Argbkrk+updated%3A2024-09-17..2025-12-09&type=Issues) | [@sebwills](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Asebwills+updated%3A2024-09-17..2025-12-09&type=Issues) | [@takluyver](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Atakluyver+updated%3A2024-09-17..2025-12-09&type=Issues) | [@tmaxwell-anthropic](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Atmaxwell-anthropic+updated%3A2024-09-17..2025-12-09&type=Issues) | [@wpk-nist-gov](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Awpk-nist-gov+updated%3A2024-09-17..2025-12-09&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.6.3
 
