@@ -1615,9 +1615,10 @@ Code inputs
 -----------
 
 To let all frontends know what code is being executed at any given time, these
-messages contain a re-broadcast of the ``code`` portion of an
-:ref:`execute_request <execute>`, along with the :ref:`execution_count
-<execution_counter>`.
+messages include a copy of the ``code`` field and the ``execution_count`` from
+the corresponding :ref:`execute_request <execute>`. This message is sent by the
+kernel and should not be interpreted as a full re-broadcast of the original
+request.
 
 Message type: ``execute_input``::
 
