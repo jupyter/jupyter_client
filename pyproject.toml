@@ -135,6 +135,8 @@ filterwarnings= [
   # from python-dateutil
   "ignore:datetime.datetime.utcfromtimestamp:DeprecationWarning",
   "ignore:datetime.datetime.utcnow:DeprecationWarning",
+  # ignore header dates warning
+  "ignore:.*extract_header_dates.*:DeprecationWarning",
   # from ipykernel 6 (fixed in 7)
   "ignore:Parsing dates:DeprecationWarning:ipykernel.jsonutil",
 ]
