@@ -35,6 +35,7 @@ class AsyncKernelClient(KernelClient):
     """
 
     context = Instance(zmq.asyncio.Context)  # type:ignore[assignment]
+
     @default("context")
     def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True
