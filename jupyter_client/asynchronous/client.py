@@ -7,7 +7,7 @@ from __future__ import annotations
 import typing as t
 
 import zmq.asyncio
-from traitlets import Instance, Type
+from traitlets import Instance, Type, default
 
 from ..channels import AsyncZMQSocketChannel, HBChannel
 from ..client import KernelClient, reqrep
@@ -35,7 +35,7 @@ class AsyncKernelClient(KernelClient):
     """
 
     context = Instance(zmq.asyncio.Context)  # type:ignore[assignment]
-
+    @default("context")
     def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True
         return zmq.asyncio.Context()
