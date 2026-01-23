@@ -50,7 +50,7 @@ following methods and attributes:
 
      Other keys may be added to this later.
 
-   .. method:: do_execute(code, silent, store_history=True, user_expressions=None, allow_stdin=False)
+   .. method:: do_execute(code, silent, store_history=True, user_expressions=None, allow_stdin=False, *, cell_id=None)
 
      Execute user code.
 
@@ -63,6 +63,8 @@ following methods and attributes:
          after the code has run. You can ignore this if you need to.
      :param bool allow_stdin: Whether the frontend can provide input on request
          (e.g. for Python's :func:`raw_input`).
+        :param str cell_id: (experimental) An optional unique ID for the cell
+        that is being executed.
 
      Your method should return a dict containing the fields described in
      :ref:`execution_results`. To display output, it can send messages
