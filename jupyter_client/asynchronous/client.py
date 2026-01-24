@@ -6,6 +6,10 @@ from __future__ import annotations
 
 import typing as t
 
+from typing import TypeVar
+K = TypeVar("K")
+V = TypeVar("V")
+
 import zmq.asyncio
 from traitlets import Instance, Type, default
 
@@ -35,9 +39,8 @@ class AsyncKernelClient(KernelClient):
     """
 
     context = Instance(zmq.asyncio.Context)  # type:ignore[assignment]
-
     @default("context")
-    def _context_default(self) -> zmq.asyncio.Context:
+    def _default_context(self) -> zmq.asyncio.Context:
         self._created_context = True
         return zmq.asyncio.Context()
 
