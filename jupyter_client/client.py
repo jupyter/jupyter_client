@@ -92,7 +92,7 @@ class KernelClient(ConnectionFileMixin):
     context = Instance(zmq.Context)
 
     _created_context = Bool(False)
-    
+
     @default("context")
     def _context_default(self) -> zmq.Context:
         self._created_context = True
