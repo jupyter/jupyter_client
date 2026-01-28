@@ -693,7 +693,7 @@ class KernelManager(ConnectionFileMixin):
 
     signal_kernel = run_sync(_async_signal_kernel)
 
-    async def _async_is_alive(self) -> bool:
+    async def async_is_alive(self) -> bool:
         """Is the kernel process still running?"""
         if not self.owns_kernel:
             return True
