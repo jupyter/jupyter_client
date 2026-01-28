@@ -483,7 +483,7 @@ class KernelManager(ConnectionFileMixin):
         except asyncio.TimeoutError:
             self.log.debug("Kernel is taking too long to finish, terminating")
             self._shutdown_status = _ShutdownStatus.SigtermRequest
-            await self._async_send_kernel_sigterm()
+            await self._async_send_kernel_sigterm(restart=restart)
 
         try:
             await asyncio.wait_for(
@@ -693,7 +693,7 @@ class KernelManager(ConnectionFileMixin):
 
     signal_kernel = run_sync(_async_signal_kernel)
 
-    async def _async_is_alive(self) -> bool:
+    async def async_is_alive(self) -> bool:
         """Is the kernel process still running?"""
         if not self.owns_kernel:
             return True
@@ -705,14 +705,14 @@ class KernelManager(ConnectionFileMixin):
                 return True
         return False
 
-    is_alive = run_sync(_async_is_alive)
+    is_alive = run_sync(async_is_alive)
 
     async def _async_wait(self, pollinterval: float = 0.1) -> None:
         # Use busy loop at 100ms intervals, polling until the process is
         # not alive.  If we find the process is no longer alive, complete
         # its cleanup via the blocking wait().  Callers are responsible for
         # issuing calls to wait() using a timeout (see _kill_kernel()).
-        while await self._async_is_alive():
+        while await self.async_is_alive():
             await asyncio.sleep(pollinterval)
 
 

@@ -69,7 +69,7 @@ class AsyncKernelClient(KernelClient):
     kernel_info = reqrep(wrapped, KernelClient.kernel_info)
     comm_info = reqrep(wrapped, KernelClient.comm_info)
 
-    is_alive = KernelClient._async_is_alive
+    is_alive = KernelClient.async_is_alive
     execute_interactive = KernelClient._async_execute_interactive
 
     # replies come on the control channel
