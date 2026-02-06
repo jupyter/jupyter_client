@@ -20,7 +20,6 @@ TIMEOUT = 60
 pjoin = os.path.join
 
 import asyncio
-import pytest
 from queue import Empty
 
 from jupyter_client.client import KernelClient
@@ -29,7 +28,7 @@ from jupyter_client.client import KernelClient
 class _NeverReplyChannel:
     async def get_msg(self, *args, **kwargs):
         raise Empty()
-    
+
 
 class TestKernelClient(TestCase):
     def setUp(self):
@@ -344,6 +343,7 @@ def test_validate_string_dict():
         validate_string_dict(dict(a=1))  # type:ignore
     with pytest.raises(ValueError):
         validate_string_dict({1: "a"})  # type:ignore
+
 
 @pytest.mark.asyncio
 async def test_async_recv_reply_timeout():
