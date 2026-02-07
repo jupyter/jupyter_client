@@ -338,4 +338,3 @@ def test_execute_fails_when_channels_stopped():
             kc.execute("print('hello')")
     finally:
         km.shutdown_kernel()
-
