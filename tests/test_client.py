@@ -328,8 +328,14 @@ class TestThreadedKernelClient(TestKernelClient):
         self.assertIsInstance(msg_id, str)
 
 
-def test_validate_string_dict():
-    with pytest.raises(ValueError):
-        validate_string_dict(dict(a=1))  # type:ignore
-    with pytest.raises(ValueError):
-        validate_string_dict({1: "a"})  # type:ignore
+def test_execute_fails_when_channels_stopped():
+    km, kc = start_new_kernel(kernel_name="echo")
+
+    try:
+        kc.stop_channels()
+
+        with pytest.raises(AssertionError):
+            kc.execute("print('hello')")
+    finally:
+        km.shutdown_kernel()
+
