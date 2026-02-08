@@ -339,3 +339,31 @@ def test_execute_fails_when_channels_stopped():
     finally:
         km.shutdown_kernel()
 
+import threading
+import time
+import zmq
+
+def test_get_msgs_blocks_when_empty():
+    km, kc = start_new_kernel(kernel_name="echo")
+
+    def target():
+        try:
+            kc.iopub_channel.get_msgs()
+        except zmq.ZMQError:
+            # expected when shutting down socket
+            pass
+
+    t = threading.Thread(target=target)
+    t.start()
+
+    time.sleep(0.5)
+
+    # get_msgs should still be blocking
+    assert t.is_alive()
+
+    kc.stop_channels()
+    km.shutdown_kernel()
+
+    t.join(timeout=1)
+
+
