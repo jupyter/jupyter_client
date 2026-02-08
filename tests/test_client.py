@@ -339,9 +339,12 @@ def test_execute_fails_when_channels_stopped():
     finally:
         km.shutdown_kernel()
 
+
 import threading
 import time
+
 import zmq
+
 
 def test_get_msgs_blocks_when_empty():
     km, kc = start_new_kernel(kernel_name="echo")
