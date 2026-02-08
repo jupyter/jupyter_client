@@ -338,6 +338,7 @@ def test_execute_fails_when_channels_stopped():
             kc.execute("print('hello')")
     finally:
         km.shutdown_kernel()
+<<<<<<< HEAD
 
 import threading
 import time
@@ -367,3 +368,5 @@ def test_get_msgs_blocks_when_empty():
     t.join(timeout=1)
 
 
+=======
+>>>>>>> ff05a420c295ccc86f138fe04456f9b2e05552c8
