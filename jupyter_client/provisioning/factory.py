@@ -169,7 +169,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         """Wrapper around entry_points (to fetch a single provisioner) - primarily to facilitate testing."""
         eps = entry_points(group=KernelProvisionerFactory.GROUP_NAME, name=name)
         if eps:
-            return eps[0]
+            return list(eps)[0]
 
         # Check if the entrypoint name is 'local-provisioner'.  Although this should never
         # happen, we have seen cases where the previous distribution of jupyter_client has
