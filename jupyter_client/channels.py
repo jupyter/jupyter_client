@@ -201,19 +201,8 @@ class ZMQSocketChannel:
     """A ZMQ socket wrapper"""
 
     def __init__(self, socket: zmq.Socket, session: Session, loop: t.Any = None) -> None:
-        """Create a channel.
-
-        Parameters
-        ----------
-        socket : :class:`zmq.Socket`
-            The ZMQ socket to use.
-        session : :class:`session.Session`
-            The session to use.
-        loop
-            Unused here, for other implementations
-        """
+        """Create a channel."""
         super().__init__()
-
         self.socket: zmq.Socket | None = socket
         self.session = session
 
@@ -226,22 +215,25 @@ class ZMQSocketChannel:
     def get_msg(self, timeout: float | None = None) -> t.Dict[str, t.Any]:
         """Gets a message if there is one that is ready."""
         assert self.socket is not None
-        timeout_ms = None if timeout is None else int(timeout * 1000)  # seconds to ms
+
+        timeout_ms = None if timeout is None else int(timeout * 1000)
         ready = self.socket.poll(timeout_ms)
+
         if ready:
-            res = self._recv()
-            return res
+            return self._recv()
         else:
             raise Empty
 
-    def get_msgs(self) -> t.List[t.Dict[str, t.Any]]:
+    def get_msgs(self, timeout: float | None = 0) -> t.List[t.Dict[str, t.Any]]:
         """Get all messages that are currently ready."""
         msgs = []
+
         while True:
             try:
-                msgs.append(self.get_msg())
+                msgs.append(self.get_msg(timeout=timeout))
             except Empty:
                 break
+
         return msgs
 
     def msg_ready(self) -> bool:
@@ -280,52 +272,38 @@ class AsyncZMQSocketChannel(ZMQSocketChannel):
     socket: zmq.asyncio.Socket
 
     def __init__(self, socket: zmq.asyncio.Socket, session: Session, loop: t.Any = None) -> None:
-        """Create a channel.
-
-        Parameters
-        ----------
-        socket : :class:`zmq.asyncio.Socket`
-            The ZMQ socket to use.
-        session : :class:`session.Session`
-            The session to use.
-        loop
-            Unused here, for other implementations
-        """
         if not isinstance(socket, zmq.asyncio.Socket):
-            msg = "Socket must be asyncio"  # type:ignore[unreachable]
-            raise ValueError(msg)
+            raise ValueError("Socket must be asyncio")
         super().__init__(socket, session)
 
-    async def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:  # type:ignore[override]
+    async def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:  # type: ignore[override]
         assert self.socket is not None
         msg = await self.socket.recv_multipart(**kwargs)
         _, smsg = self.session.feed_identities(msg)
         return self.session.deserialize(smsg)
 
-    async def get_msg(  # type:ignore[override]
-        self, timeout: float | None = None
-    ) -> t.Dict[str, t.Any]:
-        """Gets a message if there is one that is ready."""
+    async def get_msg(self, timeout: float | None = None) -> t.Dict[str, t.Any]:  # type: ignore[override]
         assert self.socket is not None
-        timeout_ms = None if timeout is None else int(timeout * 1000)  # seconds to ms
+
+        timeout_ms = None if timeout is None else int(timeout * 1000)
         ready = await self.socket.poll(timeout_ms)
+
         if ready:
-            res = await self._recv()
-            return res
+            return await self._recv()
         else:
             raise Empty
 
-    async def get_msgs(self) -> t.List[t.Dict[str, t.Any]]:  # type:ignore[override]
-        """Get all messages that are currently ready."""
+    async def get_msgs(self, timeout: float | None = 0) -> t.List[t.Dict[str, t.Any]]:  # type: ignore[override]
         msgs = []
+
         while True:
             try:
-                msgs.append(await self.get_msg())
+                msgs.append(await self.get_msg(timeout=timeout))
             except Empty:
                 break
+
         return msgs
 
-    async def msg_ready(self) -> bool:  # type:ignore[override]
-        """Is there a message that has been received?"""
+    async def msg_ready(self) -> bool:  # type: ignore[override]
         assert self.socket is not None
         return bool(await self.socket.poll(timeout=0))
