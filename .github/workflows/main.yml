@@ -64,6 +64,11 @@ jobs:
         run: |
           echo "PYTEST_ADDOPTS=${PYTEST_ADDOPTS:-} -W default" >> $GITHUB_ENV
 
+      - name: ignore RuntimeWarning on 3.14t
+        if: ${{ matrix.python-version == '3.14t' }}
+        run: |
+          echo "PYTEST_ADDOPTS=${PYTEST_ADDOPTS:-} -W ignore::RuntimeWarning" >> "$GITHUB_ENV"
+
       - name: disable coverage on pypy
         if: ${{ startsWith(matrix.python-version, 'pypy') }}
         run: |
