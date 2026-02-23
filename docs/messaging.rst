@@ -384,10 +384,10 @@ blobs of bytes:
 .. sourcecode:: python
 
    [
-        b"u-u-i-d",  # zmq identity(ies)
-        b"<IDS|MSG>",  # delimiter
-        b"baddad42",  # HMAC signature
-        b"{content}"  # serialized content dict
+       b"u-u-i-d",  # zmq identity(ies)
+       b"<IDS|MSG>",  # delimiter
+       b"baddad42",  # HMAC signature
+       b"{content}",  # serialized content dict
    ]
 
 When the registration service receives this messages, it sends back a signed,

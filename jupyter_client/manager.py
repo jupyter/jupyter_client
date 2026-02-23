@@ -50,13 +50,14 @@ from .provisioning import KernelProvisionerFactory as KPF  # noqa
 # The workaround is to explicitly set what we want to document
 
 __all__ = [
-    "KernelManager",
     "AsyncKernelManager",
-    "start_new_kernel",
-    "start_new_async_kernel",
-    "run_kernel",
+    "KernelManager",
     "in_pending_state",
+    "run_kernel",
+    "start_new_async_kernel",
+    "start_new_kernel",
 ]
+
 
 class _ShutdownStatus(Enum):
     """
