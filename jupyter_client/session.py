@@ -27,6 +27,9 @@ import warnings
 from binascii import b2a_hex
 from datetime import datetime, timezone
 from hmac import compare_digest
+from typing import TypeVar
+K = TypeVar("K")
+V = TypeVar("V")
 
 # We are using compare_digest to limit the surface of timing attacks
 import zmq.asyncio

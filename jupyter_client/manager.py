@@ -15,6 +15,9 @@ from asyncio.futures import Future
 from concurrent.futures import Future as CFuture
 from contextlib import contextmanager
 from enum import Enum
+from typing import TypeVar
+k = TypeVar("K")
+v = TypeVar("V")
 
 import zmq
 from jupyter_core.utils import run_sync
@@ -720,14 +723,11 @@ class AsyncKernelManager(KernelManager):
     """An async kernel manager."""
 
     # the class to create with our `client` method
-    client_class: DottedObjectName = DottedObjectName(
-        "jupyter_client.asynchronous.AsyncKernelClient", config=True
-    )
-    client_factory: Type = Type(klass="jupyter_client.asynchronous.AsyncKernelClient", config=True)
-
-    # The PyZMQ Context to use for communication with the kernel.
-    context: Instance = Instance(zmq.asyncio.Context)
-
+    
+    @default("client_class")
+    def _client_class_default(self):
+        return "jupyter_client.asynchronous.AsyncKernelClient"
+       
     @default("context")
     def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True

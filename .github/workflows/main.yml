@@ -15,6 +15,7 @@ defaults:
 
 env:
   HATCH_ENV: "cov"
+  PYTHON_GIL: 0
 
 jobs:
   check_release:
