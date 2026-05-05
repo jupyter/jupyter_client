@@ -573,6 +573,8 @@ class ConnectionFileMixin(LoggingConfigurable):
         if "curve_publickey" in info and "curve_secretkey" in info:
             pub = info["curve_publickey"]
             sec = info["curve_secretkey"]
+            assert isinstance(pub, (str, bytes))
+            assert isinstance(sec, (str, bytes))
             self._curve_publickey = pub.encode() if isinstance(pub, str) else pub
             self._curve_secretkey = sec.encode() if isinstance(sec, str) else sec
 
