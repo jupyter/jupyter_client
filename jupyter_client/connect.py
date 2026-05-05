@@ -318,6 +318,11 @@ port_names = ["%s_port" % channel for channel in ("shell", "stdin", "iopub", "hb
 class ConnectionFileMixin(LoggingConfigurable):
     """Mixin for configurable classes that work with connection files"""
 
+    # Optional CurveZMQ keys loaded from the connection file (Z85-encoded bytes).
+    # None when the kernel was not started with CurveZMQ enabled.
+    _curve_publickey: bytes | None = None
+    _curve_secretkey: bytes | None = None
+
     data_dir: str | Unicode = Unicode()
 
     def _data_dir_default(self) -> str:
@@ -565,6 +570,11 @@ class ConnectionFileMixin(LoggingConfigurable):
             self.session.key = key
         if "signature_scheme" in info:
             self.session.signature_scheme = info["signature_scheme"]
+        if "curve_publickey" in info and "curve_secretkey" in info:
+            pub = info["curve_publickey"]
+            sec = info["curve_secretkey"]
+            self._curve_publickey = pub.encode() if isinstance(pub, str) else pub
+            self._curve_secretkey = sec.encode() if isinstance(sec, str) else sec
 
     def _reconcile_connection_info(self, info: KernelConnectionInfo) -> None:
         """Reconciles the connection information returned from the Provisioner.
@@ -657,6 +667,14 @@ class ConnectionFileMixin(LoggingConfigurable):
         sock.linger = 1000
         if identity:
             sock.identity = identity
+        if self._curve_publickey is not None:
+            # The connection file already carries this keypair, so reusing it
+            # avoids introducing an additional key-distribution mechanism here.
+            # curve_serverkey authenticates the server; the keypair configures
+            # encrypted communication for the client socket.
+            sock.curve_secretkey = self._curve_secretkey
+            sock.curve_publickey = self._curve_publickey
+            sock.curve_serverkey = self._curve_publickey
         sock.connect(url)
         return sock
 
