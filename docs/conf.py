@@ -50,13 +50,8 @@ class FilterForIssue123(pylogging.Filter):
 
 # Workaround until https://github.com/ipython/traitlets/pull/935 is released and we can update the traitlets dependency to a version that includes it.
 class FilterForTraitletsDictForwardRef(pylogging.Filter):
-    _pattern = re.compile(
-        r'^Cannot resolve forward reference in type annotations of "jupyter_client\..+\.Dict" '
-        r"\(module traitlets\.traitlets\): name 'K' is not defined$"
-    )
-
     def filter(self, record: pylogging.LogRecord) -> bool:
-        return self._pattern.match(record.getMessage()) is None
+        return "(module traitlets.traitlets): name 'K' is not defined" not in record.getMessage()
 
 
 logging.getLogger("sphinx_autodoc_typehints").logger.addFilter(FilterForIssue123())
