@@ -23,7 +23,7 @@ import zmq
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
 from traitlets import Bool, CaselessStrEnum, Instance, Integer, Type, Unicode, observe
 from traitlets.config import LoggingConfigurable, SingletonConfigurable
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 from .localinterfaces import localhost
 from .utils import _filefind
@@ -36,9 +36,20 @@ if TYPE_CHECKING:
 # Define custom type for kernel connection info
 
 
-class KernelConnectionInfo(TypedDict, extra_items=str | bytes | int):
-    curve_publickey: str
-    curve_secretkey: str
+class KernelConnectionInfo(TypedDict, extra_items=str | bytes | int):  # type: ignore[call-arg]
+    shell_port: int
+    iopub_port: int
+    stdin_port: int
+    control_port: int
+    hb_port: int
+    ip: str
+    key: str
+    transport: str
+    signature_scheme: str
+    kernel_name: str
+    session: NotRequired[Session]
+    curve_publickey: NotRequired[str]
+    curve_secretkey: NotRequired[str]
 
 
 def write_connection_file(
@@ -166,7 +177,7 @@ def write_connection_file(
         cfg["curve_publickey"] = curve_publickey.decode("ascii")
     if curve_secretkey is not None:
         cfg["curve_secretkey"] = curve_secretkey.decode("ascii")
-    cfg.update(kwargs)
+    cfg.update(kwargs)  # type: ignore[typeddict-item]
 
     # Only ever write this file as user read/writeable
     # This would otherwise introduce a vulnerability as a file has secrets
@@ -427,7 +438,7 @@ class ConnectionFileMixin(LoggingConfigurable):
         connect_info : dict
             dictionary of connection information.
         """
-        info = {
+        info: KernelConnectionInfo = {
             "transport": self.transport,
             "ip": self.ip,
             "shell_port": self.shell_port,
@@ -537,7 +548,7 @@ class ConnectionFileMixin(LoggingConfigurable):
         # write_connection_file also sets default ports:
         self._record_random_port_names()
         for name in port_names:
-            setattr(self, name, cfg[name])
+            setattr(self, name, cast(int, cfg.get(name)))
 
         self._connection_file_written = True
 
@@ -570,13 +581,13 @@ class ConnectionFileMixin(LoggingConfigurable):
             See the connection_file spec for details.
         """
         self.transport = info.get("transport", self.transport)
-        self.ip = info.get("ip", self._ip_default())  # type:ignore[assignment]
+        self.ip = info.get("ip", self._ip_default())
 
         self._record_random_port_names()
         for name in port_names:
             if getattr(self, name) == 0 and name in info:
                 # not overridden by config or cl_args
-                setattr(self, name, info[name])
+                setattr(self, name, cast(int, info.get(name)))
 
         if "key" in info:
             key = info["key"]
