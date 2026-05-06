@@ -14,7 +14,6 @@
 import logging as pylogging
 import os
 import os.path as osp
-import re
 import shutil
 
 from sphinx.util import logging  # type:ignore[import-not-found]
@@ -41,6 +40,17 @@ extensions = [
     "sphinx_autodoc_typehints",
 ]
 
+
+# Workaround for https://github.com/tox-dev/sphinx-autodoc-typehints/issues/123
+# As of 3.10.2 release the issue is closed but removing the workaround still
+# surfaces the warnings - this needs more investigation on our side.
+class FilterForIssue123(pylogging.Filter):
+    def filter(self, record: pylogging.LogRecord) -> bool:
+        return not record.getMessage().startswith("Cannot handle as a local function")
+
+
+logging.getLogger("sphinx_autodoc_typehints").logger.addFilter(FilterForIssue123())
+# End of a workaround
 
 try:
     import enchant  # type:ignore[import-not-found]  # noqa
