@@ -6,6 +6,8 @@
 import pytest
 import zmq
 
+from jupyter_client.channels import HBChannel
+from jupyter_client.client import KernelClient
 from jupyter_client.connect import ConnectionFileMixin
 from jupyter_client.session import Session
 
@@ -120,6 +122,61 @@ def test_connect_shell_to_curve_server_with_curve_keys_succeeds():
     finally:
         server.close(linger=0)
         ctx.term()
+
+
+def test_hb_channel_class_without_curve_support_raises_when_curve_is_active():
+    """KernelClient.hb_channel raises RuntimeError when the hb_channel_class
+    does not accept curve_serverkey but CurveZMQ is active."""
+
+    class LegacyHBChannel(HBChannel):
+        """Simulates an old heartbeat channel class that predates curve support."""
+
+        def __init__(self, context, session, address):  # type: ignore[override]
+            super().__init__(context, session, address)
+
+    pub, _sec = zmq.curve_keypair()
+
+    client = KernelClient()
+    client.hb_channel_class = LegacyHBChannel  # type: ignore[assignment]
+    client.load_connection_info(
+        {
+            "ip": "127.0.0.1",
+            "transport": "tcp",
+            "hb_port": 5555,
+            "key": "abc123",
+            "signature_scheme": "hmac-sha256",
+            "curve_publickey": pub.decode("ascii"),
+            "curve_secretkey": pub.decode("ascii"),
+        }
+    )
+
+    with pytest.raises(RuntimeError, match="curve_serverkey"):
+        _ = client.hb_channel
+
+
+def test_hb_channel_class_without_curve_support_does_not_raise_when_curve_disabled():
+    """KernelClient.hb_channel remains usable with legacy hb_channel_class when Curve is off."""
+
+    class LegacyHBChannel(HBChannel):
+        """Simulates an old heartbeat channel class that predates curve support."""
+
+        def __init__(self, context, session, address):  # type: ignore[override]
+            super().__init__(context, session, address)
+
+    client = KernelClient()
+    client.hb_channel_class = LegacyHBChannel  # type: ignore[assignment]
+    client.load_connection_info(
+        {
+            "ip": "127.0.0.1",
+            "transport": "tcp",
+            "hb_port": 5555,
+            "key": "abc123",
+            "signature_scheme": "hmac-sha256",
+        }
+    )
+
+    hb = client.hb_channel
+    assert isinstance(hb, LegacyHBChannel)
 
 
 def test_connect_shell_to_curve_server_without_curve_keys_is_rejected():
