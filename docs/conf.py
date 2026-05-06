@@ -42,22 +42,6 @@ extensions = [
 ]
 
 
-# Workaround for https://github.com/agronholm/sphinx-autodoc-typehints/issues/123
-class FilterForIssue123(pylogging.Filter):
-    def filter(self, record: pylogging.LogRecord) -> bool:
-        return not record.getMessage().startswith("Cannot handle as a local function")
-
-
-# Workaround until https://github.com/ipython/traitlets/pull/935 is released and we can update the traitlets dependency to a version that includes it.
-class FilterForTraitletsDictForwardRef(pylogging.Filter):
-    def filter(self, record: pylogging.LogRecord) -> bool:
-        return "(module traitlets.traitlets): name 'K' is not defined" not in record.getMessage()
-
-
-logging.getLogger("sphinx_autodoc_typehints").logger.addFilter(FilterForIssue123())
-logging.getLogger("sphinx_autodoc_typehints").logger.addFilter(FilterForTraitletsDictForwardRef())
-# End of a workaround
-
 try:
     import enchant  # type:ignore[import-not-found]  # noqa
 
