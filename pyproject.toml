@@ -43,6 +43,13 @@ Homepage = "https://jupyter.org"
 Documentation = "https://jupyter-client.readthedocs.io/"
 Source = "https://github.com/jupyter/jupyter_client"
 
+# this is required by sp-repo-review, it suggest to rely on test, and
+# move test within dependency groups but moving it to dependency-group
+# would mean it does not work when pip install jupyter_client[test] from
+# a released sdist/wheel AFAICT.
+[dependency-groups]
+dev = [ ]
+
 [project.optional-dependencies]
 test = [
     "anyio",
@@ -138,6 +145,7 @@ filterwarnings= [
   # from ipykernel 6 (fixed in 7)
   "ignore:Parsing dates:DeprecationWarning:ipykernel.jsonutil",
 ]
+log_level = "INFO"
 
 [tool.coverage.report]
 exclude_lines = [

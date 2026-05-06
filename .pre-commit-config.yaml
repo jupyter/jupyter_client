@@ -1,6 +1,7 @@
 ci:
   autoupdate_schedule: monthly
   autoupdate_commit_msg: "chore: update pre-commit hooks"
+  autofix_commit_msg: "style: pre-commit fixes"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -21,23 +22,23 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.34.0
+    rev: 0.37.2
     hooks:
       - id: check-github-workflows
 
   - repo: https://github.com/hukkin/mdformat
-    rev: 0.7.22
+    rev: 1.0.0
     hooks:
       - id: mdformat
 
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: "v3.7.3"
+    rev: "v3.8.3"
     hooks:
       - id: prettier
         types_or: [yaml, html, json]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.19.0"
+    rev: "v1.20.2"
     hooks:
       - id: mypy
         files: jupyter_client
@@ -62,7 +63,7 @@ repos:
         additional_dependencies: [black==23.7.0]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: "v2.4.1"
+    rev: "v2.4.2"
     hooks:
       - id: codespell
         args: ["-L", "sur,nd"]
@@ -75,13 +76,13 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.0
+    rev: v0.15.12
     hooks:
       - id: ruff-check
         args: ["--fix", "--show-fixes"]
       - id: ruff-format
 
   - repo: https://github.com/scientific-python/cookie
-    rev: "2025.10.01"
+    rev: "2026.04.04"
     hooks:
       - id: sp-repo-review

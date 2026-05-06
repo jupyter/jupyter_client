@@ -646,7 +646,7 @@ class Session(Configurable):
                 raise ValueError(msg)
         except Exception:
             self.pack = lambda o: pack(squash_dates(o))
-            self.unpack = lambda s: unpack(s)
+            self.unpack = unpack
 
     def msg_header(self, msg_type: str) -> dict[str, t.Any]:
         """Create a header for a message type."""
