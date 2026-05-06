@@ -64,7 +64,7 @@ class ListKernelSpecs(JupyterApp):
                 print("No kernels available")
                 return None
             # pad to width of longest kernel name
-            name_len = len(sorted(paths, key=lambda name: len(name))[-1])
+            name_len = len(sorted(paths, key=len)[-1])
 
             def path_key(item: t.Any) -> t.Any:
                 """sort key function for Jupyter path priority"""
@@ -325,7 +325,7 @@ class ListProvisioners(JupyterApp):
         provisioners = kfp.get_provisioner_entries()
 
         # pad to width of longest kernel name
-        name_len = len(sorted(provisioners, key=lambda name: len(name))[-1])
+        name_len = len(sorted(provisioners, key=len)[-1])
 
         for name in sorted(provisioners):
             print(f"  {name.ljust(name_len)}    {provisioners[name]}")
