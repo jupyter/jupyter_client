@@ -17,12 +17,13 @@ import stat
 import tempfile
 import warnings
 from getpass import getpass
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import zmq
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
 from traitlets import Bool, CaselessStrEnum, Instance, Integer, Type, Unicode, observe
 from traitlets.config import LoggingConfigurable, SingletonConfigurable
+from typing_extensions import TypedDict
 
 from .localinterfaces import localhost
 from .utils import _filefind
@@ -33,7 +34,11 @@ if TYPE_CHECKING:
     from .session import Session
 
 # Define custom type for kernel connection info
-KernelConnectionInfo = dict[str, Union[int, str, bytes]]
+
+
+class KernelConnectionInfo(TypedDict, extra_items=str | bytes | int):
+    curve_publickey: str
+    curve_secretkey: str
 
 
 def write_connection_file(
@@ -48,6 +53,8 @@ def write_connection_file(
     transport: str = "tcp",
     signature_scheme: str = "hmac-sha256",
     kernel_name: str = "",
+    curve_publickey: bytes | None = None,
+    curve_secretkey: bytes | None = None,
     **kwargs: Any,
 ) -> tuple[str, KernelConnectionInfo]:
     """Generates a JSON config file, including the selection of random ports.
@@ -76,7 +83,7 @@ def write_connection_file(
     ip  : str, optional
         The ip address the kernel will bind to.
 
-    key : str, optional
+    key : bytes, optional
         The Session key used for message authentication.
 
     signature_scheme : str, optional
@@ -89,6 +96,12 @@ def write_connection_file(
 
     kernel_name : str, optional
         The name of the kernel currently connected to.
+
+    curve_publickey : bytes, optional
+        CurveZMQ public key (Z85).
+
+    curve_secretkey : bytes, optional
+        CurveZMQ secret key (Z85).
     """
     if not ip:
         ip = localhost()
@@ -149,6 +162,10 @@ def write_connection_file(
     cfg["transport"] = transport
     cfg["signature_scheme"] = signature_scheme
     cfg["kernel_name"] = kernel_name
+    if curve_publickey is not None:
+        cfg["curve_publickey"] = curve_publickey.decode("ascii")
+    if curve_secretkey is not None:
+        cfg["curve_secretkey"] = curve_secretkey.decode("ascii")
     cfg.update(kwargs)
 
     # Only ever write this file as user read/writeable
@@ -573,10 +590,8 @@ class ConnectionFileMixin(LoggingConfigurable):
         if "curve_publickey" in info and "curve_secretkey" in info:
             pub = info["curve_publickey"]
             sec = info["curve_secretkey"]
-            assert isinstance(pub, (str, bytes))
-            assert isinstance(sec, (str, bytes))
-            self._curve_publickey = pub.encode() if isinstance(pub, str) else pub
-            self._curve_secretkey = sec.encode() if isinstance(sec, str) else sec
+            self._curve_publickey = pub.encode()
+            self._curve_secretkey = sec.encode()
 
     def _reconcile_connection_info(self, info: KernelConnectionInfo) -> None:
         """Reconciles the connection information returned from the Provisioner.
@@ -601,6 +616,10 @@ class ConnectionFileMixin(LoggingConfigurable):
             # Prior to the following comparison, we need to adjust the value of "key" to
             # be bytes, otherwise the comparison below will fail.
             file_info["key"] = file_info["key"].encode()
+            if "curve_publickey" in file_info:
+                file_info["curve_publickey"] = file_info["curve_publickey"].encode()
+            if "curve_secretkey" in file_info:
+                file_info["curve_secretkey"] = file_info["curve_secretkey"].encode()
             if not self._equal_connections(info, file_info):
                 os.remove(self.connection_file)  # Contents mismatch - remove the file
                 self._connection_file_written = False
@@ -630,6 +649,8 @@ class ConnectionFileMixin(LoggingConfigurable):
 
         pertinent_keys = [
             "key",
+            "curve_publickey",
+            "curve_secretkey",
             "ip",
             "stdin_port",
             "iopub_port",

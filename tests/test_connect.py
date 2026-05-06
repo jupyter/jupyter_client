@@ -84,6 +84,21 @@ def test_write_connection_file():
     assert info == sample_info
 
 
+def test_write_connection_file_normalizes_curve_key_kwargs_to_strings():
+    with TemporaryDirectory() as d:
+        cf = os.path.join(d, "kernel.json")
+        _fname, cfg = connect.write_connection_file(
+            cf,
+            **sample_info,
+            curve_publickey=b"A" * 40,
+            curve_secretkey=b"B" * 40,
+        )
+
+        assert isinstance(cfg["key"], str)
+        assert isinstance(cfg["curve_publickey"], str)
+        assert isinstance(cfg["curve_secretkey"], str)
+
+
 def test_load_connection_file_session():
     """test load_connection_file() after"""
     session = Session()
