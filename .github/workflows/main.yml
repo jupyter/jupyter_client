@@ -103,7 +103,7 @@ jobs:
         run: |
           hatch -e docs run python -VV
           hatch -e docs run python -m pip freeze
-          
+
       - name: Build API docs
         run: |
           hatch run docs:api
