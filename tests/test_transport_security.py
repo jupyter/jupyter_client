@@ -159,3 +159,45 @@ def test_connect_shell_to_curve_server_without_curve_keys_is_rejected():
     finally:
         server.close(linger=0)
         ctx.term()
+
+
+def test_connect_shell_to_curve_server_with_wrong_curve_keys_is_rejected():
+    """Public API path: mismatched curve keys - traffic to a Curve server is dropped."""
+    pub, sec = zmq.curve_keypair()
+    wrong_pub, wrong_sec = zmq.curve_keypair()
+
+    ctx = zmq.Context()
+    server = ctx.socket(zmq.ROUTER)
+    server.curve_secretkey = sec
+    server.curve_publickey = pub
+    server.curve_server = True
+    port = server.bind_to_random_port("tcp://127.0.0.1")
+
+    try:
+        info = {
+            "ip": "127.0.0.1",
+            "transport": "tcp",
+            "shell_port": port,
+            "key": "abc123",
+            "signature_scheme": "hmac-sha256",
+            "curve_publickey": wrong_pub.decode("ascii"),
+            "curve_secretkey": wrong_sec.decode("ascii"),
+        }
+        mixin = ConnectionFileMixin()
+        mixin.context = ctx
+        mixin.load_connection_info(info)
+
+        client_sock = mixin.connect_shell()
+        try:
+            client_sock.send(b"probe", flags=zmq.NOBLOCK)
+            poller = zmq.Poller()
+            poller.register(server, zmq.POLLIN)
+            events = dict(poller.poll(timeout=300))
+            assert server not in events, (
+                "Message with wrong curve keys reached Curve server - expected drop"
+            )
+        finally:
+            client_sock.close(linger=0)
+    finally:
+        server.close(linger=0)
+        ctx.term()
