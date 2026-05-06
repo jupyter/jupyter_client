@@ -69,7 +69,7 @@ class HBChannel(Thread):
         address : zmq url
             Standard (ip, port) tuple that the kernel is listening on.
         curve_serverkey : bytes, optional
-            CurveZMQ server public key (Z85).  When provided, the
+            CurveZMQ server public key (Z85). When provided, the
             heartbeat REQ socket is configured as a CurveZMQ client so it
             can communicate with a CurveZMQ-enabled kernel.
         """

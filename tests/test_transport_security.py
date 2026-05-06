@@ -13,19 +13,21 @@ from jupyter_client.session import Session
 
 
 @pytest.mark.parametrize(
-    ("enable_curve", "expect_plaintext_visible"),
+    "enable_curve",
     [
-        (False, True),
-        (True, False),
+        False,
+        True,
     ],
 )
-def test_iopub_plaintext_visibility_depends_on_curve(enable_curve, expect_plaintext_visible):
+def test_iopub_plaintext_visibility_depends_on_curve(enable_curve):
     """An unauthenticated subscriber sees plaintext only when Curve is disabled."""
 
     ctx = zmq.Context()
     session = Session(key=b"secret-hmac-key")
     server = ctx.socket(zmq.XPUB)
     eavesdropper = ctx.socket(zmq.SUB)
+
+    expect_plaintext_visible = not enable_curve
 
     if enable_curve:
         pub, sec = zmq.curve_keypair()
