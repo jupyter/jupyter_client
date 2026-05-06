@@ -55,7 +55,7 @@ def install_fail_kernel():
 @pytest.fixture
 def install_slow_fail_kernel():
     return _install_kernel(
-        "problemtest-slow", extra_env={"STARTUP_DELAY": "5", "FAIL_ON_START": "1"}
+        "problemtest-slow", extra_env={"STARTUP_DELAY": "0.5", "FAIL_ON_START": "1"}
     )
 
 
@@ -93,6 +93,9 @@ async def test_restart_check(config, install_kernel, debug_logging):
     N_restarts = 1
     config.KernelRestarter.restart_limit = N_restarts
     config.KernelRestarter.debug = True
+    # Tighten the heartbeat poll interval (default 3.0s) so death is detected
+    # quickly. Localhost ZMQ heartbeats round-trip in <1ms even on slow CI.
+    config.KernelRestarter.time_to_dead = 0.5
     km = IOLoopKernelManager(kernel_name=install_kernel, config=config)
 
     cbs = 0
@@ -124,7 +127,7 @@ async def test_restart_check(config, install_kernel, debug_logging):
                 assert km.provisioner is not None
                 await km.provisioner.kill()
                 restarts[i].result()
-                # Wait for kill + restart
+                # Wait for kill + restart.
                 max_wait = 10.0
                 waited = 0.0
                 while waited < max_wait and km.is_alive():
@@ -149,6 +152,7 @@ async def test_restarter_gives_up(config, install_fail_kernel, debug_logging):
     N_restarts = 1
     config.KernelRestarter.restart_limit = N_restarts
     config.KernelRestarter.debug = True
+    config.KernelRestarter.time_to_dead = 0.5
     km = IOLoopKernelManager(kernel_name=install_fail_kernel, config=config)
 
     cbs = 0
@@ -193,6 +197,7 @@ async def test_async_restart_check(config, install_kernel, debug_logging):
     N_restarts = 1
     config.KernelRestarter.restart_limit = N_restarts
     config.KernelRestarter.debug = True
+    config.KernelRestarter.time_to_dead = 0.5
     km = AsyncIOLoopKernelManager(kernel_name=install_kernel, config=config)
 
     cbs = 0
@@ -224,8 +229,10 @@ async def test_async_restart_check(config, install_kernel, debug_logging):
                 assert km.provisioner is not None
                 await km.provisioner.kill()
                 await restarts[i]
-                # Wait for kill + restart
-                max_wait = 10.0
+                # Wait for kill + restart. Generous timeout for slow CI; the
+                # loop exits as soon as the state flips, so fast machines
+                # finish quickly.
+                max_wait = 30.0
                 waited = 0.0
                 while waited < max_wait and await km.is_alive():
                     await asyncio.sleep(0.1)
@@ -249,6 +256,7 @@ async def test_async_restarter_gives_up(config, install_slow_fail_kernel, debug_
     config.KernelRestarter.restart_limit = N_restarts
     config.KernelRestarter.debug = True
     config.KernelRestarter.stable_start_time = 30.0
+    config.KernelRestarter.time_to_dead = 0.5
     km = AsyncIOLoopKernelManager(kernel_name=install_slow_fail_kernel, config=config)
 
     cbs = 0

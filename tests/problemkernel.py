@@ -34,7 +34,7 @@ class ProblemTestApp(IPKernelApp):
 
 if __name__ == "__main__":
     # make startup artificially slow,
-    # so that we exercise client logic for slow-starting kernels
-    startup_delay = int(os.environ.get("STARTUP_DELAY", "2"))
+    # so that we exercise client logic for slow-starting kernels.
+    startup_delay = float(os.environ.get("STARTUP_DELAY", "2"))
     time.sleep(startup_delay)
     ProblemTestApp.launch_instance()

@@ -6,9 +6,12 @@
 # -----------------------------------------------------------------------------
 import sys
 
+import pytest
+
 from jupyter_client import localinterfaces
 
 
+@pytest.mark.slow
 def test_load_ips():
     # Override the machinery that skips it if it was called before
     localinterfaces._load_ips.called = False  # type:ignore[attr-defined]

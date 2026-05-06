@@ -64,6 +64,11 @@ jobs:
         run: |
           echo "PYTEST_ADDOPTS=${PYTEST_ADDOPTS:-} -W default" >> $GITHUB_ENV
 
+      - name: enable slow tests on the latest python for each platform
+        if: ${{ matrix.python-version == '3.14' }}
+        run: |
+          echo "PYTEST_ADDOPTS=${PYTEST_ADDOPTS:-} --runslow" >> $GITHUB_ENV
+
       - name: disable coverage on pypy
         if: ${{ startsWith(matrix.python-version, 'pypy') }}
         run: |
@@ -164,6 +169,8 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           dependency_type: pre
+          # Pin to <=3.14: orjson does not yet build on 3.15-dev.
+          python_version: "3.14"
       - name: Run the tests
         run: |
           hatch run test:nowarn
