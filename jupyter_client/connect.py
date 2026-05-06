@@ -23,7 +23,7 @@ import zmq
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
 from traitlets import Bool, CaselessStrEnum, Instance, Integer, Type, Unicode, observe
 from traitlets.config import LoggingConfigurable, SingletonConfigurable
-from typing_extensions import NotRequired, TypedDict
+from typing_extensions import TypedDict
 
 from .localinterfaces import localhost
 from .utils import _filefind
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 # Define custom type for kernel connection info
 
 
-class KernelConnectionInfo(TypedDict, extra_items=str | bytes | int):  # type: ignore[call-arg]
+class KernelConnectionInfo(TypedDict, extra_items=str | bytes | int, total=False):  # type: ignore[call-arg]
     shell_port: int
     iopub_port: int
     stdin_port: int
@@ -47,9 +47,9 @@ class KernelConnectionInfo(TypedDict, extra_items=str | bytes | int):  # type: i
     transport: str
     signature_scheme: str
     kernel_name: str
-    session: NotRequired[Session]
-    curve_publickey: NotRequired[str]
-    curve_secretkey: NotRequired[str]
+    session: Session
+    curve_publickey: str
+    curve_secretkey: str
 
 
 def write_connection_file(
@@ -591,11 +591,8 @@ class ConnectionFileMixin(LoggingConfigurable):
 
         if "key" in info:
             key = info["key"]
-            if isinstance(key, str):
-                key = key.encode()
-            assert isinstance(key, bytes)
-
-            self.session.key = key
+            key_bytes = key if isinstance(key, bytes) else key.encode()  # type: ignore[redundant-expr,unreachable]
+            self.session.key = key_bytes
         if "signature_scheme" in info:
             self.session.signature_scheme = info["signature_scheme"]
         if "curve_publickey" in info and "curve_secretkey" in info:
