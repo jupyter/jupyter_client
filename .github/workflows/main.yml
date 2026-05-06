@@ -98,6 +98,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Show docs environment packages
+        run: |
+          hatch -e docs run python -VV
+          hatch -e docs run python -m pip freeze
+
       - name: Build API docs
         run: |
           hatch run docs:api
@@ -108,7 +114,9 @@ jobs:
             exit 1
           fi
           echo "API docs done"
-      - run: hatch run docs:build
+
+      - name: Build docs
+        run: hatch -v run docs:build
 
   lint:
     name: Test Lint
