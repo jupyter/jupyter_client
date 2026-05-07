@@ -164,6 +164,7 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           dependency_type: pre
+          python_version: "3.14"
       - name: Run the tests
         run: |
           hatch run test:nowarn
