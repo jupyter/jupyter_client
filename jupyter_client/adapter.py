@@ -419,7 +419,7 @@ def adapt(msg: dict[str, Any], to_version: int = protocol_version_info[0]) -> di
     else:
         # assume last version before adding the key to the header
         from_version = 4
-    adapter = adapters.get((from_version, to_version), None)
+    adapter = adapters.get((from_version, to_version))
     if adapter is None:
         return msg
     return adapter(msg)
