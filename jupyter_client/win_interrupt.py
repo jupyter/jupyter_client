@@ -32,10 +32,27 @@ def create_interrupt_event() -> Any:
     sa.nLength = ctypes.sizeof(SECURITY_ATTRIBUTES)
     sa.lpSecurityDescriptor = 0
     sa.bInheritHandle = 1
+    # ensure backward compatibility with older ParentPollerWindows
+    # implementations which relied on bManualReset to be set to False
+    # upon event creation
+    MANUAL_RESET_ATTR = "manual_reset"
+    if not hasattr(create_interrupt_event, MANUAL_RESET_ATTR):
+        manual_reset = False
+        try:
+            from ipykernel.parentpoller import ParentPollerWindows
+
+            if hasattr(ParentPollerWindows, "reset_event"):
+                manual_reset = True
+        except ImportError:
+            pass
+        finally:
+            setattr(create_interrupt_event, MANUAL_RESET_ATTR, manual_reset)
+    else:
+        manual_reset = getattr(create_interrupt_event, MANUAL_RESET_ATTR)
 
     return ctypes.windll.kernel32.CreateEventA(  # type:ignore[attr-defined]
         sa_p,
-        False,
+        manual_reset,
         False,
         "",  # lpEventAttributes  # bManualReset  # bInitialState
     )  # lpName
