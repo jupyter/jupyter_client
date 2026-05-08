@@ -32,13 +32,33 @@ There are three options for writing a kernel:
    - `xeus-python <https://github.com/jupyter-xeus/xeus-python>`_
    - `JuniperKernel <https://github.com/JuniperKernel/JuniperKernel>`_
 
+.. _connection_file:
+
 Connection files
 ================
 
-Your kernel will be given the path to a connection file when it starts (see
-:ref:`kernelspecs` for how to specify the command line arguments for your kernel).
-This file, which is accessible only to the current user, will contain a JSON
-dictionary looking something like this::
+When a kernel is started, it is provided **exactly one** of the following files as
+startup information (typically as a path passed on the kernel command line):
+
+1. **A connection file** (the “classic” approach described below), containing the
+   transport, IP, ports, and authentication key needed to connect the kernel’s
+   ZeroMQ channels.
+
+2. **A registration file** (handshake-based approach), used as part of the kernel
+   startup handshake pattern. In this mode, the file does not directly provide all
+   channel endpoints up front; instead, it enables a registration/handshake step
+   through which the connection information is established.
+
+Which of these two files is given to the kernel depends on the **kernel protocol
+version** supported by both the client and the kernel. Clients and kernels will use
+the most appropriate mechanism they both support. The handshake pattern is
+implemented in version 5.6 of the protocol.
+
+Connection file format
+----------------------
+
+A connection file, which is accessible only to the current user, will contain a
+JSON dictionary looking something like this::
 
     {
       "control_port": 50160,
@@ -63,6 +83,38 @@ New ports are chosen at random for each kernel started.
 ``signature_scheme`` and ``key`` are used to cryptographically sign messages, so
 that other users on the system can't send code to run in this kernel. See
 :ref:`wire_protocol` for the details of how this signature is calculated.
+
+Registration file format
+------------------------
+
+A registration file will also contain a JSON dictionary, with the following
+fields::
+
+    {
+      "kernel_id": "unique_kernel_id",
+      "transport": "tcp",
+      "registration_ip": "127.0.0.1",
+      "registration_port": 51587,
+      "signature_scheme": "hmac-sha256",
+      "key": "a0436f6c-1916-498b-8eb9-e81ab9368e84"
+    }
+
+The ``transport``, ``registration_ip`` and ``registration_port`` fields specify
+the port the kernel should connect to to send its connection information. For
+instance, the address of the registration socket in the example above would be::
+
+    tcp://127.0.0.1:51587
+
+``signature_scheme`` and ``key`` are used to cryptographically sign messages, so
+that other users on the system can't send code to run in this kernel. See
+:ref:`wire_protocol` for the details of how this signature is calculated.
+
+``kernel_id`` is used so that the registration service can identify which kernel
+is sending its connection information on the registration socket.
+
+See :ref:`kernel_startup_handshake` for the detail of how the kernel communications
+its connection information to the registration service.
+
 
 Handling messages
 =================
@@ -163,6 +215,8 @@ JSON serialised dictionary containing the following keys and values:
 - **metadata** (optional): A dictionary of additional attributes about this
   kernel; used by clients to aid in kernel selection. Metadata added
   here should be namespaced for the tool reading and writing that metadata.
+- **kernel_protocol_version** (optional): A string indicating which version of the
+  kernel protocol the kernel supports.
 
 For example, the kernel.json file for IPython looks like this::
 
