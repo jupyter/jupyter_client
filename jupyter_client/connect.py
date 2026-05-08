@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import zmq
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
-from traitlets import Bool, CaselessStrEnum, Instance, Integer, Type, Unicode, observe
+from traitlets import Bool, Bytes, CaselessStrEnum, Instance, Integer, Type, Unicode, observe
 from traitlets.config import LoggingConfigurable, SingletonConfigurable
 from typing_extensions import TypedDict
 
@@ -346,11 +346,6 @@ port_names = ["%s_port" % channel for channel in ("shell", "stdin", "iopub", "hb
 class ConnectionFileMixin(LoggingConfigurable):
     """Mixin for configurable classes that work with connection files"""
 
-    # Optional CurveZMQ keys loaded from the connection file (Z85-encoded bytes).
-    # None when the kernel was not started with CurveZMQ enabled.
-    curve_publickey: bytes | None = None
-    curve_secretkey: bytes | None = None
-
     data_dir: str | Unicode = Unicode()
 
     def _data_dir_default(self) -> str:
@@ -403,6 +398,11 @@ class ConnectionFileMixin(LoggingConfigurable):
     iopub_port = Integer(0, config=True, help="set the iopub (PUB) port [default: random]")
     stdin_port = Integer(0, config=True, help="set the stdin (ROUTER) port [default: random]")
     control_port = Integer(0, config=True, help="set the control (ROUTER) port [default: random]")
+
+    # Optional CurveZMQ keys loaded from the connection file (Z85-encoded bytes).
+    # None when the kernel was not started with CurveZMQ enabled.
+    curve_publickey: Bytes | None = Bytes(allow_none=True, default_value=None)
+    curve_secretkey: Bytes | None = Bytes(allow_none=True, default_value=None)
 
     # names of the ports with random assignment
     _random_port_names: list[str] | None = None

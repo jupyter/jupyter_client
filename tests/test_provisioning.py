@@ -101,9 +101,22 @@ class CustomTestProvisioner(KernelProvisionerBase):  # type:ignore
             km._launch_args = kwargs.copy()
             # build the Popen cmd
             extra_arguments = kwargs.pop("extra_arguments", [])
+            transport_encryption = bool(
+                kwargs.pop("transport_encryption", getattr(km, "transport_encryption", False))
+            )
+            curve_publickey: bytes | None = None
+            curve_secretkey: bytes | None = None
+            if transport_encryption:
+                import zmq
 
+                curve_publickey, curve_secretkey = zmq.curve_keypair()
+                km.curve_publickey = curve_publickey
+                km.curve_secretkey = curve_secretkey
             # write connection file / get default ports
-            km.write_connection_file()
+            km.write_connection_file(
+                curve_publickey=curve_publickey,
+                curve_secretkey=curve_secretkey,
+            )
             self.connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(
