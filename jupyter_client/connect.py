@@ -348,8 +348,8 @@ class ConnectionFileMixin(LoggingConfigurable):
 
     # Optional CurveZMQ keys loaded from the connection file (Z85-encoded bytes).
     # None when the kernel was not started with CurveZMQ enabled.
-    _curve_publickey: bytes | None = None
-    _curve_secretkey: bytes | None = None
+    curve_publickey: bytes | None = None
+    curve_secretkey: bytes | None = None
 
     data_dir: str | Unicode = Unicode()
 
@@ -459,6 +459,9 @@ class ConnectionFileMixin(LoggingConfigurable):
                     "key": self.session.key,
                 }
             )
+        if self.curve_publickey is not None and self.curve_secretkey is not None:
+            info["curve_publickey"] = self.curve_publickey.decode()
+            info["curve_secretkey"] = self.curve_secretkey.decode()
         return info
 
     # factory for blocking clients
@@ -598,8 +601,8 @@ class ConnectionFileMixin(LoggingConfigurable):
         if "curve_publickey" in info and "curve_secretkey" in info:
             pub = info["curve_publickey"]
             sec = info["curve_secretkey"]
-            self._curve_publickey = pub.encode()
-            self._curve_secretkey = sec.encode()
+            self.curve_publickey = pub.encode() if isinstance(pub, str) else pub
+            self.curve_secretkey = sec.encode() if isinstance(sec, str) else sec
 
     def _reconcile_connection_info(self, info: KernelConnectionInfo) -> None:
         """Reconciles the connection information returned from the Provisioner.
@@ -624,10 +627,6 @@ class ConnectionFileMixin(LoggingConfigurable):
             # Prior to the following comparison, we need to adjust the value of "key" to
             # be bytes, otherwise the comparison below will fail.
             file_info["key"] = file_info["key"].encode()
-            if "curve_publickey" in file_info:
-                file_info["curve_publickey"] = file_info["curve_publickey"].encode()
-            if "curve_secretkey" in file_info:
-                file_info["curve_secretkey"] = file_info["curve_secretkey"].encode()
             if not self._equal_connections(info, file_info):
                 os.remove(self.connection_file)  # Contents mismatch - remove the file
                 self._connection_file_written = False
@@ -698,14 +697,14 @@ class ConnectionFileMixin(LoggingConfigurable):
         sock.linger = 1000
         if identity:
             sock.identity = identity
-        if self._curve_publickey is not None:
+        if self.curve_publickey is not None:
             # The connection file already carries this keypair, so reusing it
             # avoids introducing an additional key-distribution mechanism here.
             # curve_serverkey authenticates the server; the keypair configures
             # encrypted communication for the client socket.
-            sock.curve_secretkey = self._curve_secretkey
-            sock.curve_publickey = self._curve_publickey
-            sock.curve_serverkey = self._curve_publickey
+            sock.curve_secretkey = self.curve_secretkey
+            sock.curve_publickey = self.curve_publickey
+            sock.curve_serverkey = self.curve_publickey
         sock.connect(url)
         return sock
 

@@ -140,6 +140,16 @@ class KernelManager(ConnectionFileMixin):
     )
     client_factory: Type = Type(klass=KernelClient, config=True)
 
+    transport_encryption: Bool = Bool(
+        False,
+        config=True,
+        help=(
+            "Enable transport encryption using manager-side provisioning of CurveZMQ server keys for kernels. "
+            "When True, the provisioner launch path issues and writes Curve credentials "
+            "before the kernel process starts."
+        ),
+    )
+
     @default("client_factory")
     def _client_factory_default(self) -> Type:
         return import_item(self.client_class)
@@ -393,6 +403,9 @@ class KernelManager(ConnectionFileMixin):
              and launching the kernel (e.g. Popen kwargs).
         """
         self.shutting_down = False
+        # Consume manager-level curve toggle so it does not leak into subprocess kwargs.
+        # Provisioners can read this from the manager instance.
+        self.transport_encryption = bool(kw.pop("transport_encryption", self.transport_encryption))
         self.kernel_id = self.kernel_id or kw.pop("kernel_id", str(uuid.uuid4()))
         # save kwargs for use in restart
         # assigning Traitlets Dicts to Dict make mypy unhappy but is ok

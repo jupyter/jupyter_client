@@ -264,6 +264,7 @@ class TestRuntime:
         """Starts a kernel, validates the associated provisioner's config, shuts down kernel"""
 
         assert kernel_mgr.provisioner is None
+
         if kernel_mgr.kernel_name == "missing_provisioner":
             with pytest.raises(NoSuchKernel):
                 await kernel_mgr.start_kernel()
@@ -275,6 +276,27 @@ class TestRuntime:
             await kernel_mgr.shutdown_kernel()
             assert kernel_mgr.provisioner is not None
             assert kernel_mgr.provisioner.has_process is False
+
+    @pytest.mark.asyncio
+    async def test_local_provisioner_pre_launch_generates_curve_keys_under_transport_encryption(
+        self, monkeypatch, tmp_path
+    ):
+        """When transport encryption is enabled, LocalProvisioner seeds curve keys before launch."""
+        km = AsyncKernelManager(connection_file=str(tmp_path / "kernel.json"))
+        km.transport_encryption = True
+        await km._async_pre_start_kernel()
+        assert km.provisioner is not None
+        assert isinstance(km.provisioner, LocalProvisioner)
+
+        monkeypatch.setattr(
+            "jupyter_client.provisioning.local_provisioner.zmq.curve_keypair",
+            lambda: (b"A" * 40, b"B" * 40),
+        )
+
+        await km.provisioner.pre_launch()
+
+        assert km.provisioner.connection_info["curve_publickey"] == "A" * 40
+        assert km.provisioner.connection_info["curve_secretkey"] == "B" * 40
 
     async def test_existing(self, kpf, akm):
         await self.akm_test(akm)

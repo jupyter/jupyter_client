@@ -306,3 +306,23 @@ def test_reconcile_connection_info(file_exists, km_matches):
         km._reconcile_connection_info(provisioner_info)
         km_info = km.get_connection_info()
         assert km._equal_connections(km_info, provisioner_info)
+
+
+def test_reconcile_connection_info_with_curve_keys():
+    with TemporaryDirectory() as connection_dir:
+        cf = os.path.join(connection_dir, "kernel.json")
+        km = KernelManager()
+        km.connection_file = cf
+
+        _, provisioner_info = connect.write_connection_file(
+            cf,
+            **sample_info,
+            curve_publickey=b"A" * 40,
+            curve_secretkey=b"B" * 40,
+        )
+        provisioner_info["key"] = provisioner_info["key"].encode()  # type:ignore
+
+        km.load_connection_info(provisioner_info)
+        km._reconcile_connection_info(provisioner_info)
+        km_info = km.get_connection_info()
+        assert km._equal_connections(km_info, provisioner_info)

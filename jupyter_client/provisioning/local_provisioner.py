@@ -9,6 +9,8 @@ import signal
 import sys
 from typing import TYPE_CHECKING, Any
 
+import zmq
+
 from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip, local_ips
@@ -174,6 +176,11 @@ class LocalProvisioner(KernelProvisionerBase):
         # This should be considered temporary until a better division of labor can be defined.
         km = self.parent
         if km:
+            transport_encryption = bool(
+                kwargs.pop("transport_encryption", getattr(km, "transport_encryption", False))
+            )
+            curve_publickey: bytes | None = None
+            curve_secretkey: bytes | None = None
             if km.transport == "tcp" and not is_local_ip(km.ip):
                 msg = (
                     "Can only launch a kernel on a local interface. "
@@ -196,11 +203,23 @@ class LocalProvisioner(KernelProvisionerBase):
                 km.hb_port = lpc.find_available_port(km.ip)
                 km.control_port = lpc.find_available_port(km.ip)
                 self.ports_cached = True
+
+            if transport_encryption:
+                curve_publickey, curve_secretkey = zmq.curve_keypair()
+                km.curve_publickey = curve_publickey
+                km.curve_secretkey = curve_secretkey
             if "env" in kwargs:
                 jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
-                km.write_connection_file(jupyter_session=jupyter_session)
+                km.write_connection_file(
+                    jupyter_session=jupyter_session,
+                    curve_publickey=curve_publickey,
+                    curve_secretkey=curve_secretkey,
+                )
             else:
-                km.write_connection_file()
+                km.write_connection_file(
+                    curve_publickey=curve_publickey,
+                    curve_secretkey=curve_secretkey,
+                )
             self.connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(

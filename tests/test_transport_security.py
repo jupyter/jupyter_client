@@ -6,6 +6,7 @@
 import pytest
 import zmq
 
+from jupyter_client import KernelManager
 from jupyter_client.channels import HBChannel
 from jupyter_client.client import KernelClient
 from jupyter_client.connect import ConnectionFileMixin
@@ -13,34 +14,38 @@ from jupyter_client.session import Session
 
 
 @pytest.mark.parametrize(
-    "enable_curve",
+    "transport_encryption",
     [
         False,
         True,
     ],
 )
-def test_iopub_plaintext_visibility_depends_on_curve(enable_curve):
+def test_iopub_plaintext_visibility_depends_on_curve(transport_encryption, tmp_path):
     """An unauthenticated subscriber sees plaintext only when Curve is disabled."""
 
-    ctx = zmq.Context()
+    km = KernelManager(connection_file=str(tmp_path / "kernel.json"))
+    km.cache_ports = False
+    km.transport_encryption = transport_encryption
+    km.pre_start_kernel()
+
     session = Session(key=b"secret-hmac-key")
-    server = ctx.socket(zmq.XPUB)
-    eavesdropper = ctx.socket(zmq.SUB)
+    server = km.context.socket(zmq.XPUB)
+    eavesdropper_sock = km.context.socket(zmq.SUB)
+    eavesdropper_sock.setsockopt(zmq.SUBSCRIBE, b"")
 
-    expect_plaintext_visible = not enable_curve
+    expect_plaintext_visible = not transport_encryption
 
-    if enable_curve:
-        pub, sec = zmq.curve_keypair()
-        server.curve_secretkey = sec
-        server.curve_publickey = pub
+    server_info = km.get_connection_info()
+    if "curve_publickey" in server_info and "curve_secretkey" in server_info:
+        server.curve_secretkey = server_info["curve_secretkey"].encode()
+        server.curve_publickey = server_info["curve_publickey"].encode()
         server.curve_server = True
 
     try:
-        port = server.bind_to_random_port("tcp://127.0.0.1")
+        server.bind(f"tcp://{km.ip}:{km.iopub_port}")
 
-        # Eavesdropper connects with no authentication or curve keys at all.
-        eavesdropper.setsockopt(zmq.SUBSCRIBE, b"")
-        eavesdropper.connect(f"tcp://127.0.0.1:{port}")
+        # Eavesdropper connects with no authentication or curve keys.
+        eavesdropper_sock.connect(f"tcp://{km.ip}:{km.iopub_port}")
 
         # In non-Curve mode, XPUB receives the subscription and we drain it.
         # In Curve mode, unauthenticated peers are rejected so no event arrives.
@@ -58,16 +63,16 @@ def test_iopub_plaintext_visibility_depends_on_curve(enable_curve):
         # Check if an unauthenticated subscriber can read plaintext payload,
         # using the same event polling behavior in both modes.
         recv_poller = zmq.Poller()
-        recv_poller.register(eavesdropper, zmq.POLLIN)
+        recv_poller.register(eavesdropper_sock, zmq.POLLIN)
         events = dict(recv_poller.poll(timeout=1000))
 
-        did_receive = eavesdropper in events
+        did_receive = eavesdropper_sock in events
         assert did_receive is expect_plaintext_visible, (
             "Unexpected unauthenticated visibility result for IOPub payload"
         )
         if expect_plaintext_visible:
             # Demonstrates that the message content is visible in plaintext frames when Curve is disabled.
-            raw_frames = eavesdropper.recv_multipart()
+            raw_frames = eavesdropper_sock.recv_multipart()
             raw_bytes = b"".join(raw_frames)
             assert b"top_secret_output_12345" in raw_bytes, (
                 f"Expected plaintext content in raw frames.\nRaw bytes: {raw_bytes!r}"
@@ -76,8 +81,9 @@ def test_iopub_plaintext_visibility_depends_on_curve(enable_curve):
 
     finally:
         server.close(linger=0)
-        eavesdropper.close(linger=0)
-        ctx.term()
+        eavesdropper_sock.close(linger=0)
+        km.cleanup_connection_file()
+        km.context.term()
 
 
 def test_connect_shell_to_curve_server_with_curve_keys_succeeds():

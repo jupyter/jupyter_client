@@ -393,8 +393,8 @@ class KernelClient(ConnectionFileMixin):
             url = self._make_url("hb")
             self.log.debug("connecting heartbeat channel to %s", url)
             hb_kwargs = {}
-            if self._curve_publickey:
-                hb_kwargs["curve_serverkey"] = self._curve_publickey
+            if self.curve_publickey:
+                hb_kwargs["curve_serverkey"] = self.curve_publickey
             try:
                 self._hb_channel = self.hb_channel_class(  # type:ignore[call-arg,abstract]
                     self.context,
