@@ -601,8 +601,8 @@ class ConnectionFileMixin(LoggingConfigurable):
         if "curve_publickey" in info and "curve_secretkey" in info:
             pub = info["curve_publickey"]
             sec = info["curve_secretkey"]
-            self.curve_publickey = pub.encode() if isinstance(pub, str) else pub  # type: ignore[redundant-expr,unreachable]
-            self.curve_secretkey = sec.encode() if isinstance(sec, str) else sec  # type: ignore[redundant-expr,unreachable]
+            self.curve_publickey = pub.encode() if isinstance(pub, str) else pub  # type: ignore[redundant-expr]
+            self.curve_secretkey = sec.encode() if isinstance(sec, str) else sec  # type: ignore[redundant-expr]
 
     def _reconcile_connection_info(self, info: KernelConnectionInfo) -> None:
         """Reconciles the connection information returned from the Provisioner.
