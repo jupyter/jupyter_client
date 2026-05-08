@@ -392,22 +392,26 @@ class KernelClient(ConnectionFileMixin):
         if self._hb_channel is None:
             url = self._make_url("hb")
             self.log.debug("connecting heartbeat channel to %s", url)
-            hb_supports_curve = (
-                "curve_serverkey" in inspect.signature(self.hb_channel_class.__init__).parameters
-            )
-            if self._curve_publickey is not None and not hb_supports_curve:
-                msg = (
-                    f"{self.hb_channel_class.__name__} does not support the "
-                    "'curve_serverkey' parameter. Upgrade the heartbeat channel "
-                    "class or disable CurveZMQ encryption."
+            hb_kwargs = {}
+            if self._curve_publickey:
+                hb_kwargs["curve_serverkey"] = self._curve_publickey
+            try:
+                self._hb_channel = self.hb_channel_class(  # type:ignore[call-arg,abstract]
+                    self.context,
+                    self.session,
+                    url,
+                    **hb_kwargs,
                 )
-                raise RuntimeError(msg)
-            self._hb_channel = self.hb_channel_class(  # type:ignore[call-arg,abstract]
-                self.context,
-                self.session,
-                url,
-                **({"curve_serverkey": self._curve_publickey} if hb_supports_curve else {}),
-            )
+            except TypeError as e:
+                if "curve_serverkey" in str(e):
+                    msg = (
+                        f"{self.hb_channel_class.__name__} does not support the "
+                        "'curve_serverkey' parameter. Upgrade the heartbeat channel "
+                        "class or disable CurveZMQ encryption."
+                    )
+                    raise RuntimeError(msg) from e
+                else:
+                    raise
         return self._hb_channel
 
     @property

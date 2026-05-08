@@ -152,7 +152,7 @@ def test_hb_channel_class_without_curve_support_raises_when_curve_is_active():
         }
     )
 
-    with pytest.raises(RuntimeError, match="curve_serverkey"):
+    with pytest.raises(RuntimeError, match=r"LegacyHBChannel.*curve_serverkey"):
         _ = client.hb_channel
 
 
@@ -179,6 +179,33 @@ def test_hb_channel_class_without_curve_support_does_not_raise_when_curve_disabl
 
     hb = client.hb_channel
     assert isinstance(hb, LegacyHBChannel)
+
+
+def test_hb_channel_class_unrelated_typeerror_propagates_unchanged():
+    """TypeError unrelated to curve_serverkey is not swallowed or re-wrapped."""
+
+    class BrokenHBChannel(HBChannel):
+        def __init__(self, context, session, address, **kwargs):  # type: ignore[override]
+            raise TypeError("totally unrelated constructor error")
+
+    pub, _sec = zmq.curve_keypair()
+
+    client = KernelClient()
+    client.hb_channel_class = BrokenHBChannel  # type: ignore[assignment]
+    client.load_connection_info(
+        {
+            "ip": "127.0.0.1",
+            "transport": "tcp",
+            "hb_port": 5555,
+            "key": "abc123",
+            "signature_scheme": "hmac-sha256",
+            "curve_publickey": pub.decode("ascii"),
+            "curve_secretkey": pub.decode("ascii"),
+        }
+    )
+
+    with pytest.raises(TypeError, match="totally unrelated constructor error"):
+        _ = client.hb_channel
 
 
 def test_connect_shell_to_curve_server_without_curve_keys_is_rejected():
