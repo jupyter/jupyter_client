@@ -277,7 +277,6 @@ class TestRuntime:
             assert kernel_mgr.provisioner is not None
             assert kernel_mgr.provisioner.has_process is False
 
-    @pytest.mark.asyncio
     async def test_local_provisioner_pre_launch_generates_curve_keys_under_transport_encryption(
         self, monkeypatch, tmp_path
     ):
