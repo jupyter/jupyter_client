@@ -389,7 +389,7 @@ class KernelManager(ConnectionFileMixin):
         self._control_socket = None
 
     async def _async_pre_start_kernel(
-        self, **kw: t.Any
+        self, *, transport_encryption: bool | None = None, **kw: t.Any
     ) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
         """Prepares a kernel for startup in a separate process.
 
@@ -403,9 +403,8 @@ class KernelManager(ConnectionFileMixin):
              and launching the kernel (e.g. Popen kwargs).
         """
         self.shutting_down = False
-        # Consume manager-level curve toggle so it does not leak into subprocess kwargs.
-        # Provisioners can read this from the manager instance.
-        self.transport_encryption = bool(kw.pop("transport_encryption", self.transport_encryption))
+        if transport_encryption is not None:
+            self.transport_encryption = transport_encryption
         self.kernel_id = self.kernel_id or kw.pop("kernel_id", str(uuid.uuid4()))
         # save kwargs for use in restart
         # assigning Traitlets Dicts to Dict make mypy unhappy but is ok
