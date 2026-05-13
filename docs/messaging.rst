@@ -417,7 +417,7 @@ All reply messages have a ``'status'`` field, which will have one of the followi
           'traceback' : list(str), # traceback frames as strings
        }
 
-- ``status='abort'``: This is the same as ``status='error'``
+- ``status='aborted'``: This is the same as ``status='error'``
   but with no information about the error.
   No fields should be present other that ``status``.
 
@@ -426,8 +426,10 @@ have an ``execution_count`` field regardless of their status.
 
 .. versionchanged:: 5.1
 
-    ``status='abort'`` has not proved useful, and is considered deprecated.
+    ``status='aborted'`` has not proved useful, and is considered deprecated.
     Kernels should send ``status='error'`` instead.
+
+.. warning
 
 
 .. _execute:
@@ -1951,7 +1953,7 @@ Changelog
   but it has always been in the canonical implementation,
   so implementers are strongly encouraged to include it.
   It is mandatory in 5.1.
-- ``status='abort'`` in replies has not proved useful, and is considered deprecated.
+- ``status='aborted'`` in replies has not proved useful, and is considered deprecated.
   Kernels should send ``status='error'`` instead.
 - ``comm_info_request/reply`` added
 - ``connect_request/reply`` have not proved useful, and are considered deprecated.
