@@ -429,9 +429,6 @@ have an ``execution_count`` field regardless of their status.
     ``status='aborted'`` has not proved useful, and is considered deprecated.
     Kernels should send ``status='error'`` instead.
 
-.. warning
-
-
 .. _execute:
 
 Execute
