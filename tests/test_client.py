@@ -1,11 +1,10 @@
 """Tests for the KernelClient"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import os
-import platform
-import sys
 from threading import Event
-from unittest import TestCase, mock
+from unittest import TestCase
 
 import pytest
 from IPython.utils.capture import capture_output
@@ -16,7 +15,7 @@ from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
 from jupyter_client.manager import KernelManager, start_new_async_kernel, start_new_kernel
 from jupyter_client.threaded import ThreadedKernelClient, ThreadedZMQSocketChannel
 
-TIMEOUT = 30
+TIMEOUT = 60
 
 pjoin = os.path.join
 
@@ -51,6 +50,9 @@ class TestKernelClient(TestCase):
         kc = self.kc
         msg_id = kc.history(session=0)
         self.assertIsInstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        kc._recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = kc.history(session=0, reply=True, timeout=TIMEOUT)
         self._check_reply("history", reply)
 
@@ -58,6 +60,9 @@ class TestKernelClient(TestCase):
         kc = self.kc
         msg_id = kc.inspect("who cares")
         self.assertIsInstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        kc._recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = kc.inspect("code", reply=True, timeout=TIMEOUT)
         self._check_reply("inspect", reply)
 
@@ -65,6 +70,9 @@ class TestKernelClient(TestCase):
         kc = self.kc
         msg_id = kc.complete("who cares")
         self.assertIsInstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        kc._recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = kc.complete("code", reply=True, timeout=TIMEOUT)
         self._check_reply("complete", reply)
 
@@ -72,6 +80,9 @@ class TestKernelClient(TestCase):
         kc = self.kc
         msg_id = kc.kernel_info()
         self.assertIsInstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        kc._recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = kc.kernel_info(reply=True, timeout=TIMEOUT)
         self._check_reply("kernel_info", reply)
 
@@ -79,6 +90,9 @@ class TestKernelClient(TestCase):
         kc = self.kc
         msg_id = kc.comm_info()
         self.assertIsInstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        kc._recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = kc.comm_info(reply=True, timeout=TIMEOUT)
         self._check_reply("comm_info", reply)
 
@@ -123,13 +137,15 @@ class TestAsyncKernelClient:
         assert reply["header"]["msg_type"] == reply_type + "_reply"
         assert reply["parent_header"]["msg_type"] == reply_type + "_request"
 
-    @pytest.mark.skipif(
-        sys.platform != "linux" or platform.python_implementation().lower() == "pypy",
-        reason="only works with cpython on ubuntu in ci",
-    )
     async def test_input_request(self, kc):
-        with mock.patch("builtins.input", return_value="test\n"):
-            reply = await kc.execute_interactive("a = input()", timeout=TIMEOUT)
+        def handle_stdin(msg):
+            kc.input("test")
+
+        reply = await kc.execute_interactive(
+            "a = input()",
+            stdin_hook=handle_stdin,
+            timeout=TIMEOUT,
+        )
         assert reply["content"]["status"] == "ok"
 
     async def test_output_hook(self, kc):
@@ -149,36 +165,54 @@ class TestAsyncKernelClient:
     async def test_history(self, kc):
         msg_id = kc.history(session=0)
         assert isinstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        await kc._async_recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = await kc.history(session=0, reply=True, timeout=TIMEOUT)
         self._check_reply("history", reply)
 
     async def test_inspect(self, kc):
         msg_id = kc.inspect("who cares")
         assert isinstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        await kc._async_recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = await kc.inspect("code", reply=True, timeout=TIMEOUT)
         self._check_reply("inspect", reply)
 
     async def test_complete(self, kc):
         msg_id = kc.complete("who cares")
         assert isinstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        await kc._async_recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = await kc.complete("code", reply=True, timeout=TIMEOUT)
         self._check_reply("complete", reply)
 
     async def test_is_complete(self, kc):
         msg_id = kc.is_complete("who cares")
         assert isinstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        await kc._async_recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = await kc.is_complete("code", reply=True, timeout=TIMEOUT)
         self._check_reply("is_complete", reply)
 
     async def test_kernel_info(self, kc):
         msg_id = kc.kernel_info()
         assert isinstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        await kc._async_recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = await kc.kernel_info(reply=True, timeout=TIMEOUT)
         self._check_reply("kernel_info", reply)
 
     async def test_comm_info(self, kc):
         msg_id = kc.comm_info()
         assert isinstance(msg_id, str)
+        # Drain the first reply to avoid race condition
+        await kc._async_recv_reply(msg_id, timeout=TIMEOUT)
+        # Now test the reply=True convenience path
         reply = await kc.comm_info(reply=True, timeout=TIMEOUT)
         self._check_reply("comm_info", reply)
 

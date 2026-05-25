@@ -3,10 +3,11 @@ utils:
 - provides utility wrappers to run asynchronous functions in a blocking environment.
 - vendor functions from ipython_genutils that should be retired at some point.
 """
+
 from __future__ import annotations
 
 import os
-from typing import Sequence
+from collections.abc import Sequence
 
 from jupyter_core.utils import ensure_async, run_sync  # noqa: F401  # noqa: F401
 

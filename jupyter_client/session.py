@@ -8,10 +8,12 @@ Also defined here are utilities for working with Sessions:
 Sessions.
 * A Message object for convenience that allows attribute-access to the msg dict.
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
 
+import functools
 import hashlib
 import hmac
 import json
@@ -32,6 +34,7 @@ from tornado.ioloop import IOLoop
 from traitlets import (
     Any,
     Bool,
+    Callable,
     CBytes,
     CUnicode,
     Dict,
@@ -124,6 +127,41 @@ def json_unpacker(s: str | bytes) -> t.Any:
     return json.loads(s)
 
 
+try:
+    import orjson
+except ModuleNotFoundError:
+    has_orjson = False
+    orjson_packer, orjson_unpacker = json_packer, json_unpacker
+else:
+    has_orjson = True
+
+    def orjson_packer(
+        obj: t.Any, *, option: int | None = orjson.OPT_NAIVE_UTC | orjson.OPT_UTC_Z
+    ) -> bytes:
+        """Convert a json object to a bytes using orjson with fallback to json_packer."""
+        try:
+            return orjson.dumps(obj, default=json_default, option=option)
+        except Exception:
+            return json_packer(obj)
+
+    def orjson_unpacker(s: str | bytes) -> t.Any:
+        """Convert a json bytes or string to an object using orjson with fallback to json_unpacker."""
+        try:
+            return orjson.loads(s)
+        except Exception:
+            return json_unpacker(s)
+
+
+try:
+    import msgpack
+except ModuleNotFoundError:
+    has_msgpack = False
+else:
+    has_msgpack = True
+    msgpack_packer = functools.partial(msgpack.packb, default=json_default)
+    msgpack_unpacker = msgpack.unpackb
+
+
 def pickle_packer(o: t.Any) -> bytes:
     """Pack an object using the pickle module."""
     return pickle.dumps(squash_dates(o), PICKLE_PROTOCOL)
@@ -131,8 +169,6 @@ def pickle_packer(o: t.Any) -> bytes:
 
 pickle_unpacker = pickle.loads
 
-default_packer = json_packer
-default_unpacker = json_unpacker
 
 DELIM = b"<IDS|MSG>"
 # singleton dummy tracker, which will always report as done
@@ -315,7 +351,7 @@ class Session(Configurable):
 
     debug : bool
         whether to trigger extra debugging statements
-    packer/unpacker : str : 'json', 'pickle' or import_string
+    packer/unpacker : str : 'orjson', 'json', 'pickle', 'msgpack' or import_string
         importstrings for methods to serialize message parts.  If just
         'json' or 'pickle', predefined JSON and pickle packers will be used.
         Otherwise, the entire importstring must be used.
@@ -350,48 +386,42 @@ class Session(Configurable):
         """,
     )
 
+    # serialization traits:
     packer = DottedObjectName(
-        "json",
+        "orjson" if has_orjson else "json",
         config=True,
         help="""The name of the packer for serializing messages.
             Should be one of 'json', 'pickle', or an import name
             for a custom callable serializer.""",
     )
-
-    @observe("packer")
-    def _packer_changed(self, change: t.Any) -> None:
-        new = change["new"]
-        if new.lower() == "json":
-            self.pack = json_packer
-            self.unpack = json_unpacker
-            self.unpacker = new
-        elif new.lower() == "pickle":
-            self.pack = pickle_packer
-            self.unpack = pickle_unpacker
-            self.unpacker = new
-        else:
-            self.pack = import_item(str(new))
-
     unpacker = DottedObjectName(
-        "json",
+        "orjson" if has_orjson else "json",
         config=True,
         help="""The name of the unpacker for unserializing messages.
         Only used with custom functions for `packer`.""",
     )
+    pack = Callable(orjson_packer if has_orjson else json_packer)  # the actual packer function
+    unpack = Callable(
+        orjson_unpacker if has_orjson else json_unpacker
+    )  # the actual unpacker function
 
-    @observe("unpacker")
-    def _unpacker_changed(self, change: t.Any) -> None:
-        new = change["new"]
-        if new.lower() == "json":
-            self.pack = json_packer
-            self.unpack = json_unpacker
-            self.packer = new
-        elif new.lower() == "pickle":
-            self.pack = pickle_packer
-            self.unpack = pickle_unpacker
-            self.packer = new
+    @observe("packer", "unpacker")
+    def _packer_unpacker_changed(self, change: t.Any) -> None:
+        new = change["new"].lower()
+        if new == "orjson" and has_orjson:
+            self.pack, self.unpack = orjson_packer, orjson_unpacker
+        elif new == "json" or new == "orjson":
+            self.pack, self.unpack = json_packer, json_unpacker
+        elif new == "pickle":
+            self.pack, self.unpack = pickle_packer, pickle_unpacker
+        elif new == "msgpack" and has_msgpack:
+            self.pack, self.unpack = msgpack_packer, msgpack_unpacker
         else:
-            self.unpack = import_item(str(new))
+            obj = import_item(str(change["new"]))
+            name = "pack" if change["name"] == "packer" else "unpack"
+            self.set_trait(name, obj)
+            return
+        self.packer = self.unpacker = change["new"]
 
     session = CUnicode("", config=True, help="""The UUID identifying this session.""")
 
@@ -416,8 +446,7 @@ class Session(Configurable):
     metadata = Dict(
         {},
         config=True,
-        help="Metadata dictionary, which serves as the default top-level metadata dict for each "
-        "message.",
+        help="Metadata dictionary, which serves as the default top-level metadata dict for each message.",
     )
 
     # if 0, no adapting to do.
@@ -486,25 +515,6 @@ class Session(Configurable):
     # for protecting against sends from forks
     pid = Integer()
 
-    # serialization traits:
-
-    pack = Any(default_packer)  # the actual packer function
-
-    @observe("pack")
-    def _pack_changed(self, change: t.Any) -> None:
-        new = change["new"]
-        if not callable(new):
-            raise TypeError("packer must be callable, not %s" % type(new))
-
-    unpack = Any(default_unpacker)  # the actual packer function
-
-    @observe("unpack")
-    def _unpack_changed(self, change: t.Any) -> None:
-        # unpacker is not checked - it is assumed to be
-        new = change["new"]
-        if not callable(new):
-            raise TypeError("unpacker must be callable, not %s" % type(new))
-
     # thresholds:
     copy_threshold = Integer(
         2**16,
@@ -514,8 +524,7 @@ class Session(Configurable):
     buffer_threshold = Integer(
         MAX_BYTES,
         config=True,
-        help="Threshold (in bytes) beyond which an object's buffer should be extracted to avoid "
-        "pickling.",
+        help="Threshold (in bytes) beyond which an object's buffer should be extracted to avoid pickling.",
     )
     item_threshold = Integer(
         MAX_ITEMS,
@@ -533,7 +542,7 @@ class Session(Configurable):
 
         debug : bool
             whether to trigger extra debugging statements
-        packer/unpacker : str : 'json', 'pickle' or import_string
+        packer/unpacker : str : 'orjson', 'json', 'pickle', 'msgpack' or import_string
             importstrings for methods to serialize message parts.  If just
             'json' or 'pickle', predefined JSON and pickle packers will be used.
             Otherwise, the entire importstring must be used.
@@ -625,10 +634,7 @@ class Session(Configurable):
             unpacked = unpack(packed)
             assert unpacked == msg_list
         except Exception as e:
-            msg = (
-                f"unpacker '{self.unpacker}' could not handle output from packer"
-                f" '{self.packer}': {e}"
-            )
+            msg = f"unpacker {self.unpacker!r} could not handle output from packer {self.packer!r}: {e}"
             raise ValueError(msg) from e
 
         # check datetime support
@@ -640,7 +646,7 @@ class Session(Configurable):
                 raise ValueError(msg)
         except Exception:
             self.pack = lambda o: pack(squash_dates(o))
-            self.unpack = lambda s: unpack(s)
+            self.unpack = unpack
 
     def msg_header(self, msg_type: str) -> dict[str, t.Any]:
         """Create a header for a message type."""
@@ -758,7 +764,7 @@ class Session(Configurable):
         content: dict[str, t.Any] | None = None,
         parent: dict[str, t.Any] | None = None,
         ident: bytes | list[bytes] | None = None,
-        buffers: list[bytes] | None = None,
+        buffers: list[bytes | memoryview[bytes]] | None = None,
         track: bool = False,
         header: dict[str, t.Any] | None = None,
         metadata: dict[str, t.Any] | None = None,
@@ -811,10 +817,10 @@ class Session(Configurable):
             track = False
 
         if isinstance(stream, zmq.asyncio.Socket):
-            assert stream is not None  # type:ignore[unreachable]
+            assert stream is not None
             stream = zmq.Socket.shadow(stream.underlying)
 
-        if isinstance(msg_or_type, (Message, dict)):
+        if isinstance(msg_or_type, Message | dict):
             # We got a Message or message dict, not a msg_type so don't
             # build a new Message.
             msg = msg_or_type
@@ -841,16 +847,14 @@ class Session(Configurable):
                 except TypeError as e:
                     emsg = "Buffer objects must support the buffer protocol."
                     raise TypeError(emsg) from e
-            # memoryview.contiguous is new in 3.3,
-            # just skip the check on Python 2
-            if hasattr(view, "contiguous") and not view.contiguous:
+            if not view.contiguous:
                 # zmq requires memoryviews to be contiguous
                 raise ValueError("Buffer %i (%r) is not contiguous" % (idx, buf))
 
         if self.adapt_version:
             msg = adapt(msg, self.adapt_version)
         to_send = self.serialize(msg, ident)
-        to_send.extend(buffers)
+        to_send.extend(buffers)  # type: ignore[arg-type]
         longest = max([len(s) for s in to_send])
         copy = longest < self.copy_threshold
 

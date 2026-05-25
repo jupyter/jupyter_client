@@ -1,4 +1,5 @@
 """Base classes to manage a Client's interaction with a running kernel"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
@@ -51,8 +52,8 @@ class HBChannel(Thread):
 
     def __init__(
         self,
-        context: t.Optional[zmq.Context] = None,
-        session: t.Optional[Session] = None,
+        context: zmq.Context | None = None,
+        session: Session | None = None,
         address: t.Union[t.Tuple[str, int], str] = "",
     ) -> None:
         """Create the heartbeat monitor thread.
@@ -146,8 +147,10 @@ class HBChannel(Thread):
         """Run the heartbeat thread."""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.run_until_complete(self._async_run())
-        loop.close()
+        try:
+            loop.run_until_complete(self._async_run())
+        finally:
+            loop.close()
 
     def pause(self) -> None:
         """Pause the heartbeat."""
@@ -211,16 +214,16 @@ class ZMQSocketChannel:
         """
         super().__init__()
 
-        self.socket: t.Optional[zmq.Socket] = socket
+        self.socket: zmq.Socket | None = socket
         self.session = session
 
     def _recv(self, **kwargs: t.Any) -> t.Dict[str, t.Any]:
         assert self.socket is not None
         msg = self.socket.recv_multipart(**kwargs)
-        ident, smsg = self.session.feed_identities(msg)
+        _ident, smsg = self.session.feed_identities(msg)
         return self.session.deserialize(smsg)
 
-    def get_msg(self, timeout: t.Optional[float] = None) -> t.Dict[str, t.Any]:
+    def get_msg(self, timeout: float | None = None) -> t.Dict[str, t.Any]:
         """Gets a message if there is one that is ready."""
         assert self.socket is not None
         timeout_ms = None if timeout is None else int(timeout * 1000)  # seconds to ms
@@ -300,7 +303,7 @@ class AsyncZMQSocketChannel(ZMQSocketChannel):
         return self.session.deserialize(smsg)
 
     async def get_msg(  # type:ignore[override]
-        self, timeout: t.Optional[float] = None
+        self, timeout: float | None = None
     ) -> t.Dict[str, t.Any]:
         """Gets a message if there is one that is ready."""
         assert self.socket is not None

@@ -1,4 +1,5 @@
 """Test suite for our JSON utilities."""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import datetime
@@ -139,7 +140,7 @@ def test_parse_ms_precision():
             assert isinstance(parsed, str)
 
 
-def test_json_default_date():
+def test_json_default_datetime():
     naive = datetime.datetime.now()  # noqa
     local = tzoffset("Local", -8 * 3600)
     other = tzoffset("Other", 2 * 3600)
@@ -166,7 +167,7 @@ def test_json_default():
         (True, None),
         (False, None),
         (None, None),
-        ({"key": b"\xFF"}, {"key": "/w=="}),
+        ({"key": b"\xff"}, {"key": "/w=="}),
         # Containers
         ([1, 2], None),
         ((1, 2), [1, 2]),
@@ -178,6 +179,7 @@ def test_json_default():
         (iter([1, 2]), [1, 2]),
         (MyFloat(), 3.14),
         (MyInt(), 389),
+        (datetime.date(2025, 4, 8), "2025-04-08"),
     ]
 
     for val, jval in pairs:

@@ -1,11 +1,13 @@
 """Kernel Provisioner Classes"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
 import os
+import pathlib
 import signal
 import sys
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
@@ -13,7 +15,7 @@ from ..localinterfaces import is_local_ip, local_ips
 from .provisioner_base import KernelProvisionerBase
 
 
-class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
+class LocalProvisioner(KernelProvisionerBase):
     """
     :class:`LocalProvisioner` is a concrete class of ABC :py:class:`KernelProvisionerBase`
     and is the out-of-box default implementation used when no kernel provisioner is
@@ -31,19 +33,20 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
     pgid = None
     ip = None
     ports_cached = False
+    cwd = None
 
     @property
     def has_process(self) -> bool:
         return self.process is not None
 
-    async def poll(self) -> Optional[int]:
+    async def poll(self) -> int | None:
         """Poll the provisioner."""
         ret = 0
         if self.process:
             ret = self.process.poll()  # type:ignore[unreachable]
         return ret
 
-    async def wait(self) -> Optional[int]:
+    async def wait(self) -> int | None:
         """Wait for the provisioner process."""
         ret = 0
         if self.process:
@@ -128,14 +131,19 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         # has already terminated. Ignore it.
         if sys.platform == "win32":
             if os_error.winerror != 5:
-                raise
+                err_message = f"Invalid Error, expecting error number to be 5, got {os_error}"
+                raise ValueError(err_message)
+
         # On Unix, we may get an ESRCH error (or ProcessLookupError instance) if
         # the process has already terminated. Ignore it.
         else:
             from errno import ESRCH
 
             if not isinstance(os_error, ProcessLookupError) or os_error.errno != ESRCH:
-                raise
+                err_message = (
+                    f"Invalid Error, expecting ProcessLookupError or ESRCH, got {os_error}"
+                )
+                raise ValueError(err_message)
 
     async def cleanup(self, restart: bool = False) -> None:
         """Clean up the resources used by the provisioner and optionally restart."""
@@ -154,8 +162,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
                     assert isinstance(port, int)
                 lpc.return_port(port)
 
-    async def pre_launch(self, **kwargs: Any) -> Dict[str, Any]:
-        #
+    async def pre_launch(self, **kwargs: Any) -> dict[str, Any]:
         """Perform any steps in preparation for kernel process launch.
 
         This includes applying additional substitutions to the kernel launch command and env.
@@ -216,8 +223,9 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
             del kwargs["custom_kernel_specs"]
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
-    async def launch_kernel(self, cmd: List[str], **kwargs: Any) -> KernelConnectionInfo:
+    async def launch_kernel(self, cmd: list[str], **kwargs: Any) -> KernelConnectionInfo:
         """Launch a kernel with a command."""
+
         scrubbed_kwargs = LocalProvisioner._scrub_kwargs(kwargs)
         self.process = launch_kernel(cmd, **scrubbed_kwargs)
         pgid = None
@@ -229,24 +237,34 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
 
         self.pid = self.process.pid
         self.pgid = pgid
+        self.cwd = kwargs.get("cwd", pathlib.Path.cwd())
         return self.connection_info
 
+    def resolve_path(self, path_str: str) -> str | None:
+        """Resolve path to given file."""
+        path = pathlib.Path(path_str).expanduser()
+        if not path.is_absolute() and self.cwd:
+            path = (pathlib.Path(self.cwd) / path).resolve()
+        if path.exists():
+            return path.as_posix()
+        return None
+
     @staticmethod
-    def _scrub_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def _scrub_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
         """Remove any keyword arguments that Popen does not tolerate."""
-        keywords_to_scrub: List[str] = ["extra_arguments", "kernel_id", "custom_kernel_specs"]
+        keywords_to_scrub: list[str] = ["extra_arguments", "kernel_id"]
         scrubbed_kwargs = kwargs.copy()
         for kw in keywords_to_scrub:
             scrubbed_kwargs.pop(kw, None)
         return scrubbed_kwargs
 
-    async def get_provisioner_info(self) -> Dict:
+    async def get_provisioner_info(self) -> dict:
         """Captures the base information necessary for persistence relative to this instance."""
         provisioner_info = await super().get_provisioner_info()
         provisioner_info.update({"pid": self.pid, "pgid": self.pgid, "ip": self.ip})
         return provisioner_info
 
-    async def load_provisioner_info(self, provisioner_info: Dict) -> None:
+    async def load_provisioner_info(self, provisioner_info: dict) -> None:
         """Loads the base information necessary for persistence relative to this instance."""
         await super().load_provisioner_info(provisioner_info)
         self.pid = provisioner_info["pid"]

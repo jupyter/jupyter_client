@@ -5,6 +5,7 @@ restarts the kernel if it dies.
 
 It is an incomplete base class, and must be subclassed.
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations

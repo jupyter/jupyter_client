@@ -1,6 +1,7 @@
 """Basic ssh tunnel utilities, and convenience functions for tunneling
 zeromq connections.
 """
+
 # Copyright (C) 2010-2011  IPython Development Team
 # Copyright (C) 2011- PyZMQ Developers
 #
@@ -16,6 +17,7 @@ import sys
 import warnings
 from getpass import getpass, getuser
 from multiprocessing import Process
+from types import ModuleType
 from typing import Any, cast
 
 try:
@@ -33,8 +35,9 @@ except ImportError:
 else:
     from .forward import forward_tunnel
 
+pexpect: ModuleType | None
 try:
-    import pexpect  # type: ignore[import-untyped]
+    import pexpect
 except ImportError:
     pexpect = None
 
@@ -302,6 +305,7 @@ def openssh_tunnel(
 
 
 def _stop_tunnel(cmd: Any) -> None:
+    assert pexpect is not None
     pexpect.run(cmd)
 
 
@@ -438,9 +442,9 @@ else:
 
 
 __all__ = [
-    "tunnel_connection",
-    "ssh_tunnel",
     "openssh_tunnel",
     "paramiko_tunnel",
+    "ssh_tunnel",
     "try_passwordless_ssh",
+    "tunnel_connection",
 ]

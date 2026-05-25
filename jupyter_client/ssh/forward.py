@@ -4,6 +4,7 @@ This script connects to the requested SSH server and sets up local port
 forwarding (the openssh -L option) from a local port through a tunneled
 connection to a destination reachable from the SSH server machine.
 """
+
 #
 # This file is adapted from a paramiko demo, and thus licensed under LGPL 2.1.
 # Original Copyright (C) 2003-2007  Robey Pointer <robeypointer@gmail.com>
@@ -62,14 +63,10 @@ class Handler(socketserver.BaseRequestHandler):
             return
 
         logger.debug(
-            "Connected!  Tunnel open {!r} -> {!r} -> {!r}".format(
-                self.request.getpeername(),
-                chan.getpeername(),
-                (self.chain_host, self.chain_port),
-            )
+            f"Connected!  Tunnel open {self.request.getpeername()!r} -> {chan.getpeername()!r} -> {(self.chain_host, self.chain_port)!r}"
         )
         while True:
-            r, w, x = select.select([self.request, chan], [], [])
+            r, _w, _x = select.select([self.request, chan], [], [])
             if self.request in r:
                 data = self.request.recv(1024)
                 if len(data) == 0:

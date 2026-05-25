@@ -1,9 +1,10 @@
-""" A minimal application base mixin for all ZMQ based IPython frontends.
+"""A minimal application base mixin for all ZMQ based IPython frontends.
 
 This is not a complete console app, as subprocess will not be able to receive
 input, there is no real readline support, among other limitations. This is a
 refactoring of what used to be the IPython/qt/console/qtconsoleapp.py
 """
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import atexit
@@ -306,8 +307,11 @@ class JupyterConsoleApp(ConnectionFileMixin):
                 parent=self,
                 data_dir=self.data_dir,
             )
+            # access kernel_spec to ensure the NoSuchKernel error is raised
+            # if it's going to be
+            kernel_spec = self.kernel_manager.kernel_spec  # noqa: F841
         except NoSuchKernel:
-            self.log.critical("Could not find kernel %s", self.kernel_name)
+            self.log.critical("Could not find kernel %r", self.kernel_name)
             self.exit(1)  # type:ignore[attr-defined]
 
         self.kernel_manager = t.cast(KernelManager, self.kernel_manager)

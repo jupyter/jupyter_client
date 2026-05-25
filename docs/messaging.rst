@@ -21,7 +21,7 @@ Versioning
 
 The Jupyter message specification is versioned independently of the packages
 that use it.
-The current version of the specification is 5.4.
+The current version of the specification is 5.5.
 
 .. note::
    *New in* and *Changed in* messages in this document refer to versions of the
@@ -84,6 +84,11 @@ kernel has dedicated sockets for the following functions:
 5. **Heartbeat**: This socket allows for simple bytestring messages to be sent
    between the frontend and the kernel to ensure that they are still connected.
 
+.. versionchanged:: 5.5
+   The **IOPub** PUB socket is replaced with an XPUB socket,
+   to enable the ``iopub_welcome`` message.
+   There is no other difference between kernel PUB and XPUB sockets from the client perspective.
+
 The actual format of the messages allowed on each of these channels is
 specified below.  Messages are dicts of dicts with string keys and values that
 are reasonably representable in JSON.
@@ -97,7 +102,7 @@ Message Header
 --------------
 
 The message ``header`` contains information about the message,
-such as unique identifiers for the originating session and the actual message id,
+such as unique identifiers for the originating session and the actual message ID,
 the type of message, the version of the Jupyter protocol,
 and the date the message was created.
 In addition, there is a username field, e.g. for the process that generated the
@@ -118,26 +123,33 @@ so that frontends can label the various messages in a meaningful way.
         "msg_type": str,
         # the message protocol version
         "version": "5.0",
+        # Optional subshell_id
+        "subshell_id": str | None,
     }
 
 .. note::
 
-    The ``session`` id in a message header identifies a unique entity with state,
+    The ``session`` ID in a message header identifies a unique entity with state,
     such as a kernel process or client process.
 
-    A client session id, in message headers from a client, should be unique among
+    A client session ID, in message headers from a client, should be unique among
     all clients connected to a kernel. When a client reconnects to a kernel, it
-    should use the same client session id in its message headers. When a client
-    restarts, it should generate a new client session id.
+    should use the same client session ID in its message headers. When a client
+    restarts, it should generate a new client session ID.
 
-    A kernel session id, in message headers from a kernel, should identify a
-    particular kernel process. If a kernel is restarted, the kernel session id
+    A kernel session ID, in message headers from a kernel, should identify a
+    particular kernel process. If a kernel is restarted, the kernel session ID
     should be regenerated.
 
-    The session id in a message header can be used to identify the sending entity.
+    The session ID in a message header can be used to identify the sending entity.
     For example, if a client disconnects and reconnects to a kernel, and messages
-    from the kernel have a different kernel session id than prior to the disconnect,
+    from the kernel have a different kernel session ID than prior to the disconnect,
     the client should assume that the kernel was restarted.
+
+    The ``subshell_id`` is only used in shell messages of kernels that support
+    subshells (:ref:`kernel_subshells`). If it is not included or is ``None`` then the
+    shell message is handled by the parent subshell (main shell), if it is a string
+    subshell ID then it is handled by the subshell with that ID.
 
 .. versionchanged:: 5.0
 
@@ -149,6 +161,10 @@ so that frontends can label the various messages in a meaningful way.
     but it has always been in the canonical implementation,
     so implementers are strongly encouraged to include it.
     It will be mandatory in 5.1.
+
+.. versionchanged:: 5.5
+
+    ``subshell_id`` added to the header.
 
 Parent header
 -------------
@@ -401,7 +417,7 @@ All reply messages have a ``'status'`` field, which will have one of the followi
           'traceback' : list(str), # traceback frames as strings
        }
 
-- ``status='abort'``: This is the same as ``status='error'``
+- ``status='aborted'``: This is the same as ``status='error'``
   but with no information about the error.
   No fields should be present other that ``status``.
 
@@ -410,9 +426,8 @@ have an ``execution_count`` field regardless of their status.
 
 .. versionchanged:: 5.1
 
-    ``status='abort'`` has not proved useful, and is considered deprecated.
+    ``status='aborted'`` has not proved useful, and is considered deprecated.
     Kernels should send ``status='error'`` instead.
-
 
 .. _execute:
 
@@ -913,7 +928,7 @@ Message type: ``comm_info_reply``::
         # 'ok' if the request succeeded or 'error', with error information as in all other replies.
         'status' : 'ok',
 
-        # A dictionary of the comms, indexed by uuids.
+        # A dictionary of the comms, indexed by UUIDs.
         'comms': {
             comm_id: {
                 'target_name': str,
@@ -997,7 +1012,8 @@ Message type: ``kernel_info_reply``::
         'banner': str,
 
         # A boolean flag which tells if the kernel supports debugging in the notebook.
-        # Default is False
+        # Default is False.
+        # Deprecated as replaced by 'supported_features'=['debugger'] (see below).
         'debugger': bool,
 
         # Optional: A list of dictionaries, each with keys 'text' and 'url'.
@@ -1005,6 +1021,11 @@ Message type: ``kernel_info_reply``::
         'help_links': [
             {'text': str, 'url': str}
         ],
+
+        # Optional: A list of optional features such as 'debugger' and
+        # 'kernel subshells'. Introduced by Jupyter Enhancement Proposal 92
+        # https://github.com/jupyter/enhancement-proposals/pull/92
+        'supported_features': [str]
     }
 
 Refer to the lists of available `Pygments lexers <http://pygments.org/docs/lexers/>`_
@@ -1030,6 +1051,10 @@ and `codemirror modes <http://codemirror.net/mode/index.html>`_ for those fields
 .. versionchanged:: 5.0
 
     ``language`` moved to ``language_info.name``
+
+.. versionchanged:: 5.5
+
+    ``supported_features`` added and ``debugger`` deprecated.
 
 Messages on the Control (ROUTER/DEALER) channel
 ===============================================
@@ -1115,12 +1140,21 @@ Message type: ``interrupt_reply``::
 
 .. versionadded:: 5.3
 
+Kernel info
+-----------
+
+This is the same :ref:`kernel info <msging_kernel_info>` message as that received on the Shell channel.
+
+.. versionadded:: 5.5
+
 Debug request
 -------------
 
 This message type is used with debugging kernels to request specific actions
 to be performed by the debugger such as adding a breakpoint or stepping into
 a code.
+Kernels supporting subshells must include ``'debugger'`` in ``'supported_features'``
+in :ref:`kernel info <msging_kernel_info>` reply messages.
 
 Message type: ``debug_request``::
 
@@ -1136,6 +1170,8 @@ specification of the ``Request`` and ``Response`` messages from the
 
 Debug requests and replies are sent over the ``control`` channel to prevent
 queuing behind execution requests.
+
+.. versionadded:: 5.5
 
 Additions to the DAP
 ~~~~~~~~~~~~~~~~~~~~
@@ -1175,6 +1211,8 @@ debugger to which breakpoints can be added.
           }
      }
 
+.. versionadded:: 5.5
+
 debugInfo
 #########
 
@@ -1210,10 +1248,13 @@ whether the debugger is currently stopped). The ``debugInfo`` request is a DAP
               'stoppedThreads' : list(int),  # threads in which the debugger is currently in a stopped state
               'richRendering' : bool,  # whether the debugger supports rich rendering of variables
               'exceptionPaths' : list(str),  # exception names used to match leaves or nodes in a tree of exception
+              'copyToGlobals' : bool, # whether the debugger supports supports the copyToGlobals request
           }
       }
 
   The ``source_breakpoint`` schema is specified by the Debug Adapter Protocol.
+
+.. versionadded:: 5.5
 
 inspectVariables
 ################
@@ -1246,6 +1287,8 @@ argument.
           }
       }
 
+.. versionadded:: 5.5
+
 richInspectVariables
 ####################
 
@@ -1276,11 +1319,15 @@ variable that has been defined in the kernel.
           }
       }
 
+.. versionadded:: 5.5
+
 copyToGlobals
 #############
 
 The ``copyToGlobals`` request allows to copy a variable from the local variable panel
 of the debugger to the ``global`` scope to inspect it after debug session.
+The support for this request is optional and should be indicated to the client via
+the ``copyToGlobals`` boolean field in the debugInfo reply.
 
   Content of the ``copyToGlobals`` request::
 
@@ -1313,8 +1360,119 @@ of the debugger to the ``global`` scope to inspect it after debug session.
 
 .. versionadded:: 5.5
 
-Messages on the IOPub (PUB/SUB) channel
-=======================================
+.. _kernel_subshells:
+
+Kernel subshells
+----------------
+
+Kernel subshells are separate threads of execution within the same kernel process that
+were introduced by
+`Jupyter Enhancement Proposal 91 <https://github.com/jupyter/enhancement-proposals/pull/91>`_.
+Kernels supporting subshells must include ``'kernel subshells'`` in ``'supported_features'``
+in :ref:`kernel info <msging_kernel_info>` reply messages.
+
+Create subshell
+~~~~~~~~~~~~~~~
+
+In a kernel that supports subshells, this creates a new subshell (running in a separate thread)
+and returns its unique ID. In a kernel that does not support subshells an error is logged and
+no reply is sent.
+
+Message type: ``create_subshell_request``::
+
+    content = {
+    }
+
+Message type: ``create_subshell_reply``::
+
+    content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status' : 'ok',
+
+        # The ID of the subshell, unique within the kernel.
+        'subshell_id': str,
+    }
+
+.. versionadded:: 5.5
+
+Delete subshell
+~~~~~~~~~~~~~~~
+
+In a kernel that supports subshells, this deletes a subshell identified by its unique ID.
+In a kernel that does not support subshells an error is logged and no reply is sent.
+
+Message type: ``delete_subshell_request``::
+
+    content = {
+        # The ID of the subshell.
+        'subshell_id': str
+    }
+
+Message type: ``delete_subshell_reply``::
+
+    content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status': 'ok',
+    }
+
+.. versionadded:: 5.5
+
+List subshell
+~~~~~~~~~~~~~
+
+In a kernel that supports subshells, this returns a list of the IDs of all subshells that exist
+in that kernel. In a kernel that does not support subshells an error is logged and no reply is sent.
+
+Message type: ``list_subshell_request``::
+
+    content = {
+    }
+
+Message type: ``list_subshell_reply``::
+
+    content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status': 'ok',
+
+        # A list of subshell IDs.
+        'subshell_id': [str]
+    }
+
+.. versionadded:: 5.5
+
+Messages on the IOPub (XPUB/SUB) channel
+========================================
+
+Welcome message
+---------------
+
+This message is sent to a client SUB socket the first time it connects to the
+XPUB kernel socket, to notify the client that the connection is established.
+
+message type: ``iopub_welcome``::
+
+    content = {
+        # The topic the SUB has subscribed to. Can be empty string if
+        # the client has subscribed to all topics.
+        'subscription' : str,
+    }
+
+.. note::
+
+   This message has no parent header.
+
+.. note::
+
+   Welcome messages do not and cannot identify the client whose subscription is being received.
+   Receiving an iopub_welcome message with your subscription does not mean it is in response to
+   your own subscription. However, receiving a message does mean that a matching subscription has
+   been registered for your client, otherwise no message will be received. So if only one
+   subscription is registered, as is normally the case, receiving any welcome message is sufficient
+   to indicate that your client's subscription is fully established. The gist is that receiving a
+   welcome message is a sufficient condition to establish the subscription-propagation event, and
+   additional welcome messages should be expected and ignored.
+
+.. versionadded:: 5.5
 
 Streams (stdout,  stderr, etc)
 ------------------------------
@@ -1750,11 +1908,17 @@ just like an execute request.
 Changelog
 =========
 
-5.5 (draft)
------------
+5.5
+---
 
-- Added ``debug_request/reply`` messages
-- Added ``debug_event`` message
+- Added ``debug_request/reply`` and ``debug_event`` messages.
+- Replaced **IOPUB** PUB socket with an XPUB socket.
+- Added support for :ref:`kernel info <msging_kernel_info>` request on the Control channel.
+- Added ``supported_features`` in :ref:`kernel info <msging_kernel_info>` reply messages.
+- Deprecated ``debugger`` in :ref:`kernel info <msging_kernel_info>` reply messages as
+  replaced with ``supported_features``.
+- Added ``create_subshell``, ``delete_subshell`` and ``list_subshell`` messages.
+- Added ``copyToGlobals`` debug request
 
 5.4
 ---
@@ -1786,7 +1950,7 @@ Changelog
   but it has always been in the canonical implementation,
   so implementers are strongly encouraged to include it.
   It is mandatory in 5.1.
-- ``status='abort'`` in replies has not proved useful, and is considered deprecated.
+- ``status='aborted'`` in replies has not proved useful, and is considered deprecated.
   Kernels should send ``status='error'`` instead.
 - ``comm_info_request/reply`` added
 - ``connect_request/reply`` have not proved useful, and are considered deprecated.

@@ -1,0 +1,5 @@
+[options]
+python-packages = ["."]
+
+[hooks]
+before-bump-version = ["pip install hatch"]

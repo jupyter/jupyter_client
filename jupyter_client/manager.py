@@ -1,4 +1,5 @@
 """Base class to manage a running kernel"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import asyncio
@@ -104,7 +105,7 @@ class KernelManager(ConnectionFileMixin):
     This version starts kernels with Popen.
     """
 
-    _ready: t.Optional[t.Union[Future, CFuture]]
+    _ready: t.Union[Future, CFuture] | None
 
     def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         """Initialize a kernel manager."""
@@ -135,9 +136,9 @@ class KernelManager(ConnectionFileMixin):
 
     # the class to create with our `client` method
     client_class: DottedObjectName = DottedObjectName(
-        "jupyter_client.blocking.BlockingKernelClient"
+        "jupyter_client.blocking.BlockingKernelClient", config=True
     )
-    client_factory: Type = Type(klass=KernelClient)
+    client_factory: Type = Type(klass=KernelClient, config=True)
 
     @default("client_factory")
     def _client_factory_default(self) -> Type:
@@ -152,7 +153,7 @@ class KernelManager(ConnectionFileMixin):
     # The kernel provisioner with which this KernelManager is communicating.
     # This will generally be a LocalProvisioner instance unless the kernelspec
     # indicates otherwise.
-    provisioner: t.Optional[KernelProvisionerBase] = None
+    provisioner: KernelProvisionerBase | None = None
 
     kernel_spec_manager: Instance = Instance(kernelspec.KernelSpecManager)
 
@@ -187,10 +188,10 @@ class KernelManager(ConnectionFileMixin):
         if change["new"] == "python":
             self.kernel_name = kernelspec.NATIVE_KERNEL_NAME
 
-    _kernel_spec: t.Optional[kernelspec.KernelSpec] = None
+    _kernel_spec: kernelspec.KernelSpec | None = None
 
     @property
-    def kernel_spec(self) -> t.Optional[kernelspec.KernelSpec]:
+    def kernel_spec(self) -> kernelspec.KernelSpec | None:
         if self._kernel_spec is None and self.kernel_name != "":
             self._kernel_spec = self.kernel_spec_manager.get_kernel_spec(self.kernel_name)
         return self._kernel_spec
@@ -281,6 +282,11 @@ class KernelManager(ConnectionFileMixin):
     # Kernel management
     # --------------------------------------------------------------------------
 
+    def resolve_path(self, path: str) -> str | None:
+        """Resolve path to given file."""
+        assert self.provisioner is not None
+        return self.provisioner.resolve_path(path)
+
     def update_env(self, *, env: t.Dict[str, str]) -> None:
         """
         Allow to update the environment of a kernel manager.
@@ -314,7 +320,7 @@ class KernelManager(ConnectionFileMixin):
             env = self.update_custom_env_parameters(env=env)
 
             self._launch_args["env"].update(env)  # type: ignore [unreachable]
-
+    
     def update_custom_env_parameters(self, env: t.Dict[str, str]) -> t.Dict[str, str]:
         newEnv = {}
         custom_kernel_dict = {}
@@ -401,7 +407,7 @@ class KernelManager(ConnectionFileMixin):
                     custom_kernel_default_value[property_key] = property_value["default"]
         self.custom_kernel_default_value = custom_kernel_default_value
 
-    def format_kernel_cmd(self, extra_arguments: t.Optional[t.List[str]] = None) -> t.List[str]:
+    def format_kernel_cmd(self, extra_arguments: t.List[str] | None = None) -> t.List[str]:
         """Replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
         assert self.kernel_spec is not None
@@ -506,9 +512,7 @@ class KernelManager(ConnectionFileMixin):
         self.kernel_id = self.kernel_id or kw.pop("kernel_id", str(uuid.uuid4()))
         # save kwargs for use in restart
         # assigning Traitlets Dicts to Dict make mypy unhappy but is ok
-        self._launch_args = kw.copy()  # type:ignore [assignment]
-        #
-
+        self._launch_args = kw.copy()
         if self.provisioner is None:  # will not be None on restarts
             self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
                 self.kernel_id,
@@ -582,7 +586,7 @@ class KernelManager(ConnectionFileMixin):
 
     async def _async_finish_shutdown(
         self,
-        waittime: t.Optional[float] = None,
+        waittime: float | None = None,
         pollinterval: float = 0.1,
         restart: bool = False,
     ) -> None:
@@ -841,9 +845,9 @@ class AsyncKernelManager(KernelManager):
 
     # the class to create with our `client` method
     client_class: DottedObjectName = DottedObjectName(
-        "jupyter_client.asynchronous.AsyncKernelClient"
+        "jupyter_client.asynchronous.AsyncKernelClient", config=True
     )
-    client_factory: Type = Type(klass="jupyter_client.asynchronous.AsyncKernelClient")
+    client_factory: Type = Type(klass="jupyter_client.asynchronous.AsyncKernelClient", config=True)
 
     # The PyZMQ Context to use for communication with the kernel.
     context: Instance = Instance(zmq.asyncio.Context)

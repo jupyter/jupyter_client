@@ -7,13 +7,13 @@ Submodules
 
 .. automodule:: jupyter_client.asynchronous.client
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: jupyter_client.asynchronous
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

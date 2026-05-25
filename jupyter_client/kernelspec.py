@@ -1,4 +1,5 @@
 """Tools for managing kernel specs"""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
@@ -29,6 +30,7 @@ class KernelSpec(HasTraits):
     mimetype = Unicode()
     display_name = Unicode()
     language = Unicode()
+    kernel_protocol_version = Unicode()
     env = Dict()
     resource_dir = Unicode()
     interrupt_mode = CaselessStrEnum(["message", "signal"], default_value="signal")
@@ -54,6 +56,7 @@ class KernelSpec(HasTraits):
             "language": self.language,
             "interrupt_mode": self.interrupt_mode,
             "metadata": self.metadata,
+            "kernel_protocol_version": self.kernel_protocol_version,
         }
 
         return d
@@ -489,7 +492,6 @@ class KernelSpecManager(LoggingConfigurable):
 
         resource_dir = self._find_spec_directory(kernel_name.lower())
         if resource_dir is None:
-            self.log.warning("Kernelspec name %s cannot be found!", kernel_name)
             raise NoSuchKernel(kernel_name)
 
         return self._get_kernel_spec_by_name(kernel_name, resource_dir)

@@ -41,7 +41,9 @@ extensions = [
 ]
 
 
-# Workaround for https://github.com/agronholm/sphinx-autodoc-typehints/issues/123
+# Workaround for https://github.com/tox-dev/sphinx-autodoc-typehints/issues/123
+# As of 3.10.2 release the issue is closed but removing the workaround still
+# surfaces the warnings - this needs more investigation on our side.
 class FilterForIssue123(pylogging.Filter):
     def filter(self, record: pylogging.LogRecord) -> bool:
         return not record.getMessage().startswith("Cannot handle as a local function")
@@ -65,7 +67,7 @@ templates_path = ["_templates"]
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
-source_suffix = ".rst"
+source_suffix = {".rst": "restructuredtext"}
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
