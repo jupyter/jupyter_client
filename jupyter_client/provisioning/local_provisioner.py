@@ -219,8 +219,7 @@ class LocalProvisioner(KernelProvisionerBase):
         kernel_cmd = km.clear_custom_kernel_parameters(kernel_cmd)
         print("cmd--------", kernel_cmd)
 
-        if "custom_kernel_specs" in kwargs:
-            del kwargs["custom_kernel_specs"]
+        kwargs.pop("custom_kernel_specs", None)
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
     async def launch_kernel(self, cmd: list[str], **kwargs: Any) -> KernelConnectionInfo:

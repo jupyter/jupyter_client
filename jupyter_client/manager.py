@@ -320,7 +320,7 @@ class KernelManager(ConnectionFileMixin):
             env = self.update_custom_env_parameters(env=env)
 
             self._launch_args["env"].update(env)  # type: ignore [unreachable]
-    
+
     def update_custom_env_parameters(self, env: t.Dict[str, str]) -> t.Dict[str, str]:
         newEnv = {}
         custom_kernel_dict = {}
