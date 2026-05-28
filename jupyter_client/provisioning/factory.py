@@ -7,7 +7,7 @@ import glob
 # See compatibility note on `group` keyword in https://docs.python.org/3/library/importlib.metadata.html#entry-points
 from importlib.metadata import EntryPoint, entry_points
 from os import getenv, path
-from typing import Any
+from typing import Any, cast
 
 from traitlets.config import SingletonConfigurable, Unicode, default
 
@@ -94,7 +94,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
             f"kernel provisioner: {provisioner_name}"
         )
         provisioner_class = self.provisioners[provisioner_name].load()
-        provisioner_config = provisioner_cfg.get("config")
+        provisioner_config = cast(dict[str, Any], provisioner_cfg.get("config"))
         provisioner: KernelProvisionerBase = provisioner_class(
             kernel_id=kernel_id, kernel_spec=kernel_spec, parent=parent, **provisioner_config
         )
