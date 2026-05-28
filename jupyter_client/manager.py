@@ -152,12 +152,10 @@ class KernelManager(ConnectionFileMixin):
         ),
     )
 
-    def _transport_encryption_policy(self, value: str | bool | None = None) -> str:
+    def _transport_encryption_policy(self, value: str | None = None) -> str:
         """Normalize transport encryption input into one of the supported policy values."""
         if value is None:
             value = self.transport_encryption
-        if isinstance(value, bool):
-            return "enabled" if value else "disabled"
         normalized = str(value).lower()
         if normalized not in {"disabled", "enabled", "required"}:
             msg = (
@@ -421,7 +419,7 @@ class KernelManager(ConnectionFileMixin):
         self._control_socket = None
 
     async def _async_pre_start_kernel(
-        self, *, transport_encryption: str | bool | None = None, **kw: t.Any
+        self, *, transport_encryption: str | None = None, **kw: t.Any
     ) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
         """Prepares a kernel for startup in a separate process.
 

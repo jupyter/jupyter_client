@@ -3,6 +3,8 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import json
+
 import pytest
 import zmq
 
@@ -10,6 +12,7 @@ from jupyter_client import KernelManager
 from jupyter_client.channels import HBChannel
 from jupyter_client.client import KernelClient
 from jupyter_client.connect import ConnectionFileMixin
+from jupyter_client.kernelspec import KernelSpecManager
 from jupyter_client.session import Session
 
 
@@ -24,7 +27,26 @@ from jupyter_client.session import Session
 def test_iopub_plaintext_visibility_depends_on_curve(transport_encryption, tmp_path):
     """An unauthenticated subscriber sees plaintext only when Curve is disabled."""
 
-    km = KernelManager(connection_file=str(tmp_path / "kernel.json"))
+    kernel_name = "curve-test"
+    kernels_dir = tmp_path / "kernels"
+    kernel_dir = kernels_dir / kernel_name
+    kernel_dir.mkdir(parents=True)
+    with (kernel_dir / "kernel.json").open("w") as f:
+        json.dump(
+            {
+                "argv": ["python", "-m", "ipykernel_launcher", "-f", "{connection_file}"],
+                "display_name": "curve-test",
+                "language": "python",
+                "metadata": {"supported_encryption": "curve"},
+            },
+            f,
+        )
+
+    km = KernelManager(
+        connection_file=str(tmp_path / "kernel.json"),
+        kernel_name=kernel_name,
+        kernel_spec_manager=KernelSpecManager(kernel_dirs=[str(kernels_dir)]),
+    )
     km.cache_ports = False
     km.transport_encryption = transport_encryption
     km.pre_start_kernel()
