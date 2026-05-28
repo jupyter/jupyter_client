@@ -11,7 +11,7 @@ messages are sent.
 
 .. important::
    This document contains the authoritative description of the
-   IPython messaging protocol. All developers are strongly encouraged to
+   Jupyter messaging protocol. All developers are strongly encouraged to
    keep it updated as the implementation evolves, so that we have a single
    common reference for all protocol details.
 
@@ -87,7 +87,8 @@ kernel has dedicated sockets for the following functions:
 .. versionchanged:: 5.5
    The **IOPub** PUB socket is replaced with an XPUB socket,
    to enable the ``iopub_welcome`` message.
-   There is no other difference between kernel PUB and XPUB sockets from the client perspective.
+   There is no other difference between kernel PUB and XPUB sockets from the client
+   perspective.
 
 The actual format of the messages allowed on each of these channels is
 specified below.  Messages are dicts of dicts with string keys and values that
@@ -354,6 +355,47 @@ After the serialized dicts are zero to many raw data buffers,
 which can be used by message types that support binary data,
 which can be used in custom messages, such as comms and extensions to the protocol.
 
+.. _kernel_startup_handshake:
+
+Kernel startup handshake
+========================
+
+If the kernel is passed a registration file instead of a connection file
+(see :ref:`connection_file`) when starting, this initiates the handshake.
+The kernel is responsible for selecting the ports for its five channels. It
+then connects a DEALER socket to the registration address it received, and
+sends a message containing the following JSON dictionary::
+
+    {
+      'kernel_id': str,
+      'control_port': str,
+      'shell_port': str,
+      'stdin_port': str,
+      'iopub_port': str,
+      'hb_port': str
+    }
+
+The ``kernel_id`` value must be that from the registration file.
+
+This message is **not** a full Jupyter message with header, parent and metadata.
+It is a minimal, signed, single-frame content dict, serialized to the following
+blobs of bytes:
+
+.. sourcecode:: python
+
+   [
+       b"u-u-i-d",  # zmq identity(ies)
+       b"<IDS|MSG>",  # delimiter
+       b"baddad42",  # HMAC signature
+       b"{content}",  # serialized content dict
+   ]
+
+When the registration service receives this messages, it sends back a signed,
+single-frame content ACK message to the kernel. The content of this message is
+let to the implementation. The kernel can then close its DEALER socket and the
+handshake is over.
+
+.. versionadded:: 5.6
 
 Python API
 ==========
