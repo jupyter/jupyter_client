@@ -15,7 +15,7 @@ from jupyter_core import paths
 from traitlets import Int, Unicode
 
 from jupyter_client.connect import KernelConnectionInfo
-from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
+from jupyter_client.kernelspec import KernelSpec, KernelSpecManager, NoSuchKernel
 from jupyter_client.launcher import launch_kernel
 from jupyter_client.manager import AsyncKernelManager
 from jupyter_client.provisioning import (
@@ -101,12 +101,17 @@ class CustomTestProvisioner(KernelProvisionerBase):  # type:ignore
             km._launch_args = kwargs.copy()
             # build the Popen cmd
             extra_arguments = kwargs.pop("extra_arguments", [])
-            transport_encryption = bool(
-                kwargs.pop("transport_encryption", getattr(km, "transport_encryption", False))
+            transport_encryption = kwargs.pop(
+                "transport_encryption", getattr(km, "transport_encryption", "disabled")
+            )
+            transport_encryption_policy = (
+                km._transport_encryption_policy(transport_encryption)
+                if hasattr(km, "_transport_encryption_policy")
+                else ("enabled" if bool(transport_encryption) else "disabled")
             )
             curve_publickey: bytes | None = None
             curve_secretkey: bytes | None = None
-            if transport_encryption:
+            if transport_encryption_policy in {"enabled", "required"}:
                 import zmq
 
                 curve_publickey, curve_secretkey = zmq.curve_keypair()
@@ -295,7 +300,7 @@ class TestRuntime:
     ):
         """When transport encryption is enabled, LocalProvisioner seeds curve keys before launch."""
         km = AsyncKernelManager(connection_file=str(tmp_path / "kernel.json"))
-        km.transport_encryption = True
+        km.transport_encryption = "enabled"
         await km._async_pre_start_kernel()
         assert km.provisioner is not None
         assert isinstance(km.provisioner, LocalProvisioner)
@@ -309,6 +314,26 @@ class TestRuntime:
 
         assert km.provisioner.connection_info["curve_publickey"] == "A" * 40
         assert km.provisioner.connection_info["curve_secretkey"] == "B" * 40
+
+    async def test_local_provisioner_pre_launch_requires_tcp_for_required_transport_encryption(
+        self, tmp_path
+    ):
+        """Required transport encryption rejects non-TCP transports."""
+        km = AsyncKernelManager(connection_file=str(tmp_path / "kernel.json"))
+        km._kernel_spec = KernelSpec(
+            resource_dir="test",
+            **{
+                "argv": [sys.executable, "-m", "tests.signalkernel", "-f", "{connection_file}"],
+                "env": {},
+                "display_name": "test_kernel",
+                "language": "python",
+                "metadata": {"supported_encryption": "curve"},
+            },
+        )
+        km.transport = "ipc"
+        km.transport_encryption = "required"
+        with pytest.raises(RuntimeError, match="transport='tcp'"):
+            await km._async_pre_start_kernel()
 
     async def test_existing(self, kpf, akm):
         await self.akm_test(akm)

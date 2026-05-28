@@ -16,8 +16,9 @@ from jupyter_client.session import Session
 @pytest.mark.parametrize(
     "transport_encryption",
     [
-        False,
-        True,
+        "disabled",
+        "enabled",
+        "required",
     ],
 )
 def test_iopub_plaintext_visibility_depends_on_curve(transport_encryption, tmp_path):
@@ -33,7 +34,7 @@ def test_iopub_plaintext_visibility_depends_on_curve(transport_encryption, tmp_p
     eavesdropper_sock = km.context.socket(zmq.SUB)
     eavesdropper_sock.setsockopt(zmq.SUBSCRIBE, b"")
 
-    expect_plaintext_visible = not transport_encryption
+    expect_plaintext_visible = transport_encryption == "disabled"
 
     server_info = km.get_connection_info()
     if "curve_publickey" in server_info and "curve_secretkey" in server_info:

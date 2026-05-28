@@ -21,6 +21,7 @@ from jupyter_core.utils import run_sync
 from traitlets import (
     Any,
     Bool,
+    CaselessStrEnum,
     Dict,
     DottedObjectName,
     Float,
@@ -140,15 +141,46 @@ class KernelManager(ConnectionFileMixin):
     )
     client_factory: Type = Type(klass=KernelClient, config=True)
 
-    transport_encryption: Bool = Bool(
-        False,
+    transport_encryption: CaselessStrEnum = CaselessStrEnum(
+        ["disabled", "enabled", "required"],
+        default_value="disabled",
         config=True,
         help=(
-            "Enable transport encryption using manager-side provisioning of CurveZMQ server keys for kernels. "
-            "When True, the provisioner launch path issues and writes Curve credentials "
-            "before the kernel process starts."
+            "Transport encryption policy for manager-side provisioning of CurveZMQ server keys for kernels. "
+            "'disabled' (default) does not provision Curve credentials, 'enabled' provisions when available, "
+            "and 'required' enforces provisioning and fails startup if transport encryption cannot be applied."
         ),
     )
+
+    def _transport_encryption_policy(self, value: str | bool | None = None) -> str:
+        """Normalize transport encryption input into one of the supported policy values."""
+        if value is None:
+            value = self.transport_encryption
+        if isinstance(value, bool):
+            return "enabled" if value else "disabled"
+        normalized = str(value).lower()
+        if normalized not in {"disabled", "enabled", "required"}:
+            msg = (
+                "transport_encryption must be one of: 'disabled', 'enabled', 'required' "
+                f"(got: {value!r})"
+            )
+            raise ValueError(msg)
+        return normalized
+
+    def _kernel_supports_curve_encryption(self) -> bool:
+        """Whether kernelspec metadata declares support for Curve transport encryption."""
+        if self.kernel_spec is None:
+            return False
+        metadata = getattr(self.kernel_spec, "metadata", {}) or {}
+        supported_encryption = metadata.get("supported_encryption")
+        if supported_encryption is None:
+            return False
+        if isinstance(supported_encryption, str):
+            return supported_encryption.strip().lower() == "curve"
+        if isinstance(supported_encryption, (list, tuple, set)):
+            normalized = {str(item).strip().lower() for item in supported_encryption}
+            return "curve" in normalized
+        return False
 
     @default("client_factory")
     def _client_factory_default(self) -> Type:
@@ -389,7 +421,7 @@ class KernelManager(ConnectionFileMixin):
         self._control_socket = None
 
     async def _async_pre_start_kernel(
-        self, *, transport_encryption: bool | None = None, **kw: t.Any
+        self, *, transport_encryption: str | bool | None = None, **kw: t.Any
     ) -> t.Tuple[t.List[str], t.Dict[str, t.Any]]:
         """Prepares a kernel for startup in a separate process.
 
@@ -404,11 +436,20 @@ class KernelManager(ConnectionFileMixin):
         """
         self.shutting_down = False
         if transport_encryption is not None:
-            self.transport_encryption = transport_encryption
+            self.transport_encryption = self._transport_encryption_policy(transport_encryption)
         self.kernel_id = self.kernel_id or kw.pop("kernel_id", str(uuid.uuid4()))
         # save kwargs for use in restart
         # assigning Traitlets Dicts to Dict make mypy unhappy but is ok
         self._launch_args = kw.copy()
+        if (
+            self._transport_encryption_policy() == "required"
+            and not self._kernel_supports_curve_encryption()
+        ):
+            msg = (
+                "transport_encryption='required' but kernelspec does not declare "
+                "metadata.supported_encryption='curve'."
+            )
+            raise RuntimeError(msg)
         if self.provisioner is None:  # will not be None on restarts
             self.provisioner = KPF.instance(parent=self.parent).create_provisioner_instance(
                 self.kernel_id,

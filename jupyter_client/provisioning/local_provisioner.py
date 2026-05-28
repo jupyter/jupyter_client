@@ -176,11 +176,21 @@ class LocalProvisioner(KernelProvisionerBase):
         # This should be considered temporary until a better division of labor can be defined.
         km = self.parent
         if km:
-            transport_encryption = bool(
-                kwargs.pop("transport_encryption", getattr(km, "transport_encryption", False))
+            transport_encryption = kwargs.pop(
+                "transport_encryption", getattr(km, "transport_encryption", "disabled")
             )
+            transport_encryption_policy = (
+                km._transport_encryption_policy(transport_encryption)
+                if hasattr(km, "_transport_encryption_policy")
+                else ("enabled" if bool(transport_encryption) else "disabled")
+            )
+            encryption_required = transport_encryption_policy == "required"
+            encryption_enabled = transport_encryption_policy in {"enabled", "required"}
             curve_publickey: bytes | None = None
             curve_secretkey: bytes | None = None
+            if encryption_required and km.transport != "tcp":
+                msg = "transport_encryption='required' is only supported when transport='tcp'."
+                raise RuntimeError(msg)
             if km.transport == "tcp" and not is_local_ip(km.ip):
                 msg = (
                     "Can only launch a kernel on a local interface. "
@@ -204,7 +214,7 @@ class LocalProvisioner(KernelProvisionerBase):
                 km.control_port = lpc.find_available_port(km.ip)
                 self.ports_cached = True
 
-            if transport_encryption:
+            if encryption_enabled and km.transport == "tcp":
                 curve_publickey, curve_secretkey = zmq.curve_keypair()
                 km.curve_publickey = curve_publickey
                 km.curve_secretkey = curve_secretkey
