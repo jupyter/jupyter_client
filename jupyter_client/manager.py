@@ -26,11 +26,13 @@ from traitlets import (
     DottedObjectName,
     Float,
     Instance,
+    TraitError,
     Type,
     Unicode,
     default,
     observe,
     observe_compat,
+    validate,
 )
 from traitlets.utils.importstring import import_item
 
@@ -151,6 +153,18 @@ class KernelManager(ConnectionFileMixin):
             "and 'required' enforces provisioning and fails startup if transport encryption cannot be applied."
         ),
     )
+
+    @validate("transport_encryption")
+    def _validate_transport_encryption(self, proposal: dict) -> str:
+        value = proposal["value"]
+        if value in ("enabled", "required") and not zmq.has("curve"):
+            msg = (
+                f"transport_encryption={value!r} requires CurveZMQ support, "
+                "but zmq.has('curve') returned False. "
+                "Install pyzmq with libzmq compiled with libsodium to enable CurveZMQ."
+            )
+            raise TraitError(msg)
+        return value
 
     def _transport_encryption_policy(self, value: str | None = None) -> str:
         """Normalize transport encryption input into one of the supported policy values."""

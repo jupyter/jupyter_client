@@ -4,9 +4,11 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
+from unittest.mock import patch
 
 import pytest
 import zmq
+from traitlets import TraitError
 
 from jupyter_client import KernelManager
 from jupyter_client.channels import HBChannel
@@ -107,6 +109,31 @@ def test_iopub_plaintext_visibility_depends_on_curve(transport_encryption, tmp_p
         eavesdropper_sock.close(linger=0)
         km.cleanup_connection_file()
         km.context.term()
+
+
+@pytest.mark.parametrize("value", ["enabled", "required"])
+def test_transport_encryption_raises_when_curve_unavailable(value):
+    """Setting transport_encryption to 'enabled' or 'required' raises TraitError when CurveZMQ is unavailable."""
+    with (
+        patch("zmq.has", return_value=False),
+        pytest.raises(TraitError, match=r"zmq\.has\('curve'\)"),
+    ):
+        KernelManager(transport_encryption=value)
+
+
+@pytest.mark.parametrize("value", ["enabled", "required"])
+def test_transport_encryption_accepted_when_curve_available(value):
+    """Setting transport_encryption to 'enabled' or 'required' is accepted when CurveZMQ is available."""
+    with patch("zmq.has", return_value=True):
+        km = KernelManager(transport_encryption=value)
+        assert km.transport_encryption == value
+
+
+def test_transport_encryption_disabled_does_not_require_curve():
+    """Setting transport_encryption to 'disabled' never raises regardless of CurveZMQ availability."""
+    with patch("zmq.has", return_value=False):
+        km = KernelManager(transport_encryption="disabled")
+        assert km.transport_encryption == "disabled"
 
 
 def test_connect_shell_to_curve_server_with_curve_keys_succeeds():
