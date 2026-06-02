@@ -215,9 +215,15 @@ class LocalProvisioner(KernelProvisionerBase):
                 self.ports_cached = True
 
             if encryption_enabled and km.transport == "tcp":
-                curve_publickey, curve_secretkey = zmq.curve_keypair()
-                km.curve_publickey = curve_publickey
-                km.curve_secretkey = curve_secretkey
+                kernel_curve_ok = (
+                    encryption_required  # already validated in pre_start_kernel
+                    or not hasattr(km, "_kernel_supports_curve_encryption")
+                    or km._kernel_supports_curve_encryption()
+                )
+                if kernel_curve_ok:
+                    curve_publickey, curve_secretkey = zmq.curve_keypair()
+                    km.curve_publickey = curve_publickey
+                    km.curve_secretkey = curve_secretkey
             if "env" in kwargs:
                 jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
                 km.write_connection_file(

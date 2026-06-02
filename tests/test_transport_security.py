@@ -136,6 +136,70 @@ def test_transport_encryption_disabled_does_not_require_curve():
         assert km.transport_encryption == "disabled"
 
 
+def _make_km_with_kernelspec(tmp_path, *, supported_encryption, transport_encryption):
+    """Helper: build a KernelManager backed by a kernelspec with the given metadata."""
+    kernel_name = "test-kernel"
+    kernel_dir = tmp_path / "kernels" / kernel_name
+    kernel_dir.mkdir(parents=True)
+    metadata = {}
+    if supported_encryption is not None:
+        metadata["supported_encryption"] = supported_encryption
+    with (kernel_dir / "kernel.json").open("w") as f:
+        json.dump(
+            {
+                "argv": ["python", "-c", "pass"],
+                "display_name": kernel_name,
+                "language": "python",
+                "metadata": metadata,
+            },
+            f,
+        )
+    km = KernelManager(
+        connection_file=str(tmp_path / "kernel.json"),
+        kernel_name=kernel_name,
+        kernel_spec_manager=KernelSpecManager(kernel_dirs=[str(tmp_path / "kernels")]),
+    )
+    km.cache_ports = False
+    km.transport_encryption = transport_encryption
+    return km
+
+
+def test_enabled_without_curve_kernelspec_skips_keys(tmp_path):
+    """transport_encryption='enabled' skips key provisioning when kernelspec lacks curve support."""
+    km = _make_km_with_kernelspec(
+        tmp_path, supported_encryption=None, transport_encryption="enabled"
+    )
+    km.pre_start_kernel()
+    info = km.get_connection_info()
+    assert "curve_publickey" not in info
+    assert "curve_secretkey" not in info
+    km.cleanup_connection_file()
+    km.context.term()
+
+
+def test_enabled_with_curve_kernelspec_provisions_keys(tmp_path):
+    """transport_encryption='enabled' provisions keys when kernelspec declares curve support."""
+    km = _make_km_with_kernelspec(
+        tmp_path, supported_encryption="curve", transport_encryption="enabled"
+    )
+    km.pre_start_kernel()
+    info = km.get_connection_info()
+    assert "curve_publickey" in info
+    assert "curve_secretkey" in info
+    km.cleanup_connection_file()
+    km.context.term()
+
+
+def test_required_without_curve_kernelspec_raises(tmp_path):
+    """transport_encryption='required' raises RuntimeError when kernelspec lacks curve support."""
+    km = _make_km_with_kernelspec(
+        tmp_path, supported_encryption=None, transport_encryption="required"
+    )
+    with pytest.raises(RuntimeError, match=r"metadata\.supported_encryption"):
+        km.pre_start_kernel()
+    km.context.term()
+
+
 def test_connect_shell_to_curve_server_with_curve_keys_succeeds():
     """Public API path: load_connection_info + connect_shell works with curve keys."""
     pub, sec = zmq.curve_keypair()
