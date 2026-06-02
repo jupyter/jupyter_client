@@ -215,12 +215,16 @@ class LocalProvisioner(KernelProvisionerBase):
                 self.ports_cached = True
 
             if encryption_enabled and km.transport == "tcp":
-                kernel_curve_ok = (
-                    encryption_required  # already validated in pre_start_kernel
-                    or (
-                        hasattr(km, "_kernel_supports_curve_encryption")
-                        and km._kernel_supports_curve_encryption()
-                    )
+                _has_method = hasattr(km, "_kernel_supports_curve_encryption")
+                _supports = _has_method and km._kernel_supports_curve_encryption()
+                kernel_curve_ok = encryption_required or _supports
+                print(  # noqa: T201
+                    f"DEBUG pre_launch: encryption_enabled={encryption_enabled} "
+                    f"encryption_required={encryption_required} "
+                    f"transport_encryption_policy={transport_encryption_policy!r} "
+                    f"km.transport={km.transport!r} "
+                    f"has_method={_has_method} supports_curve={_supports} "
+                    f"kernel_curve_ok={kernel_curve_ok}"
                 )
                 if kernel_curve_ok:
                     curve_publickey, curve_secretkey = zmq.curve_keypair()

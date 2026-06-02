@@ -182,9 +182,14 @@ class KernelManager(ConnectionFileMixin):
     def _kernel_supports_curve_encryption(self) -> bool:
         """Whether kernelspec metadata declares support for Curve transport encryption."""
         if self.kernel_spec is None:
+            print("DEBUG _kernel_supports_curve_encryption: kernel_spec is None, returning False")  # noqa: T201
             return False
         metadata = getattr(self.kernel_spec, "metadata", {}) or {}
         supported_encryption = metadata.get("supported_encryption")
+        print(  # noqa: T201
+            f"DEBUG _kernel_supports_curve_encryption: kernel_spec={self.kernel_spec!r} "
+            f"metadata={metadata!r} supported_encryption={supported_encryption!r}"
+        )
         if supported_encryption is None:
             return False
         if isinstance(supported_encryption, str):
