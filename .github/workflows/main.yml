@@ -76,7 +76,7 @@ jobs:
 
       - name: Run the tests
         run: |
-          hatch run ${HATCH_ENV}:test tests/test_transport_security.py::test_enabled_without_curve_kernelspec_skips_keys -s
+          hatch run ${HATCH_ENV}:test
         env:
           PYTHONTRACEMALLOC: "10"
 
