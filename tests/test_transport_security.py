@@ -14,7 +14,7 @@ from jupyter_client import KernelManager
 from jupyter_client.channels import HBChannel
 from jupyter_client.client import KernelClient
 from jupyter_client.connect import ConnectionFileMixin
-from jupyter_client.kernelspec import KernelSpecManager
+from jupyter_client.kernelspec import KernelSpec, KernelSpecManager
 from jupyter_client.session import Session
 
 
@@ -136,28 +136,18 @@ def test_transport_encryption_disabled_does_not_require_curve():
         assert km.transport_encryption == "disabled"
 
 
-def _make_km_with_kernelspec(tmp_path, *, supported_encryption, transport_encryption):
-    """Helper: build a KernelManager backed by a kernelspec with the given metadata."""
-    kernel_name = "test-kernel"
-    kernel_dir = tmp_path / "kernels" / kernel_name
-    kernel_dir.mkdir(parents=True)
-    metadata = {}
-    if supported_encryption is not None:
-        metadata["supported_encryption"] = supported_encryption
-    with (kernel_dir / "kernel.json").open("w") as f:
-        json.dump(
-            {
-                "argv": ["python", "-c", "pass"],
-                "display_name": kernel_name,
-                "language": "python",
-                "metadata": metadata,
-            },
-            f,
-        )
-    km = KernelManager(
-        connection_file=str(tmp_path / "kernel.json"),
-        kernel_name=kernel_name,
-        kernel_spec_manager=KernelSpecManager(kernel_dirs=[str(tmp_path / "kernels")]),
+def _make_km(tmp_path, *, supported_encryption, transport_encryption):
+    """Helper: build a KernelManager with a kernelspec whose metadata is set directly."""
+    metadata = (
+        {} if supported_encryption is None else {"supported_encryption": supported_encryption}
+    )
+    km = KernelManager(connection_file=str(tmp_path / "kernel.json"))
+    km._kernel_spec = KernelSpec(
+        resource_dir="test",
+        argv=["python", "-c", "pass"],
+        display_name="test_kernel",
+        language="python",
+        metadata=metadata,
     )
     km.cache_ports = False
     km.transport_encryption = transport_encryption
@@ -166,9 +156,7 @@ def _make_km_with_kernelspec(tmp_path, *, supported_encryption, transport_encryp
 
 def test_enabled_without_curve_kernelspec_skips_keys(tmp_path):
     """transport_encryption='enabled' skips key provisioning when kernelspec lacks curve support."""
-    km = _make_km_with_kernelspec(
-        tmp_path, supported_encryption=None, transport_encryption="enabled"
-    )
+    km = _make_km(tmp_path, supported_encryption=None, transport_encryption="enabled")
     km.pre_start_kernel()
     info = km.get_connection_info()
     assert "curve_publickey" not in info
@@ -179,9 +167,7 @@ def test_enabled_without_curve_kernelspec_skips_keys(tmp_path):
 
 def test_enabled_with_curve_kernelspec_provisions_keys(tmp_path):
     """transport_encryption='enabled' provisions keys when kernelspec declares curve support."""
-    km = _make_km_with_kernelspec(
-        tmp_path, supported_encryption="curve", transport_encryption="enabled"
-    )
+    km = _make_km(tmp_path, supported_encryption="curve", transport_encryption="enabled")
     km.pre_start_kernel()
     info = km.get_connection_info()
     assert "curve_publickey" in info
@@ -192,9 +178,7 @@ def test_enabled_with_curve_kernelspec_provisions_keys(tmp_path):
 
 def test_required_without_curve_kernelspec_raises(tmp_path):
     """transport_encryption='required' raises RuntimeError when kernelspec lacks curve support."""
-    km = _make_km_with_kernelspec(
-        tmp_path, supported_encryption=None, transport_encryption="required"
-    )
+    km = _make_km(tmp_path, supported_encryption=None, transport_encryption="required")
     with pytest.raises(RuntimeError, match=r"metadata\.supported_encryption"):
         km.pre_start_kernel()
     km.context.term()

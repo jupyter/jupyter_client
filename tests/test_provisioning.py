@@ -300,6 +300,16 @@ class TestRuntime:
     ):
         """When transport encryption is enabled, LocalProvisioner seeds curve keys before launch."""
         km = AsyncKernelManager(connection_file=str(tmp_path / "kernel.json"))
+        km._kernel_spec = KernelSpec(
+            resource_dir="test",
+            **{
+                "argv": [sys.executable, "-c", "pass"],
+                "env": {},
+                "display_name": "test_kernel",
+                "language": "python",
+                "metadata": {"supported_encryption": "curve"},
+            },
+        )
         km.transport_encryption = "enabled"
         await km._async_pre_start_kernel()
         assert km.provisioner is not None
