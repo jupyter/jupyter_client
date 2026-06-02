@@ -248,7 +248,9 @@ def kpf(monkeypatch):
     )
     monkeypatch.setattr(KernelProvisionerFactory, "_get_provisioner", mock_get_provisioner)
     factory = KernelProvisionerFactory.instance()
-    return factory
+    yield factory
+    KernelProvisionerFactory.clear_instance()
+    KernelProvisionerFactory.provisioners.clear()
 
 
 class TestDiscovery:
