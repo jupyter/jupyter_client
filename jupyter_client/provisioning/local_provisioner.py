@@ -217,8 +217,10 @@ class LocalProvisioner(KernelProvisionerBase):
             if encryption_enabled and km.transport == "tcp":
                 kernel_curve_ok = (
                     encryption_required  # already validated in pre_start_kernel
-                    or not hasattr(km, "_kernel_supports_curve_encryption")
-                    or km._kernel_supports_curve_encryption()
+                    or (
+                        hasattr(km, "_kernel_supports_curve_encryption")
+                        and km._kernel_supports_curve_encryption()
+                    )
                 )
                 if kernel_curve_ok:
                     curve_publickey, curve_secretkey = zmq.curve_keypair()
