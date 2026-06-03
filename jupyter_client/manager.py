@@ -45,6 +45,22 @@ from .managerabc import KernelManagerABC
 from .provisioning import KernelProvisionerBase
 from .provisioning import KernelProvisionerFactory as KPF  # noqa
 
+# After an upgrade to Sphinx 9 and myst 5, the doc build started to fail
+# with the following error: :8: (ERROR/3) Unexpected indentation.
+# This seems to be due to the docstring of the wrapper function inside
+# in_pending_state. However, removing the docstring doe snot fix the issue
+# since we use the :undoc-members: directive with automodule.
+# The workaround is to explicitly set what we want to document
+
+__all__ = [
+    "AsyncKernelManager",
+    "KernelManager",
+    "in_pending_state",
+    "run_kernel",
+    "start_new_async_kernel",
+    "start_new_kernel",
+]
+
 
 class _ShutdownStatus(Enum):
     """
