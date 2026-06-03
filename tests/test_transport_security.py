@@ -256,8 +256,11 @@ def test_hb_channel_class_without_curve_support_raises_when_curve_is_active():
         }
     )
 
-    with pytest.raises(RuntimeError, match=r"LegacyHBChannel.*curve_serverkey"):
-        _ = client.hb_channel
+    try:
+        with pytest.raises(RuntimeError, match=r"LegacyHBChannel.*curve_serverkey"):
+            _ = client.hb_channel
+    finally:
+        client.context.term()
 
 
 def test_hb_channel_class_without_curve_support_does_not_raise_when_curve_disabled():
@@ -281,8 +284,11 @@ def test_hb_channel_class_without_curve_support_does_not_raise_when_curve_disabl
         }
     )
 
-    hb = client.hb_channel
-    assert isinstance(hb, LegacyHBChannel)
+    try:
+        hb = client.hb_channel
+        assert isinstance(hb, LegacyHBChannel)
+    finally:
+        client.context.term()
 
 
 def test_hb_channel_class_unrelated_typeerror_propagates_unchanged():
@@ -308,8 +314,11 @@ def test_hb_channel_class_unrelated_typeerror_propagates_unchanged():
         }
     )
 
-    with pytest.raises(TypeError, match="totally unrelated constructor error"):
-        _ = client.hb_channel
+    try:
+        with pytest.raises(TypeError, match="totally unrelated constructor error"):
+            _ = client.hb_channel
+    finally:
+        client.context.term()
 
 
 def test_connect_shell_to_curve_server_without_curve_keys_is_rejected():
