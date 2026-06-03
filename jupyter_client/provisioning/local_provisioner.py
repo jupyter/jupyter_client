@@ -182,10 +182,10 @@ class LocalProvisioner(KernelProvisionerBase):
             transport_encryption_policy = (
                 km._transport_encryption_policy(transport_encryption)
                 if hasattr(km, "_transport_encryption_policy")
-                else ("enabled" if bool(transport_encryption) else "disabled")
+                else ("auto" if bool(transport_encryption) else "disabled")
             )
             encryption_required = transport_encryption_policy == "required"
-            encryption_enabled = transport_encryption_policy in {"enabled", "required"}
+            encryption_enabled = transport_encryption_policy in {"auto", "required"}
             curve_publickey: bytes | None = None
             curve_secretkey: bytes | None = None
             if encryption_required and km.transport != "tcp":

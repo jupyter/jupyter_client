@@ -22,7 +22,7 @@ from jupyter_client.session import Session
     "transport_encryption",
     [
         "disabled",
-        "enabled",
+        "auto",
         "required",
     ],
 )
@@ -111,9 +111,9 @@ def test_iopub_plaintext_visibility_depends_on_curve(transport_encryption, tmp_p
         km.context.term()
 
 
-@pytest.mark.parametrize("value", ["enabled", "required"])
+@pytest.mark.parametrize("value", ["auto", "required"])
 def test_transport_encryption_raises_when_curve_unavailable(value):
-    """Setting transport_encryption to 'enabled' or 'required' raises TraitError when CurveZMQ is unavailable."""
+    """Setting transport_encryption to 'auto' or 'required' raises TraitError when CurveZMQ is unavailable."""
     with (
         patch("zmq.has", return_value=False),
         pytest.raises(TraitError, match=r"zmq\.has\('curve'\)"),
@@ -121,9 +121,9 @@ def test_transport_encryption_raises_when_curve_unavailable(value):
         KernelManager(transport_encryption=value)
 
 
-@pytest.mark.parametrize("value", ["enabled", "required"])
+@pytest.mark.parametrize("value", ["auto", "required"])
 def test_transport_encryption_accepted_when_curve_available(value):
-    """Setting transport_encryption to 'enabled' or 'required' is accepted when CurveZMQ is available."""
+    """Setting transport_encryption to 'auto' or 'required' is accepted when CurveZMQ is available."""
     with patch("zmq.has", return_value=True):
         km = KernelManager(transport_encryption=value)
         assert km.transport_encryption == value
@@ -155,8 +155,8 @@ def _make_km(tmp_path, *, supported_encryption, transport_encryption):
 
 
 def test_enabled_without_curve_kernelspec_skips_keys(tmp_path):
-    """transport_encryption='enabled' skips key provisioning when kernelspec lacks curve support."""
-    km = _make_km(tmp_path, supported_encryption=None, transport_encryption="enabled")
+    """transport_encryption='auto' skips key provisioning when kernelspec lacks curve support."""
+    km = _make_km(tmp_path, supported_encryption=None, transport_encryption="auto")
     km.pre_start_kernel()
     info = km.get_connection_info()
     assert "curve_publickey" not in info
@@ -166,8 +166,8 @@ def test_enabled_without_curve_kernelspec_skips_keys(tmp_path):
 
 
 def test_enabled_with_curve_kernelspec_provisions_keys(tmp_path):
-    """transport_encryption='enabled' provisions keys when kernelspec declares curve support."""
-    km = _make_km(tmp_path, supported_encryption="curve", transport_encryption="enabled")
+    """transport_encryption='auto' provisions keys when kernelspec declares curve support."""
+    km = _make_km(tmp_path, supported_encryption="curve", transport_encryption="auto")
     km.pre_start_kernel()
     info = km.get_connection_info()
     assert "curve_publickey" in info

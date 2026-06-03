@@ -107,11 +107,11 @@ class CustomTestProvisioner(KernelProvisionerBase):  # type:ignore
             transport_encryption_policy = (
                 km._transport_encryption_policy(transport_encryption)
                 if hasattr(km, "_transport_encryption_policy")
-                else ("enabled" if bool(transport_encryption) else "disabled")
+                else ("auto" if bool(transport_encryption) else "disabled")
             )
             curve_publickey: bytes | None = None
             curve_secretkey: bytes | None = None
-            if transport_encryption_policy in {"enabled", "required"}:
+            if transport_encryption_policy in {"auto", "required"}:
                 import zmq
 
                 curve_publickey, curve_secretkey = zmq.curve_keypair()
@@ -312,7 +312,7 @@ class TestRuntime:
                 "metadata": {"supported_encryption": "curve"},
             },
         )
-        km.transport_encryption = "enabled"
+        km.transport_encryption = "auto"
         await km._async_pre_start_kernel()
         assert km.provisioner is not None
         assert isinstance(km.provisioner, LocalProvisioner)

@@ -144,20 +144,21 @@ class KernelManager(ConnectionFileMixin):
     client_factory: Type = Type(klass=KernelClient, config=True)
 
     transport_encryption: CaselessStrEnum = CaselessStrEnum(
-        ["disabled", "enabled", "required"],
+        ["disabled", "auto", "required"],
         default_value="disabled",
         config=True,
         help=(
             "Transport encryption policy for manager-side provisioning of CurveZMQ server keys for kernels. "
-            "'disabled' (default) does not provision Curve credentials, 'enabled' provisions when available, "
-            "and 'required' enforces provisioning and fails startup if transport encryption cannot be applied."
+            "'disabled' (default) does not provision Curve credentials, 'auto' provisions when the kernelspec "
+            "declares support, and 'required' enforces provisioning and fails startup if transport encryption "
+            "cannot be applied."
         ),
     )
 
     @validate("transport_encryption")
     def _validate_transport_encryption(self, proposal: dict) -> str:
         value = proposal["value"]
-        if value in ("enabled", "required") and not zmq.has("curve"):
+        if value in ("auto", "required") and not zmq.has("curve"):
             msg = (
                 f"transport_encryption={value!r} requires CurveZMQ support, "
                 "but zmq.has('curve') returned False. "
@@ -171,9 +172,9 @@ class KernelManager(ConnectionFileMixin):
         if value is None:
             value = self.transport_encryption
         normalized = str(value).lower()
-        if normalized not in {"disabled", "enabled", "required"}:
+        if normalized not in {"disabled", "auto", "required"}:
             msg = (
-                "transport_encryption must be one of: 'disabled', 'enabled', 'required' "
+                "transport_encryption must be one of: 'disabled', 'auto', 'required' "
                 f"(got: {value!r})"
             )
             raise ValueError(msg)
