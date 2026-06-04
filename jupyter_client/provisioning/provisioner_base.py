@@ -154,8 +154,11 @@ class KernelProvisionerBase(ABC, LoggingConfigurable, metaclass=KernelProvisione
         :meth:`launch_kernel()`.
         """
         env = kwargs.pop("env", os.environ).copy()
+        # here!!!
         env.update(self.__apply_env_substitutions(env))
+
         self._finalize_env(env)
+
         kwargs["env"] = env
 
         return kwargs
