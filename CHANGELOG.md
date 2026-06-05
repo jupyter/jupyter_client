@@ -2,6 +2,38 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.9.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.8.0...d67bf2015d256bac3b766b2a673e980dcc169eac))
+
+### Enhancements made
+
+- Add ZMQ Curve for transport encryption [#1110](https://github.com/jupyter/jupyter_client/pull/1110) ([@krassowski](https://github.com/krassowski), [@Carreau](https://github.com/Carreau), [@minrk](https://github.com/minrk))
+
+### Maintenance and upkeep improvements
+
+- Temporarily pin Python to 3.14 in pre-releases test [#1118](https://github.com/jupyter/jupyter_client/pull/1118) ([@krassowski](https://github.com/krassowski), [@Carreau](https://github.com/Carreau))
+- CI: fix testing of nbconvert [#1116](https://github.com/jupyter/jupyter_client/pull/1116) ([@Carreau](https://github.com/Carreau), [@krassowski](https://github.com/krassowski))
+- Update pre-commit, and fix issues [#1115](https://github.com/jupyter/jupyter_client/pull/1115) ([@Carreau](https://github.com/Carreau), [@krassowski](https://github.com/krassowski))
+- Remove `3.14t` testing until `msgpack` supports it [#1113](https://github.com/jupyter/jupyter_client/pull/1113) ([@Carreau](https://github.com/Carreau), [@krassowski](https://github.com/krassowski))
+- Log environment information for docs build on CI, update comment on workaround [#1112](https://github.com/jupyter/jupyter_client/pull/1112) ([@krassowski](https://github.com/krassowski), [@Carreau](https://github.com/Carreau))
+
+### Documentation improvements
+
+- Update status terminology from 'abort' to 'aborted' [#1120](https://github.com/jupyter/jupyter_client/pull/1120) ([@krassowski](https://github.com/krassowski), [@minrk](https://github.com/minrk))
+- Added documentation for the handshake pattern [#1108](https://github.com/jupyter/jupyter_client/pull/1108) ([@JohanMabille](https://github.com/JohanMabille), [@Carreau](https://github.com/Carreau))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2026-01-08&to=2026-06-05&type=c))
+
+@Carreau ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2026-01-08..2026-06-05&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AJohanMabille+updated%3A2026-01-08..2026-06-05&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akrassowski+updated%3A2026-01-08..2026-06-05&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2026-01-08..2026-06-05&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.8.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.7.0...523294fc6cb9be685fa25129067a06348edaaab6))
@@ -34,8 +66,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2025-12-09&to=2026-01-08&type=c))
 
 @Carreau ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2025-12-09..2026-01-08&type=Issues)) | @ccordoba12 ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Accordoba12+updated%3A2025-12-09..2026-01-08&type=Issues)) | @fleming79 ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afleming79+updated%3A2025-12-09..2026-01-08&type=Issues)) | @henryiii ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Ahenryiii+updated%3A2025-12-09..2026-01-08&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AJohanMabille+updated%3A2025-12-09..2026-01-08&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akrassowski+updated%3A2025-12-09..2026-01-08&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2025-12-09..2026-01-08&type=Issues)) | @rgbkrk ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Argbkrk+updated%3A2025-12-09..2026-01-08&type=Issues)) | @SylvainCorlay ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ASylvainCorlay+updated%3A2025-12-09..2026-01-08&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.7.0
 
