@@ -55,6 +55,8 @@ class HBChannel(Thread):
         context: zmq.Context | None = None,
         session: Session | None = None,
         address: t.Union[t.Tuple[str, int], str] = "",
+        *,
+        curve_serverkey: bytes | None = None,
     ) -> None:
         """Create the heartbeat monitor thread.
 
@@ -66,12 +68,17 @@ class HBChannel(Thread):
             The session to use.
         address : zmq url
             Standard (ip, port) tuple that the kernel is listening on.
+        curve_serverkey : bytes, optional
+            CurveZMQ server public key (Z85). When provided, the
+            heartbeat REQ socket is configured as a CurveZMQ client so it
+            can communicate with a CurveZMQ-enabled kernel.
         """
         super().__init__()
         self.daemon = True
 
         self.context = context
         self.session = session
+        self.curve_serverkey = curve_serverkey
         if isinstance(address, tuple):
             if address[1] == 0:
                 message = "The port number for a channel cannot be 0."
@@ -104,6 +111,13 @@ class HBChannel(Thread):
         assert self.context is not None
         self.socket = self.context.socket(zmq.REQ)
         self.socket.linger = 1000
+        if self.curve_serverkey is not None:
+            # Generate a fresh ephemeral keypair for each socket; only the
+            # server public key (curve_serverkey) is needed for authentication.
+            client_pub, client_sec = zmq.curve_keypair()
+            self.socket.curve_secretkey = client_sec
+            self.socket.curve_publickey = client_pub
+            self.socket.curve_serverkey = self.curve_serverkey
         assert self.address is not None
         self.socket.connect(self.address)
 

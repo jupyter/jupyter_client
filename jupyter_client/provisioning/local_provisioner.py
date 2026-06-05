@@ -9,6 +9,8 @@ import signal
 import sys
 from typing import TYPE_CHECKING, Any
 
+import zmq
+
 from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip, local_ips
@@ -174,6 +176,21 @@ class LocalProvisioner(KernelProvisionerBase):
         # This should be considered temporary until a better division of labor can be defined.
         km = self.parent
         if km:
+            transport_encryption = kwargs.pop(
+                "transport_encryption", getattr(km, "transport_encryption", "disabled")
+            )
+            transport_encryption_policy = (
+                km._transport_encryption_policy(transport_encryption)
+                if hasattr(km, "_transport_encryption_policy")
+                else ("auto" if bool(transport_encryption) else "disabled")
+            )
+            encryption_required = transport_encryption_policy == "required"
+            encryption_enabled = transport_encryption_policy in {"auto", "required"}
+            curve_publickey: bytes | None = None
+            curve_secretkey: bytes | None = None
+            if encryption_required and km.transport != "tcp":
+                msg = "transport_encryption='required' is only supported when transport='tcp'."
+                raise RuntimeError(msg)
             if km.transport == "tcp" and not is_local_ip(km.ip):
                 msg = (
                     "Can only launch a kernel on a local interface. "
@@ -196,11 +213,28 @@ class LocalProvisioner(KernelProvisionerBase):
                 km.hb_port = lpc.find_available_port(km.ip)
                 km.control_port = lpc.find_available_port(km.ip)
                 self.ports_cached = True
+
+            if encryption_enabled and km.transport == "tcp":
+                kernel_curve_ok = encryption_required or (
+                    hasattr(km, "_kernel_supports_curve_encryption")
+                    and km._kernel_supports_curve_encryption()
+                )
+                if kernel_curve_ok:
+                    curve_publickey, curve_secretkey = zmq.curve_keypair()
+                    km.curve_publickey = curve_publickey
+                    km.curve_secretkey = curve_secretkey
             if "env" in kwargs:
                 jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
-                km.write_connection_file(jupyter_session=jupyter_session)
+                km.write_connection_file(
+                    jupyter_session=jupyter_session,
+                    curve_publickey=curve_publickey,
+                    curve_secretkey=curve_secretkey,
+                )
             else:
-                km.write_connection_file()
+                km.write_connection_file(
+                    curve_publickey=curve_publickey,
+                    curve_secretkey=curve_secretkey,
+                )
             self.connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(

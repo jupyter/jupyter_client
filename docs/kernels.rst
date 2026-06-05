@@ -84,6 +84,19 @@ New ports are chosen at random for each kernel started.
 that other users on the system can't send code to run in this kernel. See
 :ref:`wire_protocol` for the details of how this signature is calculated.
 
+When transport encryption is enabled, two additional fields are present:
+
+``curve_publickey``
+    Z85-encoded 40-character ASCII string holding the server's CurveZMQ
+    public key. Kernels must apply this to their ZMQ sockets before binding.
+
+``curve_secretkey``
+    Z85-encoded 40-character ASCII string holding the server's CurveZMQ
+    secret key. Kernels must apply this to their ZMQ sockets before binding.
+
+See :ref:`security` for full details on how to enable transport encryption
+and how kernels should handle these fields.
+
 Registration file format
 ------------------------
 
@@ -215,6 +228,12 @@ JSON serialised dictionary containing the following keys and values:
 - **metadata** (optional): A dictionary of additional attributes about this
   kernel; used by clients to aid in kernel selection. Metadata added
   here should be namespaced for the tool reading and writing that metadata.
+  The following key is recognised by ``jupyter_client`` itself:
+
+  - **supported_encryption** (optional): Set to ``"curve"`` to declare that
+    this kernel can handle CurveZMQ keys in its connection file. Required
+    when ``KernelManager.transport_encryption`` is ``'required'``, and used
+    as a gate when it is ``'auto'``. See :ref:`security` for details.
 - **kernel_protocol_version** (optional): A string indicating which version of the
   kernel protocol the kernel supports.
 
