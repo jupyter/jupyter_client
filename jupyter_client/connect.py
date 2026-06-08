@@ -8,6 +8,7 @@ related to writing and reading connections files.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
 
+import contextlib
 import errno
 import glob
 import json
@@ -64,8 +65,8 @@ def write_connection_file(
     transport: str = "tcp",
     signature_scheme: str = "hmac-sha256",
     kernel_name: str = "",
-    curve_publickey: bytes | None = None,
-    curve_secretkey: bytes | None = None,
+    curve_publickey: str | bytes | None = None,
+    curve_secretkey: str | bytes | None = None,
     **kwargs: Any,
 ) -> tuple[str, KernelConnectionInfo]:
     """Generates a JSON config file, including the selection of random ports.
@@ -174,9 +175,13 @@ def write_connection_file(
     cfg["signature_scheme"] = signature_scheme
     cfg["kernel_name"] = kernel_name
     if curve_publickey is not None:
-        cfg["curve_publickey"] = curve_publickey.decode("ascii")
+        if isinstance(curve_publickey, bytes):
+            curve_publickey = curve_publickey.decode("ascii")
+        cfg["curve_publickey"] = curve_publickey
     if curve_secretkey is not None:
-        cfg["curve_secretkey"] = curve_secretkey.decode("ascii")
+        if isinstance(curve_secretkey, bytes):
+            curve_secretkey = curve_secretkey.decode("ascii")
+        cfg["curve_secretkey"] = curve_secretkey
     cfg.update(kwargs)  # type: ignore[typeddict-item]
 
     # Only ever write this file as user read/writeable
@@ -377,6 +382,10 @@ class ConnectionFileMixin(LoggingConfigurable):
         to the Kernel, so be careful!""",
     )
 
+    def __del__(self) -> None:
+        if self._connection_file_written:
+            self.cleanup_connection_file()
+
     def _ip_default(self) -> str:
         if self.transport == "ipc":
             if self.connection_file:
@@ -531,29 +540,17 @@ class ConnectionFileMixin(LoggingConfigurable):
 
     def write_connection_file(self, **kwargs: Any) -> None:
         """Write connection info to JSON dict in self.connection_file."""
-        if self._connection_file_written and os.path.exists(self.connection_file):
-            return
-
-        self.connection_file, cfg = write_connection_file(
-            self.connection_file,
-            transport=self.transport,
-            ip=self.ip,
-            key=self.session.key,
-            stdin_port=self.stdin_port,
-            iopub_port=self.iopub_port,
-            shell_port=self.shell_port,
-            hb_port=self.hb_port,
-            control_port=self.control_port,
-            signature_scheme=self.session.signature_scheme,
-            kernel_name=self.kernel_name,
-            **kwargs,
-        )
+        cfg_ = self.get_connection_info()
+        if os.path.exists(self.connection_file):
+            with contextlib.suppress(Exception), open(self.connection_file, "rb") as f:
+                cfg_ = json.load(f) | cfg_
+        else:
+            self._connection_file_written = True
+        self.connection_file, cfg = write_connection_file(self.connection_file, **kwargs | cfg_)
         # write_connection_file also sets default ports:
         self._record_random_port_names()
         for name in port_names:
             setattr(self, name, cast(int, cfg.get(name)))
-
-        self._connection_file_written = True
 
     def load_connection_file(self, connection_file: str | None = None) -> None:
         """Load connection info from JSON dict in self.connection_file.

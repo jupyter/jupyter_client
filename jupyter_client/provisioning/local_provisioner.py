@@ -16,6 +16,9 @@ from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip, local_ips
 from .provisioner_base import KernelProvisionerBase
 
+if TYPE_CHECKING:
+    from jupyter_client.manager import KernelManager
+
 
 class LocalProvisioner(KernelProvisionerBase):
     """
@@ -174,8 +177,12 @@ class LocalProvisioner(KernelProvisionerBase):
         """
 
         # This should be considered temporary until a better division of labor can be defined.
-        km = self.parent
+        km: KernelManager | None = self.parent
+        extra_arguments: list[str] = kwargs.pop("extra_arguments", [])
         if km:
+            # build the Popen cmd
+            if os.path.exists(km.connection_file):
+                km.load_connection_file()
             transport_encryption = kwargs.pop(
                 "transport_encryption", getattr(km, "transport_encryption", "disabled")
             )
@@ -186,8 +193,6 @@ class LocalProvisioner(KernelProvisionerBase):
             )
             encryption_required = transport_encryption_policy == "required"
             encryption_enabled = transport_encryption_policy in {"auto", "required"}
-            curve_publickey: bytes | None = None
-            curve_secretkey: bytes | None = None
             if encryption_required and km.transport != "tcp":
                 msg = "transport_encryption='required' is only supported when transport='tcp'."
                 raise RuntimeError(msg)
@@ -200,8 +205,6 @@ class LocalProvisioner(KernelProvisionerBase):
                     f"Currently valid addresses are: {local_ips()}"
                 )
                 raise RuntimeError(msg)
-            # build the Popen cmd
-            extra_arguments = kwargs.pop("extra_arguments", [])
 
             # write connection file / get default ports
             # TODO - change when handshake pattern is adopted
@@ -219,30 +222,17 @@ class LocalProvisioner(KernelProvisionerBase):
                     hasattr(km, "_kernel_supports_curve_encryption")
                     and km._kernel_supports_curve_encryption()
                 )
-                if kernel_curve_ok:
-                    curve_publickey, curve_secretkey = zmq.curve_keypair()
-                    km.curve_publickey = curve_publickey
-                    km.curve_secretkey = curve_secretkey
-            if "env" in kwargs:
-                jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
-                km.write_connection_file(
-                    jupyter_session=jupyter_session,
-                    curve_publickey=curve_publickey,
-                    curve_secretkey=curve_secretkey,
-                )
-            else:
-                km.write_connection_file(
-                    curve_publickey=curve_publickey,
-                    curve_secretkey=curve_secretkey,
-                )
+                if kernel_curve_ok and not km.curve_publickey:
+                    km.curve_publickey, km.curve_secretkey = zmq.curve_keypair()
+            extra = {}
+            if (env := kwargs.get("env")) and (jupyter_session := env.get("JPY_SESSION_NAME", "")):
+                extra["jupyter_session"] = jupyter_session
+            km.write_connection_file(**extra)
             self.connection_info = km.get_connection_info()
 
-            kernel_cmd = km.format_kernel_cmd(
-                extra_arguments=extra_arguments
-            )  # This needs to remain here for b/c
+            kernel_cmd = km.format_kernel_cmd(extra_arguments)  # This needs to remain here for b/c
         else:
-            extra_arguments = kwargs.pop("extra_arguments", [])
-            kernel_cmd = self.kernel_spec.argv + extra_arguments
+            kernel_cmd = [*self.kernel_spec.argv, *extra_arguments]
 
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 

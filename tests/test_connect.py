@@ -2,8 +2,10 @@
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import gc
 import json
 import os
+import pathlib
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -239,18 +241,30 @@ def test_mixin_record_random_ports():
         assert dc._connection_file_written
         assert os.path.exists(dc.connection_file)
         assert dc._random_port_names == connect.port_names
+        info = json.loads(pathlib.Path(dc.connection_file).read_bytes())
+        # Check we can write extra info to the config file
+        dc.write_connection_file(extra=123)
+        info2 = json.loads(pathlib.Path(dc.connection_file).read_bytes())
+        assert info2.pop("extra", None) == 123
+        assert info2 == info
 
 
-def test_mixin_cleanup_random_ports():
+@pytest.mark.parametrize("mode", ["direct", "deleted"])
+def test_mixin_cleanup_random_ports(mode: str):
     with TemporaryDirectory() as d:
         dc = DummyConfigurable(data_dir=d, kernel_name="via-tcp", transport="tcp")
         dc.write_connection_file()
         filename = dc.connection_file
-        dc.cleanup_random_ports()
+        if mode == "direct":
+            dc.cleanup_random_ports()
 
-        assert not os.path.exists(filename)
-        for name in dc._random_port_names:  # type:ignore
-            assert getattr(dc, name) == 0
+            assert not os.path.exists(filename)
+            for name in dc._random_port_names:  # type:ignore
+                assert getattr(dc, name) == 0
+        else:
+            del dc
+            gc.collect()
+            assert not os.path.exists(filename)
 
 
 param_values = [
