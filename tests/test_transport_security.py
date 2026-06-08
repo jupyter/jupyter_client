@@ -184,6 +184,38 @@ def test_required_without_curve_kernelspec_raises(tmp_path):
     km.context.term()
 
 
+def test_curve_keys_reused_across_restart(tmp_path):
+    """Curve keys are preserved (not regenerated) on restart, consistent with
+    how session.key is handled. Both keys live in the same file, protect the
+    same local connection, and there is no security reason to rotate one but
+    not the other. Regenerating caused a key mismatch: the manager held new
+    keys while the connection file (guarded from rewrite) still had the old
+    ones, breaking every post-restart nudge.
+    """
+    km = _make_km(tmp_path, supported_encryption="curve", transport_encryption="required")
+    km.pre_start_kernel()
+
+    initial_pubkey = km.curve_publickey
+    assert initial_pubkey is not None
+    with open(km.connection_file) as f:
+        assert json.load(f)["curve_publickey"] == initial_pubkey.decode("ascii")
+
+    # Reproduce the restart sequence: cleanup (file preserved) then re-start.
+    km.cleanup_resources(restart=True)
+    km.pre_start_kernel()
+
+    restarted_pubkey = km.curve_publickey
+    assert restarted_pubkey == initial_pubkey, "Curve keys must be reused across restart"
+
+    with open(km.connection_file) as f:
+        restarted_info = json.load(f)
+
+    assert restarted_info["curve_publickey"] == restarted_pubkey.decode("ascii")
+
+    km.cleanup_connection_file()
+    km.context.term()
+
+
 def test_connect_shell_to_curve_server_with_curve_keys_succeeds():
     """Public API path: load_connection_info + connect_shell works with curve keys."""
     pub, sec = zmq.curve_keypair()
