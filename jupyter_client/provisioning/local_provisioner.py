@@ -180,7 +180,9 @@ class LocalProvisioner(KernelProvisionerBase):
         km: KernelManager | None = self.parent
         if km:
             # build the Popen cmd
-            if not os.path.exists(km.connection_file):
+            if os.path.exists(km.connection_file):
+                km.load_connection_file()
+            else:
                 transport_encryption = kwargs.pop(
                     "transport_encryption", getattr(km, "transport_encryption", "disabled")
                 )
