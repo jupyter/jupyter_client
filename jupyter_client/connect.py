@@ -61,7 +61,7 @@ def write_connection_file(
     hb_port: int = 0,
     control_port: int = 0,
     ip: str = "",
-    key: bytes = b"",
+    key: str | bytes = b"",
     transport: str = "tcp",
     signature_scheme: str = "hmac-sha256",
     kernel_name: str = "",
@@ -95,7 +95,7 @@ def write_connection_file(
     ip  : str, optional
         The ip address the kernel will bind to.
 
-    key : bytes, optional
+    key : str, bytes, optional
         The Session key used for message authentication.
 
     signature_scheme : str, optional
@@ -170,7 +170,7 @@ def write_connection_file(
         "hb_port": hb_port,
     }
     cfg["ip"] = ip
-    cfg["key"] = key.decode()
+    cfg["key"] = key.decode() if isinstance(key, bytes) else key
     cfg["transport"] = transport
     cfg["signature_scheme"] = signature_scheme
     cfg["kernel_name"] = kernel_name
@@ -540,7 +540,7 @@ class ConnectionFileMixin(LoggingConfigurable):
 
     def write_connection_file(self, **kwargs: Any) -> None:
         """Write connection info to JSON dict in self.connection_file."""
-        cfg_ = self.get_connection_info()
+        cfg_: Any = self.get_connection_info()
         if os.path.exists(self.connection_file):
             with contextlib.suppress(Exception), open(self.connection_file, "rb") as f:
                 cfg_ = json.load(f) | cfg_
