@@ -383,6 +383,7 @@ class ConnectionFileMixin(LoggingConfigurable):
     )
 
     def __del__(self) -> None:
+        """Handle garbage collection.  Remove connection file if written."""
         if self._connection_file_written:
             self.cleanup_connection_file()
 
