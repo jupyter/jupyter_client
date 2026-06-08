@@ -128,12 +128,7 @@ class KernelClient(ConnectionFileMixin):
                 if self.log:
                     self.log.debug("Destroying zmq context for %s", self)
                 self.context.destroy(linger=100)
-        try:
-            super_del = super().__del__  # type:ignore[misc]
-        except AttributeError:
-            pass
-        else:
-            super_del()
+        super().__del__()
 
     # --------------------------------------------------------------------------
     # Channel proxy methods
