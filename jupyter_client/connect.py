@@ -542,6 +542,8 @@ class ConnectionFileMixin(LoggingConfigurable):
     def write_connection_file(self, **kwargs: Any) -> None:
         """Write connection info to JSON dict in self.connection_file."""
         cfg_: Any = self.get_connection_info()
+        assert not set(cfg_).intersection(kwargs), "Overwriting connection info is not allowed!"
+
         if os.path.exists(self.connection_file):
             with contextlib.suppress(Exception), open(self.connection_file, "rb") as f:
                 cfg_ = json.load(f) | cfg_

@@ -236,6 +236,8 @@ def test_find_connection_file_abspath():
 def test_mixin_record_random_ports():
     with TemporaryDirectory() as d:
         dc = DummyConfigurable(data_dir=d, kernel_name="via-tcp", transport="tcp")
+        with pytest.raises(AssertionError, match="Overwriting connection info is not allowed!"):
+            dc.write_connection_file(transport="tcp")
         dc.write_connection_file(extra=111)
 
         assert dc._connection_file_written
