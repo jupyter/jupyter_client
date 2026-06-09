@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.9.1
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.9.0...b4a6c0a96ef36ab9bbc6cf7790a6edaaf631b6fe))
+
+### Bugs fixed
+
+- Fix restart with curve encryption enabled [#1124](https://github.com/jupyter/jupyter_client/pull/1124) ([@krassowski](https://github.com/krassowski), [@Carreau](https://github.com/Carreau), [@fleming79](https://github.com/fleming79))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2026-06-05&to=2026-06-09&type=c))
+
+@Carreau ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2026-06-05..2026-06-09&type=Issues)) | @fleming79 ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afleming79+updated%3A2026-06-05..2026-06-09&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akrassowski+updated%3A2026-06-05..2026-06-09&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.9.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.8.0...d67bf2015d256bac3b766b2a673e980dcc169eac))
@@ -31,8 +50,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2026-01-08&to=2026-06-05&type=c))
 
 @Carreau ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2026-01-08..2026-06-05&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AJohanMabille+updated%3A2026-01-08..2026-06-05&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akrassowski+updated%3A2026-01-08..2026-06-05&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2026-01-08..2026-06-05&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.8.0
 
