@@ -220,21 +220,21 @@ class LocalProvisioner(KernelProvisionerBase):
                     and km._kernel_supports_curve_encryption()
                 )
                 if kernel_curve_ok:
-                    curve_publickey, curve_secretkey = zmq.curve_keypair()
-                    km.curve_publickey = curve_publickey
-                    km.curve_secretkey = curve_secretkey
+                    if km.curve_publickey is None:
+                        curve_publickey, curve_secretkey = zmq.curve_keypair()
+                        km.curve_publickey = curve_publickey
+                        km.curve_secretkey = curve_secretkey
+                    else:
+                        # Reuse existing keys across restart (same as session.key).
+                        # The connection file is preserved on restart, so the kernel
+                        # process will read the same keys the manager already holds.
+                        curve_publickey = km.curve_publickey
+                        curve_secretkey = km.curve_secretkey
             if "env" in kwargs:
                 jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
-                km.write_connection_file(
-                    jupyter_session=jupyter_session,
-                    curve_publickey=curve_publickey,
-                    curve_secretkey=curve_secretkey,
-                )
+                km.write_connection_file(jupyter_session=jupyter_session)
             else:
-                km.write_connection_file(
-                    curve_publickey=curve_publickey,
-                    curve_secretkey=curve_secretkey,
-                )
+                km.write_connection_file()
             self.connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(

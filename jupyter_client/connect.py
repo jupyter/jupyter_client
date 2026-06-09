@@ -546,6 +546,8 @@ class ConnectionFileMixin(LoggingConfigurable):
             control_port=self.control_port,
             signature_scheme=self.session.signature_scheme,
             kernel_name=self.kernel_name,
+            curve_publickey=self.curve_publickey,
+            curve_secretkey=self.curve_secretkey,
             **kwargs,
         )
         # write_connection_file also sets default ports:
