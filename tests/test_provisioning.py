@@ -109,8 +109,6 @@ class CustomTestProvisioner(KernelProvisionerBase):  # type:ignore
                 if hasattr(km, "_transport_encryption_policy")
                 else ("auto" if bool(transport_encryption) else "disabled")
             )
-            curve_publickey: bytes | None = None
-            curve_secretkey: bytes | None = None
             if transport_encryption_policy in {"auto", "required"}:
                 import zmq
 
@@ -118,10 +116,7 @@ class CustomTestProvisioner(KernelProvisionerBase):  # type:ignore
                 km.curve_publickey = curve_publickey
                 km.curve_secretkey = curve_secretkey
             # write connection file / get default ports
-            km.write_connection_file(
-                curve_publickey=curve_publickey,
-                curve_secretkey=curve_secretkey,
-            )
+            km.write_connection_file()
             self.connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(

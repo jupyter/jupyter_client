@@ -232,16 +232,9 @@ class LocalProvisioner(KernelProvisionerBase):
                         curve_secretkey = km.curve_secretkey
             if "env" in kwargs:
                 jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
-                km.write_connection_file(
-                    jupyter_session=jupyter_session,
-                    curve_publickey=curve_publickey,
-                    curve_secretkey=curve_secretkey,
-                )
+                km.write_connection_file(jupyter_session=jupyter_session)
             else:
-                km.write_connection_file(
-                    curve_publickey=curve_publickey,
-                    curve_secretkey=curve_secretkey,
-                )
+                km.write_connection_file()
             self.connection_info = km.get_connection_info()
 
             kernel_cmd = km.format_kernel_cmd(
