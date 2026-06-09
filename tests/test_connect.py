@@ -238,17 +238,18 @@ def test_mixin_record_random_ports():
         dc = DummyConfigurable(data_dir=d, kernel_name="via-tcp", transport="tcp")
         with pytest.raises(AssertionError, match="Overwriting connection info is not allowed!"):
             dc.write_connection_file(transport="tcp")
-        dc.write_connection_file(extra=111)
+        dc.write_connection_file(extra=111, existing=True)
 
         assert dc._connection_file_written
         assert os.path.exists(dc.connection_file)
         assert dc._random_port_names == connect.port_names
         info = json.loads(pathlib.Path(dc.connection_file).read_bytes())
-        # Check we can write extra info to the config file
+        assert "existing" in info
+        assert info.pop("extra") == 111
+        # Check we can overwrite extra info stored in the config file
         dc.write_connection_file(extra=123)
         info2 = json.loads(pathlib.Path(dc.connection_file).read_bytes())
         assert info2.pop("extra") == 123
-        info.pop("extra")
         assert info2 == info
 
 
