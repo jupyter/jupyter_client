@@ -547,7 +547,7 @@ class ConnectionFileMixin(LoggingConfigurable):
                 cfg_ = json.load(f) | cfg_
         else:
             self._connection_file_written = True
-        self.connection_file, cfg = write_connection_file(self.connection_file, **kwargs | cfg_)
+        self.connection_file, cfg = write_connection_file(self.connection_file, **cfg_ | kwargs)
         # write_connection_file also sets default ports:
         self._record_random_port_names()
         for name in port_names:

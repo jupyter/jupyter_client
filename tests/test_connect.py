@@ -236,7 +236,7 @@ def test_find_connection_file_abspath():
 def test_mixin_record_random_ports():
     with TemporaryDirectory() as d:
         dc = DummyConfigurable(data_dir=d, kernel_name="via-tcp", transport="tcp")
-        dc.write_connection_file()
+        dc.write_connection_file(extra=111)
 
         assert dc._connection_file_written
         assert os.path.exists(dc.connection_file)
@@ -245,7 +245,8 @@ def test_mixin_record_random_ports():
         # Check we can write extra info to the config file
         dc.write_connection_file(extra=123)
         info2 = json.loads(pathlib.Path(dc.connection_file).read_bytes())
-        assert info2.pop("extra", None) == 123
+        assert info2.pop("extra") == 123
+        info.pop("extra")
         assert info2 == info
 
 
