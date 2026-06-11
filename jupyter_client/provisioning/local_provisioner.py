@@ -186,10 +186,16 @@ class LocalProvisioner(KernelProvisionerBase):
             )
             encryption_required = transport_encryption_policy == "required"
             encryption_enabled = transport_encryption_policy in {"auto", "required"}
+            # CurveZMQ encryption is supported over the tcp and ipc transports.
+            # inproc is in-process (no wire handshake) and is never encrypted.
+            encryption_supported_transport = km.transport in {"tcp", "ipc"}
             curve_publickey: bytes | None = None
             curve_secretkey: bytes | None = None
-            if encryption_required and km.transport != "tcp":
-                msg = "transport_encryption='required' is only supported when transport='tcp'."
+            if encryption_required and not encryption_supported_transport:
+                msg = (
+                    "transport_encryption='required' is only supported when "
+                    "transport is 'tcp' or 'ipc'."
+                )
                 raise RuntimeError(msg)
             if km.transport == "tcp" and not is_local_ip(km.ip):
                 msg = (
@@ -214,7 +220,7 @@ class LocalProvisioner(KernelProvisionerBase):
                 km.control_port = lpc.find_available_port(km.ip)
                 self.ports_cached = True
 
-            if encryption_enabled and km.transport == "tcp":
+            if encryption_enabled and encryption_supported_transport:
                 kernel_curve_ok = encryption_required or (
                     hasattr(km, "_kernel_supports_curve_encryption")
                     and km._kernel_supports_curve_encryption()

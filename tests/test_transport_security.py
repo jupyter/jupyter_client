@@ -136,7 +136,7 @@ def test_transport_encryption_disabled_does_not_require_curve():
         assert km.transport_encryption == "disabled"
 
 
-def _make_km(tmp_path, *, supported_encryption, transport_encryption):
+def _make_km(tmp_path, *, supported_encryption, transport_encryption, transport="tcp"):
     """Helper: build a KernelManager with a kernelspec whose metadata is set directly."""
     metadata = (
         {} if supported_encryption is None else {"supported_encryption": supported_encryption}
@@ -150,6 +150,7 @@ def _make_km(tmp_path, *, supported_encryption, transport_encryption):
         metadata=metadata,
     )
     km.cache_ports = False
+    km.transport = transport
     km.transport_encryption = transport_encryption
     return km
 
@@ -182,6 +183,122 @@ def test_required_without_curve_kernelspec_raises(tmp_path):
     with pytest.raises(RuntimeError, match=r"metadata\.supported_encryption"):
         km.pre_start_kernel()
     km.context.term()
+
+
+@pytest.mark.parametrize("transport_encryption", ["auto", "required"])
+def test_provisions_keys_over_ipc(transport_encryption, tmp_path):
+    """CurveZMQ keys are provisioned for the IPC transport too, not just TCP."""
+    km = _make_km(
+        tmp_path,
+        supported_encryption="curve",
+        transport_encryption=transport_encryption,
+        transport="ipc",
+    )
+    km.pre_start_kernel()  # must not raise for either policy over ipc
+    info = km.get_connection_info()
+    assert info["transport"] == "ipc"
+    assert "curve_publickey" in info
+    assert "curve_secretkey" in info
+    km.cleanup_connection_file()
+    km.context.term()
+
+
+def test_required_without_curve_kernelspec_over_ipc_raises(tmp_path):
+    """Over IPC, 'required' still refuses a kernelspec that does not declare curve support."""
+    km = _make_km(
+        tmp_path,
+        supported_encryption=None,
+        transport_encryption="required",
+        transport="ipc",
+    )
+    with pytest.raises(RuntimeError, match=r"metadata\.supported_encryption"):
+        km.pre_start_kernel()
+    km.context.term()
+
+
+def test_connect_shell_to_curve_server_over_ipc_succeeds(tmp_path):
+    """End-to-end: an authenticated client reaches a CurveZMQ server over the IPC transport."""
+    pub, sec = zmq.curve_keypair()
+
+    ctx = zmq.Context()
+    server = ctx.socket(zmq.ROUTER)
+    server.curve_secretkey = sec
+    server.curve_publickey = pub
+    server.curve_server = True
+    ip = str(tmp_path / "kernel")
+    port = 1
+    server.bind(f"ipc://{ip}-{port}")  # matches ConnectionFileMixin._make_url for ipc
+
+    try:
+        info = {
+            "ip": ip,
+            "transport": "ipc",
+            "shell_port": port,
+            "key": "abc123",
+            "signature_scheme": "hmac-sha256",
+            "curve_publickey": pub.decode("ascii"),
+            "curve_secretkey": sec.decode("ascii"),
+        }
+        mixin = ConnectionFileMixin()
+        mixin.context = ctx
+        mixin.load_connection_info(info)
+
+        client_sock = mixin.connect_shell()
+        try:
+            client_sock.send(b"probe", flags=zmq.NOBLOCK)
+            poller = zmq.Poller()
+            poller.register(server, zmq.POLLIN)
+            events = dict(poller.poll(timeout=1000))
+            assert server in events, (
+                "Authenticated client over ipc was not received - "
+                "Curve encryption did not work over the ipc transport"
+            )
+        finally:
+            client_sock.close(linger=0)
+    finally:
+        server.close(linger=0)
+        ctx.term()
+
+
+def test_connect_shell_to_curve_server_over_ipc_without_keys_is_rejected(tmp_path):
+    """End-to-end: over IPC, an unauthenticated client is dropped by the CurveZMQ server."""
+    pub, sec = zmq.curve_keypair()
+
+    ctx = zmq.Context()
+    server = ctx.socket(zmq.ROUTER)
+    server.curve_secretkey = sec
+    server.curve_publickey = pub
+    server.curve_server = True
+    ip = str(tmp_path / "kernel")
+    port = 1
+    server.bind(f"ipc://{ip}-{port}")
+
+    try:
+        info = {
+            "ip": ip,
+            "transport": "ipc",
+            "shell_port": port,
+            "key": "abc123",
+            "signature_scheme": "hmac-sha256",
+        }
+        mixin = ConnectionFileMixin()
+        mixin.context = ctx
+        mixin.load_connection_info(info)
+
+        client_sock = mixin.connect_shell()
+        try:
+            client_sock.send(b"probe", flags=zmq.NOBLOCK)
+            poller = zmq.Poller()
+            poller.register(server, zmq.POLLIN)
+            events = dict(poller.poll(timeout=300))
+            assert server not in events, (
+                "Unauthenticated message reached Curve server over ipc - expected drop"
+            )
+        finally:
+            client_sock.close(linger=0)
+    finally:
+        server.close(linger=0)
+        ctx.term()
 
 
 def test_curve_keys_reused_across_restart(tmp_path):

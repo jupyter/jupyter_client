@@ -317,10 +317,8 @@ class TestRuntime:
         assert km.provisioner.connection_info["curve_publickey"] is not None
         assert km.provisioner.connection_info["curve_secretkey"] is not None
 
-    async def test_local_provisioner_pre_launch_requires_tcp_for_required_transport_encryption(
-        self, tmp_path
-    ):
-        """Required transport encryption rejects non-TCP transports."""
+    async def test_local_provisioner_pre_launch_generates_curve_keys_over_ipc(self, tmp_path):
+        """Curve keys are provisioned over the ipc transport too (not just tcp)."""
         km = AsyncKernelManager(connection_file=str(tmp_path / "kernel.json"))
         km._kernel_spec = KernelSpec(
             resource_dir="test",
@@ -334,8 +332,14 @@ class TestRuntime:
         )
         km.transport = "ipc"
         km.transport_encryption = "required"
-        with pytest.raises(RuntimeError, match="transport='tcp'"):
-            await km._async_pre_start_kernel()
+        await km._async_pre_start_kernel()
+        assert isinstance(km.provisioner, LocalProvisioner)
+
+        await km.provisioner.pre_launch()
+
+        assert km.provisioner.connection_info["transport"] == "ipc"
+        assert km.provisioner.connection_info["curve_publickey"] is not None
+        assert km.provisioner.connection_info["curve_secretkey"] is not None
 
     async def test_existing(self, kpf, akm):
         await self.akm_test(akm)

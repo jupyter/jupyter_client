@@ -31,9 +31,9 @@ silently dropped before any data is delivered.
 
 .. note::
 
-    ``transport_encryption`` applies to TCP transport only. IPC sockets
-    already rely on filesystem permissions for access control and do not
-    support CurveZMQ.
+    ``transport_encryption`` applies to both the ``tcp`` and ``ipc``
+    transports. IPC sockets also rely on filesystem permissions for access
+    control, but CurveZMQ can be layered on top for defense in depth.
 
 
 The ``transport_encryption`` setting
