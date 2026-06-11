@@ -4,6 +4,9 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
+import os
+import shutil
+import tempfile
 from unittest.mock import patch
 
 import pytest
@@ -16,6 +19,19 @@ from jupyter_client.client import KernelClient
 from jupyter_client.connect import ConnectionFileMixin
 from jupyter_client.kernelspec import KernelSpec, KernelSpecManager
 from jupyter_client.session import Session
+
+from .utils import skip_win32
+
+
+def _short_ipc_dir():
+    """A short directory for ipc sockets.
+
+    IPC socket paths must stay under the ``sun_path`` limit (~104 chars). The
+    platform temp dir is too long on macOS (``/var/folders/...``), so anchor
+    sockets under ``/tmp``, which is short on the POSIX platforms where the
+    ipc transport is supported.
+    """
+    return tempfile.mkdtemp(prefix="jc-ipc-", dir="/tmp")
 
 
 @pytest.mark.parametrize(
@@ -216,16 +232,18 @@ def test_required_without_curve_kernelspec_over_ipc_raises(tmp_path):
     km.context.term()
 
 
-def test_connect_shell_to_curve_server_over_ipc_succeeds(tmp_path):
+@skip_win32
+def test_connect_shell_to_curve_server_over_ipc_succeeds():
     """End-to-end: an authenticated client reaches a CurveZMQ server over the IPC transport."""
     pub, sec = zmq.curve_keypair()
 
+    ipc_dir = _short_ipc_dir()
     ctx = zmq.Context()
     server = ctx.socket(zmq.ROUTER)
     server.curve_secretkey = sec
     server.curve_publickey = pub
     server.curve_server = True
-    ip = str(tmp_path / "kernel")
+    ip = os.path.join(ipc_dir, "k")
     port = 1
     server.bind(f"ipc://{ip}-{port}")  # matches ConnectionFileMixin._make_url for ipc
 
@@ -258,18 +276,21 @@ def test_connect_shell_to_curve_server_over_ipc_succeeds(tmp_path):
     finally:
         server.close(linger=0)
         ctx.term()
+        shutil.rmtree(ipc_dir, ignore_errors=True)
 
 
-def test_connect_shell_to_curve_server_over_ipc_without_keys_is_rejected(tmp_path):
+@skip_win32
+def test_connect_shell_to_curve_server_over_ipc_without_keys_is_rejected():
     """End-to-end: over IPC, an unauthenticated client is dropped by the CurveZMQ server."""
     pub, sec = zmq.curve_keypair()
 
+    ipc_dir = _short_ipc_dir()
     ctx = zmq.Context()
     server = ctx.socket(zmq.ROUTER)
     server.curve_secretkey = sec
     server.curve_publickey = pub
     server.curve_server = True
-    ip = str(tmp_path / "kernel")
+    ip = os.path.join(ipc_dir, "k")
     port = 1
     server.bind(f"ipc://{ip}-{port}")
 
@@ -299,6 +320,7 @@ def test_connect_shell_to_curve_server_over_ipc_without_keys_is_rejected(tmp_pat
     finally:
         server.close(linger=0)
         ctx.term()
+        shutil.rmtree(ipc_dir, ignore_errors=True)
 
 
 def test_curve_keys_reused_across_restart(tmp_path):
