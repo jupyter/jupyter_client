@@ -230,10 +230,11 @@ JSON serialised dictionary containing the following keys and values:
   here should be namespaced for the tool reading and writing that metadata.
   The following key is recognised by ``jupyter_client`` itself:
 
-  - **supported_encryption** (optional): Set to ``"curve"`` to declare that
-    this kernel can handle CurveZMQ keys in its connection file. Required
-    when ``KernelManager.transport_encryption`` is ``'required'``, and used
-    as a gate when it is ``'auto'``. See :ref:`security` for details.
+  - **supported_encryption** (optional): A list of the encryption schemes the
+    kernel can handle, e.g. ``["curve"]``, declaring that it can use CurveZMQ
+    keys from its connection file. Required when
+    ``KernelManager.transport_encryption`` is ``'required'``, and used as a
+    gate when it is ``'auto'``. See :ref:`security` for details.
 - **kernel_protocol_version** (optional): A string indicating which version of the
   kernel protocol the kernel supports.
 

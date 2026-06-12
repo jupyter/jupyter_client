@@ -47,13 +47,13 @@ Transport encryption is controlled by the
 
 ``'auto'``
     Keys are generated **only when the kernelspec declares support** via
-    ``metadata.supported_encryption: 'curve'``. Kernelspecs that do not
+    ``metadata.supported_encryption: ['curve']``. Kernelspecs that do not
     declare this field are started without encryption, so the setting is safe
     to enable globally without breaking existing kernels.
 
 ``'required'``
     Keys are always generated. Startup fails with a :exc:`RuntimeError` if
-    the kernelspec does not declare ``metadata.supported_encryption: 'curve'``,
+    the kernelspec does not declare ``metadata.supported_encryption: ['curve']``,
     so kernels that have not been updated to handle the connection-file keys
     are never started unencrypted.
 
@@ -84,7 +84,7 @@ A kernel must declare CurveZMQ support in its ``kernel.json`` before the
         "display_name": "Python 3",
         "language": "python",
         "metadata": {
-            "supported_encryption": "curve"
+            "supported_encryption": ["curve"]
         }
     }
 
