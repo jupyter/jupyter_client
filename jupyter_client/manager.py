@@ -476,7 +476,7 @@ class KernelManager(ConnectionFileMixin):
         ):
             msg = (
                 "transport_encryption='required' but kernelspec does not declare "
-                "metadata.supported_encryption='curve'."
+                "'curve' in `metadata.supported_encryption`."
             )
             raise RuntimeError(msg)
         if self.provisioner is None:  # will not be None on restarts
