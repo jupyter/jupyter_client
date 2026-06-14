@@ -19,9 +19,9 @@ from .provisioner_base import KernelProvisionerBase
 # Map kernel port attributes to environment variables for fixed-port configuration.
 # e.g. {"shell_port": "JUPYTER_SERVER_SHELL_PORT", ...}
 PORTS_ENV_MAP = {
-    "%s_port" % channel: "JUPYTER_SERVER_%s_PORT" % channel.upper()
-    for channel in channel_names
+    "%s_port" % channel: "JUPYTER_SERVER_%s_PORT" % channel.upper() for channel in channel_names
 }
+
 
 class LocalProvisioner(KernelProvisionerBase):
     """
