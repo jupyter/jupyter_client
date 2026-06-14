@@ -11,11 +11,17 @@ from typing import TYPE_CHECKING, Any
 
 import zmq
 
-from ..connect import KernelConnectionInfo, LocalPortCache
+from ..connect import KernelConnectionInfo, LocalPortCache, channel_names
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip, local_ips
 from .provisioner_base import KernelProvisionerBase
 
+# Map kernel port attributes to environment variables for fixed-port configuration.
+# e.g. {"shell_port": "JUPYTER_SERVER_SHELL_PORT", ...}
+PORTS_ENV_MAP = {
+    "%s_port" % channel: "JUPYTER_SERVER_%s_PORT" % channel.upper()
+    for channel in channel_names
+}
 
 class LocalProvisioner(KernelProvisionerBase):
     """
@@ -213,6 +219,13 @@ class LocalProvisioner(KernelProvisionerBase):
                 km.hb_port = lpc.find_available_port(km.ip)
                 km.control_port = lpc.find_available_port(km.ip)
                 self.ports_cached = True
+            # support fixed ports from env when kernel using reverse proxy
+            templated_env = self.kernel_spec.env
+            for arg_key, env_key in PORTS_ENV_MAP.items():
+                if env_key in templated_env:
+                    port = int(templated_env[env_key])
+                    setattr(km, arg_key, port)
+                    self.log.info("Fixed %s=%d from kernel spec env", arg_key, port)
 
             if encryption_enabled and km.transport == "tcp":
                 kernel_curve_ok = encryption_required or (

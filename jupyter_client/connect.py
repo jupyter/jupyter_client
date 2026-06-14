@@ -340,7 +340,9 @@ channel_socket_types = {
     "control": zmq.DEALER,
 }
 
-port_names = ["%s_port" % channel for channel in ("shell", "stdin", "iopub", "hb", "control")]
+channel_names = ("shell", "stdin", "iopub", "hb", "control")
+
+port_names = ["%s_port" % channel for channel in channel_names]
 
 
 class ConnectionFileMixin(LoggingConfigurable):
