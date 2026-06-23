@@ -13,7 +13,7 @@ from queue import Empty
 
 import zmq.asyncio
 from jupyter_core.utils import ensure_async
-from traitlets import Any, Bool, Instance, Type
+from traitlets import Any, Bool, Instance, Type, default
 
 from .channels import major_protocol_version
 from .channelsabc import ChannelABC, HBChannelABC
@@ -93,6 +93,7 @@ class KernelClient(ConnectionFileMixin):
 
     _created_context = Bool(False)
 
+    @default("context")
     def _context_default(self) -> zmq.Context:
         self._created_context = True
         return zmq.Context()
