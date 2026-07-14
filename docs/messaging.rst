@@ -1698,11 +1698,12 @@ Message type: ``execute_result``::
         # (for prompt N).
         'execution_count' : int,
 
-        # data and metadata are identical to a display_data message.
+        # data, metadata, and transient are identical to a display_data message.
         # the object being displayed is that passed to the display hook,
         # i.e. the *result* of the execution.
         'data' : dict,
         'metadata' : dict,
+        'transient' : dict,
     }
 
 Execution errors
