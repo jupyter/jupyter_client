@@ -1,0 +1,15 @@
+{
+  "argv": ["python3", "-m", "ipykernel_launcher", "-f", "{connection_file}"],
+  "display_name": "Python (Tenki Sandbox)",
+  "language": "python",
+  "interrupt_mode": "signal",
+  "metadata": {
+    "kernel_provisioner": {
+      "provisioner_name": "tenki-provisioner",
+      "config": {
+        "cpu_cores": 4,
+        "memory_mb": 8192
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tenki-jupyter-provisioner"
+version = "0.1.0"
+description = "Run Jupyter kernels inside Tenki Sandbox microVMs (a jupyter_client kernel provisioner)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "BSD-3-Clause"
+keywords = ["jupyter", "kernel", "provisioner", "tenki", "sandbox", "microvm"]
+authors = [{ name = "Tenki Cloud integration" }]
+dependencies = [
+    "jupyter_client>=7.0",
+    "tenki-sandbox>=0.1",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7", "pytest-asyncio>=0.23", "ipykernel>=6"]
+
+[project.urls]
+Homepage = "https://tenki.cloud/docs/sandbox"
+Source = "https://github.com/jupyter/jupyter_client"
+
+# This is the extension point jupyter_client uses to discover provisioners.
+[project.entry-points."jupyter_client.kernel_provisioners"]
+tenki-provisioner = "tenki_provisioner:TenkiProvisioner"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tenki_provisioner"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

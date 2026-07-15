@@ -357,3 +357,24 @@ names (colon-separated):
     Available kernel provisioners:
       local-provisioner    jupyter_client.provisioning:LocalProvisioner
       rbac-provisioner     acme.rbac.provisioner:RBACProvisioner
+
+A complete, remote example
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The YARN and RBAC snippets above are illustrative fragments. For a small but
+*complete* provisioner that launches kernels off the local machine, see
+``examples/tenki_provisioner`` in this repository. It runs each kernel inside a
+disposable `Tenki Sandbox <https://tenki.cloud/docs/sandbox>`_ microVM and
+demonstrates the pieces a real remote provisioner needs:
+
+-  driving the kernel over the ZeroMQ ``ipc`` transport and staging matching
+   client-side and kernel-side connection files,
+-  bridging the five channel sockets from the local machine into the remote
+   environment,
+-  implementing the full process-control surface (:meth:`poll`, :meth:`wait`,
+   :meth:`send_signal`, :meth:`kill`, :meth:`terminate`, :meth:`cleanup`),
+-  registering via the ``jupyter_client.kernel_provisioners`` entry point and
+   shipping a kernelspec installer.
+
+It includes unit tests (with the remote backend mocked) and a live end-to-end
+check, and is a useful starting point to copy for other remote environments.
