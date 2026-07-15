@@ -118,11 +118,25 @@ class FakeSandbox:
         return self.process
 
     def dial(self, path):
-        assert self._dial_factory is not None, "dial not expected in this test"
-        return self._dial_factory(path)
+        if self._dial_factory is not None:
+            return self._dial_factory(path)
+        return _NullDial()
 
     def close(self):
         self.closed = True
+
+
+class _NullDial:
+    """A no-op dial connection used for the preflight probe in unit tests."""
+
+    def write(self, data):
+        return len(data)
+
+    def read(self, n):
+        return b""
+
+    def close(self):
+        pass
 
 
 def make_provisioner(tmp_path, sandbox, **config):
@@ -217,6 +231,22 @@ async def test_signals_forwarded(tmp_path):
     assert "SIGKILL" in sandbox.process.signals
     assert await prov.wait() == -9
 
+    await prov.cleanup()
+
+
+async def test_launch_fails_clearly_when_dial_unavailable(tmp_path):
+    from tenki_sandbox import CapabilityUnavailableError
+
+    sandbox = FakeSandbox()
+
+    def _boom(_path):
+        raise CapabilityUnavailableError("dial")
+
+    sandbox.dial = _boom  # type: ignore[assignment]
+    prov, km = make_provisioner(tmp_path, sandbox)
+    kw = await prov.pre_launch(env={})
+    with pytest.raises(RuntimeError, match="dial"):
+        await prov.launch_kernel(kw.pop("cmd"), **kw)
     await prov.cleanup()
 
 

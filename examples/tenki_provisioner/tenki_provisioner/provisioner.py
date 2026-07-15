@@ -174,6 +174,7 @@ class TenkiProvisioner(KernelProvisionerBase):
         await self._run(self._write_remote_connection_file)
         await self._run(self._start_kernel_process, cmd)
         await self._run(self._await_kernel_sockets)
+        await self._run(self._preflight_dial)
         self._start_proxy()
         return self.connection_info
 
@@ -267,6 +268,33 @@ class TenkiProvisioner(KernelProvisionerBase):
                 f"{self.kernel_ready_timeout}s. stderr: {result.stderr_text}"
             )
             raise RuntimeError(msg)
+
+    def _preflight_dial(self) -> None:
+        """Fail early, and legibly, if the guest is unreachable over ``dial``.
+
+        The channel bridge relies on the SDK's ``dial`` primitive. If a
+        deployment hasn't enabled it, surface a clear error here rather than
+        letting the kernel hang waiting for channels that never connect.
+        """
+        from tenki_sandbox import CapabilityUnavailableError
+
+        probe = f"{self._remote_prefix}-{self.connection_info['hb_port']}"
+        try:
+            conn = self._sandbox.dial(probe)
+        except CapabilityUnavailableError as exc:
+            msg = (
+                "Tenki Sandbox 'dial' is required to reach the kernel but is "
+                "unavailable in this deployment. Contact Tenki to enable it. "
+                f"({exc})"
+            )
+            raise RuntimeError(msg) from exc
+        except Exception as exc:  # noqa: BLE001 - transient; proxy will retry
+            self.log.warning("dial preflight to %s failed: %s", probe, exc)
+            return
+        try:
+            conn.close()
+        except Exception:  # noqa: BLE001
+            pass
 
     def _start_proxy(self) -> None:
         mappings = [
