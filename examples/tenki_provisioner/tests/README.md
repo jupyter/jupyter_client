@@ -18,11 +18,17 @@ amount of metered usage.
 
 ```bash
 export TENKI_API_KEY=tk_...
+# Some deployments require naming the project (see the top-level README):
+export TENKI_PROJECT_ID=<project-uuid>
 python tests/live_e2e.py
 ```
 
 Expected tail:
 
 ```
-PASS: kernel ran remotely on 'sandbox-xxxxxxx' (local is 'your-laptop').
+PASS: kernel ran remotely on '019f84cb-9a1a-...' (local is 'your-laptop').
 ```
+
+This has been verified end to end against live Tenki (Ubuntu 24.04 guest,
+Python 3.12): kernel started in a microVM, `6 * 7` computed remotely, microVM
+terminated on shutdown.

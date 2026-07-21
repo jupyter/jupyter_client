@@ -59,10 +59,11 @@ class FakeKernelManager(LoggingConfigurable):
 
 
 class FakeResult:
-    def __init__(self, ok=True, exit_code=0, stderr=""):
+    def __init__(self, ok=True, exit_code=0, stderr="", stdout=""):
         self.ok = ok
         self.exit_code = exit_code
         self.stderr_text = stderr
+        self.stdout_text = stdout
 
     def check(self):
         if not self.ok:
@@ -231,6 +232,32 @@ async def test_signals_forwarded(tmp_path):
     assert "SIGKILL" in sandbox.process.signals
     assert await prov.wait() == -9
 
+    await prov.cleanup()
+
+
+async def test_ipykernel_install_retries_on_pep668(tmp_path):
+    """A PEP 668 'externally-managed' failure retries with --break-system-packages."""
+    sandbox = FakeSandbox()
+    pip_calls: list[tuple] = []
+
+    def fake_exec(*argv, **kw):
+        sandbox.exec_calls.append(argv)
+        if argv[:4] == ("python3", "-m", "pip", "install"):
+            pip_calls.append(argv)
+            if "--break-system-packages" not in argv:
+                return FakeResult(ok=False, exit_code=1, stderr="externally-managed-environment")
+            return FakeResult(ok=True)
+        if argv[1:3] == ("-c", "import ipykernel"):
+            return FakeResult(ok=False, exit_code=1)  # not installed -> triggers install
+        return FakeResult(ok=True)
+
+    sandbox.exec = fake_exec  # type: ignore[assignment]
+    prov, km = make_provisioner(tmp_path, sandbox)
+    kw = await prov.pre_launch(env={})
+    await prov.launch_kernel(kw.pop("cmd"), **kw)
+
+    assert len(pip_calls) == 2
+    assert "--break-system-packages" in pip_calls[1]
     await prov.cleanup()
 
 

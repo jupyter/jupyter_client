@@ -84,7 +84,13 @@ class TenkiProvisioner(KernelProvisionerBase):
         value_trait=Unicode(), help="Environment variables to set for the kernel process."
     ).tag(config=True)
 
-    # --- Auth (falls back to TENKI_API_KEY / TENKI_API_ENDPOINT envs) ------
+    # --- Placement / auth (auth falls back to TENKI_API_KEY / TENKI_API_ENDPOINT) ---
+    project_id = Unicode(
+        "",
+        help="Tenki project to create the sandbox in. Required unless the "
+        "deployment auto-selects one. Discover via Client().who_am_i().",
+    ).tag(config=True)
+    workspace_id = Unicode("", help="Tenki workspace id (optional).").tag(config=True)
     auth_token = Unicode(None, allow_none=True).tag(config=True)
     base_url = Unicode(None, allow_none=True).tag(config=True)
 
@@ -192,6 +198,10 @@ class TenkiProvisioner(KernelProvisionerBase):
             "timeout": self.create_timeout,
             "metadata": {"purpose": "jupyter-kernel", "kernel_id": self.kernel_id or ""},
         }
+        if self.project_id:
+            opts["project_id"] = self.project_id
+        if self.workspace_id:
+            opts["workspace_id"] = self.workspace_id
         if self.image:
             opts["image"] = self.image
         if self.idle_timeout_minutes:
@@ -214,16 +224,20 @@ class TenkiProvisioner(KernelProvisionerBase):
         if not need:
             return
         self.log.info("Installing in sandbox: %s", " ".join(need))
-        result = sb.exec(
-            self.python_executable,
-            "-m",
-            "pip",
-            "install",
-            "--quiet",
-            *need,
-            timeout=self.install_timeout,
-        )
-        result.check()
+        base = [self.python_executable, "-m", "pip", "install", "--quiet"]
+        result = sb.exec(*base, *need, timeout=self.install_timeout)
+        if not result.ok and "externally-managed" in (result.stdout_text + result.stderr_text):
+            # Debian/Ubuntu images mark the system interpreter externally
+            # managed (PEP 668). The guest is disposable, so a system-wide
+            # install is fine — retry allowing it.
+            self.log.info("Retrying install with --break-system-packages (PEP 668)")
+            result = sb.exec(
+                *base, "--break-system-packages", *need, timeout=self.install_timeout
+            )
+        if not result.ok:
+            detail = (result.stdout_text + "\n" + result.stderr_text).strip()
+            msg = f"Failed to install {' '.join(need)} in sandbox (exit {result.exit_code}):\n{detail}"
+            raise RuntimeError(msg)
 
     def _write_remote_connection_file(self) -> None:
         remote_info = dict(self.connection_info)

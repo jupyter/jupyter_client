@@ -37,9 +37,12 @@ def main() -> None:
     km.kernel_id = kid
     # Route this kernel through the Tenki provisioner regardless of the
     # installed kernelspec, so the check is self-contained.
+    config = {"cpu_cores": 2, "memory_mb": 4096}
+    if os.environ.get("TENKI_PROJECT_ID"):
+        config["project_id"] = os.environ["TENKI_PROJECT_ID"]
     km.kernel_spec.metadata["kernel_provisioner"] = {
         "provisioner_name": "tenki-provisioner",
-        "config": {"cpu_cores": 2, "memory_mb": 4096},
+        "config": config,
     }
 
     print(f"Starting kernel {kid} in a Tenki Sandbox microVM (local host: {local_host}) ...")

@@ -74,6 +74,19 @@ export TENKI_API_KEY=tk_...
 
 You can also pass `auth_token` / `base_url` in the kernelspec `config` stanza.
 
+Some deployments require you to name the **project** the sandbox is created in
+(the Python SDK does not auto-select one). Discover the ids with:
+
+```python
+from tenki_sandbox import Client
+for ws in Client().who_am_i().workspaces:
+    print(ws.name, ws.id)
+    for p in ws.projects:
+        print("  ", p.name, p.id)
+```
+
+Then set `project_id` (and optionally `workspace_id`) in the kernelspec config.
+
 ## Use it
 
 Install a kernelspec that routes through the provisioner:
@@ -97,6 +110,8 @@ traitlets):
 | ---------------------- | ----------- | ------------------------------------------------- |
 | `cpu_cores`            | `2`         | vCPUs for the microVM (1–16)                      |
 | `memory_mb`            | `4096`      | Memory in MiB                                      |
+| `project_id`           | `""`        | Tenki project to create the sandbox in (may be required) |
+| `workspace_id`         | `""`        | Tenki workspace id (optional)                     |
 | `image`                | service default | Sandbox image reference                       |
 | `allow_outbound`       | `true`      | Guest outbound network (needed to pip install)    |
 | `idle_timeout_minutes` | `0`         | Auto-terminate after idle minutes (0 = default)   |
@@ -112,6 +127,9 @@ traitlets):
   runs on Linux inside the microVM.)
 - The guest image must have a Python interpreter; `ipykernel` is installed on
   first launch unless you bake it into the image (`install_ipykernel=false`).
+  The default image (Ubuntu 24.04 / Python 3.12) marks its system interpreter
+  externally-managed (PEP 668); the provisioner handles this by retrying the
+  install with `--break-system-packages` (the guest is disposable).
 - **Restart** provisions a fresh microVM — kernel restarts do not preserve guest
   state.
 
