@@ -13,7 +13,9 @@ keywords = ["jupyter", "kernel", "provisioner", "tenki", "sandbox", "microvm"]
 authors = [{ name = "Tenki Cloud integration" }]
 dependencies = [
     "jupyter_client>=7.0",
-    "tenki-sandbox>=0.1",
+    # 0.4.0 is the version this integration is developed and tested against;
+    # it carries sandbox-lifecycle fixes over 0.3.x. Pin to the tested line.
+    "tenki-sandbox>=0.4.0,<0.5",
 ]
 
 [project.optional-dependencies]

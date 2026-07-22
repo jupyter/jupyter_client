@@ -123,6 +123,9 @@ class FakeSandbox:
             return self._dial_factory(path)
         return _NullDial()
 
+    def refresh(self):
+        return None
+
     def close(self):
         self.closed = True
 
@@ -233,6 +236,50 @@ async def test_signals_forwarded(tmp_path):
     assert await prov.wait() == -9
 
     await prov.cleanup()
+
+
+async def test_launch_failure_tears_down_sandbox(tmp_path):
+    """A failure after create must not leak the microVM (failure-atomic launch)."""
+    sandbox = FakeSandbox()
+
+    def _boom(*argv, **kw):
+        raise RuntimeError("kernel launch boom")
+
+    sandbox.start = _boom  # type: ignore[assignment]  # fails after provision
+    prov, km = make_provisioner(tmp_path, sandbox)
+    kw = await prov.pre_launch(env={})
+    with pytest.raises(RuntimeError, match="boom"):
+        await prov.launch_kernel(kw.pop("cmd"), **kw)
+
+    assert sandbox.closed is True  # sandbox was terminated on the failure path
+    assert prov._sandbox is None
+    assert prov.has_process is False
+
+
+async def test_teardown_failure_retains_handle_for_retry(tmp_path):
+    """A failed terminate is not reported as success; the handle is kept."""
+    sandbox = FakeSandbox()
+    fail = {"on": True}
+
+    def flaky_close():
+        if fail["on"]:
+            raise RuntimeError("terminate failed")
+        sandbox.closed = True
+
+    sandbox.close = flaky_close  # type: ignore[assignment]
+    prov, km = make_provisioner(tmp_path, sandbox)
+    kw = await prov.pre_launch(env={})
+    await prov.launch_kernel(kw.pop("cmd"), **kw)
+
+    # First cleanup: teardown fails -> handle retained, no exception raised.
+    await prov.cleanup()
+    assert prov._sandbox is sandbox
+
+    # Recover and retry: teardown now succeeds and the handle is cleared.
+    fail["on"] = False
+    await prov.cleanup()
+    assert prov._sandbox is None
+    assert sandbox.closed is True
 
 
 async def test_ipykernel_install_retries_on_pep668(tmp_path):

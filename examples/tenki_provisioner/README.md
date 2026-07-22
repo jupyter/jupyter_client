@@ -114,7 +114,9 @@ traitlets):
 | `workspace_id`         | `""`        | Tenki workspace id (optional)                     |
 | `image`                | service default | Sandbox image reference                       |
 | `allow_outbound`       | `true`      | Guest outbound network (needed to pip install)    |
-| `idle_timeout_minutes` | `0`         | Auto-terminate after idle minutes (0 = default)   |
+| `idle_timeout_minutes` | `0`         | Idle pause/terminate after N minutes (0 = default)|
+| `max_duration_seconds` | `0`         | Hard lifetime cap / leak backstop (0 = no cap)    |
+| `keepalive_interval_seconds` | `240` | Refresh interval to avoid idle-pausing an idle kernel (0 = off) |
 | `install_ipykernel`    | `true`      | `pip install ipykernel` in the guest if missing   |
 | `extra_pip_packages`   | `[]`        | Extra packages to install in the guest            |
 | `kernel_argv`          | ipykernel   | Guest launch command; `{connection_file}` is substituted |
@@ -132,6 +134,22 @@ traitlets):
   install with `--break-system-packages` (the guest is disposable).
 - **Restart** provisions a fresh microVM — kernel restarts do not preserve guest
   state.
+
+## Lifecycle & duration notes
+
+- **Leak-safe launch.** If provisioning succeeds but a later step fails (or the
+  launch is cancelled), the microVM is torn down before the error propagates. As
+  a last resort, set `max_duration_seconds` so an orphaned VM self-terminates.
+- **Idle sessions.** A kernel is idle between cells. If your deployment
+  idle-pauses sandboxes, a long gap could pause the VM mid-session; the
+  provisioner runs a best-effort `refresh` every `keepalive_interval_seconds` to
+  avoid this. For long unattended gaps, also raise `idle_timeout_minutes`.
+- **Long-running cells.** `create_timeout` bounds *provisioning* only, not cell
+  execution. There is no hard cell timeout; size `max_duration_seconds` to your
+  longest expected session (or leave it `0` for no cap).
+- **Teardown is retryable.** If terminating the microVM fails, the error is
+  logged and the sandbox handle is retained so a subsequent `cleanup` retries,
+  rather than silently leaking a running VM.
 
 ## Tests
 
