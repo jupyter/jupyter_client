@@ -70,7 +70,7 @@ class ListKernelSpecs(JupyterApp):
                 """sort key function for Jupyter path priority"""
                 path = item[1]
                 for idx, prefix in enumerate(self.jupyter_path):
-                    if path.startswith(prefix):
+                    if path.lower().startswith(prefix.lower()):  # case-insensitive for Windows
                         return (idx, path)
                 # not in jupyter path, artificially added to the front
                 return (-1, path)
