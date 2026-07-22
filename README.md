@@ -1,7 +1,7 @@
 # Jupyter Client
 
 [![Build Status](https://github.com/jupyter/jupyter_client/workflows/CI/badge.svg)](https://github.com/jupyter/jupyter_client/actions)
-[![Documentation Status](https://readthedocs.org/projects/jupyter-client/badge/?version=latest)](http://jupyter-client.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/jupyter-client/badge/?version=latest)](https://jupyter-client.readthedocs.io/en/latest/?badge=latest)
 
 `jupyter_client` contains the reference implementation of the [Jupyter protocol].
 It also provides client and kernel management APIs for working with kernels.
