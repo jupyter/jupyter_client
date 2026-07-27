@@ -1,0 +1,45 @@
+name: tenki_provisioner example
+
+# The repository's main test workflow does not exercise examples/, so this job
+# lints, format-checks, and unit-tests the Tenki Sandbox provisioner example on
+# its own. The unit tests mock the SDK; the live end-to-end check is not run in
+# CI (it needs Tenki credentials and provisions a real microVM).
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "examples/tenki_provisioner/**"
+      - ".github/workflows/tenki-provisioner-example.yml"
+  pull_request:
+    paths:
+      - "examples/tenki_provisioner/**"
+      - ".github/workflows/tenki-provisioner-example.yml"
+
+concurrency:
+  group: tenki-provisioner-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: examples/tenki_provisioner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+          pip install -e ".[test]"
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+      - name: Unit tests
+        run: pytest -q

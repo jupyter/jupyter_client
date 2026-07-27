@@ -33,10 +33,12 @@ class FakeKernelManager(LoggingConfigurable):
         self.cache_ports = True
         self.key = "0000-secret"
         self._conn_path = conn_path
+        self.write_connection_file_calls = 0
         for name in ("shell", "iopub", "stdin", "control", "hb"):
             setattr(self, f"{name}_port", 0)
 
     def write_connection_file(self, jupyter_session=""):
+        self.write_connection_file_calls += 1
         # Emulate ipc channel-index assignment (1..5).
         self.shell_port, self.iopub_port, self.stdin_port = 1, 2, 3
         self.control_port, self.hb_port = 4, 5
@@ -193,10 +195,11 @@ async def test_launch_provisions_and_bridges(tmp_path):
     cmd = kw.pop("cmd")
     info = await prov.launch_kernel(cmd, **kw)
 
-    # sandbox sized from config
+    # sandbox sized from config, with a finite max_duration backstop
     assert sandbox.create_opts["cpu_cores"] == 4
     assert sandbox.create_opts["memory_mb"] == 8192
     assert sandbox.create_opts["allow_inbound"] is False
+    assert sandbox.create_opts["max_duration"] == 3600
 
     # guest-side connection file written, differing only in the ip prefix
     remote = json.loads(sandbox.fs.files["/home/tenki/k1-connection.json"])
@@ -205,7 +208,7 @@ async def test_launch_provisions_and_bridges(tmp_path):
     assert remote["shell_port"] == info["shell_port"]
 
     # kernel launched with the substituted argv in the guest home
-    (argv, start_kw), = [(a, k) for a, k in sandbox.start_calls]
+    ((argv, start_kw),) = [(a, k) for a, k in sandbox.start_calls]
     assert argv[:3] == ("python3", "-m", "ipykernel_launcher")
     assert start_kw["cwd"] == "/home/tenki"
 
@@ -216,10 +219,11 @@ async def test_launch_provisions_and_bridges(tmp_path):
 
     assert await prov.poll() is None  # still running
 
+    prefix = prov._local_prefix
     await prov.cleanup()
     assert sandbox.closed is True
     assert prov.has_process is False
-    assert not os.path.exists(f"{prov._local_prefix}-1")  # sockets cleaned up
+    assert not os.path.exists(f"{prefix}-1")  # sockets cleaned up
 
 
 async def test_signals_forwarded(tmp_path):
@@ -256,8 +260,11 @@ async def test_launch_failure_tears_down_sandbox(tmp_path):
     assert prov.has_process is False
 
 
-async def test_teardown_failure_retains_handle_for_retry(tmp_path):
-    """A failed terminate is not reported as success; the handle is kept."""
+async def test_teardown_failure_raises_and_retains_handle(tmp_path, monkeypatch):
+    """A failed terminate is raised (observable), not reported as success."""
+    import tenki_provisioner.provisioner as prov_mod
+
+    monkeypatch.setattr(prov_mod.time, "sleep", lambda _s: None)  # no retry delay
     sandbox = FakeSandbox()
     fail = {"on": True}
 
@@ -271,8 +278,9 @@ async def test_teardown_failure_retains_handle_for_retry(tmp_path):
     kw = await prov.pre_launch(env={})
     await prov.launch_kernel(kw.pop("cmd"), **kw)
 
-    # First cleanup: teardown fails -> handle retained, no exception raised.
-    await prov.cleanup()
+    # First cleanup: teardown fails -> raises, handle retained for a retry.
+    with pytest.raises(RuntimeError, match="terminate failed"):
+        await prov.cleanup()
     assert prov._sandbox is sandbox
 
     # Recover and retry: teardown now succeeds and the handle is cleared.
@@ -280,6 +288,60 @@ async def test_teardown_failure_retains_handle_for_retry(tmp_path):
     await prov.cleanup()
     assert prov._sandbox is None
     assert sandbox.closed is True
+
+
+async def test_restart_preserves_connection(tmp_path):
+    """A restart reuses the same prefix/ports/connection file (comment #3)."""
+    sandbox = FakeSandbox()
+    prov, km = make_provisioner(tmp_path, sandbox)
+
+    kw = await prov.pre_launch(env={})
+    await prov.launch_kernel(kw.pop("cmd"), **kw)
+    prefix, info = prov._local_prefix, dict(prov.connection_info)
+    write_calls_after_first = km.write_connection_file_calls
+
+    # Restart: manager tears down with restart=True, then pre_launch/launch again.
+    await prov.cleanup(restart=True)
+    assert prov._local_prefix == prefix  # prefix preserved across restart
+    assert os.path.isdir(prov._tmpdir)
+
+    kw2 = await prov.pre_launch(env={})
+    # No new connection file / prefix churn on restart.
+    assert km.write_connection_file_calls == write_calls_after_first
+    assert prov._local_prefix == prefix
+    assert prov.connection_info == info
+    await prov.launch_kernel(kw2.pop("cmd"), **kw2)
+    assert await prov.poll() is None  # fresh process, not the stale return code
+    await prov.cleanup()
+
+
+async def test_env_is_forwarded_to_guest(tmp_path):
+    """kernelspec/start_kernel(env=) additions reach the guest (comment #7)."""
+    sandbox = FakeSandbox()
+    prov, km = make_provisioner(tmp_path, sandbox)
+    kw = await prov.pre_launch(env={"SENTINEL": "present", "PATH": os.environ.get("PATH", "")})
+    await prov.launch_kernel(kw.pop("cmd"), **kw)
+
+    ((_argv, start_kw),) = [(a, k) for a, k in sandbox.start_calls]
+    guest_env = start_kw["env"]
+    assert guest_env["SENTINEL"] == "present"  # explicit addition forwarded
+    assert "PATH" not in guest_env  # ambient local var not dumped into the guest
+    await prov.cleanup()
+
+
+def test_reap_late_creation_terminates_orphan(tmp_path):
+    """A sandbox created after cancellation is terminated, not leaked (comment #1)."""
+    import concurrent.futures
+
+    sandbox = FakeSandbox()
+    prov, _km = make_provisioner(tmp_path, sandbox)
+    prov._sandbox = None  # cleanup already ran; awaiter was cancelled
+
+    fut: concurrent.futures.Future = concurrent.futures.Future()
+    prov._reap_late_creation(fut)
+    fut.set_result(sandbox)  # create finishes late, after cancellation
+
+    assert sandbox.closed is True  # the late sandbox was terminated
 
 
 async def test_ipykernel_install_retries_on_pep668(tmp_path):

@@ -29,7 +29,7 @@ _BUFSIZE = 65536
 def _safe(fn) -> None:
     try:
         fn()
-    except Exception:  # noqa: BLE001 - best-effort teardown
+    except Exception:  # best-effort teardown
         pass
 
 
@@ -48,7 +48,7 @@ class IpcSocketProxy:
 
     def __init__(
         self,
-        sandbox: "Sandbox",
+        sandbox: Sandbox,
         mappings: list[tuple[str, str]],
         log: logging.Logger | None = None,
     ) -> None:
@@ -85,15 +85,13 @@ class IpcSocketProxy:
                 conn, _ = server.accept()
             except OSError:
                 return  # server socket closed during shutdown
-            t = threading.Thread(
-                target=self._handle, args=(conn, remote_path), daemon=True
-            )
+            t = threading.Thread(target=self._handle, args=(conn, remote_path), daemon=True)
             t.start()
 
     def _handle(self, conn: socket.socket, remote_path: str) -> None:
         try:
             dial = self._sandbox.dial(remote_path)
-        except Exception as exc:  # noqa: BLE001 - kernel socket may not be up yet
+        except Exception as exc:  # kernel socket may not be up yet
             self._log.debug("dial(%s) failed: %s", remote_path, exc)
             _safe(conn.close)
             return
@@ -112,7 +110,7 @@ class IpcSocketProxy:
                     if not data:
                         break
                     dial.write(data)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
             finally:
                 _safe(dial.close)  # half-close write side toward the guest
@@ -124,7 +122,7 @@ class IpcSocketProxy:
                     if not data:
                         break
                     conn.sendall(data)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
             finally:
                 _safe(lambda: conn.shutdown(socket.SHUT_WR))

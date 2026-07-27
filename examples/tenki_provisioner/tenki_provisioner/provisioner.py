@@ -18,6 +18,7 @@ import shutil
 import signal
 import tempfile
 import threading
+import time
 from typing import Any
 
 from jupyter_client.connect import KernelConnectionInfo
@@ -55,9 +56,9 @@ class TenkiProvisioner(KernelProvisionerBase):
     # --- Sandbox sizing / creation -----------------------------------------
     cpu_cores = Int(2, help="vCPUs for the sandbox microVM (1-16).").tag(config=True)
     memory_mb = Int(4096, help="Memory for the sandbox microVM in MiB.").tag(config=True)
-    image = Unicode(
-        "", help="Sandbox image reference. Empty uses the service default."
-    ).tag(config=True)
+    image = Unicode("", help="Sandbox image reference. Empty uses the service default.").tag(
+        config=True
+    )
     allow_outbound = Bool(
         True,
         help="Allow the guest outbound network access (needed to pip install ipykernel).",
@@ -66,15 +67,11 @@ class TenkiProvisioner(KernelProvisionerBase):
         0, help="Pause/terminate the sandbox after this many idle minutes (0 = service default)."
     ).tag(config=True)
     max_duration_seconds = Int(
-        0,
-        help="Hard cap on sandbox lifetime, as a leak backstop: if the provisioner "
-        "dies without cleaning up, the microVM self-terminates. 0 = no cap. Set "
-        "this comfortably longer than your longest expected kernel session.",
-    ).tag(config=True)
-    keepalive_interval_seconds = Int(
-        240,
-        help="Best-effort: refresh the sandbox this often so an idle kernel (no cell "
-        "running) isn't idle-paused mid-session. 0 = disabled.",
+        3600,
+        help="Hard cap on sandbox lifetime (seconds): the final leak backstop. If "
+        "the provisioner process dies or a launch is cancelled without cleanup, the "
+        "microVM self-terminates after this long. Raise it for sessions longer than "
+        "an hour; 0 disables the cap (not recommended for ephemeral kernels).",
     ).tag(config=True)
 
     # --- Kernel launch -----------------------------------------------------
@@ -110,9 +107,7 @@ class TenkiProvisioner(KernelProvisionerBase):
     create_timeout = Int(180, help="Seconds to wait for the sandbox to become ready.").tag(
         config=True
     )
-    install_timeout = Int(240, help="Seconds allowed for installing ipykernel.").tag(
-        config=True
-    )
+    install_timeout = Int(240, help="Seconds allowed for installing ipykernel.").tag(config=True)
     kernel_ready_timeout = Int(
         60, help="Seconds to wait for the kernel's channel sockets to appear."
     ).tag(config=True)
@@ -127,8 +122,7 @@ class TenkiProvisioner(KernelProvisionerBase):
         self._local_prefix: str | None = None
         self._remote_prefix: str | None = None
         self._remote_conn_path: str | None = None
-        self._keepalive_stop: threading.Event | None = None
-        self._keepalive_thread: threading.Thread | None = None
+        self._create_future: Any = None
 
     # ------------------------------------------------------------------ utils
     @staticmethod
@@ -158,32 +152,39 @@ class TenkiProvisioner(KernelProvisionerBase):
             msg = "TenkiProvisioner must be owned by a KernelManager."
             raise RuntimeError(msg)
 
-        # Unix-domain socket paths are length-limited (~104 chars on macOS), so
-        # root them under a short directory rather than the (long) system temp
-        # dir. The channel sockets live here as "<tmpdir>/k-<N>".
-        short_base = "/tmp" if os.path.isdir("/tmp") else tempfile.gettempdir()
-        self._tmpdir = tempfile.mkdtemp(prefix="tk-", dir=short_base)
-        os.chmod(self._tmpdir, 0o700)
-        self._local_prefix = os.path.join(self._tmpdir, "k")
+        # On restart, jupyter_client preserves the connection file (and thus the
+        # ports); the same provisioner instance is reused, so its prefix/ports/
+        # connection_info survive. Only set up the transport on the first launch
+        # — reallocating a new local prefix would strand already-connected
+        # clients, and zeroing the ports would make write_connection_file() (which
+        # returns early when the file already exists) leave the kernel with no
+        # ports to bind, timing out the restart.
+        if self._local_prefix is None:
+            # Unix-domain socket paths are length-limited (~104 chars on macOS),
+            # so root them under a short directory rather than the (long) system
+            # temp dir. The channel sockets live here as "<tmpdir>/k-<N>".
+            short_base = "/tmp" if os.path.isdir("/tmp") else tempfile.gettempdir()  # noqa: S108 - short path required for AF_UNIX length limit; the dir itself is mkdtemp'd 0700
+            self._tmpdir = tempfile.mkdtemp(prefix="tk-", dir=short_base)
+            os.chmod(self._tmpdir, 0o700)
+            self._local_prefix = os.path.join(self._tmpdir, "k")
 
-        # Drive the kernel over ipc with locally-controlled socket paths.
-        km.transport = "ipc"
-        km.ip = self._local_prefix
-        km.cache_ports = False
-        for name in _CHANNELS:
-            setattr(km, f"{name}_port", 0)
+            # Drive the kernel over ipc with locally-controlled socket paths.
+            km.transport = "ipc"
+            km.ip = self._local_prefix
+            km.cache_ports = False
+            for name in _CHANNELS:
+                setattr(km, f"{name}_port", 0)
 
-        env = kwargs.get("env", {})
-        km.write_connection_file(jupyter_session=env.get("JPY_SESSION_NAME", ""))
-        self.connection_info = km.get_connection_info()
+            env = kwargs.get("env", {})
+            km.write_connection_file(jupyter_session=env.get("JPY_SESSION_NAME", ""))
+            self.connection_info = km.get_connection_info()
 
-        ident = self._identifier()
-        self._remote_prefix = f"{REMOTE_HOME}/{ident}-k"
-        self._remote_conn_path = f"{REMOTE_HOME}/{ident}-connection.json"
+            ident = self._identifier()
+            self._remote_prefix = f"{REMOTE_HOME}/{ident}-k"
+            self._remote_conn_path = f"{REMOTE_HOME}/{ident}-connection.json"
 
         argv = [
-            arg.replace("{connection_file}", self._remote_conn_path)
-            for arg in self.kernel_argv
+            arg.replace("{connection_file}", self._remote_conn_path) for arg in self.kernel_argv
         ]
         return await super().pre_launch(cmd=argv, **kwargs)
 
@@ -199,23 +200,59 @@ class TenkiProvisioner(KernelProvisionerBase):
         # A relaunch (e.g. restart) must not orphan a sandbox from a prior launch.
         if self._sandbox is not None:
             await self.cleanup(restart=True)
+        self._returncode = None  # fresh process for this (re)launch
+        env = kwargs.get("env") or {}
         try:
-            await self._run(self._provision_sandbox)
+            await self._provision_sandbox_cancellation_safe()
             await self._run(self._ensure_ipykernel)
             await self._run(self._write_remote_connection_file)
-            await self._run(self._start_kernel_process, cmd)
+            await self._run(self._start_kernel_process, cmd, env)
             await self._run(self._await_kernel_sockets)
             await self._run(self._preflight_dial)
             self._start_proxy()
-            self._start_keepalive()
         except BaseException as exc:  # includes CancelledError
             self.log.warning("launch failed (%s); tearing down sandbox", exc)
-            await self.cleanup(restart=True)
+            try:
+                await self.cleanup(restart=False)
+            except Exception:  # don't mask the original failure
+                self.log.exception("cleanup after failed launch also failed")
             raise
         return self.connection_info
 
     # ------------------------------------------------------------ blocking bits
-    def _provision_sandbox(self) -> None:
+    async def _provision_sandbox_cancellation_safe(self) -> None:
+        """Create the sandbox such that cancellation can't leak a late VM.
+
+        ``run_in_executor`` cannot cancel the worker thread running
+        ``Sandbox.create()``. If the await is cancelled, the create may still
+        succeed afterwards. We keep the future and, on cancellation, arrange for
+        any sandbox it eventually produces to be terminated rather than orphaned.
+        """
+        loop = asyncio.get_running_loop()
+        fut = loop.run_in_executor(None, self._provision_sandbox)
+        self._create_future = fut
+        try:
+            self._sandbox = await fut
+        except BaseException:
+            self._reap_late_creation(fut)
+            raise
+
+    def _reap_late_creation(self, fut: Any) -> None:
+        def _cb(f: Any) -> None:
+            try:
+                sb = f.result()
+            except BaseException:  # create failed; nothing to reap
+                return
+            if sb is not None and self._sandbox is not sb:
+                self.log.warning("terminating sandbox created after cancellation")
+                try:
+                    _terminate_sandbox(sb)
+                except Exception as exc:
+                    self.log.error("failed to terminate late sandbox: %s", exc)
+
+        fut.add_done_callback(_cb)
+
+    def _provision_sandbox(self) -> Any:
         from tenki_sandbox import Sandbox
 
         opts: dict[str, Any] = {
@@ -243,8 +280,9 @@ class TenkiProvisioner(KernelProvisionerBase):
         if self.base_url:
             opts["base_url"] = self.base_url
         self.log.info("Creating Tenki Sandbox for kernel %s", self.kernel_id)
-        self._sandbox = Sandbox.create(**opts)
-        self.log.info("Sandbox %s ready", getattr(self._sandbox, "id", "?"))
+        sandbox = Sandbox.create(**opts)
+        self.log.info("Sandbox %s ready", getattr(sandbox, "id", "?"))
+        return sandbox
 
     def _ensure_ipykernel(self) -> None:
         sb = self._sandbox
@@ -263,9 +301,7 @@ class TenkiProvisioner(KernelProvisionerBase):
             # managed (PEP 668). The guest is disposable, so a system-wide
             # install is fine — retry allowing it.
             self.log.info("Retrying install with --break-system-packages (PEP 668)")
-            result = sb.exec(
-                *base, "--break-system-packages", *need, timeout=self.install_timeout
-            )
+            result = sb.exec(*base, "--break-system-packages", *need, timeout=self.install_timeout)
         if not result.ok:
             detail = (result.stdout_text + "\n" + result.stderr_text).strip()
             msg = f"Failed to install {' '.join(need)} in sandbox (exit {result.exit_code}):\n{detail}"
@@ -280,10 +316,14 @@ class TenkiProvisioner(KernelProvisionerBase):
         )
         self._sandbox.fs.write_text(self._remote_conn_path, payload)
 
-    def _start_kernel_process(self, cmd: list[str]) -> None:
-        guest_env = {}
-        if self.kernel_spec is not None and self.kernel_spec.env:
-            guest_env.update(self.kernel_spec.env)
+    def _start_kernel_process(self, cmd: list[str], env: dict[str, str]) -> None:
+        # Forward the finalized launch environment computed by the base
+        # pre_launch(): kernelspec `env` (with substitutions), explicit
+        # start_kernel(env=...) values, and JPY_* connection vars. We forward
+        # only entries that differ from this process's own environment, so the
+        # guest gets the caller's intent without inheriting the full local env
+        # (PATH, HOME, secrets, ...). Configured `env` always wins.
+        guest_env = {k: v for k, v in (env or {}).items() if os.environ.get(k) != v}
         guest_env.update(self.env)
         self.log.info("Launching kernel in sandbox: %s", " ".join(cmd))
         self._process = self._sandbox.start(*cmd, cwd=REMOTE_HOME, env=guest_env or None)
@@ -299,7 +339,7 @@ class TenkiProvisioner(KernelProvisionerBase):
                 if not rc and sig:
                     rc = 128 + int(sig)
                 self._returncode = rc
-            except Exception:  # noqa: BLE001
+            except Exception:
                 self._returncode = 1
 
         threading.Thread(target=_reap, name="tenki-kernel-reap", daemon=True).start()
@@ -339,12 +379,12 @@ class TenkiProvisioner(KernelProvisionerBase):
                 f"({exc})"
             )
             raise RuntimeError(msg) from exc
-        except Exception as exc:  # noqa: BLE001 - transient; proxy will retry
+        except Exception as exc:  # transient; proxy will retry
             self.log.warning("dial preflight to %s failed: %s", probe, exc)
             return
         try:
             conn.close()
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
 
     def _start_proxy(self) -> None:
@@ -357,38 +397,6 @@ class TenkiProvisioner(KernelProvisionerBase):
         ]
         self._proxy = IpcSocketProxy(self._sandbox, mappings, log=self.log)
         self._proxy.start()
-
-    def _start_keepalive(self) -> None:
-        """Periodically refresh the sandbox so an idle kernel isn't idle-paused.
-
-        A Jupyter kernel is idle between cells, and data-plane traffic may not
-        reset the idle timer. This best-effort control-plane refresh keeps a
-        long-lived but bursty session alive. Disabled when the interval is 0.
-        """
-        interval = self.keepalive_interval_seconds
-        if not interval or self._sandbox is None:
-            return
-        sandbox = self._sandbox
-        stop = threading.Event()
-        self._keepalive_stop = stop
-
-        def _loop() -> None:
-            while not stop.wait(interval):
-                try:
-                    sandbox.refresh()
-                except Exception as exc:  # noqa: BLE001 - keepalive is best-effort
-                    self.log.debug("keepalive refresh failed: %s", exc)
-
-        self._keepalive_thread = threading.Thread(
-            target=_loop, name="tenki-kernel-keepalive", daemon=True
-        )
-        self._keepalive_thread.start()
-
-    def _stop_keepalive(self) -> None:
-        if self._keepalive_stop is not None:
-            self._keepalive_stop.set()
-            self._keepalive_stop = None
-            self._keepalive_thread = None
 
     # ------------------------------------------------------------- process ctl
     async def poll(self) -> int | None:
@@ -421,65 +429,68 @@ class TenkiProvisioner(KernelProvisionerBase):
         if self._process is not None:
             try:
                 await self._run(self._process.signal, "SIGTERM")
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
 
     async def cleanup(self, restart: bool = False) -> None:
         """Tear down the proxy and terminate the sandbox microVM.
 
-        The sandbox handle is only cleared once teardown actually succeeds. If
-        termination fails the handle is retained and the error is logged (not
-        swallowed) so a later ``cleanup`` call can retry rather than silently
-        leaking a running microVM.
+        Termination is retried a few times; if it still fails the error is
+        raised (not swallowed) so teardown failure is observable to the caller
+        rather than being silently reported as a successful, leaked VM. The
+        sandbox handle is cleared only once teardown is confirmed. On ``restart``
+        the local socket prefix is preserved so the replacement kernel reuses the
+        same connection info and already-connected clients are not stranded.
         """
-        self._stop_keepalive()
         if self._proxy is not None:
             self._proxy.close()
             self._proxy = None
         sandbox = self._sandbox
         if sandbox is not None:
             self.log.info("Terminating sandbox for kernel %s", self.kernel_id)
-            try:
-                await self._run(_terminate_sandbox, sandbox)
-                self._sandbox = None  # only clear on confirmed teardown
-                self._process = None
-            except Exception as exc:  # noqa: BLE001
-                # Keep the handle so cleanup can be retried; do not report success.
-                self.log.error(
-                    "Failed to terminate sandbox for kernel %s (handle retained "
-                    "for retry): %s",
-                    self.kernel_id,
-                    exc,
-                )
-                return
-        else:
-            self._process = None
-        if self._tmpdir is not None:
-            shutil.rmtree(self._tmpdir, ignore_errors=True)
-            self._tmpdir = None
+            await self._run(_terminate_sandbox, sandbox)  # retries, then raises
+            self._sandbox = None  # only clear on confirmed teardown
+        self._process = None
+        if not restart:
+            if self._tmpdir is not None:
+                shutil.rmtree(self._tmpdir, ignore_errors=True)
+                self._tmpdir = None
+            self._local_prefix = None
+            self._remote_prefix = None
+            self._remote_conn_path = None
 
-    async def get_provisioner_info(self) -> dict[str, Any]:
-        info = await super().get_provisioner_info()
-        info["sandbox_id"] = getattr(self._sandbox, "id", None)
-        return info
+    @property
+    def sandbox_id(self) -> str | None:
+        """Id of the current sandbox, or ``None``.
+
+        Cross-process reattach is intentionally not supported:
+        ``get_provisioner_info`` / ``load_provisioner_info`` are left at the base
+        implementation (which persists only ``connection_info`` and
+        ``kernel_id``). Reconstructing the guest process handle and channel
+        bridge in another process is out of scope for this example, so persisting
+        a sandbox id we cannot reattach to would be misleading.
+        """
+        return getattr(self._sandbox, "id", None)
 
 
-def _terminate_sandbox(sandbox: Any) -> None:
-    """Terminate the microVM, raising if it cannot be confirmed torn down.
+def _terminate_sandbox(sandbox: Any, attempts: int = 3, delay: float = 1.0) -> None:
+    """Terminate the microVM, retrying, and raise if it cannot be torn down.
 
     Tries ``close()`` (which terminates and releases the client) and falls back
-    to ``terminate()``. Raises the last error if neither succeeds so the caller
-    can decide whether to retain the handle and retry.
+    to ``terminate()``, up to ``attempts`` times. Raises the last error if none
+    succeed so the caller can surface an observable teardown failure.
     """
     last_error: Exception | None = None
-    for method in ("close", "terminate"):
-        fn = getattr(sandbox, method, None)
-        if callable(fn):
-            try:
-                fn()
-                return
-            except Exception as exc:  # noqa: BLE001
-                last_error = exc
-                continue
+    for attempt in range(attempts):
+        for method in ("close", "terminate"):
+            fn = getattr(sandbox, method, None)
+            if callable(fn):
+                try:
+                    fn()
+                    return
+                except Exception as exc:
+                    last_error = exc
+        if attempt + 1 < attempts:
+            time.sleep(delay)
     if last_error is not None:
         raise last_error

@@ -16,6 +16,7 @@ import os
 import queue
 import socket
 import sys
+import time
 import uuid
 
 from jupyter_client.manager import KernelManager
@@ -46,7 +47,9 @@ def main() -> None:
     }
 
     print(f"Starting kernel {kid} in a Tenki Sandbox microVM (local host: {local_host}) ...")
-    km.start_kernel()
+    km.start_kernel(env={"TENKI_E2E_SENTINEL": "sentinel-42"})
+    sandbox_id = km.provisioner.sandbox_id
+    print(f"Sandbox id: {sandbox_id}")
     kc = km.client()
     kc.start_channels()
     try:
@@ -54,10 +57,11 @@ def main() -> None:
         print("Kernel is ready. Executing remote code ...")
 
         code = (
-            "import socket, sys, platform\n"
+            "import socket, sys, platform, os\n"
             "print('HOST=' + socket.gethostname())\n"
             "print('PLATFORM=' + sys.platform)\n"
             "print('UNAME=' + platform.uname().release)\n"
+            "print('SENTINEL=' + os.environ.get('TENKI_E2E_SENTINEL', 'MISSING'))\n"
             "print('SUM=' + str(6 * 7))\n"
         )
         msg_id = kc.execute(code)
@@ -89,10 +93,12 @@ def main() -> None:
 
         if "SUM=42" not in text:
             _fail("did not observe expected computation result (SUM=42)")
+        if "SENTINEL=sentinel-42" not in text:
+            _fail("start_kernel(env=...) did not reach the guest (env not propagated)")
         remote_host = ""
         for line in text.splitlines():
             if line.startswith("HOST="):
-                remote_host = line[len("HOST="):].strip()
+                remote_host = line[len("HOST=") :].strip()
         if not remote_host:
             _fail("could not read remote hostname")
         if remote_host == local_host:
@@ -103,6 +109,33 @@ def main() -> None:
         print("Shutting down kernel and terminating microVM ...")
         kc.stop_channels()
         km.shutdown_kernel(now=True)
+
+    if sandbox_id:
+        _verify_terminated(sandbox_id)
+
+
+def _verify_terminated(sandbox_id: str, timeout: float = 60.0) -> None:
+    """Poll until the sandbox reaches a terminal state, enforcing no leak."""
+    from tenki_sandbox import Client, SandboxError
+
+    print(f"Verifying sandbox {sandbox_id} reached TERMINATED ...")
+    client = Client()
+    deadline = time.monotonic() + timeout
+    last_state = "?"
+    while time.monotonic() < deadline:
+        try:
+            sb = client.get(sandbox_id)
+            sb.refresh()
+            last_state = sb.state
+        except SandboxError as exc:
+            # A gone/not-found/terminated session is a terminal outcome.
+            print(f"PASS: sandbox is gone ({type(exc).__name__}).")
+            return
+        if last_state == "TERMINATED":
+            print("PASS: sandbox reached TERMINATED.")
+            return
+        time.sleep(2)
+    _fail(f"sandbox {sandbox_id} did not terminate within {timeout}s (last state {last_state})")
 
 
 if __name__ == "__main__":

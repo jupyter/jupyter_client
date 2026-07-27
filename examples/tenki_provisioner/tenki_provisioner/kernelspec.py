@@ -62,15 +62,11 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("install", help="Install the Tenki kernelspec.")
     p.add_argument("--name", default="tenki-python", help="Kernelspec name.")
-    p.add_argument(
-        "--display-name", default="Python (Tenki Sandbox)", help="UI display name."
-    )
+    p.add_argument("--display-name", default="Python (Tenki Sandbox)", help="UI display name.")
     p.add_argument("--cpu", type=int, default=2, help="vCPUs for the sandbox.")
     p.add_argument("--memory-mb", type=int, default=4096, help="Memory (MiB).")
     p.add_argument("--image", default="", help="Sandbox image (optional).")
-    p.add_argument(
-        "--idle-timeout-minutes", type=int, default=0, help="Idle auto-terminate."
-    )
+    p.add_argument("--idle-timeout-minutes", type=int, default=0, help="Idle auto-terminate.")
     p.add_argument("--user", action="store_true", help="Install into the user dir.")
     p.add_argument("--prefix", default=None, help="Install prefix (e.g. sys.prefix).")
     p.set_defaults(func=install)

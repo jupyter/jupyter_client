@@ -35,3 +35,13 @@ packages = ["tenki_provisioner"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+# Inherit the repository's ruff configuration and relax a few rules that are
+# legitimate for a CLI installer, a runnable e2e script, and tests.
+[tool.ruff]
+extend = "../../pyproject.toml"
+
+[tool.ruff.lint.per-file-ignores]
+"tenki_provisioner/kernelspec.py" = ["T201"]     # a CLI prints to the user
+"tests/live_e2e.py" = ["T201"]                    # a runnable script prints progress
+"tests/test_provisioner.py" = ["EM101", "EM102", "RUF059"]  # test ergonomics
