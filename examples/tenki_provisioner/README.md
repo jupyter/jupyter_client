@@ -38,14 +38,14 @@ microVM:
 
 Lifecycle mapping onto `KernelProvisionerBase`:
 
-| Provisioner method | Tenki action                                                   |
+| Provisioner method | Tenki action |
 | ------------------ | -------------------------------------------------------------- |
-| `pre_launch`       | Switch kernel to `ipc`; stage local + guest connection files   |
-| `launch_kernel`    | `Sandbox.create` → install `ipykernel` → `start` kernel → bridge sockets |
-| `poll` / `wait`    | Track the guest process via the SDK `Process` handle           |
-| `send_signal`      | Forward the signal to the guest process (`SIGINT` interrupts)  |
-| `kill` / `terminate` | Signal the guest process                                     |
-| `cleanup`          | Close the socket bridge and terminate the microVM              |
+| `pre_launch` | Switch kernel to `ipc`; stage local + guest connection files |
+| `launch_kernel` | `Sandbox.create` → install `ipykernel` → `start` kernel → bridge sockets |
+| `poll` / `wait` | Track the guest process via the SDK `Process` handle |
+| `send_signal` | Forward the signal to the guest process (`SIGINT` interrupts) |
+| `kill` / `terminate` | Signal the guest process |
+| `cleanup` | Close the socket bridge and terminate the microVM |
 
 ## Install
 
@@ -107,20 +107,20 @@ microVM. A sample `kernel.json` is in [`kernels/tenki_python/`](kernels/tenki_py
 Set these in the kernelspec `metadata.kernel_provisioner.config` stanza (or as
 traitlets):
 
-| Option                 | Default     | Description                                       |
+| Option | Default | Description |
 | ---------------------- | ----------- | ------------------------------------------------- |
-| `cpu_cores`            | `2`         | vCPUs for the microVM (1–16)                      |
-| `memory_mb`            | `4096`      | Memory in MiB                                      |
-| `project_id`           | `""`        | Tenki project to create the sandbox in (may be required) |
-| `workspace_id`         | `""`        | Tenki workspace id (optional)                     |
-| `image`                | service default | Sandbox image reference                       |
-| `allow_outbound`       | `true`      | Guest outbound network (needed to pip install)    |
-| `idle_timeout_minutes` | `0`         | Idle pause/terminate after N minutes (0 = default)|
-| `max_duration_seconds` | `3600`      | Hard lifetime cap / leak backstop (0 = no cap; raise for long sessions) |
-| `install_ipykernel`    | `true`      | `pip install ipykernel` in the guest if missing   |
-| `extra_pip_packages`   | `[]`        | Extra packages to install in the guest            |
-| `kernel_argv`          | ipykernel   | Guest launch command; `{connection_file}` is substituted |
-| `env`                  | `{}`        | Environment variables for the kernel process      |
+| `cpu_cores` | `2` | vCPUs for the microVM (1–16) |
+| `memory_mb` | `4096` | Memory in MiB |
+| `project_id` | `""` | Tenki project to create the sandbox in (may be required) |
+| `workspace_id` | `""` | Tenki workspace id (optional) |
+| `image` | service default | Sandbox image reference |
+| `allow_outbound` | `true` | Guest outbound network (needed to pip install) |
+| `idle_timeout_minutes` | `0` | Idle pause/terminate after N minutes (0 = default)|
+| `max_duration_seconds` | `3600` | Hard lifetime cap / leak backstop (0 = no cap; raise for long sessions) |
+| `install_ipykernel` | `true` | `pip install ipykernel` in the guest if missing |
+| `extra_pip_packages` | `[]` | Extra packages to install in the guest |
+| `kernel_argv` | ipykernel | Guest launch command; `{connection_file}` is substituted |
+| `env` | `{}` | Environment variables for the kernel process |
 
 ## Requirements & limitations
 
