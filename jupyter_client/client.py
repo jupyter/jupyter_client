@@ -532,14 +532,18 @@ class KernelClient(ConnectionFileMixin):
         if output_hook is None and "IPython" in sys.modules:
             from IPython import get_ipython
 
-            ip = get_ipython()  # type:ignore[no-untyped-call]
+            ip = get_ipython()
             in_kernel = getattr(ip, "kernel", False)
             if in_kernel:
+                # In a kernel, ip.display_pub is a ZMQDisplayPublisher exposing
+                # session/pub_socket/parent_header. Narrow to Any for the type
+                # checker, since ip is typed as InteractiveShell | None here.
+                display_pub: t.Any = ip.display_pub  # type: ignore[union-attr]
                 output_hook = partial(
                     self._output_hook_kernel,
-                    ip.display_pub.session,
-                    ip.display_pub.pub_socket,
-                    ip.display_pub.parent_header,
+                    display_pub.session,
+                    display_pub.pub_socket,
+                    display_pub.parent_header,
                 )
         if output_hook is None:
             # default: redisplay plain-text outputs
