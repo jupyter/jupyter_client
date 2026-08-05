@@ -147,14 +147,14 @@ class _NullDial:
 
 
 def make_provisioner(tmp_path, sandbox, **config):
-    import tenki_sandbox
+    import tenki
 
-    # from tenki_sandbox import Sandbox; Sandbox.create(**opts) -> our fake
+    # from tenki import Sandbox; Sandbox.create(**opts) -> our fake
     def _create(**opts):
         sandbox.create_opts = opts
         return sandbox
 
-    tenki_sandbox.Sandbox.create = staticmethod(_create)
+    tenki.Sandbox.create = staticmethod(_create)
 
     ks = KernelSpec(
         argv=["python3", "-m", "ipykernel_launcher", "-f", "{connection_file}"],
@@ -347,7 +347,7 @@ def test_reap_late_creation_terminates_orphan(tmp_path):
 
 async def test_real_cancellation_reaps_late_sandbox(tmp_path):
     """Cancelling the launch task still terminates a sandbox that arrives late."""
-    import tenki_sandbox
+    import tenki
 
     started = threading.Event()
     release = threading.Event()
@@ -358,7 +358,7 @@ async def test_real_cancellation_reaps_late_sandbox(tmp_path):
         release.wait(5)  # block until the test lets create() finish
         return sandbox
 
-    tenki_sandbox.Sandbox.create = staticmethod(slow_create)
+    tenki.Sandbox.create = staticmethod(slow_create)
     ks = KernelSpec(argv=["python3"], language="python", env={}, display_name="t")
     km = FakeKernelManager(str(tmp_path / "c.json"))
     prov = TenkiProvisioner(parent=km, kernel_id="k1", kernel_spec=ks)
@@ -439,7 +439,7 @@ async def test_ipykernel_install_retries_on_pep668(tmp_path):
 
 
 async def test_launch_fails_clearly_when_dial_unavailable(tmp_path):
-    from tenki_sandbox import CapabilityUnavailableError
+    from tenki import CapabilityUnavailableError
 
     sandbox = FakeSandbox()
 

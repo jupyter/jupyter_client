@@ -5,8 +5,8 @@ Each kernel gets its own disposable, isolated Linux microVM.  The kernel talks
 to ``jupyter_client`` over the ZeroMQ ``ipc`` transport; the five channel
 sockets are bridged from the local machine into the guest with the Tenki
 Sandbox SDK's ``dial`` primitive (see :mod:`tenki_provisioner._proxy`).  The
-integration therefore depends only on the ``tenki-sandbox`` SDK -- no ssh, no
-CLI, no inbound networking.
+integration therefore depends only on the ``tenki`` SDK -- no ssh, no CLI, no
+inbound networking.
 """
 
 from __future__ import annotations
@@ -94,12 +94,11 @@ class TenkiProvisioner(KernelProvisionerBase):
     ).tag(config=True)
 
     # --- Placement / auth (auth falls back to TENKI_API_KEY / TENKI_API_ENDPOINT) ---
-    project_id = Unicode(
+    workspace_id = Unicode(
         "",
-        help="Tenki project to create the sandbox in. Required unless the "
+        help="Tenki workspace to create the sandbox in. Required unless the "
         "deployment auto-selects one. Discover via Client().who_am_i().",
     ).tag(config=True)
-    workspace_id = Unicode("", help="Tenki workspace id (optional).").tag(config=True)
     auth_token = Unicode(None, allow_none=True).tag(config=True)
     base_url = Unicode(None, allow_none=True).tag(config=True)
 
@@ -299,7 +298,7 @@ class TenkiProvisioner(KernelProvisionerBase):
         fut.add_done_callback(_cb)
 
     def _provision_sandbox(self) -> Any:
-        from tenki_sandbox import Sandbox
+        from tenki import Sandbox
 
         opts: dict[str, Any] = {
             "name": f"jupyter-{self._identifier()}"[:63],
@@ -311,8 +310,6 @@ class TenkiProvisioner(KernelProvisionerBase):
             "timeout": self.create_timeout,
             "metadata": {"purpose": "jupyter-kernel", "kernel_id": self.kernel_id or ""},
         }
-        if self.project_id:
-            opts["project_id"] = self.project_id
         if self.workspace_id:
             opts["workspace_id"] = self.workspace_id
         if self.image:
@@ -420,7 +417,7 @@ class TenkiProvisioner(KernelProvisionerBase):
         deployment hasn't enabled it, surface a clear error here rather than
         letting the kernel hang waiting for channels that never connect.
         """
-        from tenki_sandbox import CapabilityUnavailableError
+        from tenki import CapabilityUnavailableError
 
         probe = f"{self._remote_prefix}-{self.connection_info['hb_port']}"
         try:

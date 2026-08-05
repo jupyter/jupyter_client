@@ -21,7 +21,7 @@ import threading
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from tenki_sandbox import Sandbox
+    from tenki import Sandbox
 
 _BUFSIZE = 65536
 
@@ -39,7 +39,7 @@ class IpcSocketProxy:
     Parameters
     ----------
     sandbox:
-        A live :class:`tenki_sandbox.Sandbox` whose ``dial`` method opens a raw
+        A live :class:`tenki.Sandbox` whose ``dial`` method opens a raw
         stream to a Unix socket inside the guest.
     mappings:
         Pairs of ``(local_socket_path, remote_socket_path)`` -- one per Jupyter

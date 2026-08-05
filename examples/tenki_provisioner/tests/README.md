@@ -19,7 +19,7 @@ amount of metered usage.
 ```bash
 export TENKI_API_KEY=tk_...
 # Some deployments require naming the project (see the top-level README):
-export TENKI_PROJECT_ID=<project-uuid>
+export TENKI_WORKSPACE_ID=<workspace-uuid>
 python tests/live_e2e.py
 ```
 

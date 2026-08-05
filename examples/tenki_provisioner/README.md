@@ -9,7 +9,7 @@ on your machine. Notebook code — including anything an AI agent generates — 
 fully sandboxed, with its own CPU/memory and no access to your local filesystem.
 When the kernel shuts down, the microVM is destroyed.
 
-This example is built **entirely on the [`tenki-sandbox` Python SDK](https://pypi.org/project/tenki-sandbox/)** —
+This example is built **entirely on the [`tenki` Python SDK](https://pypi.org/project/tenki/)** —
 no SSH, no CLI, and no inbound networking required.
 
 ## How it works
@@ -74,19 +74,17 @@ export TENKI_API_KEY=tk_...
 
 You can also pass `auth_token` / `base_url` in the kernelspec `config` stanza.
 
-Some deployments require you to name the **project** the sandbox is created in
-(the Python SDK does not auto-select one). Discover the ids with:
+Some deployments require you to name the **workspace** the sandbox is created in
+(the Python SDK does not always auto-select one). Discover the ids with:
 
 ```python
-from tenki_sandbox import Client
+from tenki import Client
 
 for ws in Client().who_am_i().workspaces:
     print(ws.name, ws.id)
-    for p in ws.projects:
-        print("  ", p.name, p.id)
 ```
 
-Then set `project_id` (and optionally `workspace_id`) in the kernelspec config.
+Then set `workspace_id` in the kernelspec config.
 
 ## Use it
 
@@ -111,8 +109,7 @@ traitlets):
 | ---------------------- | ----------- | ------------------------------------------------- |
 | `cpu_cores` | `2` | vCPUs for the microVM (1–16) |
 | `memory_mb` | `4096` | Memory in MiB |
-| `project_id` | `""` | Tenki project to create the sandbox in (may be required) |
-| `workspace_id` | `""` | Tenki workspace id (optional) |
+| `workspace_id` | `""` | Tenki workspace to create the sandbox in (may be required) |
 | `image` | service default | Sandbox image reference |
 | `allow_outbound` | `true` | Guest outbound network (needed to pip install) |
 | `idle_timeout_minutes` | `0` | Idle pause/terminate after N minutes (0 = default)|
@@ -142,7 +139,7 @@ traitlets):
   a last resort, set `max_duration_seconds` so an orphaned VM self-terminates.
 - **Idle sessions.** A kernel is idle between cells. If your deployment
   idle-pauses sandboxes and the gap exceeds the idle window, the VM can pause
-  mid-session. `tenki-sandbox` 0.4.0 exposes no client-side activity API to
+  mid-session. `tenki` 0.5.x exposes no client-side activity API to
   refresh the idle timer (`refresh()` only reads state), so the provisioner does
   not attempt a keepalive. If you expect long idle gaps, raise (or disable via
   the service) `idle_timeout_minutes`.

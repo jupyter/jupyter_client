@@ -39,8 +39,8 @@ def main() -> None:
     # Route this kernel through the Tenki provisioner regardless of the
     # installed kernelspec, so the check is self-contained.
     config = {"cpu_cores": 2, "memory_mb": 4096}
-    if os.environ.get("TENKI_PROJECT_ID"):
-        config["project_id"] = os.environ["TENKI_PROJECT_ID"]
+    if os.environ.get("TENKI_WORKSPACE_ID"):
+        config["workspace_id"] = os.environ["TENKI_WORKSPACE_ID"]
     km.kernel_spec.metadata["kernel_provisioner"] = {
         "provisioner_name": "tenki-provisioner",
         "config": config,
@@ -116,7 +116,7 @@ def main() -> None:
 
 def _verify_terminated(sandbox_id: str, timeout: float = 60.0) -> None:
     """Poll until the sandbox reaches a terminal state, enforcing no leak."""
-    from tenki_sandbox import Client, SessionNotFoundError, SessionTerminatedError
+    from tenki import Client, SessionNotFoundError, SessionTerminatedError
 
     print(f"Verifying sandbox {sandbox_id} reached TERMINATED ...")
     client = Client()
