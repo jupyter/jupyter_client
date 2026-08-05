@@ -138,6 +138,41 @@ class TenkiProvisioner(KernelProvisionerBase):
     def _identifier(self) -> str:
         return (self.kernel_id or "kernel").replace("/", "_")
 
+    def _apply_transport_encryption(self, km: Any) -> None:
+        """Set up CurveZMQ keys when transport_encryption is enabled.
+
+        Mirrors ``LocalProvisioner``: Curve is supported over the ipc transport
+        we use, so honour the kernel manager's ``transport_encryption`` policy
+        instead of silently ignoring it. Keys are generated on the manager
+        before the connection file is written and are picked up by both the
+        client and the guest-side connection file. Guarded with ``getattr`` so a
+        manager without the (8.x) encryption API is simply treated as disabled.
+        """
+        policy_fn = getattr(km, "_transport_encryption_policy", None)
+        raw = getattr(km, "transport_encryption", "disabled")
+        if callable(policy_fn):
+            policy = policy_fn(raw)
+        elif isinstance(raw, str) and raw in {"disabled", "auto", "required"}:
+            policy = raw
+        else:
+            policy = "auto" if raw else "disabled"
+        required = policy == "required"
+        enabled = policy in {"auto", "required"}
+        supported = getattr(km, "transport", "tcp") in {"tcp", "ipc"}
+        if required and not supported:
+            msg = "transport_encryption='required' needs the tcp or ipc transport."
+            raise RuntimeError(msg)
+        if not (enabled and supported):
+            return
+        kernel_curve_ok = required or (
+            hasattr(km, "_kernel_supports_curve_encryption")
+            and km._kernel_supports_curve_encryption()
+        )
+        if kernel_curve_ok and getattr(km, "curve_publickey", None) is None:
+            import zmq
+
+            km.curve_publickey, km.curve_secretkey = zmq.curve_keypair()
+
     # -------------------------------------------------------------- lifecycle
     async def pre_launch(self, **kwargs: Any) -> dict[str, Any]:
         """Switch the kernel to the ``ipc`` transport and stage connection files.
@@ -174,6 +209,11 @@ class TenkiProvisioner(KernelProvisionerBase):
             km.cache_ports = False
             for name in _CHANNELS:
                 setattr(km, f"{name}_port", 0)
+
+            # CurveZMQ is supported over ipc; mirror LocalProvisioner so
+            # transport_encryption is honoured (keys must be set before the
+            # connection file is written).
+            self._apply_transport_encryption(km)
 
             env = kwargs.get("env", {})
             km.write_connection_file(jupyter_session=env.get("JPY_SESSION_NAME", ""))
@@ -232,7 +272,13 @@ class TenkiProvisioner(KernelProvisionerBase):
         fut = loop.run_in_executor(None, self._provision_sandbox)
         self._create_future = fut
         try:
-            self._sandbox = await fut
+            # Shield the executor future: cancelling the awaiting task must not
+            # cancel the underlying create() (the worker thread can't be
+            # cancelled anyway). Without the shield, cancellation would cancel
+            # `fut` and the reap callback would only ever see CancelledError,
+            # while the thread completes and leaks the sandbox. With the shield,
+            # `fut` runs to completion and its eventual result is reaped below.
+            self._sandbox = await asyncio.shield(fut)
         except BaseException:
             self._reap_late_creation(fut)
             raise
@@ -317,13 +363,20 @@ class TenkiProvisioner(KernelProvisionerBase):
         self._sandbox.fs.write_text(self._remote_conn_path, payload)
 
     def _start_kernel_process(self, cmd: list[str], env: dict[str, str]) -> None:
-        # Forward the finalized launch environment computed by the base
-        # pre_launch(): kernelspec `env` (with substitutions), explicit
-        # start_kernel(env=...) values, and JPY_* connection vars. We forward
-        # only entries that differ from this process's own environment, so the
-        # guest gets the caller's intent without inheriting the full local env
-        # (PATH, HOME, secrets, ...). Configured `env` always wins.
-        guest_env = {k: v for k, v in (env or {}).items() if os.environ.get(k) != v}
+        # Forward the caller's intent to the guest without inheriting this
+        # process's full environment (PATH, HOME, secrets, ...). We forward a key
+        # when it was *explicitly* provided — a kernelspec `env` key or a
+        # start_kernel(env=...) key — regardless of its value, plus any key not
+        # present in this process's environment (e.g. JPY_* connection vars).
+        # Tracking explicit keys (not value comparison) means an explicit value
+        # that happens to match the parent environment is still forwarded.
+        explicit_keys: set[str] = set(self.kernel_spec.env or {}) if self.kernel_spec else set()
+        km = self.parent
+        if km is not None:
+            explicit_keys |= set(getattr(km, "_launch_args", {}).get("env", {}) or {})
+        guest_env = {
+            k: v for k, v in (env or {}).items() if k in explicit_keys or os.environ.get(k) != v
+        }
         guest_env.update(self.env)
         self.log.info("Launching kernel in sandbox: %s", " ".join(cmd))
         self._process = self._sandbox.start(*cmd, cwd=REMOTE_HOME, env=guest_env or None)

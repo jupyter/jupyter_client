@@ -7,6 +7,7 @@ loopback socket proxy without needing Tenki credentials.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import signal
@@ -342,6 +343,73 @@ def test_reap_late_creation_terminates_orphan(tmp_path):
     fut.set_result(sandbox)  # create finishes late, after cancellation
 
     assert sandbox.closed is True  # the late sandbox was terminated
+
+
+async def test_real_cancellation_reaps_late_sandbox(tmp_path):
+    """Cancelling the launch task still terminates a sandbox that arrives late."""
+    import tenki_sandbox
+
+    started = threading.Event()
+    release = threading.Event()
+    sandbox = FakeSandbox()
+
+    def slow_create(**_opts):
+        started.set()
+        release.wait(5)  # block until the test lets create() finish
+        return sandbox
+
+    tenki_sandbox.Sandbox.create = staticmethod(slow_create)
+    ks = KernelSpec(argv=["python3"], language="python", env={}, display_name="t")
+    km = FakeKernelManager(str(tmp_path / "c.json"))
+    prov = TenkiProvisioner(parent=km, kernel_id="k1", kernel_spec=ks)
+
+    task = asyncio.ensure_future(prov._provision_sandbox_cancellation_safe())
+    await asyncio.get_running_loop().run_in_executor(None, started.wait, 5)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    release.set()  # create() completes after cancellation -> must be reaped
+    for _ in range(100):
+        if sandbox.closed:
+            break
+        await asyncio.sleep(0.02)
+    assert sandbox.closed is True
+    assert prov._sandbox is None
+
+
+async def test_explicit_env_matching_parent_is_forwarded(tmp_path, monkeypatch):
+    """An explicit env value equal to the parent env is still forwarded (issue #4)."""
+    monkeypatch.setenv("SHARED", "parent-value")
+    sandbox = FakeSandbox()
+    prov, km = make_provisioner(tmp_path, sandbox)
+    # Caller sets SHARED to the same value the parent process already has.
+    km._launch_args = {"env": {"SHARED": "parent-value"}}
+    kw = await prov.pre_launch(env={"SHARED": "parent-value"})
+    await prov.launch_kernel(kw.pop("cmd"), **kw)
+
+    ((_argv, start_kw),) = [(a, k) for a, k in sandbox.start_calls]
+    assert start_kw["env"]["SHARED"] == "parent-value"  # explicit key kept
+    await prov.cleanup()
+
+
+async def test_transport_encryption_sets_curve_keys(tmp_path):
+    """transport_encryption=required generates Curve keys over ipc (issue #2)."""
+    import zmq
+
+    sandbox = FakeSandbox()
+    prov, km = make_provisioner(tmp_path, sandbox)
+    km.transport_encryption = "required"
+    km._transport_encryption_policy = lambda raw=None: "required"
+    km._kernel_supports_curve_encryption = lambda: True
+    km.curve_publickey = None
+    km.curve_secretkey = None
+
+    await prov.pre_launch(env={})
+    assert km.curve_publickey is not None
+    assert km.curve_secretkey is not None
+    # sanity: a real Curve keypair round-trips
+    assert len(zmq.curve_keypair()[0]) == len(km.curve_publickey)
 
 
 async def test_ipykernel_install_retries_on_pep668(tmp_path):

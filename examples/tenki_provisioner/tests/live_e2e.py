@@ -116,7 +116,7 @@ def main() -> None:
 
 def _verify_terminated(sandbox_id: str, timeout: float = 60.0) -> None:
     """Poll until the sandbox reaches a terminal state, enforcing no leak."""
-    from tenki_sandbox import Client, SandboxError
+    from tenki_sandbox import Client, SessionNotFoundError, SessionTerminatedError
 
     print(f"Verifying sandbox {sandbox_id} reached TERMINATED ...")
     client = Client()
@@ -127,8 +127,9 @@ def _verify_terminated(sandbox_id: str, timeout: float = 60.0) -> None:
             sb = client.get(sandbox_id)
             sb.refresh()
             last_state = sb.state
-        except SandboxError as exc:
-            # A gone/not-found/terminated session is a terminal outcome.
+        except (SessionNotFoundError, SessionTerminatedError) as exc:
+            # Only a gone/terminated session counts as success; auth/service
+            # errors must propagate rather than masquerade as termination.
             print(f"PASS: sandbox is gone ({type(exc).__name__}).")
             return
         if last_state == "TERMINATED":
