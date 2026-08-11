@@ -164,7 +164,7 @@ class KernelSpecManager(LoggingConfigurable):
         """,
     )
     kernel_dirs: List[str] = List(
-        help="List of kernel directories to search. Later ones take priority over earlier."
+        help="List of kernel directories to search. Earlier ones take priority over later."
     )
 
     _deprecated_aliases = {

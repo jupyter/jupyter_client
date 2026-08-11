@@ -76,6 +76,14 @@ class KernelSpecTests(unittest.TestCase):
         kernels = self.ksm.find_kernel_specs()
         self.assertEqual(kernels["sample"], sample_kernel)
 
+    def test_kernel_dirs_help_text_matches_priority(self):
+        # The help text must describe the actual first-wins precedence
+        # implemented by find_kernel_specs (earlier directories take
+        # priority over later ones).
+        trait = kernelspec.KernelSpecManager.class_traits()["kernel_dirs"]
+        assert "Earlier ones take priority" in trait.help
+        assert "Later ones take priority" not in trait.help
+
     def test_install_kernel_spec(self):
         self.ksm.install_kernel_spec(self.installable_kernel, kernel_name="tstinstalled", user=True)
         self.assertIn("tstinstalled", self.ksm.find_kernel_specs())
