@@ -345,6 +345,11 @@ class KernelManager(ConnectionFileMixin):
 
         # add kwargs last, for manual overrides
         kw.update(kwargs)
+
+        for key in ("curve_publickey", "curve_secretkey"):
+            if isinstance(kw.get(key), str):
+                kw[key] = kw[key].encode("ascii")
+
         return self.client_factory(**kw)
 
     # --------------------------------------------------------------------------
