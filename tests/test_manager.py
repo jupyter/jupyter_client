@@ -87,6 +87,17 @@ def test_kernel_supports_curve_encryption_from_kernelspec_metadata():
     assert km._kernel_supports_curve_encryption()
 
 
+def test_client_preserves_curve_key_types():
+    km = KernelManager()
+    km.curve_publickey = b"A" * 40
+    km.curve_secretkey = b"B" * 40
+
+    client = km.client()
+
+    assert client.curve_publickey == km.curve_publickey
+    assert client.curve_secretkey == km.curve_secretkey
+
+
 def test_required_transport_encryption_needs_kernelspec_feature():
     km = AsyncKernelManager(
         connection_file=os.path.join(tempfile.gettempdir(), "kernel-test-required.json"),
