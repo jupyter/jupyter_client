@@ -21,6 +21,9 @@ from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
 from .session import Session
 
+if t.TYPE_CHECKING:
+    from ipykernel.zmqshell import ZMQDisplayPublisher
+
 # some utilities to validate message structure, these might get moved elsewhere
 # if they prove to have more generic utility
 
@@ -532,14 +535,17 @@ class KernelClient(ConnectionFileMixin):
         if output_hook is None and "IPython" in sys.modules:
             from IPython import get_ipython
 
-            ip = get_ipython()  # type:ignore[no-untyped-call]
+            ip = get_ipython()
             in_kernel = getattr(ip, "kernel", False)
-            if in_kernel:
+            if ip is not None and in_kernel:
+                display_pub = t.cast("ZMQDisplayPublisher", ip.display_pub)
+                # the publisher of a running kernel always has a session
+                session = t.cast(Session, display_pub.session)
                 output_hook = partial(
                     self._output_hook_kernel,
-                    ip.display_pub.session,
-                    ip.display_pub.pub_socket,
-                    ip.display_pub.parent_header,
+                    session,
+                    display_pub.pub_socket,
+                    display_pub.parent_header,
                 )
         if output_hook is None:
             # default: redisplay plain-text outputs
