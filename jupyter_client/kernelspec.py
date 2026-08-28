@@ -164,7 +164,15 @@ class KernelSpecManager(LoggingConfigurable):
         """,
     )
     kernel_dirs: List[str] = List(
-        help="List of kernel directories to search. Later ones take priority over earlier."
+        help="""
+        List of kernel directories to search.
+
+        Directories earlier in the list take priority: when two directories
+        contain a kernelspec with the same name, the one from the earlier
+        directory wins. This matches the precedence of ``$JUPYTER_PATH``,
+        where the first entry has the highest priority (see
+        ``jupyter_path("kernels")``).
+        """
     )
 
     _deprecated_aliases = {

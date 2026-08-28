@@ -17,12 +17,13 @@ import stat
 import tempfile
 import warnings
 from getpass import getpass
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import zmq
 from jupyter_core.paths import jupyter_data_dir, jupyter_runtime_dir, secure_write
-from traitlets import Bool, CaselessStrEnum, Instance, Integer, Type, Unicode, observe
+from traitlets import Bool, Bytes, CaselessStrEnum, Instance, Integer, Type, Unicode, observe
 from traitlets.config import LoggingConfigurable, SingletonConfigurable
+from typing_extensions import TypedDict
 
 from .localinterfaces import localhost
 from .utils import _filefind
@@ -33,7 +34,22 @@ if TYPE_CHECKING:
     from .session import Session
 
 # Define custom type for kernel connection info
-KernelConnectionInfo = dict[str, Union[int, str, bytes]]
+
+
+class KernelConnectionInfo(TypedDict, extra_items=str | bytes | int, total=False):  # type: ignore[call-arg]
+    shell_port: int
+    iopub_port: int
+    stdin_port: int
+    control_port: int
+    hb_port: int
+    ip: str
+    key: str
+    transport: str
+    signature_scheme: str
+    kernel_name: str
+    session: Session
+    curve_publickey: str
+    curve_secretkey: str
 
 
 def write_connection_file(
@@ -48,6 +64,8 @@ def write_connection_file(
     transport: str = "tcp",
     signature_scheme: str = "hmac-sha256",
     kernel_name: str = "",
+    curve_publickey: bytes | None = None,
+    curve_secretkey: bytes | None = None,
     **kwargs: Any,
 ) -> tuple[str, KernelConnectionInfo]:
     """Generates a JSON config file, including the selection of random ports.
@@ -76,7 +94,7 @@ def write_connection_file(
     ip  : str, optional
         The ip address the kernel will bind to.
 
-    key : str, optional
+    key : bytes, optional
         The Session key used for message authentication.
 
     signature_scheme : str, optional
@@ -89,6 +107,12 @@ def write_connection_file(
 
     kernel_name : str, optional
         The name of the kernel currently connected to.
+
+    curve_publickey : bytes, optional
+        CurveZMQ public key (Z85).
+
+    curve_secretkey : bytes, optional
+        CurveZMQ secret key (Z85).
     """
     if not ip:
         ip = localhost()
@@ -149,7 +173,11 @@ def write_connection_file(
     cfg["transport"] = transport
     cfg["signature_scheme"] = signature_scheme
     cfg["kernel_name"] = kernel_name
-    cfg.update(kwargs)
+    if curve_publickey is not None:
+        cfg["curve_publickey"] = curve_publickey.decode("ascii")
+    if curve_secretkey is not None:
+        cfg["curve_secretkey"] = curve_secretkey.decode("ascii")
+    cfg.update(kwargs)  # type: ignore[typeddict-item]
 
     # Only ever write this file as user read/writeable
     # This would otherwise introduce a vulnerability as a file has secrets
@@ -371,6 +399,11 @@ class ConnectionFileMixin(LoggingConfigurable):
     stdin_port = Integer(0, config=True, help="set the stdin (ROUTER) port [default: random]")
     control_port = Integer(0, config=True, help="set the control (ROUTER) port [default: random]")
 
+    # Optional CurveZMQ keys loaded from the connection file (Z85-encoded bytes).
+    # None when the kernel was not started with CurveZMQ enabled.
+    curve_publickey: Bytes | None = Bytes(allow_none=True, default_value=None)
+    curve_secretkey: Bytes | None = Bytes(allow_none=True, default_value=None)
+
     # names of the ports with random assignment
     _random_port_names: list[str] | None = None
 
@@ -405,7 +438,7 @@ class ConnectionFileMixin(LoggingConfigurable):
         connect_info : dict
             dictionary of connection information.
         """
-        info = {
+        info: KernelConnectionInfo = {
             "transport": self.transport,
             "ip": self.ip,
             "shell_port": self.shell_port,
@@ -426,6 +459,9 @@ class ConnectionFileMixin(LoggingConfigurable):
                     "key": self.session.key,
                 }
             )
+        if self.curve_publickey is not None and self.curve_secretkey is not None:
+            info["curve_publickey"] = self.curve_publickey.decode()
+            info["curve_secretkey"] = self.curve_secretkey.decode()
         return info
 
     # factory for blocking clients
@@ -510,12 +546,14 @@ class ConnectionFileMixin(LoggingConfigurable):
             control_port=self.control_port,
             signature_scheme=self.session.signature_scheme,
             kernel_name=self.kernel_name,
+            curve_publickey=self.curve_publickey,
+            curve_secretkey=self.curve_secretkey,
             **kwargs,
         )
         # write_connection_file also sets default ports:
         self._record_random_port_names()
         for name in port_names:
-            setattr(self, name, cfg[name])
+            setattr(self, name, cast(int, cfg.get(name)))
 
         self._connection_file_written = True
 
@@ -548,23 +586,25 @@ class ConnectionFileMixin(LoggingConfigurable):
             See the connection_file spec for details.
         """
         self.transport = info.get("transport", self.transport)
-        self.ip = info.get("ip", self._ip_default())  # type:ignore[assignment]
+        self.ip = info.get("ip", self._ip_default())
 
         self._record_random_port_names()
         for name in port_names:
             if getattr(self, name) == 0 and name in info:
                 # not overridden by config or cl_args
-                setattr(self, name, info[name])
+                setattr(self, name, cast(int, info.get(name)))
 
         if "key" in info:
             key = info["key"]
-            if isinstance(key, str):
-                key = key.encode()
-            assert isinstance(key, bytes)
-
-            self.session.key = key
+            key_bytes = key if isinstance(key, bytes) else key.encode()  # type: ignore[redundant-expr,unreachable]
+            self.session.key = key_bytes
         if "signature_scheme" in info:
             self.session.signature_scheme = info["signature_scheme"]
+        if "curve_publickey" in info and "curve_secretkey" in info:
+            pub = info["curve_publickey"]
+            sec = info["curve_secretkey"]
+            self.curve_publickey = pub.encode() if isinstance(pub, str) else pub  # type: ignore[redundant-expr]
+            self.curve_secretkey = sec.encode() if isinstance(sec, str) else sec  # type: ignore[redundant-expr]
 
     def _reconcile_connection_info(self, info: KernelConnectionInfo) -> None:
         """Reconciles the connection information returned from the Provisioner.
@@ -618,6 +658,8 @@ class ConnectionFileMixin(LoggingConfigurable):
 
         pertinent_keys = [
             "key",
+            "curve_publickey",
+            "curve_secretkey",
             "ip",
             "stdin_port",
             "iopub_port",
@@ -657,6 +699,14 @@ class ConnectionFileMixin(LoggingConfigurable):
         sock.linger = 1000
         if identity:
             sock.identity = identity
+        if self.curve_publickey is not None:
+            # The connection file already carries this keypair, so reusing it
+            # avoids introducing an additional key-distribution mechanism here.
+            # curve_serverkey authenticates the server; the keypair configures
+            # encrypted communication for the client socket.
+            sock.curve_secretkey = self.curve_secretkey
+            sock.curve_publickey = self.curve_publickey
+            sock.curve_serverkey = self.curve_publickey
         sock.connect(url)
         return sock
 

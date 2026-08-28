@@ -21,6 +21,9 @@ from .clientabc import KernelClientABC
 from .connect import ConnectionFileMixin
 from .session import Session
 
+if t.TYPE_CHECKING:
+    from ipykernel.zmqshell import ZMQDisplayPublisher
+
 # some utilities to validate message structure, these might get moved elsewhere
 # if they prove to have more generic utility
 
@@ -392,9 +395,26 @@ class KernelClient(ConnectionFileMixin):
         if self._hb_channel is None:
             url = self._make_url("hb")
             self.log.debug("connecting heartbeat channel to %s", url)
-            self._hb_channel = self.hb_channel_class(  # type:ignore[call-arg,abstract]
-                self.context, self.session, url
-            )
+            hb_kwargs = {}
+            if self.curve_publickey:
+                hb_kwargs["curve_serverkey"] = self.curve_publickey
+            try:
+                self._hb_channel = self.hb_channel_class(  # type:ignore[call-arg,abstract]
+                    self.context,
+                    self.session,
+                    url,
+                    **hb_kwargs,
+                )
+            except TypeError as e:
+                if "curve_serverkey" in str(e):
+                    msg = (
+                        f"{self.hb_channel_class.__name__} does not support the "
+                        "'curve_serverkey' parameter. Upgrade the heartbeat channel "
+                        "class or disable CurveZMQ encryption."
+                    )
+                    raise RuntimeError(msg) from e
+                else:
+                    raise
         return self._hb_channel
 
     @property
@@ -515,14 +535,17 @@ class KernelClient(ConnectionFileMixin):
         if output_hook is None and "IPython" in sys.modules:
             from IPython import get_ipython
 
-            ip = get_ipython()  # type:ignore[no-untyped-call]
+            ip = get_ipython()
             in_kernel = getattr(ip, "kernel", False)
-            if in_kernel:
+            if ip is not None and in_kernel:
+                display_pub = t.cast("ZMQDisplayPublisher", ip.display_pub)
+                # the publisher of a running kernel always has a session
+                session = t.cast(Session, display_pub.session)
                 output_hook = partial(
                     self._output_hook_kernel,
-                    ip.display_pub.session,
-                    ip.display_pub.pub_socket,
-                    ip.display_pub.parent_header,
+                    session,
+                    display_pub.pub_socket,
+                    display_pub.parent_header,
                 )
         if output_hook is None:
             # default: redisplay plain-text outputs
