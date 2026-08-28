@@ -2,6 +2,42 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 8.10.0
+
+([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.9.1...d3e1683b82698fff5266f8eeb43656259ab6f746))
+
+### Enhancements made
+
+- Support curve encryption over IPC too [#1126](https://github.com/jupyter/jupyter_client/pull/1126) ([@krassowski](https://github.com/krassowski), [@Carreau](https://github.com/Carreau))
+
+### Bugs fixed
+
+- Preserve Curve key bytes in `KernelManager.client` [#1136](https://github.com/jupyter/jupyter_client/pull/1136) ([@aryansk](https://github.com/aryansk), [@krassowski](https://github.com/krassowski))
+
+### Maintenance and upkeep improvements
+
+- Fix mypy checks on CI [#1142](https://github.com/jupyter/jupyter_client/pull/1142) ([@krassowski](https://github.com/krassowski), [@Carreau](https://github.com/Carreau))
+
+### Documentation improvements
+
+- Correct `kernel_dirs` help text to describe first-wins precedence [#1139](https://github.com/jupyter/jupyter_client/pull/1139) ([@MsfPablo](https://github.com/MsfPablo), [@claude](https://github.com/claude), [@krassowski](https://github.com/krassowski))
+- Align `supported_encryption` format with JEP in docs [#1127](https://github.com/jupyter/jupyter_client/pull/1127) ([@krassowski](https://github.com/krassowski), [@Carreau](https://github.com/Carreau))
+
+### Other merged PRs
+
+- Use org-level security policy (ipython/.github/SECURITY.md) [#1140](https://github.com/jupyter/jupyter_client/pull/1140) ([@Yann-P](https://github.com/Yann-P), [@minrk](https://github.com/minrk))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2026-06-09&to=2026-08-28&type=c))
+
+@aryansk ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aaryansk+updated%3A2026-06-09..2026-08-28&type=Issues)) | @Carreau ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2026-06-09..2026-08-28&type=Issues)) | @claude ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aclaude+updated%3A2026-06-09..2026-08-28&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akrassowski+updated%3A2026-06-09..2026-08-28&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Aminrk+updated%3A2026-06-09..2026-08-28&type=Issues)) | @MsfPablo ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AMsfPablo+updated%3A2026-06-09..2026-08-28&type=Issues)) | @Yann-P ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3AYann-P+updated%3A2026-06-09..2026-08-28&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 8.9.1
 
 ([Full Changelog](https://github.com/jupyter/jupyter_client/compare/v8.9.0...b4a6c0a96ef36ab9bbc6cf7790a6edaaf631b6fe))
@@ -18,8 +54,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter_client/graphs/contributors?from=2026-06-05&to=2026-06-09&type=c))
 
 @Carreau ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3ACarreau+updated%3A2026-06-05..2026-06-09&type=Issues)) | @fleming79 ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Afleming79+updated%3A2026-06-05..2026-06-09&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyter%2Fjupyter_client+involves%3Akrassowski+updated%3A2026-06-05..2026-06-09&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 8.9.0
 
