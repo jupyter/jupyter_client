@@ -44,6 +44,7 @@ from traitlets import (
     Set,
     TraitError,
     Unicode,
+    default,
     observe,
 )
 from traitlets.config.configurable import Configurable, LoggingConfigurable
@@ -448,6 +449,36 @@ class Session(Configurable):
         config=True,
         help="Metadata dictionary, which serves as the default top-level metadata dict for each message.",
     )
+
+    extract_header_dates = Bool(
+        True,
+        config=True,
+        help="""
+        Parse timestamps in message headers to datetime objects.
+
+        If True, `date` and other timestamp fields
+        will be `datetime.datetime` objects.
+        If False, they will be ISO8601 strings.
+
+        Parsing has a performance cost and is deprecated,
+        but kept as default for backward compatibility.
+        """,
+    )
+
+    @default("extract_header_dates")
+    def _extract_header_dates_default(self):
+        msg = """Session.extract_header_dates = True is deprecated in jupyter-client 8.7
+
+        set cfg.Session.extract_header_dates = False
+        or JUPYTER_SESSION_EXTRACT_HEADER_DATES=0
+        to avoid this message.
+        """
+        env_value = os.environ.get("JUPYTER_SESSION_EXTRACT_HEADER_DATES", "") != "0"
+        if env_value:
+            warnings.warn(msg, DeprecationWarning, stacklevel=2)
+            return True
+        else:
+            return False
 
     # if 0, no adapting to do.
     adapt_version = Integer(0)
@@ -1080,10 +1111,14 @@ class Session(Configurable):
             msg = "malformed message, must have at least %i elements" % minlen
             raise TypeError(msg)
         header = self.unpack(msg_list[1])
-        message["header"] = extract_dates(header)
+        parent_header = self.unpack(msg_list[2])
+        if self.extract_header_dates:
+            header = extract_dates(header)
+            parent_header = extract_dates(parent_header)
+        message["header"] = header
         message["msg_id"] = header["msg_id"]
         message["msg_type"] = header["msg_type"]
-        message["parent_header"] = extract_dates(self.unpack(msg_list[2]))
+        message["parent_header"] = parent_header
         message["metadata"] = self.unpack(msg_list[3])
         if content:
             message["content"] = self.unpack(msg_list[4])
