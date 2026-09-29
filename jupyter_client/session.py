@@ -242,13 +242,7 @@ def utcnow() -> datetime:
 
 
 def _wake_async_socket(socket: zmq.asyncio.Socket) -> None:
-    """Wake pending poll/recv futures on an asyncio socket after a send through its sync shadow.
-
-    A send on the underlying socket processes zmq's command mailbox and can clear the
-    edge-triggered ``ZMQ_FD``, even when a message is waiting. A coroutine that awaits
-    ``poll()`` or ``recv()`` on the asyncio socket then sleeps until its timeout.
-    Reading ``EVENTS`` through the asyncio socket makes pyzmq check the socket again.
-    """
+    """A send through the sync shadow can clear the edge-triggered FD; make pyzmq recheck it."""
     socket.get(zmq.EVENTS)
 
 
