@@ -2,10 +2,13 @@
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
+import asyncio
 import hmac
 import math
 import os
 import platform
+import threading
+import time
 import uuid
 import warnings
 from datetime import datetime
@@ -504,6 +507,53 @@ class TestSession:
         A.close()
         B.close()
         ctx.term()
+
+    @pytest.mark.parametrize("method", ["send", "send_raw"])
+    async def test_send_wakes_pending_poll(self, session, method):
+        """A send on an asyncio socket must not hide a message that a pending poll waits for."""
+        timeout = 5.0
+        ctx = zmq.asyncio.Context()
+        sync_ctx = zmq.Context()
+        server = sync_ctx.socket(zmq.ROUTER)
+        port = server.bind_to_random_port("tcp://127.0.0.1")
+        client = ctx.socket(zmq.DEALER)
+        client.connect(f"tcp://127.0.0.1:{port}")
+
+        replied = threading.Event()
+
+        def serve():
+            ident, _ = server.recv_multipart()
+            server.send_multipart([ident, b"reply"])
+            replied.set()
+            server.recv_multipart()
+
+        thread = threading.Thread(target=serve, daemon=True)
+        thread.start()
+        await client.send(b"request")
+        poll = asyncio.ensure_future(client.poll(int(timeout * 1000)))
+        await asyncio.sleep(0)
+        # Block the event loop until the reply has arrived, then send (like a client that is busy).
+        assert replied.wait(timeout)
+        time.sleep(0.1)
+
+        msg = session.msg("comm_msg", content={})
+        start = time.monotonic()
+        if method == "send":
+            session.send(client, msg)
+        else:
+            msg_list = [
+                session.pack(msg[part])
+                for part in ["header", "parent_header", "metadata", "content"]
+            ]
+            session.send_raw(client, msg_list)
+        assert await poll == zmq.POLLIN
+        assert time.monotonic() - start < timeout / 2
+
+        thread.join(timeout)
+        client.close(0)
+        server.close(0)
+        ctx.term()
+        sync_ctx.term()
 
     def test_clone(self, session):
         s = session
