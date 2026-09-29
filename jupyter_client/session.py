@@ -241,6 +241,17 @@ def utcnow() -> datetime:
 # -----------------------------------------------------------------------------
 
 
+def _wake_async_socket(socket: zmq.asyncio.Socket) -> None:
+    """Wake pending poll/recv futures on an asyncio socket after a send through its sync shadow.
+
+    A send on the underlying socket processes zmq's command mailbox and can clear the
+    edge-triggered ``ZMQ_FD``, even when a message is waiting. A coroutine that awaits
+    ``poll()`` or ``recv()`` on the asyncio socket then sleeps until its timeout.
+    Reading ``EVENTS`` through the asyncio socket makes pyzmq check the socket again.
+    """
+    socket.get(zmq.EVENTS)
+
+
 class SessionFactory(LoggingConfigurable):
     """The Base class for configurables that have a Session, Context, logger,
     and IOLoop.
@@ -816,9 +827,9 @@ class Session(Configurable):
             # ZMQStreams and dummy sockets do not support tracking.
             track = False
 
-        if isinstance(stream, zmq.asyncio.Socket):
-            assert stream is not None
-            stream = zmq.Socket.shadow(stream.underlying)
+        async_stream = stream if isinstance(stream, zmq.asyncio.Socket) else None
+        if async_stream is not None:
+            stream = zmq.Socket.shadow(async_stream.underlying)
 
         if isinstance(msg_or_type, Message | dict):
             # We got a Message or message dict, not a msg_type so don't
@@ -868,6 +879,9 @@ class Session(Configurable):
         else:
             tracker = DONE
 
+        if async_stream is not None:
+            _wake_async_socket(async_stream)
+
         if self.debug:
             pprint.pprint(msg)  # noqa
             pprint.pprint(to_send)  # noqa
@@ -911,8 +925,10 @@ class Session(Configurable):
         to_send.append(self.sign(msg_list[0:4]))
         to_send.extend(msg_list)
         if isinstance(stream, zmq.asyncio.Socket):
-            stream = zmq.Socket.shadow(stream.underlying)
-        stream.send_multipart(to_send, flags, copy=copy)
+            zmq.Socket.shadow(stream.underlying).send_multipart(to_send, flags, copy=copy)
+            _wake_async_socket(stream)
+        else:
+            stream.send_multipart(to_send, flags, copy=copy)
 
     def recv(
         self,
