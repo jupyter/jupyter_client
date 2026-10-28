@@ -1,11 +1,21 @@
 import sys
 from subprocess import run
 
+import pytest
 
-def test_runapp(tmp_path):
+
+@pytest.mark.parametrize(
+    ("code", "expected"),
+    [
+        ("print('hello')", "hello\n"),
+        ("from IPython.display import display; display(True); display(True)", "True\nTrue\n"),
+        ("1 + 1", "2\n"),
+    ],
+)
+def test_runapp(tmp_path, code, expected):
     test_py = tmp_path / "test.py"
     with test_py.open("w") as f:
-        f.write("print('hello')")
+        f.write(code)
 
     p = run(
         [sys.executable, "-m", "jupyter_client.runapp", str(test_py)],
@@ -13,7 +23,7 @@ def test_runapp(tmp_path):
         text=True,
         check=True,
     )
-    assert p.stdout.strip() == "hello"
+    assert p.stdout == expected
 
 
 def test_no_such_kernel(tmp_path):
