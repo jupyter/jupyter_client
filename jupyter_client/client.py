@@ -266,7 +266,8 @@ class KernelClient(ConnectionFileMixin):
             stream = getattr(sys, content["name"])
             stream.write(content["text"])
         elif msg_type in ("display_data", "execute_result"):
-            sys.stdout.write(content["data"].get("text/plain", ""))
+            if "text/plain" in content["data"]:
+                sys.stdout.write(content["data"]["text/plain"] + "\n")
         elif msg_type == "error":
             sys.stderr.write("\n".join(content["traceback"]))
 

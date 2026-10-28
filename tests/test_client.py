@@ -10,7 +10,7 @@ import pytest
 from IPython.utils.capture import capture_output
 from traitlets import DottedObjectName, Type
 
-from jupyter_client.client import validate_string_dict
+from jupyter_client.client import KernelClient, validate_string_dict
 from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
 from jupyter_client.manager import KernelManager, start_new_async_kernel, start_new_kernel
 from jupyter_client.threaded import ThreadedKernelClient, ThreadedZMQSocketChannel
@@ -18,6 +18,35 @@ from jupyter_client.threaded import ThreadedKernelClient, ThreadedZMQSocketChann
 TIMEOUT = 60
 
 pjoin = os.path.join
+
+
+@pytest.mark.parametrize("msg_type", ["display_data", "execute_result"])
+@pytest.mark.parametrize("text", ["True", "first\nsecond", ""])
+def test_output_hook_display_newline(capsys, msg_type, text):
+    client = KernelClient()
+    msg = {"header": {"msg_type": msg_type}, "content": {"data": {"text/plain": text}}}
+    client._output_hook_default(msg)
+    client._output_hook_default(msg)
+    assert capsys.readouterr().out == (text + "\n") * 2
+
+
+@pytest.mark.parametrize("msg_type", ["display_data", "execute_result"])
+def test_output_hook_no_plain_text(capsys, msg_type):
+    client = KernelClient()
+    msg = {"header": {"msg_type": msg_type}, "content": {"data": {"text/html": "<b>x</b>"}}}
+    client._output_hook_default(msg)
+    assert capsys.readouterr().out == ""
+
+
+@pytest.mark.parametrize("name", ["stdout", "stderr"])
+def test_output_hook_stream_no_newline(capsys, name):
+    client = KernelClient()
+    msg = {"header": {"msg_type": "stream"}, "content": {"name": name, "text": "partial"}}
+    client._output_hook_default(msg)
+    captured = capsys.readouterr()
+    assert (captured.out, captured.err) == (
+        ("partial", "") if name == "stdout" else ("", "partial")
+    )
 
 
 class TestKernelClient(TestCase):
