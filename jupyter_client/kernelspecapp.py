@@ -148,6 +148,10 @@ class InstallKernelSpec(JupyterApp):
         "debug": base_flags["debug"],
     }
 
+    def _find_subcommand(self, name: str) -> str:
+        """This app takes kernel spec names or paths, not subcommands (gh-390)."""
+        return ""
+
     def parse_command_line(self, argv: None | list[str]) -> None:  # type:ignore[override]
         """Parse the command line args."""
         super().parse_command_line(argv)
@@ -210,6 +214,10 @@ class RemoveKernelSpec(JupyterApp):
         ),
     }
     flags.update(JupyterApp.flags)
+
+    def _find_subcommand(self, name: str) -> str:
+        """This app takes kernel spec names or paths, not subcommands (gh-390)."""
+        return ""
 
     def parse_command_line(self, argv: list[str] | None) -> None:  # type:ignore[override]
         """Parse the command line args."""
