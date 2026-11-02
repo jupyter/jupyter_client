@@ -118,3 +118,21 @@ def test__limit_to_missing(dummy_kernelspecs) -> None:
 
     assert specs == {k: v for k, v in dummy_kernelspecs.items() if k != "good"}
     assert paths == {k: v["resource_dir"] for k, v in dummy_kernelspecs.items() if k != "good"}
+
+
+@pytest.mark.parametrize("name", ["kernelspec", "notebook"])
+def test_positional_arg_named_like_a_jupyter_command(name, monkeypatch):
+    # gh-390: an argument matching a `jupyter-<name>` on PATH was taken as a
+    # subcommand, so the app skipped parsing its own arguments.
+    import jupyter_core.application
+
+    fake = {f"jupyter-{name}": f"/fake/bin/jupyter-{name}"}
+    monkeypatch.setattr(jupyter_core.application, "which", lambda cmd, *a, **k: fake.get(cmd))
+
+    remove = RemoveKernelSpec()
+    remove.initialize([name])
+    assert remove.spec_names == [name]
+
+    install = InstallKernelSpec()
+    install.initialize([name])
+    assert install.sourcedir == name
