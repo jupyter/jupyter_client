@@ -10,6 +10,7 @@ import sys
 from typing import TYPE_CHECKING, Any
 
 import zmq
+from traitlets.log import get_logger
 
 from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
@@ -260,6 +261,10 @@ class LocalProvisioner(KernelProvisionerBase):
                 self.kernel_spec, kernel_cmd, kwargs
             )
 
+        get_logger().warning(
+            "Cleaning kernel cmd before launch: %s",
+            kernel_cmd,
+        )
         kernel_cmd = ParameterizedKernelSpec.clear_custom_kernel_parameters(kernel_cmd)
         kwargs.pop("custom_kernel_specs", None)
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)

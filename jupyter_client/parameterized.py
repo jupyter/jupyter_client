@@ -7,6 +7,8 @@ import copy
 import re
 import typing as t
 
+from traitlets.log import get_logger
+
 from . import kernelspec
 
 _PLACEHOLDER = re.compile(r"\{([A-Za-z0-9_]+)\}")
@@ -137,34 +139,68 @@ class ParameterizedKernelSpec:
         return counter_secure_kernel_variables
 
     @classmethod
-    def check_kernel_is_secure(cls, kspec: kernelspec.KernelSpec) -> bool:
-        """Return False is kernel spec is not secure."""
+    def get_kernel_variable_names(cls, kspec: kernelspec.KernelSpec) -> set[str]:
+        """Return the set of variables referenced in argv and env."""
 
-        is_secure = False
-        total_sum_kernel_variables = cls.get_argv_env_kernel_variables(kspec)
+        variables = set()
+
+        def extract(value: t.Any) -> None:
+            if isinstance(value, str):
+                variables.update(cls.find_parameters(value))
+
+            elif isinstance(value, list):
+                for item in value:
+                    extract(item)
+
+            elif isinstance(value, dict):
+                for item in value.values():
+                    extract(item)
+
+        extract(kspec.argv)
+        extract(kspec.env or {})
+
+        return variables
+
+    @classmethod
+    def check_kernel_is_secure(cls, kspec: kernelspec.KernelSpec) -> bool:
+        """Return True if all custom kernel variables are secure."""
 
         properties = cls._parameter_properties(kspec)
+
+        total_sum_kernel_variables = cls.get_argv_env_kernel_variables(kspec)
+       
         if not properties:
-            # check if there are kernel variables even metadata.parameters are empty
-            if total_sum_kernel_variables > 0:
-                is_secure = False
-            else:
-                is_secure = True
-        else:
-            counter_secure_kernel_variables = cls.get_count_secure_kernel_variables(
+            return total_sum_kernel_variables == 0
+
+        kernel_variables = cls.get_kernel_variable_names(kspec)
+
+        secure_parameters = set(properties.keys())
+
+        unresolved_parameters = kernel_variables - secure_parameters
+        
+
+        counter_secure_kernel_variables = cls.get_count_secure_kernel_variables(
                 obj=kspec.metadata["parameters"], counter_secure_kernel_variables=0
+        )
+
+        if counter_secure_kernel_variables == 0 or unresolved_parameters:
+
+            get_logger().warning(
+            "The kernelspec is unsecure. Secured kernel variables: %s | Unresolved parameters: %s",
+            counter_secure_kernel_variables,
+            unresolved_parameters,
+        )
+            return False
+        elif total_sum_kernel_variables>0 and counter_secure_kernel_variables == total_sum_kernel_variables:
+            return True
+        else:
+            get_logger().warning(
+            "The kernelspec is unsecure. The sum of all kernel variables and number of secured kernel variables are not equal. Total kernel variables: %s | Secured kernel variables: %s",
+            total_sum_kernel_variables,
+            counter_secure_kernel_variables,
             )
 
-            if counter_secure_kernel_variables == 0:
-                is_secure = False
-            elif total_sum_kernel_variables > 0:
-                if counter_secure_kernel_variables == total_sum_kernel_variables:
-                    is_secure = True
-                else:
-                    is_secure = False
-            else:
-                is_secure = False
-        return is_secure
+            return False
 
     @classmethod
     def replace_by_default(
@@ -281,30 +317,53 @@ class ParameterizedKernelSpec:
 
     @classmethod
     def clear_custom_kernel_parameters(cls, kernel_parameters: t.Any) -> KernelParamType:
-        """
-        Safely removes unresolved custom kernel variables.
-        """
+        """Safely removes unresolved custom kernel variables.Logs a warning when parameters are dropped."""
+
         if isinstance(kernel_parameters, list):
-            clean_parameters = [
-                item
-                for item in kernel_parameters
-                if item != "" and not cls.has_custom_parameter(item)
-            ]
+            clean_parameters = []
+            dropped_parameters = []
+
+            for item in kernel_parameters:
+                if item == "" or cls.has_custom_parameter(item):
+                    dropped_parameters.append(item)
+                else:
+                    clean_parameters.append(item)
+
+            if dropped_parameters:
+                get_logger().warning(
+                    "Dropping unresolved custom kernel parameters: %s",
+                    dropped_parameters,
+                )
 
             return clean_parameters if clean_parameters else kernel_parameters
+
         elif isinstance(kernel_parameters, dict):
-            clean_parameters = {
-                key: value
-                for key, value in kernel_parameters.items()
-                if value != "" and not cls.has_custom_parameter(value)
-            }
+            clean_parameters_dict = {}
+            dropped_parameters = []
 
-            return clean_parameters if clean_parameters else kernel_parameters
-        else:
-            if isinstance(kernel_parameters, str):
-                if kernel_parameters == "" or cls.has_custom_parameter(kernel_parameters):
-                    return ""
-                return kernel_parameters
+            for key, value in kernel_parameters.items():
+                if value == "" or cls.has_custom_parameter(value):
+                    dropped_parameters.append(value)
+                else:
+                    clean_parameters_dict[key] = value
+
+            if dropped_parameters:
+                get_logger().warning(
+                    "Dropping unresolved custom kernel parameters: %s",
+                    dropped_parameters,
+                )
+
+            return clean_parameters_dict if clean_parameters_dict else kernel_parameters
+
+        elif isinstance(kernel_parameters, str):
+            if kernel_parameters == "" or cls.has_custom_parameter(kernel_parameters):
+                get_logger().warning(
+                    "Dropping unresolved custom kernel parameter: %s",
+                    kernel_parameters,
+                )
+                return ""
+
+            return kernel_parameters
 
         return kernel_parameters
 
