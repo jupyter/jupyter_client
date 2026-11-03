@@ -168,7 +168,7 @@ class ParameterizedKernelSpec:
         properties = cls._parameter_properties(kspec)
 
         total_sum_kernel_variables = cls.get_argv_env_kernel_variables(kspec)
-       
+
         if not properties:
             return total_sum_kernel_variables == 0
 
@@ -177,27 +177,28 @@ class ParameterizedKernelSpec:
         secure_parameters = set(properties.keys())
 
         unresolved_parameters = kernel_variables - secure_parameters
-        
 
         counter_secure_kernel_variables = cls.get_count_secure_kernel_variables(
-                obj=kspec.metadata["parameters"], counter_secure_kernel_variables=0
+            obj=kspec.metadata["parameters"], counter_secure_kernel_variables=0
         )
 
         if counter_secure_kernel_variables == 0 or unresolved_parameters:
-
             get_logger().warning(
-            "The kernelspec is unsecure. Secured kernel variables: %s | Unresolved parameters: %s",
-            counter_secure_kernel_variables,
-            unresolved_parameters,
-        )
+                "The kernelspec is unsecure. Secured kernel variables: %s | Unresolved parameters: %s",
+                counter_secure_kernel_variables,
+                unresolved_parameters,
+            )
             return False
-        elif total_sum_kernel_variables>0 and counter_secure_kernel_variables == total_sum_kernel_variables:
+        elif (
+            total_sum_kernel_variables > 0
+            and counter_secure_kernel_variables == total_sum_kernel_variables
+        ):
             return True
         else:
             get_logger().warning(
-            "The kernelspec is unsecure. The sum of all kernel variables and number of secured kernel variables are not equal. Total kernel variables: %s | Secured kernel variables: %s",
-            total_sum_kernel_variables,
-            counter_secure_kernel_variables,
+                "The kernelspec is unsecure. The sum of all kernel variables and number of secured kernel variables are not equal. Total kernel variables: %s | Secured kernel variables: %s",
+                total_sum_kernel_variables,
+                counter_secure_kernel_variables,
             )
 
             return False
