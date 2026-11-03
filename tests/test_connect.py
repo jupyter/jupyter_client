@@ -326,3 +326,28 @@ def test_reconcile_connection_info_with_curve_keys():
         km._reconcile_connection_info(provisioner_info)
         km_info = km.get_connection_info()
         assert km._equal_connections(km_info, provisioner_info)
+
+
+
+def test_load_connection_file_reloads_ports():
+    """A later connection file must replace the ports of an earlier one."""
+    first = sample_info.copy()
+    second = sample_info.copy()
+    second["shell_port"] = first["shell_port"] + 100
+    second["iopub_port"] = first["iopub_port"] + 100
+    second["stdin_port"] = first["stdin_port"] + 100
+    second["hb_port"] = first["hb_port"] + 100
+    second["control_port"] = first["control_port"] + 100
+
+    with TemporaryDirectory() as d:
+        fa = os.path.join(d, "a.json")
+        fb = os.path.join(d, "b.json")
+        connect.write_connection_file(fa, **first)
+        connect.write_connection_file(fb, **second)
+
+        km = KernelManager()
+        km.load_connection_file(fa)
+        assert km.shell_port == first["shell_port"]
+
+        km.load_connection_file(fb)
+        assert km.ports == [second[name] for name in connect.port_names]
