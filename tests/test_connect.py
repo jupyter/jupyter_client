@@ -328,7 +328,6 @@ def test_reconcile_connection_info_with_curve_keys():
         assert km._equal_connections(km_info, provisioner_info)
 
 
-
 def test_load_connection_file_reloads_ports():
     """A later connection file must replace the ports of an earlier one."""
     first = sample_info.copy()
