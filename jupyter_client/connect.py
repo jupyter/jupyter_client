@@ -419,6 +419,12 @@ class ConnectionFileMixin(LoggingConfigurable):
 
         return Session(parent=self)
 
+    @observe("curve_publickey", "session")
+    def _sync_session_transport_encrypted(self, change: Any) -> None:
+        # Every socket gets CurveZMQ when the public key is set
+        # so the session can rely on it.
+        self.session.transport_encrypted = self.curve_publickey is not None
+
     # --------------------------------------------------------------------------
     # Connection and ipc file management
     # --------------------------------------------------------------------------
