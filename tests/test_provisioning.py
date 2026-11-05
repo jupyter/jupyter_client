@@ -405,3 +405,55 @@ class TestRuntime:
             assert not isinstance(akm.provisioner, LocalProvisioner)
             if akm.kernel_name == "new_provisioner":
                 assert isinstance(akm.provisioner, NewTestProvisioner)
+
+
+class _FakeKernelProcess:
+    """Minimal Popen stand-in with a Windows interrupt event."""
+
+    def __init__(self) -> None:
+        self.win32_interrupt_event: int | None = 1234
+        self.stdout = None
+        self.stderr = None
+        self.stdin = None
+
+    def poll(self) -> int:
+        return 0
+
+    def wait(self) -> int:
+        return 0
+
+
+class TestLocalProvisionerWindowsHandles:
+    async def test_wait_closes_interrupt_event(self, monkeypatch) -> None:
+        closed: list[int] = []
+        monkeypatch.setattr("jupyter_client.win_interrupt.close_interrupt_event", closed.append)
+        provisioner = LocalProvisioner()
+        provisioner.process = _FakeKernelProcess()
+
+        await provisioner.wait()
+
+        assert closed == [1234]
+        assert provisioner.process is None
+
+    async def test_cleanup_closes_interrupt_event_without_wait(self, monkeypatch) -> None:
+        closed: list[int] = []
+        monkeypatch.setattr("jupyter_client.win_interrupt.close_interrupt_event", closed.append)
+        provisioner = LocalProvisioner()
+        process = _FakeKernelProcess()
+        provisioner.process = process
+
+        await provisioner.cleanup()
+
+        assert closed == [1234]
+        assert process.win32_interrupt_event is None
+
+    async def test_wait_and_cleanup_close_interrupt_event_once(self, monkeypatch) -> None:
+        closed: list[int] = []
+        monkeypatch.setattr("jupyter_client.win_interrupt.close_interrupt_event", closed.append)
+        provisioner = LocalProvisioner()
+        provisioner.process = _FakeKernelProcess()
+
+        await provisioner.wait()
+        await provisioner.cleanup()
+
+        assert closed == [1234]

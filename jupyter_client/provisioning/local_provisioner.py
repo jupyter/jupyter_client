@@ -66,6 +66,7 @@ class LocalProvisioner(KernelProvisionerBase):
                 fid = getattr(self.process, attr)
                 if fid:
                     fid.close()
+            self._close_win32_interrupt_event(self.process)
             self.process = None  # allow has_process to now return False
         return ret
 
@@ -128,6 +129,16 @@ class LocalProvisioner(KernelProvisionerBase):
                 LocalProvisioner._tolerate_no_process(e)
 
     @staticmethod
+    def _close_win32_interrupt_event(process: Any) -> None:
+        """Close the interrupt event attached to a Windows kernel process."""
+        interrupt_event = getattr(process, "win32_interrupt_event", None)
+        if interrupt_event:
+            from ..win_interrupt import close_interrupt_event
+
+            close_interrupt_event(interrupt_event)
+            process.win32_interrupt_event = None
+
+    @staticmethod
     def _tolerate_no_process(os_error: OSError) -> None:
         # In Windows, we will get an Access Denied error if the process
         # has already terminated. Ignore it.
@@ -163,6 +174,10 @@ class LocalProvisioner(KernelProvisionerBase):
                 if TYPE_CHECKING:
                     assert isinstance(port, int)
                 lpc.return_port(port)
+
+        # The event may still be open if the process never reached wait().
+        if self.process:
+            self._close_win32_interrupt_event(self.process)  # type:ignore[unreachable]
 
     async def pre_launch(self, **kwargs: Any) -> dict[str, Any]:
         """Perform any steps in preparation for kernel process launch.
