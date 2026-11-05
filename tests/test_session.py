@@ -99,6 +99,29 @@ class TestSession:
         assert isinstance(session.key, bytes)
         assert isinstance(session.auth, hmac.HMAC)
 
+    def test_encrypted_transport_signing(self):
+        key = b"secret"
+        signer = ss.Session(key=key, transport_encrypted=True)
+        non_signer = ss.Session(key=key, transport_encrypted=True, sign_encrypted_messages=False)
+        receiver = ss.Session(key=key, transport_encrypted=True)
+        msg = signer.msg("execute", content={"a": 1})
+
+        # Signing stays on by default; it can be turned off only on encrypted transports.
+        signed = signer.serialize(msg)[1:]
+        unsigned = non_signer.serialize(msg)[1:]
+        assert signed[0]
+        assert unsigned[0] == b""
+        assert ss.Session(key=key, sign_encrypted_messages=False).serialize(msg)[1]
+
+        # Encrypted receivers accept both, without keeping a replay history.
+        for parts in (signed, signed, unsigned):
+            assert receiver.deserialize(parts)["content"] == {"a": 1}
+        assert not receiver.digest_history
+
+        # Unencrypted receivers still reject unsigned messages.
+        with pytest.raises(ValueError, match="Unsigned Message"):
+            ss.Session(key=key).deserialize(unsigned)
+
     def test_send_sync(self, session):
         ctx = zmq.Context()
         A = ctx.socket(zmq.PAIR)

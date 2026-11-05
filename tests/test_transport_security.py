@@ -355,6 +355,26 @@ def test_curve_keys_reused_across_restart(tmp_path):
     km.context.term()
 
 
+@pytest.mark.parametrize("supported_encryption, encrypted", [("curve", True), (None, False)])
+def test_session_transport_encrypted_follows_curve_keys(tmp_path, supported_encryption, encrypted):
+    """Sessions of the manager and its clients know when the connection uses Curve."""
+    km = _make_km(tmp_path, supported_encryption=supported_encryption, transport_encryption="auto")
+    km.pre_start_kernel()
+    assert km.session.transport_encrypted is encrypted
+    assert km.client().session.transport_encrypted is encrypted
+
+    # A client loading the connection file gets the same, and the key is kept.
+    with open(km.connection_file) as f:
+        info = json.load(f)
+    assert info["key"]
+    client = KernelClient()
+    client.load_connection_info(info)
+    assert client.session.transport_encrypted is encrypted
+
+    km.cleanup_connection_file()
+    km.context.term()
+
+
 def test_connect_shell_to_curve_server_with_curve_keys_succeeds():
     """Public API path: load_connection_info + connect_shell works with curve keys."""
     pub, sec = zmq.curve_keypair()
