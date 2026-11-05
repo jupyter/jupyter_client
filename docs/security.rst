@@ -120,6 +120,25 @@ apply them to their ZMQ sockets before binding. See :ref:`kernels` for the
 full description of the connection file format.
 
 
+Message signing
+~~~~~~~~~~~~~~~
+
+CurveZMQ already authenticates every frame, so on a CurveZMQ connection a
+``Session`` accepts messages with or without an HMAC signature.
+
+Messages are still signed by default, because older peers check signatures.
+Once every peer is updated, including each kernel's environment, turn
+signing off with:
+
+.. code:: python
+
+    c.Session.sign_encrypted_messages = False
+
+The setting applies to the messages that a process sends. Set it in the
+kernel's configuration too, to stop the kernel from signing its messages.
+Connections without Curve keys always sign and check signatures.
+
+
 Implementing curve support in a kernel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
