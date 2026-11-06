@@ -10,10 +10,12 @@ import sys
 from typing import TYPE_CHECKING, Any
 
 import zmq
+from traitlets.log import get_logger
 
 from ..connect import KernelConnectionInfo, LocalPortCache
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip, local_ips
+from ..parameterized import ParameterizedKernelSpec
 from .provisioner_base import KernelProvisionerBase
 
 
@@ -176,6 +178,9 @@ class LocalProvisioner(KernelProvisionerBase):
         # This should be considered temporary until a better division of labor can be defined.
         km = self.parent
         if km:
+            # Get default values from kernel.json file if there is a custom kernel
+            km.set_default_custom_kernel_specs_value()
+
             transport_encryption = kwargs.pop(
                 "transport_encryption", getattr(km, "transport_encryption", "disabled")
             )
@@ -237,6 +242,9 @@ class LocalProvisioner(KernelProvisionerBase):
                         curve_publickey = km.curve_publickey
                         curve_secretkey = km.curve_secretkey
             if "env" in kwargs:
+                # update env if there is custom kernel specs variables for env
+                km.update_env(env=kwargs["env"])
+
                 jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
                 km.write_connection_file(jupyter_session=jupyter_session)
             else:
@@ -249,7 +257,16 @@ class LocalProvisioner(KernelProvisionerBase):
         else:
             extra_arguments = kwargs.pop("extra_arguments", [])
             kernel_cmd = self.kernel_spec.argv + extra_arguments
+            kernel_cmd = ParameterizedKernelSpec.update_custom_arg_parameters(
+                self.kernel_spec, kernel_cmd, kwargs
+            )
 
+        get_logger().warning(
+            "Cleaning kernel cmd before launch: %s",
+            kernel_cmd,
+        )
+        kernel_cmd = ParameterizedKernelSpec.clear_custom_kernel_parameters(kernel_cmd)
+        kwargs.pop("custom_kernel_specs", None)
         return await super().pre_launch(cmd=kernel_cmd, **kwargs)
 
     async def launch_kernel(self, cmd: list[str], **kwargs: Any) -> KernelConnectionInfo:

@@ -42,6 +42,7 @@ from .blocking import BlockingKernelClient
 from .client import KernelClient
 from .connect import ConnectionFileMixin
 from .managerabc import KernelManagerABC
+from .parameterized import ParameterizedKernelSpec
 from .provisioning import KernelProvisionerBase
 from .provisioning import KernelProvisionerFactory as KPF  # noqa
 
@@ -300,6 +301,8 @@ class KernelManager(ConnectionFileMixin):
 
     shutting_down: bool = False
 
+    custom_kernel_default_value: dict = {}
+
     def __del__(self) -> None:
         self._close_control_socket()
         self.cleanup_connection_file()
@@ -374,20 +377,41 @@ class KernelManager(ConnectionFileMixin):
 
         .. version-added: 8.5
         """
+
         # Mypy think this is unreachable as it see _launch_args as Dict, not t.Dict
         if (
             isinstance(self._launch_args, dict)
             and "env" in self._launch_args
             and isinstance(self._launch_args["env"], dict)  # type: ignore [unreachable]
         ):
-            self._launch_args["env"].update(env)  # type: ignore [unreachable]
+            saved_env = self._launch_args["env"]  # type: ignore [unreachable]
+            custom_kernel_dict = self._launch_args.get("custom_kernel_specs")
+
+            if isinstance(custom_kernel_dict, dict):
+                for key, _value in custom_kernel_dict.items():
+                    if key in saved_env and key not in env:
+                        env[key] = saved_env[key]
+
+                env = ParameterizedKernelSpec.update_custom_env_parameters(
+                    self._launch_args, self.custom_kernel_default_value, env=env
+                )
+
+            if isinstance(saved_env, dict):
+                saved_env.update(env)
+            else:
+                self._launch_args["env"] = dict(env)
+
+    def set_default_custom_kernel_specs_value(self) -> None:
+        assert self.kernel_spec is not None
+        self.custom_kernel_default_value = (
+            ParameterizedKernelSpec.get_default_custom_kernel_specs_value(self.kernel_spec)
+        )
 
     def format_kernel_cmd(self, extra_arguments: t.List[str] | None = None) -> t.List[str]:
         """Replace templated args (e.g. {connection_file})"""
         extra_arguments = extra_arguments or []
         assert self.kernel_spec is not None
         cmd = self.kernel_spec.argv + extra_arguments
-
         if cmd and cmd[0] in {
             "python",
             "python%i" % sys.version_info[0],
@@ -411,10 +435,20 @@ class KernelManager(ConnectionFileMixin):
             "prefix": sys.prefix,
         }
 
+        launch_args = self._launch_args if isinstance(self._launch_args, dict) else {}
+
+        # Updating ns if there are custom kernel specs variables
+        custom_kernel_dict = ParameterizedKernelSpec.get_custom_kernel_spec_value(
+            launch_args, self.custom_kernel_default_value
+        )
+
+        if isinstance(custom_kernel_dict, dict):
+            for custom_kernel_spec_key, custom_kernel_spec_value in custom_kernel_dict.items():
+                ns[custom_kernel_spec_key] = custom_kernel_spec_value
+
         if self.kernel_spec:  # type:ignore[truthy-bool]
             ns["resource_dir"] = self.kernel_spec.resource_dir
         assert isinstance(self._launch_args, dict)
-
         ns.update(self._launch_args)
 
         pat = re.compile(r"\{([A-Za-z0-9_]+)\}")
@@ -491,7 +525,26 @@ class KernelManager(ConnectionFileMixin):
                 parent=self,
             )
         kw = await self.provisioner.pre_launch(**kw)
+        # update env
+        if (
+            "env" in kw
+            and "custom_kernel_specs" in self._launch_args
+            and isinstance(self._launch_args["custom_kernel_specs"], dict)  # type: ignore [unreachable]
+        ):
+            kw["env"] = ParameterizedKernelSpec.update_custom_env_parameters(  # type: ignore [unreachable]
+                self._launch_args, self.custom_kernel_default_value, env=kw["env"]
+            )
+
+            saved_env = self._launch_args.get("env")
+            if isinstance(saved_env, dict):
+                saved_env.update(kw["env"])
+            else:
+                self._launch_args["env"] = dict(kw["env"])
+
         kernel_cmd = kw.pop("cmd")
+        if "custom_kernel_specs" in kw:
+            del kw["custom_kernel_specs"]
+
         return kernel_cmd, kw
 
     pre_start_kernel = run_sync(_async_pre_start_kernel)

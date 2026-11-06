@@ -60,6 +60,9 @@ def launch_kernel(
     # If this process has been backgrounded, our stdin is invalid. Since there
     # is no compelling reason for the kernel to inherit our stdin anyway, we'll
     # place this one safe and always redirect.
+
+    kw.pop("custom_kernel_specs", None)
+
     redirect_in = True
     _stdin = PIPE if stdin is None else stdin
 
