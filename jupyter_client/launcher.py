@@ -87,12 +87,16 @@ def launch_kernel(
     }
     kwargs.update(main_args)
 
+    # Handles owned by this process that must be released once the child is spawned.
+    interrupt_event: Any = None
+    parent_handle: Any = None
+
     # Spawn a kernel.
     if sys.platform == "win32":
         if cwd:
             kwargs["cwd"] = cwd
 
-        from .win_interrupt import create_interrupt_event
+        from .win_interrupt import close_interrupt_event, create_interrupt_event
 
         # Create a Win32 event for interrupting the kernel
         # and store it in an environment variable.
@@ -105,6 +109,7 @@ def launch_kernel(
             from _winapi import (
                 CREATE_NEW_PROCESS_GROUP,
                 DUPLICATE_SAME_ACCESS,
+                CloseHandle,
                 DuplicateHandle,
                 GetCurrentProcess,
             )
@@ -112,6 +117,7 @@ def launch_kernel(
             from _subprocess import (
                 CREATE_NEW_PROCESS_GROUP,
                 DUPLICATE_SAME_ACCESS,
+                CloseHandle,
                 DuplicateHandle,
                 GetCurrentProcess,
             )
@@ -121,7 +127,7 @@ def launch_kernel(
             kwargs["creationflags"] = CREATE_NEW_PROCESS_GROUP
         else:
             pid = GetCurrentProcess()
-            handle = DuplicateHandle(
+            parent_handle = DuplicateHandle(
                 pid,
                 pid,
                 pid,
@@ -129,7 +135,7 @@ def launch_kernel(
                 True,
                 DUPLICATE_SAME_ACCESS,  # Inheritable by new processes.
             )
-            env["JPY_PARENT_PID"] = str(int(handle))
+            env["JPY_PARENT_PID"] = str(int(parent_handle))
 
         # Prevent creating new console window on pythonw
         if redirect_out:
@@ -170,9 +176,19 @@ def launch_kernel(
                 f"The following exception occurred handling the previous failure: {ex2}",
                 stacklevel=2,
             )
+        if sys.platform == "win32":
+            # No process inherited these handles, so release them here.
+            if parent_handle is not None:
+                CloseHandle(parent_handle)
+            if interrupt_event is not None:
+                close_interrupt_event(interrupt_event)
         raise ex
 
     if sys.platform == "win32":
+        # The child inherited its own copy of the parent handle at spawn, and
+        # this process never uses its copy again.
+        if parent_handle is not None:
+            CloseHandle(parent_handle)
         # Attach the interrupt event to the Popen object so it can be used later.
         proc.win32_interrupt_event = interrupt_event
 

@@ -44,3 +44,8 @@ def create_interrupt_event() -> Any:
 def send_interrupt(interrupt_handle: Any) -> None:
     """Sends an interrupt event using the specified handle."""
     ctypes.windll.kernel32.SetEvent(interrupt_handle)  # type:ignore[attr-defined]
+
+
+def close_interrupt_event(interrupt_handle: Any) -> None:
+    """Close an interrupt event handle owned by this process."""
+    ctypes.windll.kernel32.CloseHandle(interrupt_handle)  # type:ignore[attr-defined]
