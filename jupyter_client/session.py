@@ -495,6 +495,25 @@ class Session(Configurable):
         else:
             self.auth = None
 
+    transport_encrypted = Bool(
+        False,
+        help="""Whether every connection that carries this session's messages uses CurveZMQ.
+
+        Set from the connection info when it holds Curve keys. CurveZMQ
+        authenticates every frame, so received messages are accepted with
+        or without a signature.""",
+    )
+
+    sign_encrypted_messages = Bool(
+        True,
+        config=True,
+        help="""Whether to sign outgoing messages when the transport uses CurveZMQ.
+
+        Signing is redundant with CurveZMQ, but peers running an older
+        jupyter_client still check signatures and drop unsigned messages.
+        Only set this to False when every peer has been updated.""",
+    )
+
     digest_history = Set()
     digest_history_size = Integer(
         2**16,
@@ -679,14 +698,17 @@ class Session(Configurable):
         return msg
 
     def sign(self, msg_list: list) -> bytes:
-        """Sign a message with HMAC digest. If no auth, return b''.
+        """Sign a message with HMAC digest.
+
+        Returns b'' if there is no auth, or if the transport uses CurveZMQ
+        and `sign_encrypted_messages` is False.
 
         Parameters
         ----------
         msg_list : list
             The [p_header,p_parent,p_content] part of the message list.
         """
-        if self.auth is None:
+        if self.auth is None or (self.transport_encrypted and not self.sign_encrypted_messages):
             return b""
         h = self.auth.copy()
         for m in msg_list:
@@ -1062,7 +1084,9 @@ class Session(Configurable):
             msg_list = t.cast(t.List[bytes], msg_list)
             msg_list = msg_list_beginning + msg_list[minlen:]
         msg_list = t.cast(t.List[bytes], msg_list)
-        if self.auth is not None:
+        # CurveZMQ already authenticates every frame and rejects replays,
+        # so the signature is not checked on encrypted transports.
+        if self.auth is not None and not self.transport_encrypted:
             signature = msg_list[0]
             if not signature:
                 msg = "Unsigned Message"
