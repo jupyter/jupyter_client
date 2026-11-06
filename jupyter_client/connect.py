@@ -571,6 +571,13 @@ class ConnectionFileMixin(LoggingConfigurable):
         self.log.debug("Loading connection file %s", connection_file)
         with open(connection_file) as f:
             info = json.load(f)
+        # Ports already set are not overridden by load_connection_info, which is
+        # what keeps config and command-line values in force. Here the file is the
+        # authority, so clear the ports it carries before loading it, otherwise a
+        # second load into the same object silently keeps the first file's ports.
+        for name in port_names:
+            if name in info:
+                setattr(self, name, 0)
         self.load_connection_info(info)
 
     def load_connection_info(self, info: KernelConnectionInfo) -> None:
