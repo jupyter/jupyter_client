@@ -19,6 +19,8 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: ipykernel
+          # ipykernel >= 7.4 declares test deps in a dependency group.
+          package_spec: ". --group test"
 
   nbclient:
     runs-on: ubuntu-latest
