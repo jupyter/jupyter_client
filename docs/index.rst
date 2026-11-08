@@ -24,6 +24,7 @@ with Jupyter kernels.
    kernels
    wrapperkernels
    provisioning
+   kernel-management
    pending-kernels
    security
 

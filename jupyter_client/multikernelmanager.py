@@ -14,7 +14,7 @@ from functools import wraps
 from pathlib import Path
 
 import zmq
-from traitlets import Any, Bool, Dict, DottedObjectName, Instance, Unicode, default, observe
+from traitlets import Any, Bool, Dict, DottedObjectName, Instance, Int, Unicode, default, observe
 from traitlets.config.configurable import LoggingConfigurable
 from traitlets.utils.importstring import import_item
 
@@ -94,6 +94,13 @@ class MultiKernelManager(LoggingConfigurable):
         help="Share a single zmq.Context to talk to all my kernels",
     ).tag(config=True)
 
+    io_threads = Int(
+        1,
+        min=1,
+        help="Number of I/O threads for a shared zmq.Context created by this manager. "
+        "Does not change an existing context or apply when shared_context is False.",
+    ).tag(config=True)
+
     context = Instance("zmq.Context")
 
     _created_context = Bool(False)
@@ -108,7 +115,7 @@ class MultiKernelManager(LoggingConfigurable):
     @default("context")
     def _context_default(self) -> zmq.Context:
         self._created_context = True
-        return zmq.Context()
+        return zmq.Context(io_threads=self.io_threads)
 
     connection_dir = Unicode("")
     external_connection_dir = Unicode(None, allow_none=True)
@@ -615,7 +622,7 @@ class AsyncMultiKernelManager(MultiKernelManager):
     @default("context")
     def _context_default(self) -> zmq.asyncio.Context:
         self._created_context = True
-        return zmq.asyncio.Context()
+        return zmq.asyncio.Context(io_threads=self.io_threads)
 
     start_kernel: t.Callable[..., t.Awaitable] = MultiKernelManager._async_start_kernel  # type:ignore[assignment]
     restart_kernel: t.Callable[..., t.Awaitable] = MultiKernelManager._async_restart_kernel  # type:ignore[assignment]
