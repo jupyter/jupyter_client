@@ -112,7 +112,7 @@ class KMSubclass(RecordCallMixin):
         """Record call and defer to superclass"""
 
     @subclass_recorder
-    def _async_kill_kernel(self):
+    def _async_kill_kernel(self, restart=False):
         """Record call and defer to superclass"""
 
     @subclass_recorder

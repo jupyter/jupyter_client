@@ -570,7 +570,7 @@ class KernelManager(ConnectionFileMixin):
         except asyncio.TimeoutError:
             self.log.debug("Kernel is taking too long to finish, terminating")
             self._shutdown_status = _ShutdownStatus.SigtermRequest
-            await self._async_send_kernel_sigterm()
+            await self._async_send_kernel_sigterm(restart=restart)
 
         try:
             await asyncio.wait_for(
@@ -635,7 +635,7 @@ class KernelManager(ConnectionFileMixin):
             await self._async_interrupt_kernel()
 
         if now:
-            await self._async_kill_kernel()
+            await self._async_kill_kernel(restart=restart)
         else:
             await self._async_request_shutdown(restart=restart)
             # Don't send any additional kernel kill messages immediately, to give

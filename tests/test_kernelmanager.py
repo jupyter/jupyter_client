@@ -11,13 +11,16 @@ import sys
 import sysconfig
 import time
 from subprocess import PIPE
+from unittest.mock import Mock
 
 import pytest
 from jupyter_core import paths
+from jupyter_core.utils import ensure_async
 from traitlets.config.loader import Config
 
 from jupyter_client import AsyncKernelManager, KernelManager
 from jupyter_client.manager import _ShutdownStatus, start_new_async_kernel, start_new_kernel
+from jupyter_client.provisioning import KernelProvisionerBase
 
 from .utils import AsyncKMSubclass, SyncKMSubclass
 
@@ -105,6 +108,37 @@ def async_km(request, config):
 def async_km_subclass(config):
     km = AsyncKMSubclass(config=config)
     return km
+
+
+@pytest.mark.parametrize("manager_class", [KernelManager, AsyncKernelManager])
+@pytest.mark.parametrize("now", [False, True])
+@pytest.mark.parametrize("restart", [False, True])
+async def test_shutdown_preserves_provisioner_restart_flag(
+    monkeypatch, manager_class, now, restart
+):
+    km = manager_class()
+    provisioner = Mock(spec=KernelProvisionerBase)
+    provisioner.has_process = True
+    provisioner.poll.return_value = 0
+    provisioner.get_shutdown_wait_time.return_value = 0
+    km.provisioner = provisioner
+    # Avoid sending a shutdown request to a real kernel. A zero wait forces escalation.
+    monkeypatch.setattr(km, "_connect_control_socket", lambda: None)
+    monkeypatch.setattr(km.session, "send", Mock())
+
+    try:
+        await ensure_async(km.shutdown_kernel(now=now, restart=restart))
+
+        provisioner.kill.assert_awaited_once_with(restart=restart)
+        if now:
+            provisioner.terminate.assert_not_awaited()
+        else:
+            provisioner.terminate.assert_awaited_once_with(restart=restart)
+            provisioner.shutdown_requested.assert_awaited_once_with(restart=restart)
+        provisioner.cleanup.assert_awaited_once_with(restart=restart)
+    finally:
+        if not km.context.closed:
+            km.context.destroy()
 
 
 class TestKernelManagerShutDownGracefully:
