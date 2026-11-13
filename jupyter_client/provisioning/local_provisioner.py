@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import zmq
 
-from ..connect import KernelConnectionInfo, LocalPortCache
+from ..connect import KernelConnectionInfo, LocalPortCache, port_names
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip, local_ips
 from .provisioner_base import KernelProvisionerBase
@@ -211,13 +211,26 @@ class LocalProvisioner(KernelProvisionerBase):
 
             # write connection file / get default ports
             # TODO - change when handshake pattern is adopted
-            if km.cache_ports and not self.ports_cached:
+            if km.cache_ports:
+                # Record random requests before cached allocation fills them in.
+                km._record_random_port_names()
                 lpc = LocalPortCache.instance()
-                km.shell_port = lpc.find_available_port(km.ip)
-                km.iopub_port = lpc.find_available_port(km.ip)
-                km.stdin_port = lpc.find_available_port(km.ip)
-                km.hb_port = lpc.find_available_port(km.ip)
-                km.control_port = lpc.find_available_port(km.ip)
+                allocated: dict[str, int] = {}
+                try:
+                    for name in port_names:
+                        if not self.ports_cached or getattr(km, name) <= 0:
+                            allocated[name] = lpc.find_available_port(km.ip)
+                except Exception:
+                    for port in allocated.values():
+                        lpc.return_port(port)
+                    raise
+                for name, port in allocated.items():
+                    if self.ports_cached:
+                        previous = self.connection_info.get(name)
+                        if TYPE_CHECKING:
+                            assert isinstance(previous, int)
+                        lpc.return_port(previous)
+                    setattr(km, name, port)
                 self.ports_cached = True
 
             if encryption_enabled and encryption_supported_transport:
