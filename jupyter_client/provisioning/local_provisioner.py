@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import zmq
 
-from ..connect import KernelConnectionInfo, LocalPortCache
+from ..connect import KernelConnectionInfo, LocalPortCache, port_names
 from ..launcher import launch_kernel
 from ..localinterfaces import is_local_ip, local_ips
 from .provisioner_base import KernelProvisionerBase
@@ -209,17 +209,6 @@ class LocalProvisioner(KernelProvisionerBase):
             # build the Popen cmd
             extra_arguments = kwargs.pop("extra_arguments", [])
 
-            # write connection file / get default ports
-            # TODO - change when handshake pattern is adopted
-            if km.cache_ports and not self.ports_cached:
-                lpc = LocalPortCache.instance()
-                km.shell_port = lpc.find_available_port(km.ip)
-                km.iopub_port = lpc.find_available_port(km.ip)
-                km.stdin_port = lpc.find_available_port(km.ip)
-                km.hb_port = lpc.find_available_port(km.ip)
-                km.control_port = lpc.find_available_port(km.ip)
-                self.ports_cached = True
-
             if encryption_enabled and encryption_supported_transport:
                 kernel_curve_ok = encryption_required or (
                     hasattr(km, "_kernel_supports_curve_encryption")
@@ -236,12 +225,51 @@ class LocalProvisioner(KernelProvisionerBase):
                         # process will read the same keys the manager already holds.
                         curve_publickey = km.curve_publickey
                         curve_secretkey = km.curve_secretkey
-            if "env" in kwargs:
-                jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
-                km.write_connection_file(jupyter_session=jupyter_session)
-            else:
-                km.write_connection_file()
+
+            # write connection file / get default ports
+            # TODO - change when handshake pattern is adopted
+            lpc = LocalPortCache.instance()
+            was_cached = self.ports_cached
+            # Ports to restore if the connection file cannot be written.
+            requested: dict[str, int] = {}
+            if km.cache_ports:
+                # Record random requests before cached allocation fills them in.
+                km._record_random_port_names()
+                allocated: dict[str, int] = {}
+                try:
+                    for name in port_names:
+                        if not was_cached or getattr(km, name) <= 0:
+                            allocated[name] = lpc.find_available_port(km.ip)
+                except BaseException:
+                    for port in allocated.values():
+                        lpc.return_port(port)
+                    raise
+                for name, port in allocated.items():
+                    requested[name] = getattr(km, name)
+                    setattr(km, name, port)
+                self.ports_cached = True
+            previous_info = self.connection_info
+            try:
+                if "env" in kwargs:
+                    jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
+                    km.write_connection_file(jupyter_session=jupyter_session)
+                else:
+                    km.write_connection_file()
+            except BaseException:
+                # Keep the reservations described by connection_info.
+                for name, port in requested.items():
+                    lpc.return_port(getattr(km, name))
+                    setattr(km, name, port)
+                self.ports_cached = was_cached
+                raise
             self.connection_info = km.get_connection_info()
+            if was_cached:
+                # Release superseded ports only once their replacements are recorded.
+                for name in requested:
+                    previous = previous_info.get(name)
+                    if TYPE_CHECKING:
+                        assert isinstance(previous, int)
+                    lpc.return_port(previous)
 
             kernel_cmd = km.format_kernel_cmd(
                 extra_arguments=extra_arguments
