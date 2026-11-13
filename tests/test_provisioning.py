@@ -7,6 +7,7 @@ import json
 import os
 import signal
 import sys
+from importlib.metadata import EntryPoints
 from subprocess import PIPE
 from typing import Any
 
@@ -246,6 +247,37 @@ def kpf(monkeypatch):
     yield factory
     KernelProvisionerFactory.clear_instance()
     KernelProvisionerFactory.provisioners.clear()
+
+
+def test_get_provisioner_returns_named_entrypoint(monkeypatch):
+    """A registered provisioner comes back from importlib EntryPoints.
+
+    EntryPoints.__getitem__ looks up by name, so indexing with 0 raises
+    KeyError even when that entry point is present.
+    """
+    ep = EntryPoint(
+        "demo-provisioner",
+        "jupyter_client.provisioning:LocalProvisioner",
+        KernelProvisionerFactory.GROUP_NAME,
+    )
+    matches = EntryPoints([ep])
+
+    def fake_entry_points(**kwargs):
+        if kwargs.get("name") == "demo-provisioner":
+            return matches
+        return EntryPoints([])
+
+    monkeypatch.setattr("jupyter_client.provisioning.factory.entry_points", fake_entry_points)
+    KernelProvisionerFactory.clear_instance()
+    KernelProvisionerFactory.provisioners.clear()
+    factory = KernelProvisionerFactory.instance()
+    try:
+        found = factory._get_provisioner("demo-provisioner")
+    finally:
+        KernelProvisionerFactory.clear_instance()
+        KernelProvisionerFactory.provisioners.clear()
+    assert found.name == "demo-provisioner"
+    assert found.value == ep.value
 
 
 class TestDiscovery:
