@@ -209,29 +209,6 @@ class LocalProvisioner(KernelProvisionerBase):
             # build the Popen cmd
             extra_arguments = kwargs.pop("extra_arguments", [])
 
-            # write connection file / get default ports
-            # TODO - change when handshake pattern is adopted
-            lpc = LocalPortCache.instance()
-            was_cached = self.ports_cached
-            # Ports to restore if the connection file cannot be written.
-            requested: dict[str, int] = {}
-            if km.cache_ports:
-                # Record random requests before cached allocation fills them in.
-                km._record_random_port_names()
-                allocated: dict[str, int] = {}
-                try:
-                    for name in port_names:
-                        if not was_cached or getattr(km, name) <= 0:
-                            allocated[name] = lpc.find_available_port(km.ip)
-                except Exception:
-                    for port in allocated.values():
-                        lpc.return_port(port)
-                    raise
-                for name, port in allocated.items():
-                    requested[name] = getattr(km, name)
-                    setattr(km, name, port)
-                self.ports_cached = True
-
             if encryption_enabled and encryption_supported_transport:
                 kernel_curve_ok = encryption_required or (
                     hasattr(km, "_kernel_supports_curve_encryption")
@@ -248,6 +225,29 @@ class LocalProvisioner(KernelProvisionerBase):
                         # process will read the same keys the manager already holds.
                         curve_publickey = km.curve_publickey
                         curve_secretkey = km.curve_secretkey
+
+            # write connection file / get default ports
+            # TODO - change when handshake pattern is adopted
+            lpc = LocalPortCache.instance()
+            was_cached = self.ports_cached
+            # Ports to restore if the connection file cannot be written.
+            requested: dict[str, int] = {}
+            if km.cache_ports:
+                # Record random requests before cached allocation fills them in.
+                km._record_random_port_names()
+                allocated: dict[str, int] = {}
+                try:
+                    for name in port_names:
+                        if not was_cached or getattr(km, name) <= 0:
+                            allocated[name] = lpc.find_available_port(km.ip)
+                except BaseException:
+                    for port in allocated.values():
+                        lpc.return_port(port)
+                    raise
+                for name, port in allocated.items():
+                    requested[name] = getattr(km, name)
+                    setattr(km, name, port)
+                self.ports_cached = True
             previous_info = self.connection_info
             try:
                 if "env" in kwargs:

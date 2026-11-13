@@ -108,7 +108,12 @@ async def test_newports_recovers_from_an_occupied_startup_port(tmp_path, monkeyp
     assert cache.currently_used_ports == initially_used
 
 
-async def test_partial_reallocation_failure_returns_new_reservations(tmp_path, monkeypatch):
+class AllocationInterrupted(BaseException):
+    """Stands in for an interruption that is not an Exception."""
+
+
+@pytest.mark.parametrize("error", [OSError, AllocationInterrupted])
+async def test_partial_reallocation_failure_returns_new_reservations(tmp_path, monkeypatch, error):
     """A failed refresh retains old reservations and permits another attempt."""
     km = make_manager(tmp_path)
     cache = LocalPortCache.instance()
@@ -121,7 +126,7 @@ async def test_partial_reallocation_failure_returns_new_reservations(tmp_path, m
 
         def fail_third_allocation(ip):
             if len(allocated) == 2:
-                raise OSError("test allocation failure")
+                raise error("test allocation failure")
             port = real_pick(ip)
             allocated.append(port)
             return port
@@ -129,7 +134,7 @@ async def test_partial_reallocation_failure_returns_new_reservations(tmp_path, m
         km.cleanup_random_ports()
         with monkeypatch.context() as patch:
             patch.setattr(cache, "find_available_port", fail_third_allocation)
-            with pytest.raises(OSError, match="test allocation failure"):
+            with pytest.raises(error, match="test allocation failure"):
                 await km._async_pre_start_kernel()
         assert cache.currently_used_ports == initially_used | old_ports
         await km._async_pre_start_kernel()
