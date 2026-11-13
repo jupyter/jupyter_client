@@ -141,6 +141,39 @@ async def test_partial_reallocation_failure_returns_new_reservations(tmp_path, m
     assert cache.currently_used_ports == initially_used
 
 
+@pytest.mark.parametrize("refresh", [False, True])
+async def test_connection_file_failure_returns_new_reservations(tmp_path, monkeypatch, refresh):
+    """A failed connection-file write keeps only reservations it can clean up."""
+    km = make_manager(tmp_path)
+    cache = LocalPortCache.instance()
+    initially_used = cache.currently_used_ports.copy()
+    try:
+        old_ports = set()
+        if refresh:
+            await km._async_pre_start_kernel()
+            old_ports = {getattr(km, name) for name in port_names}
+            km.cleanup_random_ports()
+        requested = {name: getattr(km, name) for name in port_names}
+
+        def fail_write(**kwargs):
+            raise OSError("test write failure")
+
+        with monkeypatch.context() as patch:
+            patch.setattr(km, "write_connection_file", fail_write)
+            with pytest.raises(OSError, match="test write failure"):
+                await km._async_pre_start_kernel()
+        assert {name: getattr(km, name) for name in port_names} == requested
+        assert cache.currently_used_ports == initially_used | old_ports
+
+        await km._async_pre_start_kernel()
+        new_ports = {getattr(km, name) for name in port_names}
+        assert old_ports.isdisjoint(new_ports)
+        assert cache.currently_used_ports == initially_used | new_ports
+    finally:
+        await km.cleanup_resources()
+    assert cache.currently_used_ports == initially_used
+
+
 async def test_uncached_fixed_port_is_preserved(tmp_path):
     """Random-port cleanup leaves an explicitly configured uncached port alone."""
     cache = LocalPortCache.instance()

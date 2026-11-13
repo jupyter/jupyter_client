@@ -211,25 +211,24 @@ class LocalProvisioner(KernelProvisionerBase):
 
             # write connection file / get default ports
             # TODO - change when handshake pattern is adopted
+            lpc = LocalPortCache.instance()
+            was_cached = self.ports_cached
+            # Ports to restore if the connection file cannot be written.
+            requested: dict[str, int] = {}
             if km.cache_ports:
                 # Record random requests before cached allocation fills them in.
                 km._record_random_port_names()
-                lpc = LocalPortCache.instance()
                 allocated: dict[str, int] = {}
                 try:
                     for name in port_names:
-                        if not self.ports_cached or getattr(km, name) <= 0:
+                        if not was_cached or getattr(km, name) <= 0:
                             allocated[name] = lpc.find_available_port(km.ip)
                 except Exception:
                     for port in allocated.values():
                         lpc.return_port(port)
                     raise
                 for name, port in allocated.items():
-                    if self.ports_cached:
-                        previous = self.connection_info.get(name)
-                        if TYPE_CHECKING:
-                            assert isinstance(previous, int)
-                        lpc.return_port(previous)
+                    requested[name] = getattr(km, name)
                     setattr(km, name, port)
                 self.ports_cached = True
 
@@ -249,12 +248,28 @@ class LocalProvisioner(KernelProvisionerBase):
                         # process will read the same keys the manager already holds.
                         curve_publickey = km.curve_publickey
                         curve_secretkey = km.curve_secretkey
-            if "env" in kwargs:
-                jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
-                km.write_connection_file(jupyter_session=jupyter_session)
-            else:
-                km.write_connection_file()
+            previous_info = self.connection_info
+            try:
+                if "env" in kwargs:
+                    jupyter_session = kwargs["env"].get("JPY_SESSION_NAME", "")
+                    km.write_connection_file(jupyter_session=jupyter_session)
+                else:
+                    km.write_connection_file()
+            except BaseException:
+                # Keep the reservations described by connection_info.
+                for name, port in requested.items():
+                    lpc.return_port(getattr(km, name))
+                    setattr(km, name, port)
+                self.ports_cached = was_cached
+                raise
             self.connection_info = km.get_connection_info()
+            if was_cached:
+                # Release superseded ports only once their replacements are recorded.
+                for name in requested:
+                    previous = previous_info.get(name)
+                    if TYPE_CHECKING:
+                        assert isinstance(previous, int)
+                    lpc.return_port(previous)
 
             kernel_cmd = km.format_kernel_cmd(
                 extra_arguments=extra_arguments
