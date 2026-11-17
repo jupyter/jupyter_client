@@ -13,7 +13,7 @@ from queue import Empty
 
 import zmq.asyncio
 from jupyter_core.utils import ensure_async
-from traitlets import Any, Bool, Instance, Type
+from traitlets import Any, Bool, Instance, Type, observe
 
 from .channels import major_protocol_version
 from .channelsabc import ChannelABC, HBChannelABC
@@ -99,6 +99,12 @@ class KernelClient(ConnectionFileMixin):
     def _context_default(self) -> zmq.Context:
         self._created_context = True
         return zmq.Context()
+
+    @observe("curve_publickey", "session")
+    def _sync_session_transport_encrypted(self, change: t.Any) -> None:
+        # Every socket this client connects uses CurveZMQ when the public key
+        # is set, so the session can skip signature checks.
+        self.session.transport_encrypted = self.curve_publickey is not None
 
     # The classes to use for the various channels
     shell_channel_class = Type(ChannelABC)

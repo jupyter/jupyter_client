@@ -114,6 +114,7 @@ class HBChannel(Thread):
         if self.curve_serverkey is not None:
             # Generate a fresh ephemeral keypair for each socket; only the
             # server public key (curve_serverkey) is needed for authentication.
+            # Kernels accept any client that knows it, so it must stay secret.
             client_pub, client_sec = zmq.curve_keypair()
             self.socket.curve_secretkey = client_sec
             self.socket.curve_publickey = client_pub

@@ -16,7 +16,8 @@ encryption and authentication at the ZMQ transport layer. When enabled, the
 ``KernelManager`` generates a keypair, writes it into the kernel's connection
 file, and configures all sockets as a CurveZMQ server. Clients must present
 the correct server public key to connect; unauthenticated connections are
-silently dropped before any data is delivered.
+silently dropped before any data is delivered. This makes the server public
+key a secret; see :ref:`Protecting the public key <curve_publickey_secret>`.
 
 .. note::
 
@@ -119,6 +120,46 @@ Kernel implementations must read these fields from the connection file and
 apply them to their ZMQ sockets before binding. See :ref:`kernels` for the
 full description of the connection file format.
 
+.. _curve_publickey_secret:
+
+.. warning::
+
+    Protect ``curve_publickey`` the same way as ``key``.
+
+    The kernel does not check the keys of the clients that connect to it.
+    Any process that knows the server public key can connect, run code in
+    the kernel, and read its output, so the public key works like a password.
+    "Public" in its name does not mean that it is safe to share.
+
+    Do not log it or pass it on a command line, and keep the connection file
+    readable only by its owner.
+
+
+.. _message_signing:
+
+Message signing
+~~~~~~~~~~~~~~~
+
+CurveZMQ already authenticates every frame, so a ``Session`` can accept
+messages with or without an HMAC signature, as long as every socket that
+carries them uses CurveZMQ. ``KernelManager`` and ``KernelClient`` connect
+every socket with CurveZMQ when the connection info holds Curve keys, so
+their sessions skip the signature check. Kernels decide this for themselves;
+see :ref:`kernel_curve_signing`.
+
+Messages are still signed by default, because older peers check signatures.
+If you use Jupyter Server, update it to version <jupyter_server version> or
+later before you turn signing off. Once every peer is updated, including each
+kernel's environment, turn signing off with:
+
+.. code:: python
+
+    c.Session.sign_encrypted_messages = False
+
+The setting applies to the messages that a process sends. Set it in the
+kernel's configuration too, to stop the kernel from signing its messages.
+Connections without Curve keys always sign and check signatures.
+
 
 Implementing curve support in a kernel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -151,6 +192,27 @@ are rejected automatically.
 
 Kernels based on `ipykernel <https://ipykernel.readthedocs.io/>`_ v7.3+ handle
 this automatically when the connection file contains the curve fields.
+
+.. _kernel_curve_signing:
+
+Skipping signature checks in a kernel
+-------------------------------------
+
+A kernel may stop checking HMAC signatures only after it has bound **every**
+socket with CurveZMQ. Finding Curve keys in the connection file is not
+enough: a kernelspec can declare Curve support that the installed kernel
+lacks, for instance after a downgrade. That kernel binds without CurveZMQ,
+and if it also skipped signature checks, any local process could run code
+in it.
+
+For this reason, loading a connection file through ``ConnectionFileMixin``
+does not change how its ``Session`` checks signatures. A Python kernel that
+uses ``jupyter_client.session.Session`` should set the flag itself, after
+binding its sockets with CurveZMQ:
+
+.. code:: python
+
+    session.transport_encrypted = True
 
 .. seealso::
 

@@ -355,6 +355,60 @@ def test_curve_keys_reused_across_restart(tmp_path):
     km.context.term()
 
 
+@pytest.mark.parametrize("supported_encryption, encrypted", [("curve", True), (None, False)])
+def test_session_transport_encrypted_follows_curve_keys(tmp_path, supported_encryption, encrypted):
+    """Sessions of the manager and its clients know when the connection uses Curve."""
+    km = _make_km(tmp_path, supported_encryption=supported_encryption, transport_encryption="auto")
+    km.pre_start_kernel()
+    assert km.session.transport_encrypted is encrypted
+    assert km.client().session.transport_encrypted is encrypted
+
+    # A client loading the connection file gets the same, and the key is kept.
+    with open(km.connection_file) as f:
+        info = json.load(f)
+    assert info["key"]
+    client = KernelClient()
+    client.load_connection_info(info)
+    assert client.session.transport_encrypted is encrypted
+
+    km.cleanup_connection_file()
+    km.context.term()
+
+
+def test_signatures_checked_on_sockets_bound_without_curve(tmp_path):
+    """A kernel that ignores the Curve keys in its connection file still checks signatures.
+
+    Kernels such as ipykernel inherit ConnectionFileMixin. If the kernelspec
+    declares Curve support but the installed kernel predates it, the kernel
+    binds without Curve. Its session must not skip signature checks just
+    because the connection file holds Curve keys.
+    """
+    km = _make_km(tmp_path, supported_encryption="curve", transport_encryption="auto")
+    km.pre_start_kernel()
+
+    kernel = ConnectionFileMixin()
+    kernel.load_connection_file(km.connection_file)
+    assert kernel.curve_publickey is not None
+
+    ctx = zmq.Context()
+    shell = ctx.socket(zmq.ROUTER)  # bound without Curve, as ipykernel < 7.3 does
+    shell.rcvtimeo = 5000
+    shell.bind(f"tcp://{kernel.ip}:{kernel.shell_port}")
+    peer = ctx.socket(zmq.DEALER)  # another local process, with no key
+    peer.connect(f"tcp://{kernel.ip}:{kernel.shell_port}")
+    try:
+        Session(key=b"").send(peer, "execute_request", content={"code": "1"})
+        _, msg_list = kernel.session.feed_identities(shell.recv_multipart())
+        with pytest.raises(ValueError, match="Unsigned Message"):
+            kernel.session.deserialize(msg_list)
+    finally:
+        peer.close(linger=0)
+        shell.close(linger=0)
+        ctx.term()
+        km.cleanup_connection_file()
+        km.context.term()
+
+
 def test_connect_shell_to_curve_server_with_curve_keys_succeeds():
     """Public API path: load_connection_info + connect_shell works with curve keys."""
     pub, sec = zmq.curve_keypair()
