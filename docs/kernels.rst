@@ -89,10 +89,17 @@ When transport encryption is enabled, two additional fields are present:
 ``curve_publickey``
     Z85-encoded 40-character ASCII string holding the server's CurveZMQ
     public key. Kernels must apply this to their ZMQ sockets before binding.
+    Despite its name, it must be kept as secret as ``key``; see
+    :ref:`Protecting the public key <curve_publickey_secret>`.
 
 ``curve_secretkey``
     Z85-encoded 40-character ASCII string holding the server's CurveZMQ
     secret key. Kernels must apply this to their ZMQ sockets before binding.
+
+On a CurveZMQ connection, ``key`` is not required once every peer sets
+``Session.sign_encrypted_messages`` to ``False``. CurveZMQ authenticates every
+message, so receivers do not check the signature. The connection file still
+holds ``key`` for peers that sign their messages. See :ref:`message_signing`.
 
 See :ref:`security` for full details on how to enable transport encryption
 and how kernels should handle these fields.

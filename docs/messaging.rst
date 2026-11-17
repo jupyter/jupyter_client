@@ -323,6 +323,14 @@ By default, the hashing function used for computing these signatures is sha256.
     To disable authentication and signature checking,
     set the ``key`` field of a connection file to an empty string.
 
+.. note::
+
+    On a connection that uses CurveZMQ transport encryption, CurveZMQ
+    authenticates every message. Receivers that bound or connected every
+    socket with CurveZMQ do not check the signature, and senders with
+    ``Session.sign_encrypted_messages = False`` leave it empty.
+    See :ref:`message_signing`.
+
 The signature is the HMAC hex digest of the concatenation of:
 
 - A shared key (typically the ``key`` field of a connection file)
