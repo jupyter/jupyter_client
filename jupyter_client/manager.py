@@ -156,9 +156,7 @@ class KernelManager(ConnectionFileMixin):
     @observe("curve_publickey", "session")
     def _sync_session_transport_encrypted(self, change: t.Any) -> None:
         # Every socket the manager connects uses CurveZMQ when the public key
-        # is set. Not on ConnectionFileMixin, which kernels also inherit and
-        # may bind without Curve (see KernelClient). Clients from `client()`
-        # share this session.
+        # is set. Clients from `client()` share this session.
         self.session.transport_encrypted = self.curve_publickey is not None
 
     # the class to create with our `client` method

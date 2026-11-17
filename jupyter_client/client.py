@@ -103,10 +103,7 @@ class KernelClient(ConnectionFileMixin):
     @observe("curve_publickey", "session")
     def _sync_session_transport_encrypted(self, change: t.Any) -> None:
         # Every socket this client connects uses CurveZMQ when the public key
-        # is set, so the session can skip signature checks. This lives here and
-        # not on ConnectionFileMixin, which kernels also inherit: a kernel that
-        # binds without Curve must keep checking signatures even if its
-        # connection file holds Curve keys.
+        # is set, so the session can skip signature checks.
         self.session.transport_encrypted = self.curve_publickey is not None
 
     # The classes to use for the various channels
