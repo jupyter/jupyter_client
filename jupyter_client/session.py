@@ -499,9 +499,10 @@ class Session(Configurable):
         False,
         help="""Whether every connection that carries this session's messages uses CurveZMQ.
 
-        Set from the connection info when it holds Curve keys. CurveZMQ
-        authenticates every frame, so received messages are accepted with
-        or without a signature.""",
+        CurveZMQ authenticates every frame, so received messages are accepted
+        with or without a signature. KernelManager and KernelClient set this
+        when their connection info holds Curve keys. A kernel must set it only
+        after binding every socket with CurveZMQ.""",
     )
 
     sign_encrypted_messages = Bool(
