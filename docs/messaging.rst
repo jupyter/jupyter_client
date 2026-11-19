@@ -672,131 +672,6 @@ Only for console frontends.
         "keepkernel": bool,
     }
 
-
-.. _msging_inspection:
-
-Introspection
--------------
-
-Code can be inspected to show useful information to the user.
-It is up to the Kernel to decide what information should be displayed, and its formatting.
-
-Message type: ``inspect_request``::
-
-    content = {
-        # The code context in which introspection is requested
-        # this may be up to an entire multiline cell.
-        'code' : str,
-
-        # The cursor position within 'code' (in unicode characters) where inspection is requested
-        'cursor_pos' : int,
-
-        # The level of detail desired.  In IPython, the default (0) is equivalent to typing
-        # 'x?' at the prompt, 1 is equivalent to 'x??'.
-        # The difference is up to kernels, but in IPython level 1 includes the source code
-        # if available.
-        'detail_level' : 0 or 1,
-    }
-
-.. versionchanged:: 5.0
-
-    ``object_info_request`` renamed to ``inspect_request``.
-
-.. versionchanged:: 5.0
-
-    ``name`` key replaced with ``code`` and ``cursor_pos``,
-    moving the lexing responsibility to the kernel.
-
-.. versionchanged:: 5.2
-
-    Due to a widespread bug in many frontends, ``cursor_pos``
-    in versions prior to 5.2 is ambiguous in the presence of "astral-plane" characters.
-    In 5.2, cursor_pos **must be** the actual encoding-independent offset in unicode codepoints.
-    See :ref:`cursor_pos_unicode_note` for more.
-
-
-The reply is a mime-bundle, like a `display_data`_ message,
-which should be a formatted representation of information about the context.
-In the notebook, this is used to show tooltips over function calls, etc.
-
-Message type: ``inspect_reply``::
-
-    content = {
-        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
-        'status' : 'ok',
-
-        # found should be true if an object was found, false otherwise
-        'found' : bool,
-
-        # data can be empty if nothing is found
-        'data' : dict,
-        'metadata' : dict,
-    }
-
-.. versionchanged:: 5.0
-
-    ``object_info_reply`` renamed to ``inspect_reply``.
-
-.. versionchanged:: 5.0
-
-    Reply is changed from structured data to a mime bundle,  allowing formatting decisions to be made by the kernel.
-
-.. _msging_completion:
-
-Completion
-----------
-
-Message type: ``complete_request``::
-
-    content = {
-        # The code context in which completion is requested
-        # this may be up to an entire multiline cell, such as
-        # 'foo = a.isal'
-        'code' : str,
-
-        # The cursor position within 'code' (in unicode characters) where completion is requested
-        'cursor_pos' : int,
-    }
-
-.. versionchanged:: 5.0
-
-    ``line``, ``block``, and ``text`` keys are removed in favor of a single ``code`` for context.
-    Lexing is up to the kernel.
-
-.. versionchanged:: 5.2
-
-    Due to a widespread bug in many frontends, ``cursor_pos``
-    in versions prior to 5.2 is ambiguous in the presence of "astral-plane" characters.
-    In 5.2, cursor_pos **must be** the actual encoding-independent offset in unicode codepoints.
-    See :ref:`cursor_pos_unicode_note` for more.
-
-
-Message type: ``complete_reply``::
-
-    content = {
-    # status should be 'ok' unless an exception was raised during the request,
-    # in which case it should be 'error', along with the usual error message content
-    # in other messages.
-    'status' : 'ok'
-
-    # The list of all matches to the completion request, such as
-    # ['a.isalnum', 'a.isalpha'] for the above example.
-    'matches' : list,
-
-    # The range of text that should be replaced by the above matches when a completion is accepted.
-    # typically cursor_end is the same as cursor_pos in the request.
-    'cursor_start' : int,
-    'cursor_end' : int,
-
-    # Information that frontend plugins might use for extra display information about completions.
-    'metadata' : dict,
-    }
-
-.. versionchanged:: 5.0
-
-    - ``matched_text`` is removed in favor of ``cursor_start`` and ``cursor_end``.
-    - ``metadata`` is added for extended information.
-
 .. _msging_history:
 
 History
@@ -868,53 +743,6 @@ Message type: ``history_reply``::
    This interface was designed by exposing all the main options of IPython's
    history interface. We may remove some options in a future version of the
    message spec.
-
-.. _msging_is_complete:
-
-Code completeness
------------------
-
-.. versionadded:: 5.0
-
-When the user enters a line in a console style interface, the console must
-decide whether to immediately execute the current code, or whether to show a
-continuation prompt for further input. For instance, in Python ``a = 5`` would
-be executed immediately, while ``for i in range(5):`` would expect further input.
-
-There are four possible replies:
-
-- *complete* code is ready to be executed
-- *incomplete* code should prompt for another line
-- *invalid* code will typically be sent for execution, so that the user sees the
-  error soonest.
-- *unknown* - if the kernel is not able to determine this. The frontend should
-  also handle the kernel not replying promptly. It may default to sending the
-  code for execution, or it may implement simple fallback heuristics for whether
-  to execute the code (e.g. execute after a blank line).
-
-Frontends may have ways to override this, forcing the code to be sent for
-execution or forcing a continuation prompt.
-
-Message type: ``is_complete_request``::
-
-    content = {
-        # The code entered so far as a multiline string
-        'code' : str,
-    }
-
-Message type: ``is_complete_reply``::
-
-    content = {
-        # One of 'complete', 'incomplete', 'invalid', 'unknown'
-        'status' : str,
-
-        # If status is 'incomplete', indent should contain the characters to use
-        # to indent the next line. This is only a hint: frontends may ignore it
-        # and use their own autoindentation rules. For other statuses, this
-        # field does not exist.
-        'indent': str,
-    }
-
 
 Connect
 -------
@@ -1181,6 +1009,189 @@ Message type: ``interrupt_reply``::
     }
 
 .. versionadded:: 5.3
+
+.. _msging_inspection:
+
+Introspection
+-------------
+
+Code can be inspected to show useful information to the user.
+It is up to the Kernel to decide what information should be displayed, and its formatting.
+
+Message type: ``inspect_request``::
+
+    content = {
+        # The code context in which introspection is requested
+        # this may be up to an entire multiline cell.
+        'code' : str,
+
+        # The cursor position within 'code' (in unicode characters) where inspection is requested
+        'cursor_pos' : int,
+
+        # The level of detail desired.  In IPython, the default (0) is equivalent to typing
+        # 'x?' at the prompt, 1 is equivalent to 'x??'.
+        # The difference is up to kernels, but in IPython level 1 includes the source code
+        # if available.
+        'detail_level' : 0 or 1,
+    }
+
+.. versionchanged:: 5.0
+
+    ``object_info_request`` renamed to ``inspect_request``.
+
+.. versionchanged:: 5.0
+
+    ``name`` key replaced with ``code`` and ``cursor_pos``,
+    moving the lexing responsibility to the kernel.
+
+.. versionchanged:: 5.2
+
+    Due to a widespread bug in many frontends, ``cursor_pos``
+    in versions prior to 5.2 is ambiguous in the presence of "astral-plane" characters.
+    In 5.2, cursor_pos **must be** the actual encoding-independent offset in unicode codepoints.
+    See :ref:`cursor_pos_unicode_note` for more.
+
+.. versionchanged:: 5.6
+
+    Sending a ``inspect_request`` message on the ``shell`` channel is deprecated.
+
+
+The reply is a mime-bundle, like a `display_data`_ message,
+which should be a formatted representation of information about the context.
+In the notebook, this is used to show tooltips over function calls, etc.
+
+Message type: ``inspect_reply``::
+
+    content = {
+        # 'ok' if the request succeeded or 'error', with error information as in all other replies.
+        'status' : 'ok',
+
+        # found should be true if an object was found, false otherwise
+        'found' : bool,
+
+        # data can be empty if nothing is found
+        'data' : dict,
+        'metadata' : dict,
+    }
+
+.. versionchanged:: 5.0
+
+    ``object_info_reply`` renamed to ``inspect_reply``.
+
+.. versionchanged:: 5.0
+
+    Reply is changed from structured data to a mime bundle,  allowing formatting decisions to be made by the kernel.
+
+.. _msging_completion:
+
+Completion
+----------
+
+Message type: ``complete_request``::
+
+    content = {
+        # The code context in which completion is requested
+        # this may be up to an entire multiline cell, such as
+        # 'foo = a.isal'
+        'code' : str,
+
+        # The cursor position within 'code' (in unicode characters) where completion is requested
+        'cursor_pos' : int,
+    }
+
+.. versionchanged:: 5.0
+
+    ``line``, ``block``, and ``text`` keys are removed in favor of a single ``code`` for context.
+    Lexing is up to the kernel.
+
+.. versionchanged:: 5.2
+
+    Due to a widespread bug in many frontends, ``cursor_pos``
+    in versions prior to 5.2 is ambiguous in the presence of "astral-plane" characters.
+    In 5.2, cursor_pos **must be** the actual encoding-independent offset in unicode codepoints.
+    See :ref:`cursor_pos_unicode_note` for more.
+
+.. versionchanged:: 5.6
+
+    Sending a ``inspect_request`` message on the ``shell`` channel is deprecated.
+
+
+Message type: ``complete_reply``::
+
+    content = {
+    # status should be 'ok' unless an exception was raised during the request,
+    # in which case it should be 'error', along with the usual error message content
+    # in other messages.
+    'status' : 'ok'
+
+    # The list of all matches to the completion request, such as
+    # ['a.isalnum', 'a.isalpha'] for the above example.
+    'matches' : list,
+
+    # The range of text that should be replaced by the above matches when a completion is accepted.
+    # typically cursor_end is the same as cursor_pos in the request.
+    'cursor_start' : int,
+    'cursor_end' : int,
+
+    # Information that frontend plugins might use for extra display information about completions.
+    'metadata' : dict,
+    }
+
+.. versionchanged:: 5.0
+
+    - ``matched_text`` is removed in favor of ``cursor_start`` and ``cursor_end``.
+    - ``metadata`` is added for extended information.
+
+.. _msging_is_complete:
+
+Code completeness
+-----------------
+
+.. versionadded:: 5.0
+
+When the user enters a line in a console style interface, the console must
+decide whether to immediately execute the current code, or whether to show a
+continuation prompt for further input. For instance, in Python ``a = 5`` would
+be executed immediately, while ``for i in range(5):`` would expect further input.
+
+There are four possible replies:
+
+- *complete* code is ready to be executed
+- *incomplete* code should prompt for another line
+- *invalid* code will typically be sent for execution, so that the user sees the
+  error soonest.
+- *unknown* - if the kernel is not able to determine this. The frontend should
+  also handle the kernel not replying promptly. It may default to sending the
+  code for execution, or it may implement simple fallback heuristics for whether
+  to execute the code (e.g. execute after a blank line).
+
+Frontends may have ways to override this, forcing the code to be sent for
+execution or forcing a continuation prompt.
+
+Message type: ``is_complete_request``::
+
+    content = {
+        # The code entered so far as a multiline string
+        'code' : str,
+    }
+
+Message type: ``is_complete_reply``::
+
+    content = {
+        # One of 'complete', 'incomplete', 'invalid', 'unknown'
+        'status' : str,
+
+        # If status is 'incomplete', indent should contain the characters to use
+        # to indent the next line. This is only a hint: frontends may ignore it
+        # and use their own autoindentation rules. For other statuses, this
+        # field does not exist.
+        'indent': str,
+    }
+
+.. versionchanged:: 5.6
+
+    Sending a ``is_complete_request`` message on the ``shell`` channel is deprecated.
+
 
 Kernel info
 -----------
