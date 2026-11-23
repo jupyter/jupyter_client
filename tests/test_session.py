@@ -426,10 +426,14 @@ class TestSession:
         msg = session.msg("msg", content=content, metadata=metadata, parent=p["header"])
         smsg = session.serialize(msg)
         msg2 = session.deserialize(session.feed_identities(smsg)[1])
-        assert isinstance(msg2["header"]["date"], datetime)
-        self.assertEqual(msg["header"], msg2["header"])
-        self.assertEqual(msg["parent_header"], msg2["parent_header"])
-        self.assertEqual(msg["parent_header"], msg2["parent_header"])
+        if session.extract_header_dates:
+            date_type = datetime
+        else:
+            date_type = str
+        assert isinstance(msg2["header"]["date"], date_type)
+        assert isinstance(msg2["parent_header"]["date"], date_type)
+        self.assertEqual(msg["header"], jsonutil.extract_dates(msg2["header"]))
+        self.assertEqual(msg["parent_header"], jsonutil.extract_dates(msg2["parent_header"]))
         assert isinstance(msg["content"]["t"], datetime)
         assert isinstance(msg["metadata"]["t"], datetime)
         assert isinstance(msg2["content"]["t"], str)
@@ -437,7 +441,9 @@ class TestSession:
         self.assertEqual(msg["content"], jsonutil.extract_dates(msg2["content"]))
         self.assertEqual(msg["content"], jsonutil.extract_dates(msg2["content"]))
 
-    def test_datetimes(self, session):
+    @pytest.mark.parametrize("extract_header_dates", [True, False])
+    def test_datetimes(self, session, extract_header_dates):
+        session.extract_header_dates = extract_header_dates
         self._datetime_test(session)
 
     def test_datetimes_pickle(self):
