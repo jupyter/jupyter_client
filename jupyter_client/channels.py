@@ -253,7 +253,7 @@ class ZMQSocketChannel:
         msgs = []
         while True:
             try:
-                msgs.append(self.get_msg())
+                msgs.append(self.get_msg(timeout=0))
             except Empty:
                 break
         return msgs
@@ -334,7 +334,7 @@ class AsyncZMQSocketChannel(ZMQSocketChannel):
         msgs = []
         while True:
             try:
-                msgs.append(await self.get_msg())
+                msgs.append(await self.get_msg(timeout=0))
             except Empty:
                 break
         return msgs
