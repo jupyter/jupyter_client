@@ -10,7 +10,8 @@ import pytest
 from IPython.utils.capture import capture_output
 from traitlets import DottedObjectName, Type
 
-from jupyter_client.client import validate_string_dict
+from jupyter_client.asynchronous.client import AsyncKernelClient
+from jupyter_client.client import KernelClient, validate_string_dict
 from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
 from jupyter_client.manager import KernelManager, start_new_async_kernel, start_new_kernel
 from jupyter_client.threaded import ThreadedKernelClient, ThreadedZMQSocketChannel
@@ -333,3 +334,21 @@ def test_validate_string_dict():
         validate_string_dict(dict(a=1))  # type:ignore
     with pytest.raises(ValueError):
         validate_string_dict({1: "a"})  # type:ignore
+
+
+@pytest.mark.parametrize("client_class", [KernelClient, AsyncKernelClient])
+def test_context_default_registered_by_decorator(client_class):
+    """The context default must be registered by trait name, not only by the
+    reserved ``_context_default`` method name.
+
+    The ``@default`` decorator, unlike the magic method, keeps the default
+    working if the generator method is renamed (see issue #1065).
+    """
+    assert "context" in client_class._trait_default_generators
+
+    client = client_class()
+    try:
+        assert client.context is not None
+        assert client._created_context
+    finally:
+        client.context.destroy(linger=0)
