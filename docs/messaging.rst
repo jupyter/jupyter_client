@@ -1148,6 +1148,14 @@ Message type: ``shutdown_reply``::
         'restart' : bool # False if final shutdown, or True if shutdown precedes a restart
     }
 
+A ``shutdown_request`` always instructs the kernel to shut itself down. The
+kernel is not responsible for restarting itself. The ``restart`` field is a hint
+telling the kernel whether external resources (such as connection files or shared
+runtime state) may be reused across an upcoming restart, so the kernel can avoid
+cleaning them up during shutdown. In ``shutdown_reply``, ``status`` indicates
+whether the kernel completed the shutdown request, and ``restart`` echoes the
+value from ``shutdown_request``.
+
 .. Note::
 
    When the clients detect a dead kernel thanks to inactivity on the heartbeat
