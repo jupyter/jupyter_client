@@ -119,18 +119,31 @@ class KernelClient(ConnectionFileMixin):
 
     def __del__(self) -> None:
         """Handle garbage collection.  Destroy context if applicable."""
-        if (
-            self._created_context
-            and self.context is not None  # type:ignore[redundant-expr]
-            and not self.context.closed
-        ):
-            if self.channels_running:
-                if self.log:
-                    self.log.warning("Could not destroy zmq context for %s", self)
-            else:
-                if self.log:
-                    self.log.debug("Destroying zmq context for %s", self)
-                self.context.destroy(linger=100)
+        # Read _trait_values directly so GC during interpreter shutdown never
+        # invokes traitlets defaults after module globals are cleared.
+        trait_values = getattr(self, "_trait_values", None)
+        if isinstance(trait_values, dict):
+            created_context = trait_values.get("_created_context", False)
+            context = trait_values.get("context")
+            if created_context and context is not None and not context.closed:
+                channels_running = any(
+                    (ch := trait_values.get(name)) is not None and ch.is_alive()
+                    for name in (
+                        "_shell_channel",
+                        "_iopub_channel",
+                        "_stdin_channel",
+                        "_hb_channel",
+                        "_control_channel",
+                    )
+                )
+                log = trait_values.get("log")
+                if channels_running:
+                    if log:
+                        log.warning("Could not destroy zmq context for %s", self)
+                else:
+                    if log:
+                        log.debug("Destroying zmq context for %s", self)
+                    context.destroy(linger=100)
         try:
             super_del = super().__del__  # type:ignore[misc]
         except AttributeError:
